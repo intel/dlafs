@@ -142,7 +142,7 @@ public:
     /* pool to allocate buffer for cv/dl algorithm processing, OCL buffer 
        *    buffer size is: mInputWidth x mInputHeight
        */
-    GstBufferPool *mPool;
+    //GstBufferPool *mPool;
 
 #if 0
     /* queue for input buffer, the pointer to CvdlAlgoData*/

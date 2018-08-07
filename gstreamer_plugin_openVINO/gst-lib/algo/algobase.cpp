@@ -64,15 +64,16 @@ CvdlAlgoBase::~CvdlAlgoBase()
     if((gst_task_get_state(mTask) == GST_TASK_STARTED) ||
        (gst_task_get_state(mTask) == GST_TASK_PAUSED)) {
          gst_task_set_state(mTask, GST_TASK_STOPPED);
+         mInQueue.flush();
          gst_task_join(mTask);
+    } else {
+        mInQueue.close();
     }
     gst_object_unref(mTask);
     mTask = NULL;
 
     mNext = mPrev = NULL;
-    gst_object_unref(mPool);
-
-    mInQueue.close();
+    //gst_object_unref(mPool);
 }
 
 void CvdlAlgoBase::algo_connect(CvdlAlgoBase *algoTo)
@@ -89,6 +90,7 @@ void CvdlAlgoBase::start_algo_thread()
 void CvdlAlgoBase::stop_algo_thread()
 {
     gst_task_set_state(mTask, GST_TASK_STOPPED);
+    mInQueue.flush();
     gst_task_join(mTask);
 }
 

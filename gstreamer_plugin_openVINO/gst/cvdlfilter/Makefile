@@ -36,7 +36,7 @@ GST_LIBS_DIR := ../../gst-lib
 
 SRCS = cvdlfilter.c plugin.c
 
-LIB_NAME    := libgstcvdl
+LIB_NAME    := libgstcvdlfilter
 SHARE_LIB   := $(LIB_OCL_PATH)/$(LIB_NAME).so
 DYNAMIC_LIB := $(LIB_OCL_PATH)/$(LIB_NAME).a
 
@@ -45,7 +45,7 @@ OBJS := $(patsubst %.c, %.o, $(SRCS))
 GST_LIBS := $(GST_LIBS_DIR)/common/libocl_common.a $(GST_LIBS_DIR)/ocl/libocl_ocl.a $(GST_LIBS_DIR)/algo/libcvdl_algo.a $(GST_LIBS_DIR)/vpp/libocl_vpp.a
 
 all: $(OBJS)
-	$(LD) $(LDFLAGS) -o $(DIR_LIB)/libgstcvdlfilter.so $(OBJS)
+	$(LD) $(LDFLAGS) -o $(DIR_LIB)/libgstcvdlfilterbase.so $(OBJS)
 	$(LD) $(LDFLAGS) -o $(SHARE_LIB) -Wl,--whole-archive $(GST_LIBS) $(OBJS) -Wl,--no-whole-archive $(LIBS)
 
 $(OBJS): $(DIR_OBJ)/%.o:$(DIR_SRC)/%.c

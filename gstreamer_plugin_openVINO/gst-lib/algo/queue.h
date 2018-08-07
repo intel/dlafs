@@ -41,7 +41,7 @@ template<class T>
 class thread_queue
 {
 public:
-    thread_queue(int sz = 0x7FFFFFFF):_size_limit(sz), _max_size(0), _closed(false){}
+    thread_queue(int sz = 0x7FFFFFFF):_size_limit(sz), _max_size(0), _closed(false), _flush(false){}
 
     //with Filter on element(get specific element)
     template<class FilterFunc>
@@ -59,6 +59,10 @@ public:
 
 			//if closed & not-found, then we will never found it in the future
 				if(_closed) return true;
+                if(_flush) {
+                    _flush = false;
+                    return true;
+                }
 
 				return false;
 			});
@@ -112,6 +116,15 @@ public:
         _closed = true;
         _cv.notify_all();
     }
+
+    // release the lock, make it can go
+    void flush(void)
+    {
+        std::unique_lock<std::mutex> lk(_m);
+        _flush = true;
+        _cv.notify_all();
+    }
+
     int size(void){
         std::unique_lock<std::mutex> lk(_m);
         return _q.size();
@@ -127,5 +140,6 @@ private:
     std::condition_variable        _cv_notfull;
     int                            _max_size;
     bool                           _closed;
+    bool                           _flush;
 };
 #endif

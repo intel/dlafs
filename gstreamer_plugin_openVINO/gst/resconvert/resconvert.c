@@ -234,9 +234,6 @@ res_convert_init (ResConvert * convertor)
     gst_pad_set_activatemode_function (convertor->sinkpad,  GST_DEBUG_FUNCPTR (res_convert_sink_activate_mode));
     gst_element_add_pad (GST_ELEMENT (convertor), convertor->sinkpad);
 
-    /* reset resconvert element*/
-    res_convert_reset (convertor);
-
     /* create a pool for src_txt buffer */
     convertor->src_pool = res_pool_create (caps, sizeof(InferenceData), 3, 10);
 
@@ -255,18 +252,23 @@ res_convert_init (ResConvert * convertor)
 static void
 res_convert_finalize (ResConvert * convertor)
 {
-    res_convert_reset (convertor);
 
-    if(convertor->sinkpad && GST_PAD_PARENT(convertor->sinkpad)){
-        gst_element_remove_pad (GST_ELEMENT_CAST (convertor), convertor->sinkpad);
-    } else {
+    // g_object_unref() --> gst_element_dispose
+    // will unref all the pads
+    #if 0
+    res_convert_reset (convertor);
+    if(convertor->sinkpad) {
+        if(GST_PAD_PARENT(convertor->sinkpad)){
+            gst_element_remove_pad (GST_ELEMENT_CAST (convertor), convertor->sinkpad);
+        }
         gst_object_unref(convertor->sinkpad);
+        convertor->sinkpad = NULL;
     }
+    #endif
     if(convertor->src_pool) {
         gst_object_unref (convertor->src_pool);
         convertor->src_pool = NULL;
     }
-
     blender_destroy(convertor->blend_handle);
     G_OBJECT_CLASS (parent_class)->finalize (G_OBJECT (convertor));
 }
@@ -274,18 +276,26 @@ res_convert_finalize (ResConvert * convertor)
 static void
 res_convert_reset (ResConvert * convertor)
 {
+    // g_object_unref() --> gst_element_dispose
+    // will unref all the pads
+    #if 0
     /* Clean up the streams and pads we allocated */
-    if(convertor->pic_srcpad && GST_PAD_PARENT(convertor->pic_srcpad)){
-        gst_element_remove_pad (GST_ELEMENT_CAST (convertor), convertor->pic_srcpad);
-    } else { 
+    if(convertor->pic_srcpad){
+        if(GST_PAD_PARENT(convertor->pic_srcpad)){
+            gst_element_remove_pad (GST_ELEMENT_CAST (convertor), convertor->pic_srcpad);
+        }
         gst_object_unref(convertor->pic_srcpad);
+        convertor->pic_srcpad = NULL;
     }
 
-    if(convertor->txt_srcpad && GST_PAD_PARENT(convertor->txt_srcpad)){
-        gst_element_remove_pad (GST_ELEMENT_CAST (convertor), convertor->txt_srcpad);
-    } else {
+    if(convertor->txt_srcpad){
+        if(GST_PAD_PARENT(convertor->txt_srcpad)){
+            gst_element_remove_pad (GST_ELEMENT_CAST (convertor), convertor->txt_srcpad);
+        }
         gst_object_unref(convertor->txt_srcpad);
+        convertor->txt_srcpad = NULL;
     }
+    #endif
 }
 
 static gboolean
