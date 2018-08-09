@@ -23,8 +23,6 @@
 #ifndef __IE_LOADER_H__
 #define __IE_LOADER_H__
 
-
-
 #include <string>
 #include <vector>
 #include <map>
@@ -37,6 +35,9 @@
 #include <inference_engine.hpp>
 
 #include "algobase.h"
+
+// model directory, alt it can be passed from app
+#define MODEL_DIR "/usr/local/lib/libgstcvdl/models"
 
 #define CHECK(X) if(!(X)){ GST_ERROR("CHECK ERROR!"); std::exit(EXIT_FAILURE); }
 #define REQUEST_NUM 8

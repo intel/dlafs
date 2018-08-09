@@ -35,6 +35,18 @@ const char* voc_names[] = { "aeroplane", "bicycle", "bird", "boat", "bottle", "b
 const char* barrier_names[] = { "minibus", "minitruck", "car", "mediumbus", "mpv", "suv", "largetruck", "largebus",
                             "other" };
 
+static int nms_comparator(const void *pa, const void *pb)
+{
+    RectSortable a = *(RectSortable *) pa;
+    RectSortable b = *(RectSortable *) pb;
+    float diff = a.fProbs[a.nIdx][b.nCls] - b.fProbs[b.nIdx][b.nCls];
+    if (diff < 0) {
+        return 1;
+    } else if (diff > 0) {
+        return -1;
+    }
+    return 0;
+}
 
 DetectionInternalData::DetectionInternalData()
 {
@@ -156,8 +168,8 @@ DetectionAlgo::DetectionAlgo() : CvdlAlgoBase(detection_algo_func, this, NULL)
     //mImageProcessor.set_ocl_kernel_name(CRC_FORMAT_BGR_PLANNAR);
     mInputWidth = DETECTION_INPUT_W;
     mInputHeight = DETECTION_INPUT_H;
+    mIeInited = false;
 }
-
 
 DetectionAlgo::~DetectionAlgo()
 {
@@ -197,11 +209,18 @@ void DetectionAlgo::set_data_caps(GstCaps *incaps)
     mImageProcessor.get_input_video_size(&mImageProcessorInVideoWidth,
                                          &mImageProcessorInVideoHeight);
     //gst_caps_unref (mOclCaps);
+
+    // load IE and cnn model
+    std::string filenameXML = std::string(MODEL_DIR"/vehicle_detect/yolov1-tiny.xml");
+    algo_dl_init(filenameXML.c_str());
 }
 
-GstFlowReturn DetectionAlgo::algo_dl_init(char* modeFileName)
+GstFlowReturn DetectionAlgo::algo_dl_init(const char* modeFileName)
 {
     GstFlowReturn ret = GST_FLOW_OK;
+    if(mIeInited)
+        return ret;
+    mIeInited = true;
 
     ret = mIeLoader.set_device(InferenceEngine::TargetDevice::eHDDL);
     if(ret != GST_FLOW_OK){
@@ -222,19 +241,6 @@ GstFlowReturn DetectionAlgo::algo_dl_init(char* modeFileName)
         return GST_FLOW_ERROR;
     }
     return ret;
-}
-
-static int nms_comparator(const void *pa, const void *pb)
-{
-    RectSortable a = *(RectSortable *) pa;
-    RectSortable b = *(RectSortable *) pb;
-    float diff = a.fProbs[a.nIdx][b.nCls] - b.fProbs[b.nIdx][b.nCls];
-    if (diff < 0) {
-        return 1;
-    } else if (diff > 0) {
-        return -1;
-    }
-    return 0;
 }
 
 

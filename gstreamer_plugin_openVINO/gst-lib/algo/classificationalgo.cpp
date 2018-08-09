@@ -189,6 +189,7 @@ ClassificationAlgo::ClassificationAlgo() : CvdlAlgoBase(classification_algo_func
     //mImageProcessor.set_ocl_kernel_name(CRC_FORMAT_BGR_PLANNAR);
     mInputWidth = CLASSIFICATION_INPUT_W;
     mInputHeight = CLASSIFICATION_INPUT_H;
+    mIeInited = false;
 }
 
 
@@ -215,12 +216,19 @@ void ClassificationAlgo::set_data_caps(GstCaps *incaps)
     mImageProcessor.get_input_video_size(&mImageProcessorInVideoWidth,
                                          &mImageProcessorInVideoHeight);
     //gst_caps_unref (mOclCaps)
-    //return GST_FLOW_OK;
+
+    // load IE and cnn model
+    // TODO: filename can be passed from application 
+    std::string filenameXML = std::string(MODEL_DIR"/vehicle_classify/carmodel_fine_tune_1062_bn_iter_370000.xml");
+    algo_dl_init(filenameXML.c_str());
 }
 
-GstFlowReturn ClassificationAlgo::algo_dl_init(char* modeFileName)
+GstFlowReturn ClassificationAlgo::algo_dl_init(const char* modeFileName)
 {
     GstFlowReturn ret = GST_FLOW_OK;
+    if(mIeInited)
+        return ret;
+    mIeInited = true;
 
     ret = mIeLoader.set_device(InferenceEngine::TargetDevice::eHDDL);
     if(ret != GST_FLOW_OK){

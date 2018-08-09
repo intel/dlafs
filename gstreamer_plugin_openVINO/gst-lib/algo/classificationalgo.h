@@ -37,9 +37,10 @@ public:
     virtual GstBuffer* dequeue_buffer();
     virtual GstFlowReturn parse_inference_result(InferenceEngine::Blob::Ptr &resultBlobPtr,
                                                       int precision, CvdlAlgoData *outData, int objId);
-    virtual GstFlowReturn algo_dl_init(char* modeFileName);
+    virtual GstFlowReturn algo_dl_init(const char* modeFileName);
 
     IELoader mIeLoader;
+    gboolean mIeInited;
     ImageProcessor mImageProcessor;
     GstCaps *mInCaps;  /* Caps for orignal input video*/
     GstCaps *mOclCaps; /* Caps for output surface of OCL, which has been CRCed, and as the input of this algo */

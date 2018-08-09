@@ -59,7 +59,7 @@ public:
     DetectionAlgo();
     virtual ~DetectionAlgo();
     virtual void set_data_caps(GstCaps *incaps);
-    virtual GstFlowReturn algo_dl_init(char* modeFileName);
+    virtual GstFlowReturn algo_dl_init(const char* modeFileName);
     virtual GstFlowReturn parse_inference_result(InferenceEngine::Blob::Ptr &resultBlobPtr,
                                                  int precision, CvdlAlgoData *outData, int objId);
     void set_default_label_name();
@@ -73,6 +73,7 @@ public:
     void get_result(DetectionInternalData *internalData, CvdlAlgoData *outData);
 
     IELoader mIeLoader;
+    gboolean mIeInited;
     ImageProcessor mImageProcessor;
     GstCaps *mInCaps;  /* Caps for orignal input video*/
     GstCaps *mOclCaps; /* Caps for output surface of OCL, which has been CRCed, and as the input of detection algo */
