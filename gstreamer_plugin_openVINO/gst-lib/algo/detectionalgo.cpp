@@ -169,11 +169,14 @@ DetectionAlgo::DetectionAlgo() : CvdlAlgoBase(detection_algo_func, this, NULL)
     mInputWidth = DETECTION_INPUT_W;
     mInputHeight = DETECTION_INPUT_H;
     mIeInited = false;
+
+    mInCaps = NULL;
 }
 
 DetectionAlgo::~DetectionAlgo()
 {
-
+    if(mInCaps)
+        gst_caps_unref(mInCaps);
 }
 
 void DetectionAlgo::set_default_label_name()
@@ -197,8 +200,8 @@ void DetectionAlgo::set_data_caps(GstCaps *incaps)
         gst_caps_unref(mInCaps);
     mInCaps = gst_caps_copy(incaps);
 
-    if(mOclCaps)
-        gst_caps_unref(mOclCaps);
+    //if(mOclCaps)
+    //    gst_caps_unref(mOclCaps);
 
     //int oclSize = mInputWidth * mInputHeight * 3;
     mOclCaps = gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING, "BGR", NULL);
@@ -208,7 +211,7 @@ void DetectionAlgo::set_data_caps(GstCaps *incaps)
     mImageProcessor.ocl_init(incaps, mOclCaps, IMG_PROC_TYPE_OCL_CRC, CRC_FORMAT_BGR_PLANNAR);
     mImageProcessor.get_input_video_size(&mImageProcessorInVideoWidth,
                                          &mImageProcessorInVideoHeight);
-    //gst_caps_unref (mOclCaps);
+    gst_caps_unref (mOclCaps);
 
     // load IE and cnn model
     std::string filenameXML = std::string(MODEL_DIR"/vehicle_detect/yolov1-tiny.xml");

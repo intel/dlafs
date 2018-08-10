@@ -33,6 +33,7 @@ ImageProcessor::ImageProcessor()
     gst_video_info_init (&mInVideoInfo);
     gst_video_info_init (&mOutVideoInfo);
 
+    mOclInited = false;
     mPool = NULL;
     mOclFormat = CRC_FORMAT_BGR_PLANNAR; // default is plannar
 }
@@ -81,7 +82,7 @@ GstFlowReturn ImageProcessor::ocl_init(GstCaps *incaps, GstCaps *oclcaps, int vp
                 GST_ERROR ("Failed to init ImageProcessor: no oclcaps info found!");
                 return GST_FLOW_ERROR;
             }
-            mPool = ocl_pool_create (incaps, mInVideoInfo.size, 3, 16);
+            mPool = ocl_pool_create (oclcaps, mOutVideoInfo.size, 3, 16);
             break;
         case IMG_PROC_TYPE_OCL_BLENDER:
             mPool = NULL;

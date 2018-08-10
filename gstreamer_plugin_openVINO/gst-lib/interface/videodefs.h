@@ -199,6 +199,12 @@ typedef struct _OclGstMfxVideoMeta
   VADisplay display_id;
 }OclGstMfxVideoMeta;
 
+typedef struct _OclGstMfxVideoMetaHolder
+{
+  GstMeta base;
+  OclGstMfxVideoMeta *meta;
+}OclGstMfxVideoMetaHolder;
+
 typedef struct {
     cl_mem      mem;
     uint32_t    fourcc;

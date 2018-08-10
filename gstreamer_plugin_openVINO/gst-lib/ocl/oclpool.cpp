@@ -79,8 +79,12 @@ ocl_pool_set_config (GstBufferPool* pool, GstStructure* config)
         return FALSE;
     }
 
-    //FIXME: support BGR3 only
-    g_return_val_if_fail ((GST_VIDEO_FORMAT_BGR == info.finfo->format) , FALSE);
+    //FIXME: support BGR3 and GRAY8 only
+    if( (info.finfo->format != GST_VIDEO_FORMAT_GRAY8) &&
+        (info.finfo->format != GST_VIDEO_FORMAT_BGR) ) {
+        GST_WARNING_OBJECT (pool, "Got invalid format when config pool!");
+        return FALSE;
+    }
 
     if (size < info.size) {
         GST_WARNING_OBJECT (pool, "Provided size is to small for the caps: %u", size);
@@ -95,9 +99,12 @@ ocl_pool_set_config (GstBufferPool* pool, GstStructure* config)
     priv->caps = gst_caps_ref (caps);
     priv->add_videometa = FALSE;   //TODO
 
-    // Only support BRG format
+    // Only support BRG/Gray8 format
     info.offset[1] = info.offset[2] = 0;
-    info.stride[0] = info.width * 3;
+    if(info.finfo->format == GST_VIDEO_FORMAT_BGR)
+        info.stride[0] = info.width * 3;
+    else if(info.finfo->format == GST_VIDEO_FORMAT_GRAY8)
+        info.stride[0] = info.width;
     info.size = MAX (size, info.size);
     priv->info = info;
 

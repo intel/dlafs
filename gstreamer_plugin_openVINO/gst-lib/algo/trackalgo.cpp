@@ -117,11 +117,14 @@ TrackAlgo::TrackAlgo():CvdlAlgoBase(track_algo_func, this, NULL)
     //mImageProcessor.set_ocl_kernel_name(CRC_FORMAT_GRAY);
 
     mPreFrame = NULL;
+    mOclCaps = NULL;
+    mInCaps = NULL;
 }
 
 TrackAlgo::~TrackAlgo()
 {
-
+    if(mInCaps)
+        gst_caps_unref(mInCaps);
 }
 
 cv::UMat& TrackAlgo::get_umat(GstBuffer *buffer)
@@ -145,8 +148,8 @@ void TrackAlgo::set_data_caps(GstCaps *incaps)
         gst_caps_unref(mInCaps);
     mInCaps = gst_caps_copy(incaps);
 
-    if(mOclCaps)
-        gst_caps_unref(mOclCaps);
+    //if(mOclCaps)
+    //    gst_caps_unref(mOclCaps);
 
     // set OCL surface: width and height and format
     //   Object track will use gray data format
@@ -158,7 +161,7 @@ void TrackAlgo::set_data_caps(GstCaps *incaps)
     mImageProcessor.ocl_init(incaps, mOclCaps, IMG_PROC_TYPE_OCL_CRC, CRC_FORMAT_GRAY);
     mImageProcessor.get_input_video_size(&mImageProcessorInVideoWidth,
                                          &mImageProcessorInVideoHeight);
-    //gst_caps_unref (mOclCaps);
+    gst_caps_unref (mOclCaps);
 }
 
 /**

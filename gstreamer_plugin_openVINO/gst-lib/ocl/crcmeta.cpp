@@ -192,8 +192,8 @@ OclGstMfxVideoMeta *gst_buffer_get_mfx_meta (GstBuffer * buffer)
     gpointer state = NULL;
     GstMeta *meta_item;
     while ((meta_item = gst_buffer_iterate_meta (buffer, &state))) {
-        OclGstMfxVideoMeta *meta = (OclGstMfxVideoMeta *)meta_item;
-        if (meta->token == 0xFACED) {
+        OclGstMfxVideoMeta *meta = ((OclGstMfxVideoMetaHolder *)meta_item)->meta;
+        if (meta && (meta->token == 0xFACED)) {
             result = meta;
             break;
         }
