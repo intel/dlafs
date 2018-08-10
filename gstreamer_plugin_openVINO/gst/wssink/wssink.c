@@ -63,9 +63,83 @@ GST_STATIC_PAD_TEMPLATE ("sink_txt",
 
 static GstElementClass *parent_class = NULL;
 
-static void gst_ws_sink_get_times (GstWsSink * basesink, GstBuffer * buffer,
-    GstClockTime * start, GstClockTime * end);
+static void gst_ws_sink_get_times (GstWsSink * basesink, GstBuffer * buffer, GstClockTime * start);
 
+#define INVALID_BUFFER_TS (-1)
+// get the bit buffer and txt buffer with the same ts
+// if not, find the earliest buffer as the output
+static void get_buffers_with_same_ts(GstWsSink * basesink, GstBuffer **bit_buf, GstBuffer **txt_buf)
+{
+    GstBuffer *bit_buf_temp, *txt_buf_temp;
+    GstClockTime bit_ts=INVALID_BUFFER_TS;
+    GstClockTime txt_ts=INVALID_BUFFER_TS;
+    GstWsSinkPrivate *priv = basesink->priv;
+
+    txt_buf_temp = NULL;
+    bit_buf_temp = NULL;
+
+    // try to get a buffer of bitstream
+    GST_WS_SINK_BIT_LOCK(basesink);
+    if(gst_buffer_list_length(basesink->bit_list)>0) {
+        bit_buf_temp = gst_buffer_list_get(basesink->bit_list,0);
+        gst_ws_sink_get_times(basesink, bit_buf_temp, &bit_ts);
+    }
+    GST_WS_SINK_BIT_UNLOCK(basesink);
+
+    // try to get a buffer of txt data
+    GST_WS_SINK_TXT_LOCK(basesink);
+    if(gst_buffer_list_length(basesink->txt_list)>0) {
+        txt_buf_temp = gst_buffer_list_get(basesink->txt_list,0);
+        gst_ws_sink_get_times(basesink, txt_buf_temp, &txt_ts);
+    }
+    GST_WS_SINK_TXT_UNLOCK(basesink);
+
+    // TODO: align bit buffer and txt buffer
+
+    // can not get any, return NULL
+    if(G_UNLIKELY((!bit_buf_temp && !txt_buf_temp))) {
+        *txt_buf = NULL;
+        *bit_buf = NULL;
+        return;
+    }
+
+    // bit buffer is early, only return it
+    if(G_UNLIKELY(bit_ts < txt_ts)){
+        GST_WS_SINK_BIT_LOCK(basesink);
+        gst_buffer_list_remove(basesink->bit_list, 0, 1);
+        GST_WS_SINK_BIT_UNLOCK(basesink);
+        priv->bit_processed_num++;
+        *txt_buf = NULL;
+        *bit_buf = bit_buf_temp;
+        return;
+    }
+
+    // txt buffer is early, only return it
+    if(G_UNLIKELY(txt_ts < bit_ts)){
+        GST_WS_SINK_TXT_LOCK(basesink);
+        gst_buffer_list_remove(basesink->txt_list, 0, 1);
+        GST_WS_SINK_TXT_UNLOCK(basesink);
+        priv->txt_processed_num++;
+        *txt_buf = txt_buf_temp;
+        *bit_buf = NULL;
+        return;
+    }
+
+    GST_WS_SINK_BIT_LOCK(basesink);
+    gst_buffer_list_remove(basesink->bit_list, 0, 1);
+    GST_WS_SINK_BIT_UNLOCK(basesink);
+    priv->bit_processed_num++;
+
+    GST_WS_SINK_TXT_LOCK(basesink);
+    gst_buffer_list_remove(basesink->txt_list, 0, 1);
+    GST_WS_SINK_TXT_UNLOCK(basesink);
+    priv->txt_processed_num++;
+
+    *txt_buf = txt_buf_temp;
+    *bit_buf = bit_buf_temp;
+
+    return;
+}
 // Main function to processed buffer into next filter
 //      1. package jpeg bitstream and inference result data
 //      2. send out by WebSocket
@@ -73,36 +147,22 @@ static void process_sink_buffers(gpointer userData)
 {
     GstWsSink *basesink;
     basesink = GST_WS_SINK (userData);
-    GstBuffer *bit_buf, *txt_buf;
-    GstWsSinkPrivate *priv = basesink->priv;
-    GstClockTime bit_start, txt_start, bit_end, txt_end;
+    GstBuffer *bit_buf = NULL, *txt_buf = NULL;
+    //GstWsSinkPrivate *priv = basesink->priv;
 
-    // TODO: align bit buffer and txt buffer
-    GST_WS_SINK_BIT_LOCK(basesink);
-    if(gst_buffer_list_length(basesink->bit_list)>0) {
-        bit_buf = gst_buffer_list_get(basesink->bit_list,0);
-        gst_buffer_list_remove(basesink->bit_list, 0, 1);
-        priv->bit_processed_num++;
+    get_buffers_with_same_ts(basesink, &bit_buf, &txt_buf);
+    if(!bit_buf && !txt_buf){
+        GST_INFO("Not buffer, do nothing!");
+        return;
     }
-    GST_WS_SINK_BIT_LOCK(basesink);
-
-
-    GST_WS_SINK_TXT_LOCK(basesink);
-    if(gst_buffer_list_length(basesink->txt_list)>0) {
-        txt_buf = gst_buffer_list_get(basesink->txt_list,0);
-        gst_buffer_list_remove(basesink->txt_list, 0, 1);
-        priv->txt_processed_num++;
-    }
-    GST_WS_SINK_TXT_LOCK(basesink);
-
-    gst_ws_sink_get_times(basesink, bit_buf, &bit_start, &bit_end);
-    gst_ws_sink_get_times(basesink, txt_buf, &txt_start, &txt_end);
 
     // TODO: parse gstbuffer and package them
 
     // release buffer
-    gst_buffer_unref(bit_buf);
-    gst_buffer_unref(txt_buf);
+    if(bit_buf)
+        gst_buffer_unref(bit_buf);
+    if(txt_buf)
+        gst_buffer_unref(txt_buf);
 }
 
 static GstCaps *
@@ -210,13 +270,10 @@ gst_ws_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
   return result;
 }
 
-/* default implementation to calculate the start and end
- * timestamps on a buffer, subclasses can override
- */
-static void gst_ws_sink_get_times (GstWsSink * basesink, GstBuffer * buffer,
-    GstClockTime * start, GstClockTime * end)
+/* get the timestamps on this buffer */
+static void gst_ws_sink_get_times (GstWsSink * basesink, GstBuffer * buffer, GstClockTime * start)
 {
-  GstClockTime timestamp, duration;
+  GstClockTime timestamp;
 
   /* first sync on DTS, else use PTS */
   timestamp = GST_BUFFER_DTS (buffer);
@@ -224,12 +281,9 @@ static void gst_ws_sink_get_times (GstWsSink * basesink, GstBuffer * buffer,
     timestamp = GST_BUFFER_PTS (buffer);
 
   if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
-    /* get duration to calculate end time */
-    duration = GST_BUFFER_DURATION (buffer);
-    if (GST_CLOCK_TIME_IS_VALID (duration)) {
-      *end = timestamp + duration;
-    }
     *start = timestamp;
+  } else {
+    *start = 0;
   }
 }
 
@@ -550,6 +604,10 @@ gst_ws_sink_finalize (GObject * object)
     GstWsSink *basesink;
     basesink = GST_WS_SINK (object);
 
+    gst_task_stop(basesink->task);
+    gst_task_join(basesink->task);
+    gst_object_unref(basesink->task);
+
     g_mutex_clear (&basesink->lock);
     g_cond_clear (&basesink->cond);
 
@@ -557,11 +615,6 @@ gst_ws_sink_finalize (GObject * object)
     gst_buffer_list_unref (basesink->txt_list);
     //g_mutex_clear(&basesink->bit_lock);
     //g_mutex_clear(&basesink->txt_lock);
-
-    gst_task_stop(basesink->task);
-    gst_task_join(basesink->task);
-
-    gst_object_unref(basesink->task);
 
     G_OBJECT_CLASS (parent_class)->finalize (object);
 }
