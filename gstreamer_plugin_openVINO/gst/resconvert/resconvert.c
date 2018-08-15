@@ -49,7 +49,7 @@ enum
 enum
 {
   PROP_0,
-  /* FILL ME */
+  /* FILL ME for more properties*/
 };
 
 enum
@@ -60,14 +60,8 @@ enum
 
 struct _ResOclBlendPrivate
 {
-    //SharedPtr<VideoFrame> src_frame;
-    //SharedPtr<VideoFrame> dst_frame;
+    // TODO: Put more private data here
     int id;
-
-    //SharedPtr<OclContext> ctx;
-    //SharedPtr<VppInterface> vpp_blend;
-
-    //gboolean cl_inited;
 };
 
 
@@ -75,6 +69,7 @@ struct _ResOclBlendPrivate
     (G_TYPE_INSTANCE_GET_PRIVATE ((obj), TYPE_RES_CONVERT, ResOclBlendPrivate))
 
 
+// SINK pad caps - the same with mfxdec src pad caps
 static const char sink_caps_str[] = \
     GST_VIDEO_CAPS_MAKE ("NV12") "; " \
     GST_VIDEO_CAPS_MAKE_WITH_FEATURES("memory:MFXSurface", "{ NV12 }");
@@ -87,6 +82,7 @@ static GstStaticPadTemplate sink_factory =
     GST_STATIC_CAPS (sink_caps_str)
     );
 
+// PIC_SRC pad caps - the same with mfxdec src pad caps
 static const char src_pic_caps_str[] = \
     GST_VIDEO_CAPS_MAKE ("NV12") "; " \
     GST_VIDEO_CAPS_MAKE_WITH_FEATURES("memory:MFXSurface", "{ NV12 }");
@@ -99,245 +95,18 @@ static GstStaticPadTemplate src_pic_factory =
     GST_STATIC_CAPS (src_pic_caps_str)
     );
 
+// TXT_SRC pad caps
+static const char src_txt_caps_str[] = "data/res_txt";
 static GstStaticPadTemplate src_txt_factory =
 GST_STATIC_PAD_TEMPLATE (
     "src_txt",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
-    GST_STATIC_CAPS_ANY
+    GST_STATIC_CAPS (src_txt_caps_str)
+    /*GST_STATIC_CAPS_ANY*/
     );
 
-static void res_convert_base_init (ResConvertClass * klass);
-static void res_convert_class_init (ResConvertClass * klass);
-static void res_convert_init (ResConvert * convertor);
-static void res_convert_finalize (ResConvert * convertor);
-static void res_convert_reset (ResConvert * convertor);
-
-static gboolean res_convert_sink_event (GstPad * pad, GstObject * parent, GstEvent * event);
-static GstFlowReturn res_convert_chain (GstPad * pad, GstObject * parent,  GstBuffer * buffer);
-static gboolean res_convert_sink_activate (GstPad * sinkpad, GstObject * parent);
-static gboolean res_convert_sink_activate_mode (GstPad * pad, GstObject * parent, GstPadMode mode, gboolean active);
-
-static gboolean res_convert_query (GstPad * pad, GstObject * parent, GstQuery * query);
-static gboolean res_convert_src_event (GstPad * pad, GstObject * parent, GstEvent * event);
-static gboolean res_convert_create_src_pad (ResConvert * convertor, gint stream_type);
-
-static GstStateChangeReturn res_convert_change_state (GstElement * element, GstStateChange transition);
-
-static void res_convert_flush (ResConvert * convertor);
-
-
 /*static guint res_convert_signals[LAST_SIGNAL] = { 0 };*/
-
-#if 0
-static void res_ocl_context_init(ResConvert * convertor, VADisplay display)
-{
-    OclBlendPrivate *priv = convertor->priv = RES_CONVERT_GET_PRIVATE (convertor);
-
-    if(priv->cl_inited)
-        return;
-
-    priv->ctx = OclContext::create(display);
-    if (!SHARED_PTR_IS_VALID (priv->ctx)) {
-        GST_DEBUG ("oclblend: failed to create ocl ctx");
-        return;
-    }
-
-    priv->vpp_blend.reset (NEW_VPP_SHARED_PTR (OCL_VPP_BLENDER));
-    if (!SHARED_PTR_IS_VALID (priv->vpp_blend) ||
-        (OCL_SUCCESS != priv->vpp_blend->setOclContext (priv->ctx))) {
-        GST_DEBUG ("oclblend: failed to init vpp_blend");
-        priv->vpp_blend.reset ();
-    }
-
-    priv->cl_inited = true;
-}
-#endif
-
-GType
-res_convert_get_type (void)
-{
-  static GType res_convert_type = 0;
-
-  if (!res_convert_type) {
-    static const GTypeInfo res_convert_info = {
-      sizeof (ResConvertClass),
-      (GBaseInitFunc) res_convert_base_init,
-      NULL,
-      (GClassInitFunc) res_convert_class_init,
-      NULL,
-      NULL,
-      sizeof (ResConvert),
-      0,
-      (GInstanceInitFunc) res_convert_init,
-      NULL
-    };
-
-    res_convert_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "ResConvert",
-        &res_convert_info, 0);
-
-    GST_DEBUG_CATEGORY_INIT (resconvert_debug, "resconvert", 0,
-        "Inference result convertor element");
-  }
-
-  return res_convert_type;
-}
-
-static void
-res_convert_base_init (ResConvertClass * klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  klass->sink_template    = gst_static_pad_template_get (&sink_factory);
-  klass->src_pic_template = gst_static_pad_template_get (&src_pic_factory);
-  klass->src_txt_template = gst_static_pad_template_get (&src_txt_factory);
-
-  gst_element_class_add_pad_template (element_class, klass->src_pic_template);
-  gst_element_class_add_pad_template (element_class, klass->src_txt_template);
-  gst_element_class_add_pad_template (element_class, klass->sink_template);
-
-  gst_element_class_set_static_metadata (element_class,
-      "Inference result convertor", "Transform/PostProcess",
-      "Convert inference result into OSD", "River Li<river.li@intel.com>");
-}
-
-static void
-res_convert_class_init (ResConvertClass * klass)
-{
-  GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
-
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
-
-  gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
-
-  gobject_class->finalize = (GObjectFinalizeFunc) res_convert_finalize;
-  gstelement_class->change_state = res_convert_change_state;
-
-  g_type_class_add_private (klass, sizeof (ResOclBlendPrivate));
-}
-
-static void
-res_convert_init (ResConvert * convertor)
-{
-    ResConvertClass *klass = RES_CONVERT_GET_CLASS (convertor);
-    GstCaps *caps = gst_caps_new_any();
-
-    /* Create sink pad */
-    convertor->sinkpad = gst_pad_new_from_template (klass->sink_template, "sink");
-    gst_pad_set_event_function (convertor->sinkpad, GST_DEBUG_FUNCPTR (res_convert_sink_event));
-    gst_pad_set_query_function (convertor->sinkpad, GST_DEBUG_FUNCPTR (res_convert_query));
-    gst_pad_set_chain_function (convertor->sinkpad, GST_DEBUG_FUNCPTR (res_convert_chain));
-    gst_pad_set_activate_function (convertor->sinkpad, GST_DEBUG_FUNCPTR (res_convert_sink_activate));
-    gst_pad_set_activatemode_function (convertor->sinkpad,  GST_DEBUG_FUNCPTR (res_convert_sink_activate_mode));
-    gst_element_add_pad (GST_ELEMENT (convertor), convertor->sinkpad);
-
-    /* create a pool for src_txt buffer */
-    convertor->src_pool = res_pool_create (caps, sizeof(InferenceData), 3, 10);
-
-    /* create src pads */
-    //TODO: also we can create src pads dynamically in future
-    res_convert_create_src_pad (convertor, STREAM_TYPE_TXT);
-    res_convert_create_src_pad (convertor, STREAM_TYPE_PIC);
-
-    convertor->priv = RES_CONVERT_GET_PRIVATE (convertor);
-    gst_video_info_init (&convertor->sink_info);
-    gst_video_info_init (&convertor->src_info);
-
-    convertor->blend_handle = blender_create();
-}
-
-static void
-res_convert_finalize (ResConvert * convertor)
-{
-
-    // g_object_unref() --> gst_element_dispose
-    // will unref all the pads
-    #if 0
-    res_convert_reset (convertor);
-    if(convertor->sinkpad) {
-        if(GST_PAD_PARENT(convertor->sinkpad)){
-            gst_element_remove_pad (GST_ELEMENT_CAST (convertor), convertor->sinkpad);
-        }
-        gst_object_unref(convertor->sinkpad);
-        convertor->sinkpad = NULL;
-    }
-    #endif
-    if(convertor->src_pool) {
-        gst_object_unref (convertor->src_pool);
-        convertor->src_pool = NULL;
-    }
-    blender_destroy(convertor->blend_handle);
-    G_OBJECT_CLASS (parent_class)->finalize (G_OBJECT (convertor));
-}
-
-static void
-res_convert_reset (ResConvert * convertor)
-{
-    // g_object_unref() --> gst_element_dispose
-    // will unref all the pads
-    #if 0
-    /* Clean up the streams and pads we allocated */
-    if(convertor->pic_srcpad){
-        if(GST_PAD_PARENT(convertor->pic_srcpad)){
-            gst_element_remove_pad (GST_ELEMENT_CAST (convertor), convertor->pic_srcpad);
-        }
-        gst_object_unref(convertor->pic_srcpad);
-        convertor->pic_srcpad = NULL;
-    }
-
-    if(convertor->txt_srcpad){
-        if(GST_PAD_PARENT(convertor->txt_srcpad)){
-            gst_element_remove_pad (GST_ELEMENT_CAST (convertor), convertor->txt_srcpad);
-        }
-        gst_object_unref(convertor->txt_srcpad);
-        convertor->txt_srcpad = NULL;
-    }
-    #endif
-}
-
-static gboolean
-res_convert_create_src_pad (ResConvert * convertor, gint stream_type)
-{
-  ResConvertClass *klass = RES_CONVERT_GET_CLASS (convertor);
-  GST_DEBUG_OBJECT (convertor, "create src pad, type: 0x%02x", stream_type);
-
-  switch (stream_type) {
-    case STREAM_TYPE_TXT:
-    {
-      convertor->txt_srcpad = gst_pad_new_from_template (klass->src_txt_template, "src_txt");
-      gst_pad_set_event_function (convertor->txt_srcpad, GST_DEBUG_FUNCPTR (res_convert_src_event));
-      gst_pad_set_query_function (convertor->txt_srcpad, GST_DEBUG_FUNCPTR (res_convert_query));
-      gst_pad_use_fixed_caps (convertor->txt_srcpad);
-      if (!gst_pad_set_active (convertor->txt_srcpad, TRUE)) {
-        GST_WARNING_OBJECT (convertor, "Failed to activate pad %" GST_PTR_FORMAT, convertor->txt_srcpad);
-        return FALSE;
-      }
-      gst_element_add_pad (GST_ELEMENT (convertor), convertor->txt_srcpad);
-      break;
-    }
-    case STREAM_TYPE_PIC:
-    {
-        convertor->pic_srcpad = gst_pad_new_from_template (klass->src_pic_template, "src_pic");
-        gst_pad_set_event_function (convertor->pic_srcpad, GST_DEBUG_FUNCPTR (res_convert_src_event));
-        gst_pad_set_query_function (convertor->pic_srcpad, GST_DEBUG_FUNCPTR (res_convert_query));
-        gst_pad_use_fixed_caps (convertor->pic_srcpad);
-        if (!gst_pad_set_active (convertor->pic_srcpad, TRUE)) {
-          GST_WARNING_OBJECT (convertor, "Failed to activate pad %" GST_PTR_FORMAT, convertor->pic_srcpad);
-          return FALSE;
-        }
-        gst_element_add_pad (GST_ELEMENT (convertor), convertor->pic_srcpad);
-        break;
-    }
-    default:
-      break;
-  }
-
-  return TRUE;
-}
-
 
 static GstFlowReturn
 res_convert_fill_txt_data(ResMemory *res_mem, CvdlMeta *cvdl_meta)
@@ -467,10 +236,18 @@ res_convert_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     case GST_EVENT_CAPS:
       gst_event_parse_caps (event, &caps);
 
-      // set caps??
-      
+      //set caps here
+
+      // dead-loop if call below function
+      //gst_pad_set_caps (convertor->sinkpad, caps);
+
+      // set caps for pic_srcpad
+      gst_pad_set_caps (convertor->pic_srcpad, caps);
       gst_video_info_from_caps (&convertor->sink_info, caps);
       gst_event_unref (event);
+
+      // TODO: set caps for txt_srcpad
+
       break;
     default:
       res_convert_send_event (convertor, event);
@@ -527,137 +304,22 @@ res_convert_sink_activate (GstPad * sinkpad, GstObject * parent)
 
 /* This function gets called when we activate ourselves in push mode. */
 static gboolean
-res_convert_sink_activate_push (GstPad * sinkpad, GstObject * parent,
-    gboolean active)
-{
-  //ResConvert *convertor = RES_CONVERT (parent);
-  return TRUE;
-}
-
-static gboolean
 res_convert_sink_activate_mode (GstPad * pad, GstObject * parent,
     GstPadMode mode, gboolean active)
 {
-  if (mode == GST_PAD_MODE_PUSH) {
-    return res_convert_sink_activate_push (pad, parent, active);
-  } 
-  return FALSE;
+    gboolean res = TRUE;
+
+    switch (mode) {
+      case GST_PAD_MODE_PUSH:
+        res = TRUE;
+        break;
+      default:
+        GST_LOG_OBJECT (pad, "unknown activation mode %d", mode);
+        res = FALSE;
+        break;
+    }
+    return res;
 }
-
-#if 0
-static GstFlowReturn create_osd_pool_if_possible(ResConvert *convertor, GstPad * pad)
-{
-    GstCaps *caps = NULL, *pad_caps;
-    GstVideoInfo info;
-    int width, height, size;
-    if(convertor->osd_pool)
-        return GST_FLOW_OK;
-
-    // Get pad caps for video width/heigh
-    pad_caps = gst_pad_get_current_caps(pad);
-    gst_video_info_from_caps (&info, pad_caps);
-    width = info.width;
-    height = info.height;
-
-    // ocl pool will allocate the same size osd buffer with BRG format
-    size = width * height * 3;
-    caps = gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING, "BGR", NULL);
-    gst_caps_set_simple (caps, "width", G_TYPE_INT, width, "height",
-      G_TYPE_INT, height, NULL);
-
-    convertor->osd_pool = ocl_pool_create (caps, size, 3,10);
-    gst_caps_unref (caps);
-    return GST_FLOW_OK;
-}
-
-static GstFlowReturn generate_osd(GstBuffer * osd_buf, GstBuffer *input_buf)
-{
-    OclMemory *osd_mem = ocl_memory_acquire(osd_buf);
-    g_return_val_if_fail(osd_mem, GST_FLOW_ERROR);
-
-    CvdlMeta *cvdl_meta = gst_buffer_get_cvdl_meta(input_buf);
-    g_return_val_if_fail(cvdl_meta, GST_FLOW_ERROR);
-
-    InferenceMeta *inference_result = cvdl_meta->inference_result;
-    int meta_count = cvdl_meta->meta_count;
-    int i;
-    cv::Mat mdraw = osd_mem->frame.getMat(0);
-
-    for(i=0;i<meta_count && inference_result;i++){
-
-        VideoRect *rect = &inference_result->rect;
-        std::string strTxt;
-        // Create an output string stream
-	    std::ostringstream stream_prob;
-	    stream_prob << std::fixed << std::setprecision(3) << inference_result->probility;
-
-        // Write label and probility
-        strTxt << inference_result->label << "(prob= " stream_prob.str() << ")";
-        cv::putText(mdraw, strTxt, cv::Point(rect->x, rect->y), 1, 1.5, cv::Scalar(0, 255, 255), 2);
-
-        // Draw rectangle on target object
-        cv::Rect target_rect(rect->x, rect->y, rect->width, rect->heigh);
-        cv::rectangle(mdraw, target_rect, cv::Scalar(0, 255, 0), 2);
-
-        inference_result = inference_result->next;
-    }
-    if(i==meta_count)
-        return GST_FLOW_OK;
-    else
-        return GST_FLOW_ERROR;
-}
-
-static GstFlowReturn
-blend_osd(ResConvert *convertor, GstBuffer *osd_buf, GstBuffer *dst_buf)
-{
-    GstBuffer *buffer = NULL;
-    OclMemory *osd_mem, *dst_mem;
-
-    ResOclBlendPrivate *priv = convertor->priv;
-    if (!SHARED_PTR_IS_VALID (priv->ctx) ||
-        (dst_buf && !SHARED_PTR_IS_VALID (priv->vpp_blend))) {
-        GST_ERROR_OBJECT (convertor, "invalid oclblend");
-        return GST_FLOW_ERROR;
-    }
-
-    // osd memory is OCL buffer
-    osd_mem = ocl_memory_acquire (osd_buf);
-    if (!osd_mem) {
-        GST_ERROR ("Failed to acquire ocl memory from osd_buf");
-        return GST_FLOW_ERROR;
-    }
-    priv->src_frame->fourcc = osd_mem->fourcc;
-    priv->src_frame->surface = osd_mem->mem;
-
-
-    /* Output data must be NV12 surface from mfxdec element */
-    priv->dst_frame->fourcc = video_format_to_va_fourcc (GST_VIDEO_INFO_FORMAT (&convertor->sink_info));
-    priv->dst_frame->surface= gst_get_mfx_surface (dst_buf, convertor->sink_info, &display);
-    priv->dst_frame->width  = convertor->sink_info->width;
-    priv->dst_frame->height = convertor->sink_info->height;
-
-    if(priv->src_frame->surface == VA_INVALID_SURFACE) {
-        GST_ERROR ("Failed to map VASurface to CL_MEM!");
-        return GST_FLOW_ERROR;
-    }
-    if(!priv->cl_inited) {
-        res_ocl_context_init(convertor, display);
-    }
-
-
-    if (priv->dst_frame->fourcc != OCL_FOURCC_NV12) {
-        GST_ERROR ("only support RGBA blending on NV12 video frame");
-        return GST_FLOW_ERROR;
-    }
-
-    // blend osd
-    priv->vpp_blend->process (priv->src_frame, priv->dst_frame);
-    //priv->ctx->setDestSurface ((VASurfaceID*)&priv->dst_frame->surface);
-
-    priv->ctx->finish ();
-    return GST_FLOW_OK;
-}
-#endif
 
 static GstFlowReturn
 res_convert_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
@@ -670,23 +332,13 @@ res_convert_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
         GST_BUFFER_OFFSET (buffer));
 
     // create osd pool if it not created before
-    //create_osd_pool_if_possible(convertor, pad);
     blender_init(convertor->blend_handle ,pad);
 
     // Process the input buffer - draw data into NV12 surface by OpenCV
     // The src_pic will connect to a queue filter to cache the data
     // step 1: create a RGB OSD and draw string/rectangle/track points on it
-    //GstBuffer *osd = ocl_buffer_alloc(convertor->osd_pool);
-    //ret = generate_osd(osd, buffer);
-    //if(ret!=GST_FLOW_OK) {
-    //    gst_buffer_unref(osd);
-    //    return ret;
-    //}
-
     // step 2: call OpenCL to blend OSD with NV12 surface, into OSD buffer?
     // It is better to blend OSD int NV12 surface
-    //ret = blend_osd(convertor, osd, buffer);
-    //gst_buffer_unref(osd);
     ret = blender_process_cvdl_buffer(convertor->blend_handle, buffer);
 
     // push the result
@@ -696,6 +348,54 @@ res_convert_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
         gst_buffer_unref(buffer);
 
     return ret;
+}
+
+static gboolean
+res_convert_create_src_pad (ResConvert * convertor, gint stream_type)
+{
+  ResConvertClass *klass = RES_CONVERT_GET_CLASS (convertor);
+  GST_DEBUG_OBJECT (convertor, "create src pad, type: 0x%02x", stream_type);
+
+  switch (stream_type) {
+    case STREAM_TYPE_TXT:
+    {
+      convertor->txt_srcpad = gst_pad_new_from_template (klass->src_txt_template, "src_txt");
+      gst_pad_set_event_function (convertor->txt_srcpad, GST_DEBUG_FUNCPTR (res_convert_src_event));
+      gst_pad_set_query_function (convertor->txt_srcpad, GST_DEBUG_FUNCPTR (res_convert_query));
+      gst_pad_use_fixed_caps (convertor->txt_srcpad);
+      if (!gst_pad_set_active (convertor->txt_srcpad, TRUE)) {
+        GST_WARNING_OBJECT (convertor, "Failed to activate pad %" GST_PTR_FORMAT, convertor->txt_srcpad);
+        return FALSE;
+      }
+      gst_element_add_pad (GST_ELEMENT (convertor), convertor->txt_srcpad);
+      break;
+    }
+    case STREAM_TYPE_PIC:
+    {
+        convertor->pic_srcpad = gst_pad_new_from_template (klass->src_pic_template, "src_pic");
+        gst_pad_set_event_function (convertor->pic_srcpad, GST_DEBUG_FUNCPTR (res_convert_src_event));
+        gst_pad_set_query_function (convertor->pic_srcpad, GST_DEBUG_FUNCPTR (res_convert_query));
+        gst_pad_use_fixed_caps (convertor->pic_srcpad);
+        if (!gst_pad_set_active (convertor->pic_srcpad, TRUE)) {
+          GST_WARNING_OBJECT (convertor, "Failed to activate pad %" GST_PTR_FORMAT, convertor->pic_srcpad);
+          return FALSE;
+        }
+        gst_element_add_pad (GST_ELEMENT (convertor), convertor->pic_srcpad);
+        break;
+    }
+    default:
+      break;
+  }
+
+  return TRUE;
+}
+
+
+static void
+res_convert_reset (ResConvert * convertor)
+{
+    // It should unref all the pads
+    // but g_object_unref() --> gst_element_dispose has done it
 }
 
 static GstStateChangeReturn
@@ -727,5 +427,121 @@ res_convert_change_state (GstElement * element, GstStateChange transition)
   }
 
   return result;
+}
+
+static void
+res_convert_finalize (ResConvert * convertor)
+{
+    // g_object_unref() --> gst_element_dispose
+    // it has unref all the pads
+
+    // release pool
+    if(convertor->src_pool) {
+        gst_object_unref (convertor->src_pool);
+        convertor->src_pool = NULL;
+    }
+    blender_destroy(convertor->blend_handle);
+    G_OBJECT_CLASS (parent_class)->finalize (G_OBJECT (convertor));
+}
+
+static void
+res_convert_base_init (ResConvertClass * klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  klass->sink_template    = gst_static_pad_template_get (&sink_factory);
+  klass->src_pic_template = gst_static_pad_template_get (&src_pic_factory);
+  klass->src_txt_template = gst_static_pad_template_get (&src_txt_factory);
+
+  gst_element_class_add_pad_template (element_class, klass->src_pic_template);
+  gst_element_class_add_pad_template (element_class, klass->src_txt_template);
+  gst_element_class_add_pad_template (element_class, klass->sink_template);
+
+  gst_element_class_set_static_metadata (element_class,
+      "Inference result convertor", "Transform/PostProcess",
+      "Convert inference result into OSD", "River Li<river.li@intel.com>");
+}
+
+static void
+res_convert_class_init (ResConvertClass * klass)
+{
+  GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
+
+  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+
+  gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
+
+  gobject_class->finalize = (GObjectFinalizeFunc) res_convert_finalize;
+  gstelement_class->change_state = res_convert_change_state;
+
+  g_type_class_add_private (klass, sizeof (ResOclBlendPrivate));
+}
+
+static void
+res_convert_init (ResConvert * convertor)
+{
+    ResConvertClass *klass = RES_CONVERT_GET_CLASS (convertor);
+    //GstCaps *caps = gst_caps_new_any();
+
+    //TODO:
+    GstCaps *caps = gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING, "BGR", NULL);
+    gst_caps_set_simple (caps, "width", G_TYPE_INT, sizeof(InferenceData), "height",
+      G_TYPE_INT, 1, NULL);
+
+    /* Create sink pad */
+    convertor->sinkpad = gst_pad_new_from_template (klass->sink_template, "sink");
+    gst_pad_set_event_function (convertor->sinkpad, GST_DEBUG_FUNCPTR (res_convert_sink_event));
+    gst_pad_set_query_function (convertor->sinkpad, GST_DEBUG_FUNCPTR (res_convert_query));
+    gst_pad_set_chain_function (convertor->sinkpad, GST_DEBUG_FUNCPTR (res_convert_chain));
+    gst_pad_set_activate_function (convertor->sinkpad, GST_DEBUG_FUNCPTR (res_convert_sink_activate));
+    gst_pad_set_activatemode_function (convertor->sinkpad,  GST_DEBUG_FUNCPTR (res_convert_sink_activate_mode));
+    gst_element_add_pad (GST_ELEMENT (convertor), convertor->sinkpad);
+
+    /* create a pool for src_txt buffer */
+    convertor->src_pool = res_pool_create (caps, sizeof(InferenceData), 3, 10);
+
+    /* create src pads */
+    //TODO: also we can create src pads dynamically in future
+    res_convert_create_src_pad (convertor, STREAM_TYPE_TXT);
+    res_convert_create_src_pad (convertor, STREAM_TYPE_PIC);
+
+    convertor->priv = RES_CONVERT_GET_PRIVATE (convertor);
+    gst_video_info_init (&convertor->sink_info);
+    gst_video_info_init (&convertor->src_info);
+
+    convertor->blend_handle = blender_create();
+}
+
+
+GType
+res_convert_get_type (void)
+{
+  static GType res_convert_type = 0;
+
+  if (!res_convert_type) {
+    static const GTypeInfo res_convert_info = {
+      sizeof (ResConvertClass),
+      (GBaseInitFunc) res_convert_base_init,
+      NULL,
+      (GClassInitFunc) res_convert_class_init,
+      NULL,
+      NULL,
+      sizeof (ResConvert),
+      0,
+      (GInstanceInitFunc) res_convert_init,
+      NULL
+    };
+
+    res_convert_type =
+        g_type_register_static (GST_TYPE_ELEMENT, "ResConvert",
+        &res_convert_info, 0);
+
+    GST_DEBUG_CATEGORY_INIT (resconvert_debug, "resconvert", 0,
+        "Inference result convertor element");
+  }
+
+  return res_convert_type;
 }
 

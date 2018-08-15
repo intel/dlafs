@@ -55,11 +55,13 @@ GST_STATIC_PAD_TEMPLATE ("sink_bit",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (gst_ws_bit_src_caps_str));
 
+static const char gst_ws_txt_src_caps_str[] = "data/res_txt";
 static GstStaticPadTemplate gst_ws_txt_src_factory =
 GST_STATIC_PAD_TEMPLATE ("sink_txt",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS_ANY);
+    GST_STATIC_CAPS (gst_ws_txt_src_caps_str));
+    /*GST_STATIC_CAPS_ANY);*/
 
 static GstElementClass *parent_class = NULL;
 
@@ -152,7 +154,7 @@ static void process_sink_buffers(gpointer userData)
 
     get_buffers_with_same_ts(basesink, &bit_buf, &txt_buf);
     if(!bit_buf && !txt_buf){
-        GST_INFO("Not buffer, do nothing!");
+        GST_INFO("No buffers, do nothing!");
         return;
     }
 
@@ -353,6 +355,7 @@ gst_ws_sink_pad_activate_mode (GstPad * pad, GstObject * parent,
 
   switch (mode) {
     case GST_PAD_MODE_PUSH:
+      res = TRUE;
       break;
     default:
       GST_LOG_OBJECT (pad, "unknown activation mode %d", mode);

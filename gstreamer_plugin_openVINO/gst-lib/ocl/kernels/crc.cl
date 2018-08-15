@@ -63,14 +63,19 @@ void crop_resize_csc_planar(
 
     float r_w = 1.0 * crop_w / dst_w;
     float r_h = 1.0 * crop_h / dst_h;
-    float src_xf_00 = fma(r_w, 2.0 * (id_x + 0), crop_x) / src_w;
-    float src_yf_00 = fma(r_h, 2.0 * (id_y + 0), crop_y) / src_h;
-    float src_xf_10 = fma(r_w, 2.0 * (id_x + 1), crop_x) / src_w;
-    float src_yf_10 = fma(r_h, 2.0 * (id_y + 0), crop_y) / src_h;
-    float src_xf_01 = fma(r_w, 2.0 * (id_x + 0), crop_x) / src_w;
-    float src_yf_01 = fma(r_h, 2.0 * (id_y + 1), crop_y) / src_h;
-    float src_xf_11 = fma(r_w, 2.0 * (id_x + 1), crop_x) / src_w;
-    float src_yf_11 = fma(r_h, 2.0 * (id_y + 1), crop_y) / src_h;
+
+    float dst_x0 = dst_x;
+    float dst_x1 = dst_x + 2.0;
+    float dst_y0 = dst_y;
+    float dst_y1 = dst_y + 2.0;
+    float src_xf_00 = fma(r_w, dst_x0, crop_x) / src_w;
+    float src_yf_00 = fma(r_h, dst_y0, crop_y) / src_h;
+    float src_xf_10 = fma(r_w, dst_x1, crop_x) / src_w;
+    float src_yf_10 = src_yf_00;
+    float src_xf_01 = src_xf_00;
+    float src_yf_01 = fma(r_h, dst_y1, crop_y) / src_h;
+    float src_xf_11 = src_xf_10;
+    float src_yf_11 = src_yf_01;
 
     float4  Y0 = read_imagef (img_y_src, sampler, (float2)(src_xf_00, src_yf_00));
     float4  Y1 = read_imagef (img_y_src, sampler, (float2)(src_xf_10, src_xf_10));
@@ -106,7 +111,7 @@ void crop_resize_csc_planar(
     float B4 = (Y3.x + buv) * CV_8U_MAX;
 
     int plane_step = dst_w * dst_h;
-    __global uchar* pDstRow1B = pBGR + mad24(dst_y, dst_w, dst_x);
+    __global uchar* pDstRow1B = pBGR + (dst_y * dst_w + dst_x);
     __global uchar* pDstRow1G = pDstRow1B + plane_step;
     __global uchar* pDstRow1R = pDstRow1G + plane_step;
 
@@ -151,14 +156,18 @@ void crop_resize_csc(
 
     float r_w = 1.0 * crop_w / dst_w;
     float r_h = 1.0 * crop_h / dst_h;
-    float src_xf_00 = fma(r_w, 2.0 * (id_x + 0), crop_x) / src_w;
-    float src_yf_00 = fma(r_h, 2.0 * (id_y + 0), crop_y) / src_h;
-    float src_xf_10 = fma(r_w, 2.0 * (id_x + 1), crop_x) / src_w;
-    float src_yf_10 = fma(r_h, 2.0 * (id_y + 0), crop_y) / src_h;
-    float src_xf_01 = fma(r_w, 2.0 * (id_x + 0), crop_x) / src_w;
-    float src_yf_01 = fma(r_h, 2.0 * (id_y + 1), crop_y) / src_h;
-    float src_xf_11 = fma(r_w, 2.0 * (id_x + 1), crop_x) / src_w;
-    float src_yf_11 = fma(r_h, 2.0 * (id_y + 1), crop_y) / src_h;
+    float dst_x0 = dst_x;
+    float dst_x1 = dst_x + 2.0;
+    float dst_y0 = dst_y;
+    float dst_y1 = dst_y + 2.0;
+    float src_xf_00 = fma(r_w, dst_x0, crop_x) / src_w;
+    float src_yf_00 = fma(r_h, dst_y0, crop_y) / src_h;
+    float src_xf_10 = fma(r_w, dst_x1, crop_x) / src_w;
+    float src_yf_10 = src_yf_00;
+    float src_xf_01 = src_xf_00;
+    float src_yf_01 = fma(r_h, dst_y1, crop_y) / src_h;
+    float src_xf_11 = src_xf_10;
+    float src_yf_11 = src_yf_01;
 
     float4  Y0 = read_imagef (img_y_src, sampler, (float2)(src_xf_00, src_yf_00));
     float4  Y1 = read_imagef (img_y_src, sampler, (float2)(src_xf_10, src_xf_10));
@@ -194,7 +203,7 @@ void crop_resize_csc(
     float B4 = (Y3.x + buv) * CV_8U_MAX;
 
     int row_step = dst_w * 3;
-    __global uchar* pDstRow1 = pBGR + mad24(dst_y, row_step, mad24(dst_x, 3, 0));
+    __global uchar* pDstRow1 = pBGR + (dst_y * row_step + 3 * dst_x);
     __global uchar* pDstRow2 = pDstRow1 + row_step;
             
     pDstRow1[0] = convert_uchar_sat(B1);
@@ -234,28 +243,33 @@ void crop_resize_csc_gray(
 
     float r_w = 1.0 * crop_w / dst_w;
     float r_h = 1.0 * crop_h / dst_h;
-    float src_xf_00 = fma(r_w, 2.0 * (id_x + 0), crop_x) / src_w;
-    float src_yf_00 = fma(r_h, 2.0 * (id_y + 0), crop_y) / src_h;
-    float src_xf_10 = fma(r_w, 2.0 * (id_x + 1), crop_x) / src_w;
-    float src_yf_10 = fma(r_h, 2.0 * (id_y + 0), crop_y) / src_h;
-    float src_xf_01 = fma(r_w, 2.0 * (id_x + 0), crop_x) / src_w;
-    float src_yf_01 = fma(r_h, 2.0 * (id_y + 1), crop_y) / src_h;
-    float src_xf_11 = fma(r_w, 2.0 * (id_x + 1), crop_x) / src_w;
-    float src_yf_11 = fma(r_h, 2.0 * (id_y + 1), crop_y) / src_h;
+    float dst_x0 = dst_x;
+    float dst_x1 = dst_x + 2.0;
+    float dst_y0 = dst_y;
+    float dst_y1 = dst_y + 2.0;
+    float src_xf_00 = fma(r_w, dst_x0, crop_x) / src_w;
+    float src_yf_00 = fma(r_h, dst_y0, crop_y) / src_h;
+    float src_xf_10 = fma(r_w, dst_x1, crop_x) / src_w;
+    float src_yf_10 = src_yf_00;
+    float src_xf_01 = src_xf_00;
+    float src_yf_01 = fma(r_h, dst_y1, crop_y) / src_h;
+    float src_xf_11 = src_xf_10;
+    float src_yf_11 = src_yf_01;
 
-    float4  Y0 = read_imagef (img_y_src, sampler, (float2)(src_xf_00, src_yf_00));
-    float4  Y1 = read_imagef (img_y_src, sampler, (float2)(src_xf_10, src_xf_10));
-    float4  Y2 = read_imagef (img_y_src, sampler, (float2)(src_xf_01, src_yf_01));
-    float4  Y3 = read_imagef (img_y_src, sampler, (float2)(src_xf_11, src_yf_11));
-    
-    int row_step = dst_w;
-    __global uchar* pDstRow1 = pBGR + mad24(dst_y, dst_w, dst_x);
-    __global uchar* pDstRow2 = pDstRow1 + row_step;
-            
-    pDstRow1[0] = convert_uchar_sat(Y0);
-    pDstRow1[1] = convert_uchar_sat(Y1);
-    pDstRow2[0] = convert_uchar_sat(Y2);
-    pDstRow2[1] = convert_uchar_sat(Y3);
+    float4  Y0 = read_imagef(img_y_src, sampler, (float2)(src_xf_00, src_yf_00));
+    float4  Y1 = read_imagef(img_y_src, sampler, (float2)(src_xf_10, src_xf_10));
+    float4  Y2 = read_imagef(img_y_src, sampler, (float2)(src_xf_01, src_yf_01));
+    float4  Y3 = read_imagef(img_y_src, sampler, (float2)(src_xf_11, src_yf_11));
+
+    __global uchar* pDstRow1 = pBGR + (dst_y * dst_w + dst_x);
+    __global uchar* pDstRow2 = pDstRow1 + dst_w;
+
+    pDstRow1[0] = convert_uchar_sat(Y0.x * CV_8U_MAX);
+    pDstRow1[1] = convert_uchar_sat(Y1.x * CV_8U_MAX);
+    pDstRow2[0] = convert_uchar_sat(Y2.x * CV_8U_MAX);
+    pDstRow2[1] = convert_uchar_sat(Y3.x * CV_8U_MAX);
+
 }
+
 
 

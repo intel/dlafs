@@ -132,13 +132,17 @@ ocl_memory_alloc (OclPool* oclpool)
     OCL_MEMORY_HEIGHT (ocl_mem) = GST_VIDEO_INFO_HEIGHT (&priv->info);
     OCL_MEMORY_SIZE (ocl_mem) = GST_VIDEO_INFO_SIZE (&priv->info);
 
-    ocl_mem->frame.create(cv::Size(OCL_MEMORY_WIDTH (ocl_mem),OCL_MEMORY_HEIGHT (ocl_mem)), CV_8UC3);
+    if(priv->info.finfo->format == GST_VIDEO_FORMAT_GRAY8)
+        ocl_mem->frame.create(cv::Size(OCL_MEMORY_WIDTH (ocl_mem),OCL_MEMORY_HEIGHT (ocl_mem)), CV_8UC1);
+    else
+        ocl_mem->frame.create(cv::Size(OCL_MEMORY_WIDTH (ocl_mem),OCL_MEMORY_HEIGHT (ocl_mem)), CV_8UC3);
     g_return_val_if_fail(ocl_mem->frame.offset == 0, NULL);
     g_return_val_if_fail(ocl_mem->frame.isContinuous(), NULL);
     OCL_MEMORY_MEM (ocl_mem) = (cl_mem)ocl_mem->frame.handle(ACCESS_WRITE);
 
     GstMemory *memory = GST_MEMORY_CAST (ocl_mem);
-    gst_memory_init (memory, GST_MEMORY_FLAG_NO_SHARE, priv->allocator, NULL, 0, 0, 0, 0); //TODO
+    gst_memory_init (memory, GST_MEMORY_FLAG_NO_SHARE, priv->allocator, NULL,
+          GST_VIDEO_INFO_SIZE (&priv->info), 0, 0, GST_VIDEO_INFO_SIZE (&priv->info)); //TODO
 
     return memory;
 }

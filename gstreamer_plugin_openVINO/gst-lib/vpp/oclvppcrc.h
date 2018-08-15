@@ -50,7 +50,7 @@ public:
                 return "crop_resize_csc_planar";
                 break;
             case CRC_FORMAT_GRAY:
-                return "crop_resize_gray";
+                return "crop_resize_csc_gray";
                 break;
             default:
                 return "";

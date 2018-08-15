@@ -26,12 +26,19 @@
 #include <iterator>
 #include <CL/va_ext.h>
 
+#include <opencv2/opencv.hpp>
+#include <opencv2/core/ocl.hpp>
+#include <opencv2/core/va_intel.hpp>
+
 #include "common/log.h"
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
 using namespace std;
+using namespace cv;
+using namespace cv::ocl;
+using namespace cv::va_intel;
 
 namespace HDDLStreamFilter {
 
@@ -76,6 +83,8 @@ private:
 
     static WeakPtr<OclDevice> m_instance;
     static Lock m_lock;
+
+    cv::ocl::Context m_ocvContext;
 
     cl_context m_context;
     cl_command_queue m_queue;
@@ -260,7 +269,11 @@ OclDevice::getInstance (VADisplay display)
     SharedPtr<OclDevice> device = m_instance.lock ();
     if (device)
         return device;
+
     device.reset (new OclDevice);
+    // init ocl based on VADisplay
+    device->m_ocvContext = cv::va_intel::ocl::initializeContextFromVA(display, true);
+
     device->setDisplay(display);
     if (!device->init ()) {
         device.reset ();
@@ -337,8 +350,36 @@ OclDevice::InitPlatform ()
 gboolean
 OclDevice::init ()
 {
-    cl_int status;
+#if 1
+    //cv::ocl::Context& ctx = cv::ocl::Context::getDefault();
+    m_context = (cl_context)m_ocvContext.ptr();
+    m_device  = (cl_device_id)m_ocvContext.device(0).ptr();
+    m_platform = (cl_platform_id)cv::ocl::Platform::getDefault().ptr();
+    m_queue = (cl_command_queue)Queue::getDefault().ptr();
 
+    if(!m_context || !m_device || !m_platform || !m_queue) {
+        g_print ("OclDevice: failed to init oclDevice\n");
+        return FALSE;
+    }
+
+    clGetDeviceIDsFromVA_APIMediaAdapterINTEL = (clGetDeviceIDsFromVA_APIMediaAdapterINTEL_fn)
+        getExtensionFunctionAddress ("clGetDeviceIDsFromVA_APIMediaAdapterINTEL");
+    clCreateFromVA_APIMediaSurfaceINTEL = (clCreateFromVA_APIMediaSurfaceINTEL_fn)
+        getExtensionFunctionAddress ("clCreateFromVA_APIMediaSurfaceINTEL");
+    clEnqueueAcquireVA_APIMediaSurfacesINTEL = (clEnqueueAcquireVA_APIMediaSurfacesINTEL_fn)
+        getExtensionFunctionAddress ("clEnqueueAcquireVA_APIMediaSurfacesINTEL");
+    clEnqueueReleaseVA_APIMediaSurfacesINTEL = (clEnqueueReleaseVA_APIMediaSurfacesINTEL_fn)
+        getExtensionFunctionAddress ("clEnqueueReleaseVA_APIMediaSurfacesINTEL");
+
+    if (!clGetDeviceIDsFromVA_APIMediaAdapterINTEL ||
+        !clCreateFromVA_APIMediaSurfaceINTEL ||
+        !clEnqueueAcquireVA_APIMediaSurfacesINTEL ||
+        !clEnqueueReleaseVA_APIMediaSurfacesINTEL) {
+        g_print ("OclDevice: failed to get extension function\n");
+        return FALSE;
+    }
+#else
+    cl_int status;
     InitPlatform ();
 
     clGetDeviceIDsFromVA_APIMediaAdapterINTEL = (clGetDeviceIDsFromVA_APIMediaAdapterINTEL_fn)
@@ -363,23 +404,18 @@ OclDevice::init ()
     cl_context_properties props[] = { CL_CONTEXT_VA_API_DISPLAY_INTEL,
         (cl_context_properties) m_display, CL_CONTEXT_INTEROP_USER_SYNC, 1, 0};
 
-#if 1
     m_context = clCreateContext (props, 1, &m_device, NULL, NULL, &status);
     if (status != CL_SUCCESS) {
         g_print ("OclDevice: clCreateContext failed, error=%d\n", status);
         return FALSE;
     }
-#else
-    cv::ocl::Context& ctx = cv::ocl::Context::getDefault();
-    m_context = (cl_context)ctx.ptr();
-#endif
 
     m_queue = clCreateCommandQueue (m_context, m_device, 0, &status);
     if (status != CL_SUCCESS) {
         g_print ("OclDevice: clCreateCommandQueue failed, error=%d\n", status);
         return FALSE;
     }
-
+#endif
     return TRUE;
 }
 
@@ -433,7 +469,8 @@ OclDevice::createProgramFromSource (const char* filename)
         return NULL;
     }
 
-    char buildOptions[] = "-I. -Werror -cl-fast-relaxed-math";
+    //char buildOptions[] = "-I. -Werror -cl-fast-relaxed-math";
+    char buildOptions[] = "-I. -cl-fast-relaxed-math";
     if (CL_ERROR_PRINT (clBuildProgram (program, 1, &m_device,
                         buildOptions, NULL, NULL), "clBuildProgram")) {
         char log[1024];
@@ -644,9 +681,11 @@ OclDevice::createFromVA_Intel (cl_mem_flags flags, VASurfaceID* surface, cl_uint
 
     *mem = clCreateFromVA_APIMediaSurfaceINTEL (m_context, flags, surface, plane, &status);
 
-    if (CL_ERROR_PRINT (status, "clCreateFromVA_APIMediaSurfaceINTEL"))
+    if (CL_ERROR_PRINT (status, "clCreateFromVA_APIMediaSurfaceINTEL")) {
+        g_print("error - surface = %p, plane = %d, flags = %d, m_context = %p\n", surface, plane, flags, m_context);
         return FALSE;
-
+    }
+    g_print("surface = %p, plane = %d, flags = %d, m_context = %p\n", surface, plane, flags, m_context);
     return TRUE;
 }
 

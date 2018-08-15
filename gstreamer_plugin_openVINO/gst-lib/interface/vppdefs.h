@@ -42,10 +42,14 @@ typedef enum {
 
 typedef struct {
     VppParamType type;
+    guint32 src_w;
+    guint32 src_h;
     guint32 crop_x;
     guint32 crop_y;
     guint32 crop_w;
     guint32 crop_h;
+    guint32 dst_w;
+    guint32 dst_h;
 } VppCrcParam;
 
 typedef struct {

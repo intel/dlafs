@@ -62,8 +62,18 @@ OclVppBlender::process (const SharedPtr<VideoFrame>& src, const SharedPtr<VideoF
 {
     OclStatus status = OCL_SUCCESS;
 
+    m_src_w = src->width;
+    m_src_h = src->height;
+    m_dst_w  = dst->width;
+    m_dst_h  = dst->height; 
+
     if (!m_dst_w || !m_dst_h || !m_src_w || !m_src_h) {
-        g_print ("crc transform failed due to invalid resolution\n");
+        g_print ("OclVppBlender failed due to invalid resolution\n");
+        return OCL_INVALID_PARAM;
+    }
+
+    if((m_src_w != m_dst_w) || (m_src_h != m_dst_h)) {
+        g_print ("OclVppBlender failed due to dst and src is not same resolution!\n");
         return OCL_INVALID_PARAM;
     }
 

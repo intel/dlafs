@@ -97,6 +97,8 @@ static void detection_algo_func(gpointer userData)
     CvdlAlgoData *algoData = new CvdlAlgoData;
     GstFlowReturn ret;
 
+    g_print("new algoData = %p\n", algoData);
+
     if(!detectionAlgo->mNext) {
         GST_WARNING("The next algo is NULL, return");
         return;
@@ -118,6 +120,7 @@ static void detection_algo_func(gpointer userData)
     detectionAlgo->mImageProcessor.process_image(algoData->mGstBuffer, &ocl_buf, &crop);
     if(ocl_buf==NULL) {
         GST_WARNING("Failed to do image process!");
+        g_print("Failed to do image process!");
         return;
     }
     // No crop, the whole frame was be resized to it
@@ -133,14 +136,18 @@ static void detection_algo_func(gpointer userData)
     // Detect callback function
     auto onDetectResult = [](CvdlAlgoData* &algoData)
     {
-        DetectionAlgo *detectionAlgo = static_cast<DetectionAlgo *>(algoData->algoBase);
+        //DetectionAlgo *detectionAlgo = static_cast<DetectionAlgo *>(algoData->algoBase);
+        CvdlAlgoBase *algo = algoData->algoBase;
+        g_print("detect algo = %p\n", algo);
         gst_buffer_unref(algoData->mGstBufferOcl);
+
         if(algoData->mResultValid){
-            detectionAlgo->mNext->mInQueue.put(*algoData);
+            algo->mNext->mInQueue.put(*algoData);
         }else{
             delete algoData;
+            g_print("delete algoData = %p\n", algoData);
         }
-        detectionAlgo->mInferCnt--;
+        algo->mInferCnt--;
     };
 
     // ASync detect, directly return after pushing request.

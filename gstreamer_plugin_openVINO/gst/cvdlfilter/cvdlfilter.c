@@ -42,14 +42,8 @@ enum
 
 struct _CvdlFilterPrivate
 {
-    //VideoFrame *src_frame;
-    //VideoFrame *dst_frame;
     gboolean negotiated;
     gboolean same_caps_flag;
-
-//    SharedPtr<OclContext> ctx;
-//    SharedPtr<VppInterface> vpp_crc;
-//    gboolean cl_inited;
 };
 
 const char cvdl_filter_caps_str[] = \
@@ -72,30 +66,6 @@ static GstStaticPadTemplate cvdl_src_factory =
     GST_STATIC_CAPS (cvdl_filter_caps_str)
     );
 
-/*
-static void cvdl_ocl_context_init(CvdlFilter *cvdlfilter, VADisplay display)
-{
-    CvdlFilterPrivate *priv = cvdlfilter->priv;
-
-    if(priv->cl_inited)
-        return;
-
-    priv->ctx = OclContext::create(display);
-    if (!SHARED_PTR_IS_VALID (priv->ctx)) {
-        GST_DEBUG ("oclcrc: failed to create ocl ctx");
-        return;
-    }
-
-    priv->vpp_crc.reset (NEW_VPP_SHARED_PTR (OCL_VPP_CRC));
-    if (!SHARED_PTR_IS_VALID (priv->vpp_crc) ||
-        (OCL_SUCCESS != priv->vpp_crc->setOclContext (priv->ctx))) {
-        GST_DEBUG ("oclcrc: failed to init vpp_crc");
-        priv->vpp_crc.reset ();
-    }
-
-    priv->cl_inited = true;
-}
-*/
 
 static GstFlowReturn
 cvdl_handle_buffer(CvdlFilter *cvdlfilter, GstBuffer* buffer)
@@ -103,7 +73,6 @@ cvdl_handle_buffer(CvdlFilter *cvdlfilter, GstBuffer* buffer)
     GstFlowReturn ret = GST_FLOW_OK;
 
     // put buffer into a queue
-    //cvdlfilter->first_algo->queue_buffer(buffer);
     algo_pipeline_put_buffer(cvdlfilter->algoHandle, buffer);
 
     return ret;;
@@ -112,10 +81,9 @@ cvdl_handle_buffer(CvdlFilter *cvdlfilter, GstBuffer* buffer)
 GstBuffer* cvdl_try_to_get_output(CvdlFilter *cvdlfilter)
 {
     GstBuffer *buf = NULL;
+
     // get data from output queue, and attach it into outbuf
     // if no data in output queue, return NULL;
-
-    //buf = cvdlfilter->last_algo->dequeue_buffer();
     algo_pipeline_get_buffer(cvdlfilter->algoHandle, &buf);
 
     return buf;
@@ -125,14 +93,10 @@ static GstFlowReturn
 cvdl_filter_transform_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
     GstBaseTransform *trans = GST_BASE_TRANSFORM_CAST (parent);
-    //GstBaseTransformClass *klass = GST_BASE_TRANSFORM_GET_CLASS (trans);
     CvdlFilter *cvdlfilter = CVDL_FILTER (trans);
     CvdlFilterPrivate *priv = cvdlfilter->priv;
-    //VASurfaceID surface = VA_INVALID_SURFACE;
-    //GstFlowReturn ret;
-    //GstClockTime position = GST_CLOCK_TIME_NONE;
     GstClockTime timestamp, duration;
-    //GstBuffer *outbuf = NULL;
+
     
     timestamp = GST_BUFFER_TIMESTAMP (buffer);
     duration = GST_BUFFER_DURATION (buffer);
@@ -144,25 +108,6 @@ cvdl_filter_transform_chain (GstPad * pad, GstObject * parent, GstBuffer * buffe
     GST_LOG_OBJECT (cvdlfilter, "input buffer caps: %" GST_PTR_FORMAT, buffer);
 
     /* vpp will not called in main pipeline thread, but it should be called in algo thread*/
-    //if (!SHARED_PTR_IS_VALID (priv->vpp_crc)) {
-    //    GST_ERROR_OBJECT (trans, "invalid crc");
-    //    return GST_FLOW_ERROR;
-    //}
-
-    //priv->src_frame->surface= 
-    //            gst_get_mfx_surface (buffer, cvdlfilter->sink_info, &cvdlfilter->display);
-
-    //if(!priv->cl_inited) {
-    //    cvdl_ocl_context_init(cvdlfilter, display);
-    //}
-
-    //priv->src_frame->fourcc =
-    //            video_format_to_va_fourcc (GST_VIDEO_INFO_FORMAT (&cvdlfilter->src_info));
-    //if (priv->src_frame->fourcc != OCL_FOURCC_NV12) {
-    //    GST_ERROR ("only support NV12 video frame");
-    //    return GST_FLOW_ERROR;
-    //}
-
     // step 1: put input buffer into queue, which will do cvdl processing in another thread
     //         thread 1:  detection thread
     //              --> thread 2: object track thread
@@ -178,8 +123,6 @@ cvdl_filter_transform_chain (GstPad * pad, GstObject * parent, GstBuffer * buffe
         gst_task_start(cvdlfilter->mPushTask);
     //outbuf = cvdl_try_to_get_output(cvdlfilter);
     //push the buffer only when can get a output data 
-    //if(outbuf)
-    //    gst_pad_push(trans->srcpad, outbuf);
 
     cvdlfilter->frame_num++;
     GST_DEBUG_OBJECT (trans, "src_info: index=%d ",cvdlfilter->frame_num);
@@ -202,14 +145,23 @@ cvdl_filter_transform_caps (GstBaseTransform* trans,
     GstPadDirection direction, GstCaps* caps, GstCaps* filter)
 {
     GstPad *pad = NULL;
+    GstCaps *newcaps = NULL;
 
+    // debug code
+    //GstVideoInfo info;
+    //gst_video_info_from_caps (&info, caps);
+
+    // get the caps of other pad for input caps
     if (GST_PAD_SRC == direction) {
         pad = GST_BASE_TRANSFORM_SINK_PAD (trans);
+        // src pad, we set original caps to be sink pad
+        newcaps = gst_pad_get_pad_template_caps (pad);
     } else if (GST_PAD_SINK == direction) {
         pad = GST_BASE_TRANSFORM_SRC_PAD (trans);
+        // sink pad, we set src pad to be the same with itself
+        newcaps = gst_caps_ref (caps);
     }
-
-    GstCaps *newcaps = gst_pad_get_pad_template_caps (pad);
+    //GstCaps *newcaps = gst_pad_get_pad_template_caps (pad);
 
     if (filter) {
         GstCaps *intersection = gst_caps_intersect_full (filter,
@@ -217,7 +169,6 @@ cvdl_filter_transform_caps (GstBaseTransform* trans,
         gst_caps_unref (newcaps);
         newcaps = intersection;
     }
-
     GST_DEBUG_OBJECT (trans, "returning caps: %" GST_PTR_FORMAT, newcaps);
 
     return newcaps;
@@ -236,13 +187,8 @@ cvdl_filter_finalize (GObject * object)
     gst_task_set_state(cvdlfilter->mPushTask, GST_TASK_STOPPED);
     gst_task_join(cvdlfilter->mPushTask);
 
-#if 0
-    for(int i=0; i<CVDL_ALGO_NUM; i++)
-        if(cvdlfilter->algo[i])
-            delete cvdlfilter->algo[i];
-#else
     algo_pipeline_destroy(cvdlfilter->algoHandle);
-#endif
+
     G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -373,8 +319,6 @@ gst_compare_caps (GstCaps* incaps, GstCaps* outcaps)
 
     if (gst_value_compare (gst_structure_get_value (s1, "format"),
                            gst_structure_get_value (s2, "format")) ||
-        //gst_value_compare (gst_structure_get_value (s1, "tiled"),
-        //                   gst_structure_get_value (s2, "tiled")) ||
         gst_value_compare (gst_structure_get_value (s1, "width"),
                            gst_structure_get_value (s2, "width")) ||
         gst_value_compare (gst_structure_get_value (s1, "height"),
@@ -405,17 +349,10 @@ cvdl_filter_set_caps (GstBaseTransform* trans, GstCaps* incaps, GstCaps* outcaps
     }
 
     priv->same_caps_flag = gst_compare_caps (incaps, outcaps);
-
     gst_base_transform_set_passthrough (trans, priv->same_caps_flag);
 
-#if 0
-    // this 3 algo accept the orignal video buffer
-    cvdlfilter->algo[ALGO_DETECTION]->set_data_caps(incaps);
-    cvdlfilter->algo[ALGO_TRACKING]->set_data_caps(incaps);
-    cvdlfilter->algo[ALGO_CLASSIFICATION]->set_data_caps(incaps);
-#else
     algo_pipeline_set_caps_all(cvdlfilter->algoHandle, incaps);
-#endif
+
     return TRUE;
 }
 
@@ -491,18 +428,10 @@ cvdl_filter_init (CvdlFilter* cvdl_filter)
     priv->negotiated = FALSE;
     priv->same_caps_flag = FALSE;
 
-    //priv->src_frame.reset (g_new0 (VideoFrame, 1), g_free);
-    //priv->dst_frame.reset (g_new0 (VideoFrame, 1), g_free);
-
-    //cvdl_filter->detection_pool = NULL;
-    //cvdl_filter->tracking_pool = NULL;
-    //cvdl_filter->classification_pool = NULL:
     gst_video_info_init (&cvdl_filter->sink_info);
     gst_video_info_init (&cvdl_filter->src_info);
 
     cvdl_filter->frame_num = 0;
-
-    //cvdl_filter->display = VA_INVALID_DISPLAY;
 
     // create task for push data to next filter/element
     g_rec_mutex_init (&cvdl_filter->mMutex);
@@ -511,24 +440,7 @@ cvdl_filter_init (CvdlFilter* cvdl_filter)
     gst_task_set_enter_callback (cvdl_filter->mPushTask, NULL, NULL, NULL);
     gst_task_set_leave_callback (cvdl_filter->mPushTask, NULL, NULL, NULL);
 
-#if 0
-    // create algo and link them
-    cvdl_filter->algo[ALGO_DETECTION] = new DetectionAlgo;
-    cvdl_filter->algo[ALGO_TRACKING] = new TrackAlgo;
-    cvdl_filter->algo[ALGO_CLASSIFICATION] = new ClassificationAlgo;
-
-    cvdl_filter->algo[ALGO_DETECTION]->algo_connect(cvdl_filter->algo[ALGO_TRACKING]);
-    cvdl_filter->algo[ALGO_TRACKING]->algo_connect(cvdl_filter->algo[ALGO_CLASSIFICATION]);
-    cvdl_filter->algo[ALGO_CLASSIFICATION]->algo_connect(NULL);
-
-    cvdl_filter->first_algo = cvdl_filter->algo[ALGO_DETECTION];
-    cvdl_filter->last_algo  = cvdl_filter->algo[ALGO_CLASSIFICATION];
-
-    //start algo thread
-    for(int i=0; i<CVDL_ALGO_NUM; i++)
-        cvdl_filter->algo[ALGO_DETECTION].start_algo_thread();
-#else
     cvdl_filter->algoHandle = algo_pipeline_create_default();
     algo_pipeline_start(cvdl_filter->algoHandle);
-#endif
+
 }

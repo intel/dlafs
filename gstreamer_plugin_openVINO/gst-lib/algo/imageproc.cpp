@@ -107,11 +107,17 @@ void ImageProcessor::setup_ocl_context(VADisplay display)
     switch(mOclVppType){
         case IMG_PROC_TYPE_OCL_CRC:
              mOclVpp.reset (NEW_VPP_SHARED_PTR (OCL_VPP_CRC));
+             // CRC has 3 kernel to output different format surface
+             //if(mOclVppType==IMG_PROC_TYPE_OCL_CRC) {
+             // Let OclVppCrc to choose the right kernel
+             mOclVpp->setOclFormat(mOclFormat);
+             //}
             break;
         case IMG_PROC_TYPE_OCL_BLENDER:
              mOclVpp.reset (NEW_VPP_SHARED_PTR (OCL_VPP_BLENDER));
              break;
         default:
+            g_print("ocl: invalid vpp type!!!\n");
             break;
     }
 
@@ -119,13 +125,9 @@ void ImageProcessor::setup_ocl_context(VADisplay display)
         (OCL_SUCCESS != mOclVpp->setOclContext (mContext))) {
         GST_DEBUG ("oclcrc: failed to init ocl_vpp");
         mOclVpp.reset ();
+        g_print("oclcrc: failed to init ocl_vpp");
     }
 
-    // CRC has 3 kernel to output different format surface
-    if(mOclVppType==IMG_PROC_TYPE_OCL_CRC) {
-        // Let OclVppCrc to choose the right kernel
-        mOclVpp->setOclFormat(mOclFormat);
-    }
     mOclInited = true;
     mDisplay = display;
 }

@@ -63,7 +63,7 @@ IELoader::IELoader()
 
 IELoader::~IELoader()
 {
-
+    //TODO: how to release IE?
 }
 
 GstFlowReturn IELoader::set_device(InferenceEngine::TargetDevice dev)
@@ -273,6 +273,7 @@ GstFlowReturn IELoader::do_inference_async(CvdlAlgoData *algoData, uint64_t frmI
         // Start thread listen to result
         auto WaitAsync = [this, &algoData, frmId, objId, cb](InferenceEngine::IInferRequest::Ptr inferRequestAsyn, int reqestId)
         {
+            //CvdlAlgoBase *algo;
             InferenceEngine::ResponseDesc resp;
             IECALLNORET(inferRequestAsyn->Wait(InferenceEngine::IInferRequest::WaitMode::RESULT_READY, &resp));
             InferenceEngine::Blob::Ptr resultBlobPtr;
@@ -282,7 +283,9 @@ GstFlowReturn IELoader::do_inference_async(CvdlAlgoData *algoData, uint64_t frmI
             {
                 //auto resultBlobFp32 = std::dynamic_pointer_cast<InferenceEngine::TBlob<float> >(resultBlobPtr);
                 //parser_inference_result(resultBlobFp32->data(), sizeof(float), algoData);
-                CvdlAlgoBase *algo = static_cast<CvdlAlgoBase*>(algoData->algoBase);
+                //algo = static_cast<CvdlAlgoBase*>(algoData->algoBase);
+                CvdlAlgoBase *algo = algoData->algoBase;
+                g_print("do_inference_async - wait thread: algo = %p\n", algo);
                 algo->parse_inference_result(resultBlobPtr, sizeof(float), algoData, objId);
             } else {
                 GST_ERROR("Don't support other output precision except FP32!");

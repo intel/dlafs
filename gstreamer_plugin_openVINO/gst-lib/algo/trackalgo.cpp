@@ -218,7 +218,7 @@ void TrackAlgo::verify_detection_result(std::vector<ObjectData> &objectVec)
     }
 }
 
-std::vector<cv::Point2f> TrackAlgo::calc_feature_points(cv::UMat gray)
+std::vector<cv::Point2f> TrackAlgo::calc_feature_points(cv::UMat &gray)
 {
     /* Optical flow parameter */
     cv::TermCriteria termcrit(cv::TermCriteria::COUNT | cv::TermCriteria::EPS, 20, 0.03);

@@ -67,7 +67,7 @@ public:
 private:
     cv::UMat& get_umat(GstBuffer *buffer);
     
-    std::vector<cv::Point2f> calc_feature_points(cv::UMat gray);
+    std::vector<cv::Point2f> calc_feature_points(cv::UMat &gray);
     std::vector<cv::Point2f> find_points_in_ROI(cv::Rect roi);
     void calc_average_shift_moment(TrackObjAttribute& curObj, float& offx, float& offy);
     bool track_one_object(cv::UMat& curFrame, TrackObjAttribute& curObj, cv::Rect& outRoi);
