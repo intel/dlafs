@@ -52,16 +52,9 @@ struct _CvdlFilter
     gboolean            negotiated;
     gboolean            same_caps_flag;
 
-    //VADisplay           display;
-
     GstVideoInfo        sink_info;
     GstVideoInfo        src_info;
 
-/*
-    CvdlAlgoBase*       algo[CVDL_ALGO_NUM];
-    CvdlAlgoBase*       first_algo;
-    CvdlAlgoBase*       last_algo;
-*/
     AlgoPipelineHandle algoHandle;
 
     CvdlFilterPrivate*  priv;
@@ -69,6 +62,10 @@ struct _CvdlFilter
     GstTask *mPushTask;
     GRecMutex mMutex;
     int frame_num;
+
+    // debug
+    int frame_num_in;
+    int frame_num_out;
 };
 
 struct _CvdlFilterClass

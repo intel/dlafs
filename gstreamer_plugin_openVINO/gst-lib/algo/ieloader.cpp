@@ -170,14 +170,14 @@ GstFlowReturn IELoader::convert_input_to_blob(const cv::UMat& img, InferenceEngi
         return GST_FLOW_ERROR;
     }
 
-    cv::UMat src;
+    cv::Mat src;
     int w = (int)inputBlobPtr->dims()[0];
     int h = (int)inputBlobPtr->dims()[1];
     if (img.cols != w || img.rows != h) {
         GST_LOG("WARNNING: resize from %dx%d to %dx%d !\n", src.cols, src.rows, w, h);
         cv::resize(img, src, cv::Size(w, h));
     } else {
-        src = img;
+        src = img.getMat(0);
     }
 
     auto numBlobChannels = inputBlobPtr->dims()[2];
@@ -197,7 +197,7 @@ GstFlowReturn IELoader::convert_input_to_blob(const cv::UMat& img, InferenceEngi
             // Src data has been converted to be BGR planar format
             int nPixels = w * h * numBlobChannels;
             for (int i = 0; i < nPixels; i++)
-                inputDataPtr[i] = src.getMat(0).data[i];
+                inputDataPtr[i] = src.data[i];
 #else
             //--reverse_input_channels
             cv::Mat dst0 = cv::Mat(h, w, CV_8UC1, inputDataPtr + h*w*0, w);
@@ -271,7 +271,7 @@ GstFlowReturn IELoader::do_inference_async(CvdlAlgoData *algoData, uint64_t frmI
         IECALLNORET(inferRequestAsyn->StartAsync(&resp));
 
         // Start thread listen to result
-        auto WaitAsync = [this, &algoData, frmId, objId, cb](InferenceEngine::IInferRequest::Ptr inferRequestAsyn, int reqestId)
+        auto WaitAsync = [this, algoData, frmId, objId, cb](InferenceEngine::IInferRequest::Ptr inferRequestAsyn, int reqestId)
         {
             //CvdlAlgoBase *algo;
             InferenceEngine::ResponseDesc resp;
@@ -285,8 +285,10 @@ GstFlowReturn IELoader::do_inference_async(CvdlAlgoData *algoData, uint64_t frmI
                 //parser_inference_result(resultBlobFp32->data(), sizeof(float), algoData);
                 //algo = static_cast<CvdlAlgoBase*>(algoData->algoBase);
                 CvdlAlgoBase *algo = algoData->algoBase;
-                g_print("do_inference_async - wait thread: algo = %p\n", algo);
+                g_print("==========WaitAsync - do_inference_async begin: algo = %p(%p), algoData = %p\n", algo, algoData->algoBase, algoData);
+                g_usleep(10);
                 algo->parse_inference_result(resultBlobPtr, sizeof(float), algoData, objId);
+                g_print("==========WaitAsync - do_inference_async finish: algo = %p(%p), algoData = %p\n", algo,algoData->algoBase, algoData);
             } else {
                 GST_ERROR("Don't support other output precision except FP32!");
                 return;

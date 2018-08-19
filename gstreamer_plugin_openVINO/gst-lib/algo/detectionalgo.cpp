@@ -97,7 +97,7 @@ static void detection_algo_func(gpointer userData)
     CvdlAlgoData *algoData = new CvdlAlgoData;
     GstFlowReturn ret;
 
-    g_print("new algoData = %p\n", algoData);
+    g_print("\ndetection_algo_func - new an algoData = %p\n", algoData);
 
     if(!detectionAlgo->mNext) {
         GST_WARNING("The next algo is NULL, return");
@@ -109,18 +109,24 @@ static void detection_algo_func(gpointer userData)
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         return;
     }
+
     // bind algoTask into algoData, so that can be used when sync callback
     algoData->algoBase = static_cast<CvdlAlgoBase *>(detectionAlgo);
+    g_print("%s() - detectionAlgo = %p, algoData->mFrameId = %ld\n", __func__, detectionAlgo, algoData->mFrameId);
+    g_print("%s() - get one buffer, GstBuffer = %p, refcout = %d, queueSize = %d, algoData = %p, algoBase = %p\n",
+        __func__, algoData->mGstBuffer, GST_MINI_OBJECT_REFCOUNT (algoData->mGstBuffer),
+        detectionAlgo->mInQueue.size(), algoData, algoData->algoBase);
+
 
     // get input data and process it here, put the result into algoData
     // NV12-->BGR_Plannar
     GstBuffer *ocl_buf = NULL;
     VideoRect crop = {0,0, (unsigned int)detectionAlgo->mImageProcessorInVideoWidth,
                            (unsigned int)detectionAlgo->mImageProcessorInVideoHeight};
-    detectionAlgo->mImageProcessor.process_image(algoData->mGstBuffer, &ocl_buf, &crop);
+    detectionAlgo->mImageProcessor.process_image(algoData->mGstBuffer,NULL, &ocl_buf, &crop);
     if(ocl_buf==NULL) {
         GST_WARNING("Failed to do image process!");
-        g_print("Failed to do image process!");
+        g_print("detection_algo_func - Failed to do image process!\n");
         return;
     }
     // No crop, the whole frame was be resized to it
@@ -134,18 +140,23 @@ static void detection_algo_func(gpointer userData)
     }
 
     // Detect callback function
-    auto onDetectResult = [](CvdlAlgoData* &algoData)
+    auto onDetectResult = [](CvdlAlgoData* algoData)
     {
         //DetectionAlgo *detectionAlgo = static_cast<DetectionAlgo *>(algoData->algoBase);
         CvdlAlgoBase *algo = algoData->algoBase;
-        g_print("detect algo = %p\n", algo);
+        g_print("onDetectResult - detect algo = %p, OclBuffer = %p(%d)\n", algo, algoData->mGstBufferOcl,
+            GST_MINI_OBJECT_REFCOUNT(algoData->mGstBufferOcl));
         gst_buffer_unref(algoData->mGstBufferOcl);
 
         if(algoData->mResultValid){
+            g_print("detection_algo_func - pass down GstBuffer = %p(%d)\n",
+                algoData->mGstBuffer, GST_MINI_OBJECT_REFCOUNT(algoData->mGstBuffer));
             algo->mNext->mInQueue.put(*algoData);
         }else{
+            //g_print("delete algoData = %p\n", algoData);
+            g_print("detection_algo_func - unref GstBuffer = %p(%d)\n", 
+                algoData->mGstBuffer, GST_MINI_OBJECT_REFCOUNT(algoData->mGstBuffer));
             delete algoData;
-            g_print("delete algoData = %p\n", algoData);
         }
         algo->mInferCnt--;
     };
@@ -434,6 +445,8 @@ void DetectionAlgo::get_result(DetectionInternalData *internalData, CvdlAlgoData
 GstFlowReturn DetectionAlgo::parse_inference_result(InferenceEngine::Blob::Ptr &resultBlobPtr,
                                                             int precision, CvdlAlgoData *outData, int objId)
 {
+    g_print("DetectionAlgo::parse_inference_result begin: outData = %p\n", outData);
+
     auto resultBlobFp32 = std::dynamic_pointer_cast<InferenceEngine::TBlob<float> >(resultBlobPtr);
 
     float *input = static_cast<float*>(resultBlobFp32->data());

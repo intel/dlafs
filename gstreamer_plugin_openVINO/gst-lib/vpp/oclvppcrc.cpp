@@ -54,7 +54,7 @@ OclVppCrc::crc_helper()
         (status = clSetKernelArg (m_kernel, 5, sizeof(guint32), &m_crop_y)) ||
         (status = clSetKernelArg (m_kernel, 6, sizeof(guint32), &m_crop_w)) ||
         (status = clSetKernelArg (m_kernel, 7, sizeof(guint32), &m_crop_h)) ||
-        (status = clSetKernelArg (m_kernel, 8, sizeof(cl_mem), (cl_mem)&m_dst->cl_memory[0])) ||
+        (status = clSetKernelArg (m_kernel, 8, sizeof(cl_mem), &m_dst->cl_memory[0])) ||
         (status = clSetKernelArg (m_kernel, 9, sizeof(guint32), &m_src_w)) ||
         (status = clSetKernelArg (m_kernel, 10, sizeof(guint32), &m_src_h))) {
             CL_ERROR_PRINT (status, "clSetKernelArg");
@@ -146,7 +146,7 @@ OclVppCrc::process (const SharedPtr<VideoFrame>& src, const SharedPtr<VideoFrame
     m_crop_w = src->crop.width;
     m_crop_h = src->crop.height;
     m_dst_w  = dst->width;
-    m_dst_h  = dst->height; 
+    m_dst_h  = dst->height;
 
     if (!m_dst_w || !m_dst_h || !m_src_w || !m_src_h || !m_crop_w || !m_crop_h) {
         g_print ("OclVppCrc failed due to invalid resolution\n");
@@ -172,6 +172,7 @@ OclVppCrc::process (const SharedPtr<VideoFrame>& src, const SharedPtr<VideoFrame
         return OCL_FAIL;
     }
 
+    printOclKernelInfo(); // test
     status = crc_helper();
 
     m_context->releaseMemoryCL(&m_dst);

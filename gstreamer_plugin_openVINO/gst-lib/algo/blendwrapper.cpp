@@ -61,11 +61,11 @@ void blender_init(BlendHandle handle, GstPad* pad)
     height = info.height;
 
     // ocl pool will allocate the same size osd buffer with BRG format
-    size = width * height * 3;
-    ocl_caps = gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING, "BGR", NULL);
+    size = width * height * 4;
+    ocl_caps = gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING, "BGRx", NULL);
     gst_caps_set_simple (ocl_caps, "width", G_TYPE_INT, width, "height",
                          G_TYPE_INT, height, NULL);
-    cvdl_blender->mOsdPool = ocl_pool_create (ocl_caps, size, 3,10);
+    cvdl_blender->mOsdPool = ocl_pool_create (ocl_caps, size, 6,20);
     gst_caps_unref (ocl_caps);
 
     // init imgage processor: it will not allocate ocl buffer in it
@@ -90,27 +90,41 @@ void blender_destroy(BlendHandle handle)
     free(cvdl_blender);
 }
 
-static GstBuffer *generate_osd(BlendHandle handle, GstBuffer *input_buf)
+
+static GstBuffer *get_free_buf(BlendHandle handle)
 {
     CvdlBlender *cvdl_blender  = (CvdlBlender *) handle;
+    GstBuffer *free_buf = NULL;
+    OclMemory *free_mem = NULL;
+
+    free_buf = ocl_buffer_alloc(cvdl_blender->mOsdPool);
+    g_return_val_if_fail(free_buf, NULL);
+
+    free_mem = ocl_memory_acquire(free_buf);
+    if(!free_mem) {
+        gst_buffer_unref(free_buf);
+        return NULL;
+    }
+    return free_buf;
+}
+
+static GstBuffer *generate_osd(BlendHandle handle, GstBuffer *input_buf)
+{
+    //CvdlBlender *cvdl_blender  = (CvdlBlender *) handle;
     GstBuffer *osd_buf = NULL;
     OclMemory *osd_mem = NULL;
     CvdlMeta *cvdl_meta = NULL;
 
-    osd_buf = ocl_buffer_alloc(cvdl_blender->mOsdPool);
+    osd_buf = get_free_buf(handle);
     g_return_val_if_fail(osd_buf, NULL);
-
-    osd_mem = ocl_memory_acquire(osd_buf);
-    if(!osd_mem) {
-        gst_buffer_unref(osd_buf);
-        return NULL;
-    }
 
     cvdl_meta = gst_buffer_get_cvdl_meta(input_buf);
     if(!cvdl_meta){
         gst_buffer_unref(osd_buf);
         return NULL;
     }
+
+    osd_mem = ocl_memory_acquire(osd_buf);
 
     InferenceMeta *inference_result = cvdl_meta->inference_result;
     int meta_count = cvdl_meta->meta_count;
@@ -141,24 +155,37 @@ static GstBuffer *generate_osd(BlendHandle handle, GstBuffer *input_buf)
     return NULL;
 }
 
-GstFlowReturn blender_process_cvdl_buffer(BlendHandle handle, GstBuffer* buffer)
+GstBuffer* blender_process_cvdl_buffer(BlendHandle handle, GstBuffer* buffer)
 {
     CvdlBlender *cvdl_blender  = (CvdlBlender *) handle;
     GstBuffer *osd_buf = NULL, *out_buf = NULL;
-    VideoRect rect = {0, 0 , (unsigned int)cvdl_blender->mImageWidth, (unsigned int)cvdl_blender->mImageWidth};
-    GstFlowReturn ret = GST_FLOW_OK;
-
+    VideoRect rect = {0, 0 , (unsigned int)cvdl_blender->mImageWidth,
+                             (unsigned int)cvdl_blender->mImageHeight};
+    //GstFlowReturn ret = GST_FLOW_OK;
+    GstBuffer *dst_buf = get_free_buf(handle);
+    g_return_val_if_fail(dst_buf, NULL);
 
     osd_buf = generate_osd(handle, buffer);
     if(!osd_buf) {
         GST_ERROR("Failed to generate osd surface for cvdl buffer!");
-        return GST_FLOW_ERROR;
+        return NULL;
     }
-    out_buf = buffer;
+    out_buf = dst_buf;
     ImageProcessor *img_processor = static_cast<ImageProcessor *>(cvdl_blender->mImgProcessor);
-    img_processor->process_image(osd_buf, &out_buf, &rect);
+    img_processor->process_image(osd_buf, buffer, &out_buf, &rect);
 
-    return ret;
+    // TODO: Set cvdl_meta to this buffer
+
+    //release osd
+    gst_buffer_unref(osd_buf);
+ 
+    // TODO: Where to release Nv12 buffer and dst buffer?
+
+
+
+    // TODO: how to make out_buf can be accepted by jpeg enc - RGBA or NV12?
+
+    return dst_buf;
 }
 
 

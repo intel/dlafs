@@ -27,18 +27,23 @@
 #endif
 
 #include "cvdlfilter.h"
-
-//GST_DEBUG_CATEGORY_EXTERN (cvdl_filter_debug);
+#include "resconvert.h"
+#include "wssink.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  //GST_DEBUG_CATEGORY_INIT (cvdl_filter_debug, "cvdlfilter", 0,
-  //    "CVDL filter");
-
-  if (!gst_element_register (plugin, "cvdlfilter", GST_RANK_PRIMARY,
+    if (!gst_element_register (plugin, "cvdlfilter", GST_RANK_PRIMARY,
           CVDL_FILTER_TYPE))
-    return FALSE;
+        return FALSE;
+
+    if (!gst_element_register (plugin, "resconvert", GST_RANK_PRIMARY,
+          TYPE_RES_CONVERT))
+        return FALSE;
+
+    if (!gst_element_register (plugin, "wssink", GST_RANK_PRIMARY,
+          GST_TYPE_WS_SINK))
+        return FALSE;
 
   return TRUE;
 }
@@ -59,6 +64,6 @@ plugin_init (GstPlugin * plugin)
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     cvdlfilter,
-    "CVDL filter",
+    "CV/DL filters for HDDL-S",
     plugin_init, VERSION,
     "BSD", PACKAGE_NAME, GST_PACKAGE_ORIGIN);

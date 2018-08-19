@@ -278,6 +278,9 @@ OclDevice::getInstance (VADisplay display)
     if (!device->init ()) {
         device.reset ();
     }
+
+    // make it can be created only once for multiple threads
+    m_instance = device;
     return device;
 }
 
@@ -352,8 +355,12 @@ OclDevice::init ()
 {
 #if 1
     //cv::ocl::Context& ctx = cv::ocl::Context::getDefault();
-    m_context = (cl_context)m_ocvContext.ptr();
-    m_device  = (cl_device_id)m_ocvContext.device(0).ptr();
+    //m_context = (cl_context)m_ocvContext.ptr();
+    //m_device  = (cl_device_id)m_ocvContext.device(0).ptr();
+
+    m_context  = (cl_context)Context::getDefault().ptr();
+    m_device  = (cl_device_id)Context::getDefault().device(0).ptr();
+
     m_platform = (cl_platform_id)cv::ocl::Platform::getDefault().ptr();
     m_queue = (cl_command_queue)Queue::getDefault().ptr();
 
@@ -361,6 +368,13 @@ OclDevice::init ()
         g_print ("OclDevice: failed to init oclDevice\n");
         return FALSE;
     }
+
+    //debug
+    cl_int status = CL_SUCCESS;
+    char platform[MAX_STRING_LEN];
+    status = clGetPlatformInfo (m_platform, CL_PLATFORM_VERSION, MAX_STRING_LEN, platform, NULL);
+    g_print ("OpenCL platform %s is used, status = %d\n", platform, status);
+    //debug end
 
     clGetDeviceIDsFromVA_APIMediaAdapterINTEL = (clGetDeviceIDsFromVA_APIMediaAdapterINTEL_fn)
         getExtensionFunctionAddress ("clGetDeviceIDsFromVA_APIMediaAdapterINTEL");
@@ -477,7 +491,12 @@ OclDevice::createProgramFromSource (const char* filename)
         if (!CL_ERROR_PRINT (clGetProgramBuildInfo (program, m_device,
                CL_PROGRAM_BUILD_LOG, sizeof(log), log, NULL), "clGetProgramBuildInfo")) {
             log[sizeof(log) - 1] = '\0';
-            g_print ("Error in kernel: %s\n", log);
+            g_print ("Log Error in kernel: %s\n", log);
+        }
+        if (!CL_ERROR_PRINT (clGetProgramBuildInfo (program, m_device,
+               CL_PROGRAM_BUILD_STATUS, sizeof(log), log, NULL), "clGetProgramBuildInfo")) {
+            log[sizeof(log) - 1] = '\0';
+            g_print ("Status Error in kernel: %s\n", log);
         }
         clReleaseProgram (program);
         return NULL;
@@ -679,13 +698,14 @@ OclDevice::createFromVA_Intel (cl_mem_flags flags, VASurfaceID* surface, cl_uint
 {
     cl_int status = CL_SUCCESS;
 
+    m_context = getContext();
     *mem = clCreateFromVA_APIMediaSurfaceINTEL (m_context, flags, surface, plane, &status);
 
     if (CL_ERROR_PRINT (status, "clCreateFromVA_APIMediaSurfaceINTEL")) {
-        g_print("error - surface = %p, plane = %d, flags = %d, m_context = %p\n", surface, plane, flags, m_context);
+        g_print("error - surface = %d, plane = %d, flags = %ld, m_context = %p\n", *surface, plane, flags, m_context);
         return FALSE;
     }
-    g_print("surface = %p, plane = %d, flags = %d, m_context = %p\n", surface, plane, flags, m_context);
+    g_print("surface = %d, plane = %d, flags = %ld, m_context = %p\n", *surface, plane, flags, m_context);
     return TRUE;
 }
 
@@ -725,6 +745,12 @@ OclDevice::getCommandQueue ()
 cl_context
 OclDevice::getContext ()
 {
+    cl_context context = (cl_context)Context::getDefault().ptr();
+
+    if(context != m_context) {
+        g_print("Warning - m_context is changed!!!\n");
+    }
+
     return m_context;
 }
 
@@ -741,6 +767,7 @@ checkCLError (cl_int status, const char* func, const char* file, const int line)
 {
     if (status != CL_SUCCESS) {
         g_print ("(%s,%d) %s failed: %s\n", file, line, func, getCLErrorString(status));
+        while(1); //test
         return TRUE;
     }
     return FALSE;

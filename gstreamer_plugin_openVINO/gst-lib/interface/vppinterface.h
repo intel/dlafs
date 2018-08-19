@@ -40,6 +40,9 @@ class VppInterface
     virtual OclStatus
     process (const SharedPtr<VideoFrame>&, const SharedPtr<VideoFrame>&) = 0;
 
+    virtual OclStatus
+    process (const SharedPtr<VideoFrame>&, const SharedPtr<VideoFrame>&, const SharedPtr<VideoFrame>&) = 0;
+
     virtual gboolean
     setParameters (gpointer) = 0;
 

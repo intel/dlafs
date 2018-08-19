@@ -19,7 +19,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
+#include <gst/gst.h>
+#include <gst/video/video.h>
 #include "algobase.h"
 
 //using namespace HDDLStreamFilter;
@@ -47,6 +48,7 @@ CvdlAlgoBase::CvdlAlgoBase(GstTaskFunction func, gpointer user_data, GDestroyNot
 
     mInferCnt = 0;
     mInferCntTotal = 0;
+    mFrameIndex = 0;
 
     /* Create task for this algo */
     mTask = gst_task_new (func, user_data, notify);
@@ -97,7 +99,14 @@ void CvdlAlgoBase::stop_algo_thread()
 void CvdlAlgoBase::queue_buffer(GstBuffer *buffer)
 {
     CvdlAlgoData algoData(buffer);
+    algoData.mFrameId = mFrameIndex++;
+    if(buffer)
+        algoData.mPts = GST_BUFFER_TIMESTAMP (buffer);
     mInQueue.put(algoData);
+    g_print("InQueue size = %d\n", mInQueue.size());
 }
 
-
+int CvdlAlgoBase::get_in_queue_size()
+{
+    return mInQueue.size();
+}

@@ -43,6 +43,9 @@ public:
     virtual OclStatus
     process (const SharedPtr<VideoFrame>&, const SharedPtr<VideoFrame>&);
 
+    virtual OclStatus
+    process (const SharedPtr<VideoFrame>&, const SharedPtr<VideoFrame>&, const SharedPtr<VideoFrame>&);
+
     virtual gboolean
     setParameters (gpointer) { return FALSE; }
 
@@ -79,6 +82,8 @@ public:
     virtual void
     destroyMetaList ();
 
+    OclStatus
+    printOclKernelInfo();
 protected:
     GList*    m_meta_list;
     guint16   m_pixel_size;

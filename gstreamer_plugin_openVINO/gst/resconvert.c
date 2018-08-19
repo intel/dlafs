@@ -84,8 +84,8 @@ static GstStaticPadTemplate sink_factory =
 
 // PIC_SRC pad caps - the same with mfxdec src pad caps
 static const char src_pic_caps_str[] = \
-    GST_VIDEO_CAPS_MAKE ("NV12") "; " \
-    GST_VIDEO_CAPS_MAKE_WITH_FEATURES("memory:MFXSurface", "{ NV12 }");
+    GST_VIDEO_CAPS_MAKE ("{BGRA, BGRx}") "; " \
+    GST_VIDEO_CAPS_MAKE ("NV12") "; ";
 
 static GstStaticPadTemplate src_pic_factory =
     GST_STATIC_PAD_TEMPLATE (
@@ -158,6 +158,7 @@ res_convert_send_data (ResConvert * convertor, GstBuffer * buf)
     // For pic data which has been blended already:
     //  1) push the buffer directly
     if(convertor->pic_srcpad){
+        buf = gst_buffer_ref(buf);
         gst_pad_push (convertor->pic_srcpad, buf);
     } else {
         gst_buffer_unref(buf);
@@ -206,53 +207,166 @@ res_convert_flush (ResConvert * convertor)
   //TODO
 }
 
+static void
+res_convert_finalize (ResConvert * convertor)
+{
+    // g_object_unref() --> gst_element_dispose
+    // it has unref all the pads
+
+    // release pool
+    if(convertor->src_pool) {
+        gst_object_unref (convertor->src_pool);
+        convertor->src_pool = NULL;
+    }
+    if(convertor->blend_handle)
+        blender_destroy(convertor->blend_handle);
+    convertor->blend_handle = 0;
+    G_OBJECT_CLASS (parent_class)->finalize (G_OBJECT (convertor));
+}
+
 
 static gboolean
 res_convert_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  gboolean res = TRUE;
-  ResConvert *convertor = RES_CONVERT (parent);
-  GstCaps *caps = NULL;
+    gboolean res = TRUE;
+    ResConvert *convertor = RES_CONVERT (parent);
+    GstCaps *caps = NULL;
 
-  switch (GST_EVENT_TYPE (event)) {
+    switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
-      res_convert_send_event (convertor, event);
-      break;
+        res_convert_send_event (convertor, event);
+        break;
     case GST_EVENT_FLUSH_STOP:
-      res_convert_send_event (convertor, event);
-      res_convert_flush (convertor);
-      break;
+        res_convert_send_event (convertor, event);
+        res_convert_flush (convertor);
+        res_convert_finalize(convertor);
+        break;
     case GST_EVENT_SEGMENT:
     {
-      gst_event_unref (event);
-      break;
+        gst_event_unref (event);
+        break;
     }
     case GST_EVENT_EOS:
-      GST_INFO_OBJECT (convertor, "Received EOS");
-      if (!res_convert_send_event (convertor, event)) {
-        GST_WARNING_OBJECT (convertor, "EOS and no streams open");
-      }
-      break;
+        GST_INFO_OBJECT (convertor, "Received EOS");
+        if (!res_convert_send_event (convertor, event)) {
+            GST_WARNING_OBJECT (convertor, "EOS and no streams open");
+        }
+        break;
     case GST_EVENT_CAPS:
-      gst_event_parse_caps (event, &caps);
+        gst_event_parse_caps (event, &caps);
 
-      //set caps here
+        // get info of caps
+        gst_video_info_from_caps (&convertor->sink_info, caps);
 
-      // dead-loop if call below function
-      //gst_pad_set_caps (convertor->sinkpad, caps);
+        /**---  set caps here  --*/
+        // From src pad event, only process sink pad caps
+        // From sink pad event, only process src pad caps
+        // If not, there will be dead-loop
+        //
+        // For example: event from sink pad, then call below function will be dead lock
+        //              gst_pad_set_caps (convertor->sinkpad, caps);
 
-      // set caps for pic_srcpad
-      gst_pad_set_caps (convertor->pic_srcpad, caps);
-      gst_video_info_from_caps (&convertor->sink_info, caps);
-      gst_event_unref (event);
+        /**---set caps for peer pad below----*/
+        GstPadDirection direction = GST_PAD_DIRECTION (pad);
+        GstCaps *prev_incaps = NULL, *newcaps;
+        //GstPad *mypad = NULL;
+        GstPad *otherpad = NULL;
+        if(direction==GST_PAD_SRC){
+            //mypad = convertor->pic_srcpad;
+            otherpad  = convertor->sinkpad;
+        }else{
+            //mypad = convertor->sinkpad;
+            otherpad = convertor->pic_srcpad;
+        }
 
-      // TODO: set caps for txt_srcpad
+        // Don't process src event
+        if(direction==GST_PAD_SRC){
+            // TODO: how to process src event?
+            gst_event_unref (event);
+            break;
+        }
 
-      break;
+        #if 0
+        prev_incaps = gst_pad_get_current_caps (mypad);      
+        g_print("current_caps =\n %s\n", gst_caps_to_string(prev_incaps));
+        g_print("caps =\n %s\n", gst_caps_to_string(caps));
+
+        //dead-loop if call below function
+        // set sink pad
+        if(prev_incaps && gst_caps_is_equal(prev_incaps, caps)) {
+            g_print("%s() - the same caps!!!\n", __func__);
+            // DO nothig
+        }else{
+            if(!prev_incaps)
+                prev_incaps = gst_pad_get_pad_template_caps(mypad);
+            newcaps = gst_caps_intersect_full (prev_incaps, caps, GST_CAPS_INTERSECT_FIRST);
+            g_print("newcaps =\n %s\n", gst_caps_to_string(newcaps));
+            // set caps
+            gst_pad_set_caps (mypad, newcaps);
+            gst_caps_unref(newcaps);
+        }
+        g_print("prev_incaps = %s\n", gst_caps_to_string(prev_incaps));
+        g_print("caps = %s\n", gst_caps_to_string(caps));
+        gst_caps_unref (prev_incaps);
+        #endif
+
+        // set pic_src pad
+        prev_incaps = gst_pad_get_current_caps (otherpad);
+        g_print("caps = %s\n", gst_caps_to_string(caps));
+        g_print("1.prev_incaps = %s\n", gst_caps_to_string(prev_incaps));
+        if(!prev_incaps)
+            prev_incaps = gst_pad_get_pad_template_caps(otherpad);
+        g_print("2.prev_incaps = %s\n", gst_caps_to_string(prev_incaps));
+
+        // create a new caps based on input caps of event
+        GstStructure *structure;
+        GstCapsFeatures *features;
+
+        newcaps = gst_caps_new_empty();
+        GST_CAPS_FLAGS (newcaps) = GST_CAPS_FLAGS (caps);
+
+        structure  = gst_structure_copy(gst_caps_get_structure(caps, 0));
+        //features = gst_caps_features_copy(gst_caps_get_features(caps, 0));
+        g_print("structure:\n%s\n",gst_structure_to_string(structure));
+        //g_printf("features:\n%s\n",gst_caps_features_to_string(features));
+
+        gst_structure_set_name(structure, "video/x-raw");
+        gst_structure_remove_field(structure, "format=(string)NV12");
+        gst_structure_set(structure,"format",G_TYPE_STRING, "BGRx", NULL);
+        g_print("structure:\n%s\n",gst_structure_to_string(structure));
+        features = gst_caps_features_new_empty();
+
+        gst_caps_append_structure_full(newcaps, structure, features);
+        g_print("caps =\n %s\n", gst_caps_to_string(caps));
+        g_print("newcaps =\n %s\n", gst_caps_to_string(newcaps));
+        newcaps = gst_caps_intersect_full (newcaps, prev_incaps, GST_CAPS_INTERSECT_FIRST);
+        g_print("intersect newcaps =\n %s\n", gst_caps_to_string(newcaps));
+
+        // TODO: need to free structure and features?
+
+        // set caps
+        gst_pad_set_caps (otherpad, newcaps);
+
+        // push this caps to next filter
+        GstEvent *new_event = gst_event_new_caps(newcaps);
+        res = gst_pad_push_event (convertor->pic_srcpad, gst_event_ref(new_event));
+        gst_event_unref (new_event);
+
+        // free caps
+        gst_caps_unref(newcaps);
+        gst_caps_unref (prev_incaps);
+        gst_caps_unref(caps);
+
+        // TODO: set caps for txt_srcpad
+
+
+        // free event
+        gst_event_unref (event);
+        break;
     default:
-      res_convert_send_event (convertor, event);
-      break;
-  }
+        res = res_convert_send_event (convertor, event);
+        break;
+    }
 
   return res;
 }
@@ -278,14 +392,98 @@ res_convert_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 static gboolean
 res_convert_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
-  gboolean res = FALSE;
-  ResConvert *convertor = RES_CONVERT (parent);
+    ResConvert *convertor = RES_CONVERT (parent);
+    //GstPadDirection direction = GST_PAD_DIRECTION (pad);
+    gboolean ret = TRUE;//, forward = FALSE;
 
-  GST_LOG_OBJECT (convertor, "Have query of type %d on pad %" GST_PTR_FORMAT,
-      GST_QUERY_TYPE (query), pad);
+    GST_LOG_OBJECT (convertor, "Have query of type %d on pad %" GST_PTR_FORMAT,
+        GST_QUERY_TYPE (query), pad);
+    g_print("Have query of type %d on pad %" GST_PTR_FORMAT "\n",
+        GST_QUERY_TYPE (query), pad);
 
-  res = gst_pad_query_default (pad, parent, query);
-  return res;
+    // It will make transform filter get empty out/in caps
+    #if 0
+    switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_ALLOCATION:
+        g_print("%s() - query GST_QUERY_ALLOCATION...",__func__);
+        forward = TRUE;
+        break;
+    case GST_QUERY_ACCEPT_CAPS:
+    {
+        GstCaps *caps;
+        gst_query_parse_accept_caps (query, &caps);
+
+        if(!caps) {
+            forward = TRUE;
+            break;
+        }
+
+        GstCaps *temp = NULL;
+        if(direction==GST_PAD_SRC)
+            temp = gst_pad_get_pad_template_caps (convertor->pic_srcpad);
+        else
+            temp = gst_pad_get_pad_template_caps (convertor->sinkpad);
+
+        //GstVideoInfo info;
+        //gst_video_info_from_caps(&info, temp);
+        //gst_video_info_from_caps(&info, caps);
+        g_print("pad_caps = %s\n", gst_caps_to_string(temp));
+        g_print("caps = %s\n", gst_caps_to_string(caps));
+
+        ret = gst_caps_can_intersect (caps, temp);
+        if(ret==TRUE) {
+            gst_query_set_accept_caps_result (query, ret);
+            /* return TRUE, we answered the query */
+            ret = TRUE;
+        }
+        gst_caps_unref(caps);
+        gst_caps_unref(temp);
+        break;
+    }
+    case GST_QUERY_CAPS:
+    {
+        GstCaps *filter, *caps, *temp;
+        gst_query_parse_caps (query, &filter);
+
+        if(!filter) {
+            forward = TRUE;
+            break;
+        }
+        if(direction==GST_PAD_SRC)
+            temp = gst_pad_get_pad_template_caps (convertor->pic_srcpad);
+        else
+            temp = gst_pad_get_pad_template_caps (convertor->sinkpad);
+
+        caps = gst_caps_intersect_full (filter, temp, GST_CAPS_INTERSECT_FIRST);
+
+        //GstVideoInfo info;
+        //gst_video_info_from_caps(&info, filter);
+        //gst_video_info_from_caps(&info, caps);
+
+        g_print("filter_caps = %s\n", gst_caps_to_string(filter));
+        g_print("caps = %s\n", gst_caps_to_string(caps));
+
+        if(caps){
+            gst_query_set_caps_result (query, caps);
+            gst_caps_unref (caps);
+            ret = TRUE;
+        }
+        gst_caps_unref(temp);
+        gst_caps_unref(filter);
+        break;
+    }
+    default:
+      ret = gst_pad_query_default (pad, parent, query);
+      break;
+  }
+
+  if(forward == TRUE)
+    ret = gst_pad_query_default (pad, parent, query);
+  #endif
+
+  ret = gst_pad_query_default (pad, parent, query);
+  
+  return ret;
 }
 
 
@@ -293,13 +491,13 @@ res_convert_query (GstPad * pad, GstObject * parent, GstQuery * query)
 static gboolean
 res_convert_sink_activate (GstPad * sinkpad, GstObject * parent)
 {
-  gboolean res = FALSE;
-  GstQuery *query = gst_query_new_formats();
-  if (gst_pad_peer_query (sinkpad, query)) {
-      res = gst_pad_activate_mode (sinkpad, GST_PAD_MODE_PUSH, TRUE);
-  } 
-  gst_query_unref (query);
-  return res;
+    gboolean res = FALSE;
+    GstQuery *query = gst_query_new_formats();
+    if (gst_pad_peer_query (sinkpad, query)) {
+        res = gst_pad_activate_mode (sinkpad, GST_PAD_MODE_PUSH, TRUE);
+    } 
+    gst_query_unref (query);
+    return res;
 }
 
 /* This function gets called when we activate ourselves in push mode. */
@@ -326,6 +524,7 @@ res_convert_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
     ResConvert *convertor = RES_CONVERT (parent);
     GstFlowReturn ret = GST_FLOW_OK;
+    GstBuffer* output = NULL;
 
     GST_LOG_OBJECT (convertor,
         "Received buffer with offset %" G_GUINT64_FORMAT,
@@ -339,13 +538,21 @@ res_convert_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     // step 1: create a RGB OSD and draw string/rectangle/track points on it
     // step 2: call OpenCL to blend OSD with NV12 surface, into OSD buffer?
     // It is better to blend OSD int NV12 surface
-    ret = blender_process_cvdl_buffer(convertor->blend_handle, buffer);
+    output = blender_process_cvdl_buffer(convertor->blend_handle, buffer);
 
+#if 1
     // push the result
-    if(ret==GST_FLOW_OK)
-        ret = res_convert_send_data (convertor, buffer);
-    else
-        gst_buffer_unref(buffer);
+    if(output!=NULL)
+        ret = res_convert_send_data (convertor, output);
+    //gst_buffer_unref(buffer);
+#else
+   //test
+    if(output!=NULL)
+        gst_buffer_unref(output);
+    gst_pad_push (convertor->pic_srcpad, buffer);
+    //gst_buffer_unref(buffer);
+#endif
+
 
     return ret;
 }
@@ -421,6 +628,7 @@ res_convert_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       // stop the thread
+      res_convert_finalize(convertor);
       break;
     default:
       break;
@@ -429,20 +637,6 @@ res_convert_change_state (GstElement * element, GstStateChange transition)
   return result;
 }
 
-static void
-res_convert_finalize (ResConvert * convertor)
-{
-    // g_object_unref() --> gst_element_dispose
-    // it has unref all the pads
-
-    // release pool
-    if(convertor->src_pool) {
-        gst_object_unref (convertor->src_pool);
-        convertor->src_pool = NULL;
-    }
-    blender_destroy(convertor->blend_handle);
-    G_OBJECT_CLASS (parent_class)->finalize (G_OBJECT (convertor));
-}
 
 static void
 res_convert_base_init (ResConvertClass * klass)
@@ -486,7 +680,7 @@ res_convert_init (ResConvert * convertor)
     //GstCaps *caps = gst_caps_new_any();
 
     //TODO:
-    GstCaps *caps = gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING, "BGR", NULL);
+    GstCaps *caps = gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING, "BGRx", NULL);
     gst_caps_set_simple (caps, "width", G_TYPE_INT, sizeof(InferenceData), "height",
       G_TYPE_INT, 1, NULL);
 

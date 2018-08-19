@@ -97,7 +97,7 @@ ocl_pool_set_config (GstBufferPool* pool, GstStructure* config)
         gst_caps_unref (priv->caps);
 
     priv->caps = gst_caps_ref (caps);
-    priv->add_videometa = FALSE;   //TODO
+    priv->add_videometa = TRUE;   //TODO
 
     // Only support BRG/Gray8 format
     info.offset[1] = info.offset[2] = 0;
@@ -132,13 +132,27 @@ ocl_memory_alloc (OclPool* oclpool)
     OCL_MEMORY_HEIGHT (ocl_mem) = GST_VIDEO_INFO_HEIGHT (&priv->info);
     OCL_MEMORY_SIZE (ocl_mem) = GST_VIDEO_INFO_SIZE (&priv->info);
 
-    if(priv->info.finfo->format == GST_VIDEO_FORMAT_GRAY8)
-        ocl_mem->frame.create(cv::Size(OCL_MEMORY_WIDTH (ocl_mem),OCL_MEMORY_HEIGHT (ocl_mem)), CV_8UC1);
-    else
-        ocl_mem->frame.create(cv::Size(OCL_MEMORY_WIDTH (ocl_mem),OCL_MEMORY_HEIGHT (ocl_mem)), CV_8UC3);
+    switch(priv->info.finfo->format) {
+        case GST_VIDEO_FORMAT_GRAY8:
+            ocl_mem->frame.create(cv::Size(OCL_MEMORY_WIDTH (ocl_mem),OCL_MEMORY_HEIGHT (ocl_mem)), CV_8UC1);
+            break;
+        case GST_VIDEO_FORMAT_BGR:
+            ocl_mem->frame.create(cv::Size(OCL_MEMORY_WIDTH (ocl_mem),OCL_MEMORY_HEIGHT (ocl_mem)), CV_8UC3);
+            break;
+        case GST_VIDEO_FORMAT_BGRx:
+            // For blender module
+            ocl_mem->frame.create(cv::Size(OCL_MEMORY_WIDTH (ocl_mem),OCL_MEMORY_HEIGHT (ocl_mem)), CV_8UC4);
+            break;
+        default:
+            g_print("Not support format = %d\n", priv->info.finfo->format);
+            while(1);
+            break;
+    }
     g_return_val_if_fail(ocl_mem->frame.offset == 0, NULL);
     g_return_val_if_fail(ocl_mem->frame.isContinuous(), NULL);
-    OCL_MEMORY_MEM (ocl_mem) = (cl_mem)ocl_mem->frame.handle(ACCESS_WRITE);
+
+    // CRC is ACCESS_WRITE, but blender is ACCESS_READ
+    OCL_MEMORY_MEM (ocl_mem) = (cl_mem)ocl_mem->frame.handle(ACCESS_RW);
 
     GstMemory *memory = GST_MEMORY_CAST (ocl_mem);
     gst_memory_init (memory, GST_MEMORY_FLAG_NO_SHARE, priv->allocator, NULL,

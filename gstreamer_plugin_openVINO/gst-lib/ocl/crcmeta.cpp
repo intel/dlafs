@@ -23,6 +23,10 @@
 #include "crcmeta.h"
 #include "oclcommon.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 static void crc_meta_free(CrcMeta *meta)
 {
     if(!meta)
@@ -213,5 +217,9 @@ VASurfaceID gst_get_mfx_surface(GstBuffer* inbuf, GstVideoInfo *info, VADisplay 
     *display = meta->display_id;
     return surface;
 }
+
+#ifdef __cplusplus
+};
+#endif
 
 

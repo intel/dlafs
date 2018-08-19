@@ -56,7 +56,7 @@ public:
 
 class CvdlAlgoBase;
 class CvdlAlgoData;
-using AsyncCallback = std::function<void(CvdlAlgoData* &algoData)>;
+using AsyncCallback = std::function<void(CvdlAlgoData* algoData)>;
 
 class CvdlAlgoData{
 public:
@@ -67,14 +67,31 @@ public:
         }else{
             mGstBuffer = NULL;
         }
+        mFrameId = 0;
+        mPts = 0;
     }
     ~CvdlAlgoData() {
+        // Dont unref it, which will cause unref when copy this data structure into Queue
         if(mGstBuffer){
-            gst_buffer_unref(mGstBuffer);
+            //gst_buffer_unref(mGstBuffer);
         }
         mObjectVec.clear();
-
     }
+   /*
+    CvdlAlgoData& operator=(CvdlAlgoData &data) {
+        if(data.mGstBuffer){
+            mGstBuffer = gst_buffer_ref(data.mGstBuffer);
+        }
+        mFrameId = data.mFrameId;
+        mPts     = data.mPts;
+        mResultValid = data.mResultValid;
+        mGstBufferOcl = data.mGstBufferOcl;
+        mObjectVec = data.mObjectVec;
+        algoBase = data.algoBase;
+
+        return *this;
+    }
+    */
     GstBuffer *mGstBuffer;
     guint64 mFrameId;
     guint64 mPts;
@@ -104,6 +121,8 @@ public:
     void start_algo_thread();
     void stop_algo_thread();
 
+    int get_in_queue_size();
+
     virtual void set_data_caps(GstCaps *incaps)
     {
 
@@ -128,8 +147,8 @@ public:
     GRecMutex mMutex;
 
     /* orignal input video size */
-    int mOrignalVideoWidth;
-    int mOrignalVideoHeight;
+    //int mOrignalVideoWidth;
+    //int mOrignalVideoHeight;
 
     /* The image size into the actual algo processing */
     int mInputWidth;
@@ -159,5 +178,7 @@ public:
 
     std::atomic<int> mInferCnt;
 	std::atomic<guint64> mInferCntTotal;
+
+    int mFrameIndex;
 };
 #endif

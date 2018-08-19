@@ -53,7 +53,7 @@ public:
     /*Process image: CRC
        *   Note: oclcontext will be setup when first call this function
        */
-    GstFlowReturn process_image(GstBuffer* inbuf, GstBuffer** outbuf, VideoRect *crop);
+    GstFlowReturn process_image(GstBuffer* inbuf, GstBuffer* inbuf2, GstBuffer** outbuf, VideoRect *crop);
     /*
        *  Interface API: set ocl format for output surface
        *      This format will be passed into OclVppCrc to load the right kernel
@@ -71,7 +71,8 @@ public:
     GstVideoInfo     mOutVideoInfo;
 
     VideoRect mCrop;
-    SharedPtr<VideoFrame> mSrcFrame;
+    SharedPtr<VideoFrame> mSrcFrame;  // 
+    SharedPtr<VideoFrame> mSrcFrame2; // if blender - NV12
     SharedPtr<VideoFrame> mDstFrame;
 
     //SharedPtr<VppInterface> mOclCrc;
@@ -80,7 +81,7 @@ public:
 private:
     void setup_ocl_context(VADisplay display);
     GstFlowReturn process_image_crc(GstBuffer* inbuf, GstBuffer** outbuf, VideoRect *crop);
-    GstFlowReturn process_image_blend(GstBuffer* inbuf, GstBuffer** outbuf, VideoRect *rect);
+    GstFlowReturn process_image_blend(GstBuffer* inbuf, GstBuffer* inbuf2, GstBuffer** outbuf, VideoRect *rect);
 
     VADisplay mDisplay;
     //cl_context mContext;

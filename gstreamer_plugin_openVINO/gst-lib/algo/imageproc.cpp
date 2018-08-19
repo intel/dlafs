@@ -23,11 +23,18 @@
 #include "imageproc.h"
 #include <common/common.h>
 #include <ocl/oclpool.h>
+#include <mutex>
+
 using namespace HDDLStreamFilter;
+
+using namespace std;
+// vpp lock for ocl context
+static std::mutex vpp_mutext;
 
 ImageProcessor::ImageProcessor()
 {
     mSrcFrame.reset (g_new0 (VideoFrame, 1), g_free);
+    mSrcFrame2.reset (g_new0 (VideoFrame, 1), g_free);
     mDstFrame.reset (g_new0 (VideoFrame, 1), g_free);
 
     gst_video_info_init (&mInVideoInfo);
@@ -125,9 +132,10 @@ void ImageProcessor::setup_ocl_context(VADisplay display)
         (OCL_SUCCESS != mOclVpp->setOclContext (mContext))) {
         GST_DEBUG ("oclcrc: failed to init ocl_vpp");
         mOclVpp.reset ();
-        g_print("oclcrc: failed to init ocl_vpp");
+        g_print("oclcrc: failed to init ocl_vpp\n");
     }
 
+    g_print("oclcrc: success to init ocl_vpp\n");
     mOclInited = true;
     mDisplay = display;
 }
@@ -167,7 +175,9 @@ GstFlowReturn ImageProcessor::process_image_crc(GstBuffer* inbuf, GstBuffer** ou
 
     ocl_video_rect_set (&mSrcFrame->crop, crop);
 
+    vpp_mutext.lock();
     OclStatus status = mOclVpp->process (mSrcFrame, mDstFrame);
+    vpp_mutext.unlock();
 
     if(status == OCL_SUCCESS) {
         *outbuf = out_buf;
@@ -184,14 +194,20 @@ GstFlowReturn ImageProcessor::process_image_crc(GstBuffer* inbuf, GstBuffer** ou
  *   *output: nv12 video buffer
  *    rect: the size of osd buffer
  */
-GstFlowReturn ImageProcessor::process_image_blend(GstBuffer* inbuf, GstBuffer** outbuf, VideoRect *rect)
+GstFlowReturn ImageProcessor::process_image_blend(GstBuffer* inbuf, GstBuffer* inbuf2, GstBuffer** outbuf, VideoRect *rect)
 {
     VADisplay display;
     GstBuffer *osd_buf, *dst_buf;
-    OclMemory *osd_mem;
+    OclMemory *osd_mem, *dst_mem;
 
     osd_buf = inbuf;
     dst_buf = *outbuf;
+
+    dst_mem = ocl_memory_acquire (dst_buf);
+    if (!dst_mem) {
+        GST_ERROR ("Failed to acquire ocl memory from dst_buf");
+        return GST_FLOW_ERROR;
+    }
 
     // osd memory is OCL buffer
     osd_mem = ocl_memory_acquire (osd_buf);
@@ -199,30 +215,40 @@ GstFlowReturn ImageProcessor::process_image_blend(GstBuffer* inbuf, GstBuffer** 
         GST_ERROR ("Failed to acquire ocl memory from osd_buf");
         return GST_FLOW_ERROR;
     }
+    //osd
     mSrcFrame->fourcc = osd_mem->fourcc;
     mSrcFrame->mem    = osd_mem->mem;
     mSrcFrame->width  = rect->width;
     mSrcFrame->height = rect->height;
 
     /* Output data must be NV12 surface from mfxdec element */
-    mDstFrame->fourcc = video_format_to_va_fourcc (GST_VIDEO_INFO_FORMAT (&mInVideoInfo));
-    mDstFrame->surface= gst_get_mfx_surface (dst_buf, &mInVideoInfo, &display);
-    mDstFrame->width  = mInVideoInfo.width;
-    mDstFrame->height = mInVideoInfo.height;
+    // NV12 input
+    mSrcFrame2->fourcc = video_format_to_va_fourcc (GST_VIDEO_INFO_FORMAT (&mInVideoInfo));
+    mSrcFrame2->surface= gst_get_mfx_surface (inbuf2, &mInVideoInfo, &display);
+    mSrcFrame2->width  = mInVideoInfo.width;
+    mSrcFrame2->height = mInVideoInfo.height;
 
-    if(mDstFrame->surface == VA_INVALID_SURFACE) {
+    // output is RGB format
+    mDstFrame->fourcc = dst_mem->fourcc;
+    mDstFrame->mem    = dst_mem->mem;
+    mDstFrame->width  = rect->width;
+    mDstFrame->height = rect->height;
+
+    if(mSrcFrame2->surface == VA_INVALID_SURFACE) {
         GST_ERROR ("Failed to get VASurface!");
         return GST_FLOW_ERROR;
     }
     setup_ocl_context(display);
 
-    if (mDstFrame->fourcc != OCL_FOURCC_NV12) {
+    if (mSrcFrame2->fourcc != OCL_FOURCC_NV12) {
         GST_ERROR ("only support RGBA blending on NV12 video frame");
         return GST_FLOW_ERROR;
     }
     ocl_video_rect_set (&mSrcFrame->crop, rect);
 
-    OclStatus status = mOclVpp->process (mSrcFrame, mDstFrame);
+    vpp_mutext.lock();
+    OclStatus status = mOclVpp->process (mSrcFrame, mSrcFrame2, mDstFrame);
+    vpp_mutext.unlock();
 
     if(status == OCL_SUCCESS)
         return GST_FLOW_OK;
@@ -234,7 +260,7 @@ GstFlowReturn ImageProcessor::process_image_blend(GstBuffer* inbuf, GstBuffer** 
 
 }
 
-GstFlowReturn ImageProcessor::process_image(GstBuffer* inbuf, GstBuffer** outbuf, VideoRect *crop)
+GstFlowReturn ImageProcessor::process_image(GstBuffer* inbuf, GstBuffer* inbuf2, GstBuffer** outbuf, VideoRect *crop)
 {
     GstFlowReturn ret = GST_FLOW_OK;
     switch(mOclVppType){
@@ -242,7 +268,7 @@ GstFlowReturn ImageProcessor::process_image(GstBuffer* inbuf, GstBuffer** outbuf
             ret = process_image_crc(inbuf, outbuf, crop);
             break;
         case IMG_PROC_TYPE_OCL_BLENDER:
-            ret = process_image_blend(inbuf, outbuf, crop); 
+            ret = process_image_blend(inbuf, inbuf2, outbuf, crop); 
             break;
         default:
             ret = GST_FLOW_ERROR;

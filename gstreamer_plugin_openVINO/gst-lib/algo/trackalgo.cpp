@@ -61,6 +61,8 @@ static void track_algo_func(gpointer userData)
     CvdlAlgoData *algoData = new CvdlAlgoData;
     //GstFlowReturn ret;
 
+    g_print("\ntrack_algo_func - new an algoData = %p\n", algoData);
+
     if(!trackAlgo->mNext) {
         GST_WARNING("TrackAlgo: the next algo is NULL, return!");
         return;
@@ -71,15 +73,22 @@ static void track_algo_func(gpointer userData)
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         return;
     }
+
     // bind algoTask into algoData, so that can be used when sync callback
     algoData->algoBase = static_cast<CvdlAlgoBase *>(trackAlgo);
+
+    g_print("%s() - trackAlgo = %p, algoData->mFrameId = %ld\n", __func__, trackAlgo, algoData->mFrameId);
+    g_print("%s() - get one buffer, GstBuffer = %p, refcout = %d, queueSize = %d, algoData = %p, algoBase = %p\n",
+        __func__, algoData->mGstBuffer, GST_MINI_OBJECT_REFCOUNT (algoData->mGstBuffer),
+        trackAlgo->mInQueue.size(), algoData, algoData->algoBase);
+
 
     // get input data and process it here, put the result into algoData
     // NV12-->BGR
     GstBuffer *ocl_buf = NULL;
     VideoRect crop = {0,0, (unsigned int)trackAlgo->mImageProcessorInVideoWidth,
                            (unsigned int)trackAlgo->mImageProcessorInVideoHeight};
-    trackAlgo->mImageProcessor.process_image(algoData->mGstBuffer,&ocl_buf, &crop);
+    trackAlgo->mImageProcessor.process_image(algoData->mGstBuffer,NULL, &ocl_buf, &crop);
     if(ocl_buf==NULL) {
         GST_WARNING("Failed to do image process!");
         return;
@@ -93,6 +102,8 @@ static void track_algo_func(gpointer userData)
         return;
     }
 
+    //trackAlgo->push_track_object(algoData);//test
+
     // do object track
     /**
        * HDDL detect result x, y, width or height may be < 0
@@ -102,8 +113,9 @@ static void track_algo_func(gpointer userData)
     // Tracking every object, and get predicts.
     trackAlgo->track_objects(algoData);
 
+    //------------test---remove this code -----------------
     // update object data
-    trackAlgo->update_track_object(algoData->mObjectVec);
+    //trackAlgo->update_track_object(algoData->mObjectVec);
 
     // push data if possible
     trackAlgo->push_track_object(algoData);
@@ -602,7 +614,7 @@ void TrackAlgo::update_track_object(std::vector<ObjectData> &objectVec)
             for(unsigned int i=0; i<objectVec.size(); i++){
                 ObjectData& objectData = objectVec[i];
                 if(objectData.id == (*it).objId) {
-                    objectData.flags &= (~FLAGS_TRACKED_DATA_IS_PASS);
+                    objectData.flags |= FLAGS_TRACKED_DATA_IS_PASS;
                     //objectData.flags.fetch_and(~FLAGS_TRACKED_DATA_IS_PASS);
                     break;
                 }
@@ -634,10 +646,13 @@ void TrackAlgo::push_track_object(CvdlAlgoData* &algoData)
 
     // Not tracking data need to pass to next algo component
     if(objectVec.size()==0) {
+        g_print("track_algo_func - unref GstBuffer = %p(%d)\n",
+            algoData->mGstBuffer, GST_MINI_OBJECT_REFCOUNT(algoData->mGstBuffer));
         delete algoData;
         return;
     } 
-
+    g_print("track_algo_func - pass down GstBuffer = %p(%d)\n",
+         algoData->mGstBuffer, GST_MINI_OBJECT_REFCOUNT(algoData->mGstBuffer));
     mNext->mInQueue.put(*algoData);
 }
 

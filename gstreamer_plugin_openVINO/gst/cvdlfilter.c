@@ -21,7 +21,7 @@
  */
 
 #include "cvdlfilter.h"
-
+#include <ocl/crcmeta.h>
 
 GST_DEBUG_CATEGORY_STATIC (cvdl_filter_debug);
 #define GST_CAT_DEFAULT cvdl_filter_debug
@@ -72,22 +72,25 @@ cvdl_handle_buffer(CvdlFilter *cvdlfilter, GstBuffer* buffer)
 {
     GstFlowReturn ret = GST_FLOW_OK;
 
+#if 1
+    // wait algo task
+    while(algo_pipeline_get_input_queue_size(cvdlfilter->algoHandle) >=1 ) {
+        g_usleep(30000);
+    }
     // put buffer into a queue
     algo_pipeline_put_buffer(cvdlfilter->algoHandle, buffer);
+#else
+    buffer = gst_buffer_ref(buffer);
+#endif
+    cvdlfilter->frame_num_in++;
+    void *data;
+    g_print("input buffer num = %d, buffer = %p, refcount = %d, surface = %d\n",
+        cvdlfilter->frame_num_in, buffer, GST_MINI_OBJECT_REFCOUNT (buffer),
+        gst_get_mfx_surface(buffer, NULL, &data));
 
     return ret;;
 }
 
-GstBuffer* cvdl_try_to_get_output(CvdlFilter *cvdlfilter)
-{
-    GstBuffer *buf = NULL;
-
-    // get data from output queue, and attach it into outbuf
-    // if no data in output queue, return NULL;
-    algo_pipeline_get_buffer(cvdlfilter->algoHandle, &buf);
-
-    return buf;
-}
 
 static GstFlowReturn
 cvdl_filter_transform_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
@@ -97,9 +100,18 @@ cvdl_filter_transform_chain (GstPad * pad, GstObject * parent, GstBuffer * buffe
     CvdlFilterPrivate *priv = cvdlfilter->priv;
     GstClockTime timestamp, duration;
 
-    
+    // NOt need ref this buffer, since it will be refed in CvdlAlgoBase::queue_buffer(GstBuffer *buffer)
+    // buffer = gst_buffer_ref(buffer);
+
     timestamp = GST_BUFFER_TIMESTAMP (buffer);
     duration = GST_BUFFER_DURATION (buffer);
+
+    //debug
+    if(duration>0)
+        g_usleep(duration/1000);
+    else
+        g_usleep(30000);
+
 
     if (G_UNLIKELY (!priv->negotiated)) {
         GST_ELEMENT_ERROR (cvdlfilter, CORE, NOT_IMPLEMENTED, (NULL), ("unknown format"));
@@ -185,11 +197,49 @@ cvdl_filter_finalize (GObject * object)
 
     // stop the data push task
     gst_task_set_state(cvdlfilter->mPushTask, GST_TASK_STOPPED);
+    algo_pipeline_flush_buffer(cvdlfilter->algoHandle);
     gst_task_join(cvdlfilter->mPushTask);
 
-    algo_pipeline_destroy(cvdlfilter->algoHandle);
+    if(cvdlfilter->algoHandle)
+        algo_pipeline_destroy(cvdlfilter->algoHandle);
+    cvdlfilter->algoHandle = 0;
 
     G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+static GstStateChangeReturn
+cvdl_filter_change_state (GstElement * element, GstStateChange transition)
+{
+  CvdlFilter *cvdlfilter = CVDL_FILTER (element);
+  GstStateChangeReturn result;
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      // create the process task(thread) and start it
+
+      break;
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      break;
+    default:
+      break;
+  }
+
+  result = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      break;
+    case GST_STATE_CHANGE_READY_TO_NULL:
+        // stop the data push task
+        gst_task_set_state(cvdlfilter->mPushTask, GST_TASK_STOPPED);
+        algo_pipeline_flush_buffer(cvdlfilter->algoHandle);
+        gst_task_join(cvdlfilter->mPushTask);
+        if(cvdlfilter->algoHandle)
+            algo_pipeline_destroy(cvdlfilter->algoHandle);
+        cvdlfilter->algoHandle = 0;
+      break;
+    default:
+      break;
+  }
+
+  return result;
 }
 
 static void
@@ -383,6 +433,7 @@ cvdl_filter_class_init (CvdlFilterClass * klass)
     obj_class->set_property = cvdl_filter_set_property;
     obj_class->get_property = cvdl_filter_get_property;
 
+    elem_class->change_state = cvdl_filter_change_state;
     gst_element_class_set_details_simple (elem_class,
         "CvdlFilter", "Filter/Video/CVDL",
         "Video CV/DL algorithm processing based on OpenVINO",
@@ -409,7 +460,12 @@ static void push_buffer_func(gpointer userData)
     GstBaseTransform *trans = GST_BASE_TRANSFORM_CAST (userData);
     GstBuffer *outbuf;
 
-    outbuf = cvdl_try_to_get_output(cvdl_filter);
+    // get data from output queue, and attach it into outbuf
+    // if no data in output queue, return NULL;
+    algo_pipeline_get_buffer(cvdl_filter->algoHandle, &outbuf);
+
+    cvdl_filter->frame_num_out++;
+    g_print("%d: push_buffer_func - get output buffer = %p\n", cvdl_filter->frame_num_out, outbuf);
 
     //push the buffer only when can get an output data 
     if(outbuf)

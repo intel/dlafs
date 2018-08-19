@@ -24,7 +24,7 @@
 
 #include "oclvppbase.h"
 #include "common/log.h"
-//#include "ocl/oclmixmeta.h"
+
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -56,6 +56,12 @@ OclVppBase::process (const SharedPtr<VideoFrame>&,const SharedPtr<VideoFrame>&)
 }
 
 OclStatus
+OclVppBase::process (const SharedPtr<VideoFrame>&,const SharedPtr<VideoFrame>&, const SharedPtr<VideoFrame>&)
+{
+    return OCL_SUCCESS;
+}
+
+OclStatus
 OclVppBase::setOclContext (const SharedPtr<OclContext>& context)
 {
     m_context = context;
@@ -65,9 +71,36 @@ OclVppBase::setOclContext (const SharedPtr<OclContext>& context)
         g_print ("invalid kernel file: %s.cl\n", getKernelFileName());
         return OCL_FAIL;
     }
+    g_print("kernel:%s - m_kernel = %p\n", getKernelName(), m_kernel);
 
     return OCL_SUCCESS;
 }
+
+OclStatus
+OclVppBase::printOclKernelInfo()
+{
+    cl_int status = CL_SUCCESS;
+    char kernel_name[128];
+    cl_context ctx;
+    if(m_kernel) {
+        status = clGetKernelInfo (m_kernel, CL_KERNEL_FUNCTION_NAME, sizeof(kernel_name), kernel_name, NULL);
+        if(status == CL_SUCCESS) {
+            g_print("m_kernel = %p, name = %s\n", m_kernel, kernel_name);
+        } else {
+            g_print("printOclKernelInfo name failed = %d\n", status);
+        }
+
+        status = clGetKernelInfo (m_kernel, CL_KERNEL_CONTEXT, sizeof(cl_context), &ctx, NULL);
+        if(status == CL_SUCCESS) {
+            g_print("m_kernel = %p, context = %p\n", m_kernel, ctx);
+        } else {
+            g_print("printOclKernelInfo context failed = %d\n", status);
+        }
+    }
+
+    return OCL_SUCCESS;
+}
+
 
 OclStatus
 OclVppBase::setNativeDisplay (const VADisplay, const OclNativeDisplayType)

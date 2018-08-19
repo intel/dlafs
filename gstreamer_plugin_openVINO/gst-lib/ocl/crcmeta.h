@@ -27,6 +27,10 @@
 #include <gst/video/video.h>
 #include "interface/videodefs.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct _CrcMeta CrcMeta;
 struct _CrcMeta {
   guint16  id;
@@ -61,5 +65,9 @@ CrcMeta* gst_buffer_get_crc_meta_ (GstBuffer * buffer);
 
 OclGstMfxVideoMeta *gst_buffer_get_mfx_meta (GstBuffer * buffer);
 VASurfaceID gst_get_mfx_surface(GstBuffer* inbuf, GstVideoInfo *info, VADisplay *display);
+
+#ifdef __cplusplus
+};
+#endif
 
 #endif

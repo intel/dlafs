@@ -265,9 +265,10 @@ static gboolean
 cvdl_meta_holder_init (GstMeta *meta, gpointer params, GstBuffer *buffer)
 {
     CvdlMetaHolder *meta_holder = (CvdlMetaHolder *)meta;
-    CvdlMeta *cvdl_meta = meta_holder->meta;
-    if(cvdl_meta)
-        cvdl_meta_free(cvdl_meta);
+    //CvdlMeta *cvdl_meta = meta_holder->meta;
+
+    // It will be called by gst_buffer_add_meta()
+    // meta is allocated just now, and it was not inited so far 
     meta_holder->meta = NULL;
     meta_holder->buffer = buffer;
     return TRUE;
@@ -306,7 +307,7 @@ cvdl_meta_get_info (void)
 
     if (g_once_init_enter (&meta_info)) {
         const GstMetaInfo *mi = gst_meta_register (
-            INFERENCE_META_API_TYPE, "CVDLMetaHolder", sizeof (CvdlMetaHolder),
+            CVDL_META_API_TYPE, "CVDLMetaHolder", sizeof (CvdlMetaHolder),
             cvdl_meta_holder_init, cvdl_meta_holder_free, cvdl_meta_holder_transform);
         g_once_init_leave (&meta_info, mi);
     }
@@ -318,12 +319,39 @@ cvdl_meta_get_info (void)
 void
 gst_buffer_set_cvdl_meta (GstBuffer * buffer, CvdlMeta* meta)
 {
-  GstMeta *m;
+  GstMeta *m = NULL;
+  int count = 0;
 
   g_return_if_fail (GST_IS_BUFFER (buffer));
-  g_return_if_fail (meta==NULL);
+  g_return_if_fail (meta!=NULL);
 
+  /* Use this function to ensure that a buffer can be safely modified before
+    * making changes to it, including changing the metadata such as PTS/DTS.
+    *
+    * If the reference count of the source buffer @buf is exactly one, the caller
+    * is the sole owner and this function will return the buffer object unchanged.
+    *
+    * If there is more than one reference on the object, a copy will be made using
+    * gst_buffer_copy(). The passed-in @buf will be unreffed in that case, and the
+    * caller will now own a reference to the new returned buffer object. Note
+    * that this just copies the buffer structure itself, the underlying memory is
+    * not copied if it can be shared amongst multiple buffers.
+    *
+    * In short, this function unrefs the buf in the argument and refs the buffer
+    * that it returns. Don't access the argument after calling this function unless
+    * you have an additional reference to it.
+    */
+
+  // make this buffer to be writable
+  if(GST_MINI_OBJECT_REFCOUNT(buffer)>=2) {
+    gst_buffer_unref(buffer);
+    count = 1;
+  }
   m = gst_buffer_add_meta (buffer, CVDL_META_INFO, NULL);
+  if(count == 1) {
+    buffer = gst_buffer_ref(buffer);
+  }
+  //g_print("================== gst_buffer_set_cvdl_meta: meta = %p, buffer = %p\n", meta, buffer);
   ((CvdlMetaHolder *)m)->meta = meta;
   ((CvdlMetaHolder *)m)->buffer = buffer;
 }

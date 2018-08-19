@@ -70,8 +70,12 @@ static void try_process_algo_data(CvdlAlgoData *algoData)
         }
         if(objectVec.size()>0) {
             //put valid algoData;
+            g_print("Classification algo - output GstBuffer = %p(%d)\n",
+                   algoData->mGstBuffer, GST_MINI_OBJECT_REFCOUNT(algoData->mGstBuffer));
             classificationAlgo->mOutQueue.put(*algoData);
         } else {
+            g_print("Classification algo - unref GstBuffer = %p(%d)\n",
+                algoData->mGstBuffer, GST_MINI_OBJECT_REFCOUNT(algoData->mGstBuffer));
             delete algoData;
         }
     }
@@ -92,7 +96,7 @@ static void process_one_object(CvdlAlgoData *algoData, ObjectData &objectData, i
         try_process_algo_data(algoData);
         return;
     }
-    classificationAlgo->mImageProcessor.process_image(algoData->mGstBuffer,&ocl_buf,&crop);
+    classificationAlgo->mImageProcessor.process_image(algoData->mGstBuffer,NULL,&ocl_buf,&crop);
     if(ocl_buf==NULL) {
         GST_WARNING("Failed to do image process!");
         objectData.flags |= CLASSIFICATION_OBJECT_FLAG_DONE;
@@ -116,7 +120,7 @@ static void process_one_object(CvdlAlgoData *algoData, ObjectData &objectData, i
     }
 
     // Classification callback function
-    auto onClassificationResult = [&objectData](CvdlAlgoData* &algoData)
+    auto onClassificationResult = [&objectData](CvdlAlgoData* algoData)
     {
         ClassificationAlgo *classificationAlgo = static_cast<ClassificationAlgo *>(algoData->algoBase);
         // this ocl will not use, free it here
@@ -152,6 +156,7 @@ static void classification_algo_func(gpointer userData)
     ClassificationAlgo *classificationAlgo = static_cast<ClassificationAlgo*> (userData);
     CvdlAlgoData *algoData = new CvdlAlgoData;
     //GstFlowReturn ret;
+    g_print("\nclassification_algo_func - new an algoData = %p\n", algoData);
 
     if(!classificationAlgo->mNext) {
         GST_LOG("The classification algo's next algo is NULL");
@@ -162,8 +167,20 @@ static void classification_algo_func(gpointer userData)
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         return;
     }
+
     // bind algoTask into algoData, so that can be used when sync callback
     algoData->algoBase = static_cast<CvdlAlgoBase *>(classificationAlgo);
+
+    if(algoData->mGstBuffer==NULL) {
+        g_print("%s() - get null buffer\n", __func__);
+        return;
+    }
+    g_print("%s() - classification = %p, algoData->mFrameId = %ld\n", __func__, classificationAlgo, algoData->mFrameId);
+    g_print("----------------------classfication-----------------------------\n");
+    g_print("%s() - get one buffer, GstBuffer = %p, refcout = %d, queueSize = %d, algoData = %p, algoBase = %p\n",
+        __func__, algoData->mGstBuffer, GST_MINI_OBJECT_REFCOUNT (algoData->mGstBuffer),
+        classificationAlgo->mInQueue.size(), algoData, algoData->algoBase);
+
 
     for(unsigned int i=0; i< algoData->mObjectVec.size(); i++) {
         algoData->mObjectVec[i].flags &= ~(CLASSIFICATION_OBJECT_FLAG_DONE|CLASSIFICATION_OBJECT_FLAG_VALID);
@@ -257,6 +274,8 @@ GstFlowReturn ClassificationAlgo::algo_dl_init(const char* modeFileName)
 GstFlowReturn ClassificationAlgo::parse_inference_result(InferenceEngine::Blob::Ptr &resultBlobPtr,
                                                   int precision, CvdlAlgoData *outData, int objId)
 {
+    g_print("ClassificationAlgo::parse_inference_result begin: outData = %p\n", outData);
+
     if (precision == sizeof(short)) {
         GST_ERROR("Don't support FP16!");
         return GST_FLOW_ERROR;
@@ -302,8 +321,14 @@ GstBuffer* ClassificationAlgo::dequeue_buffer()
             break;
     }
     buf = algoData.mGstBuffer;
-    // put object data as meta data
 
+    g_print("cvdlfilter-dequeue: buf = %p(%d)\n", algoData.mGstBuffer, GST_MINI_OBJECT_REFCOUNT(algoData.mGstBuffer));
+
+    // Send an invalid buffer for quit this task
+    if(buf==NULL)
+        return NULL;
+    
+    // put object data as meta data
     VASurfaceID surface;
     VADisplay display;
     unsigned int color = 0x00FF00;
@@ -320,6 +345,7 @@ GstBuffer* ClassificationAlgo::dequeue_buffer()
         else
             cvdl_meta_add (meta_data, &rect, algoData.mObjectVec[i].label.c_str(), color);
     }
+    ((CvdlMeta *)meta_data)->meta_count = algoData.mObjectVec.size();
 
     gst_buffer_set_cvdl_meta(buf, (CvdlMeta *)meta_data);
     return buf;

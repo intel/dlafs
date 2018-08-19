@@ -31,8 +31,9 @@ namespace HDDLStreamFilter
 class OclVppBlender : public OclVppBase
 {
 public:
-    OclStatus process (const SharedPtr<VideoFrame>&, const SharedPtr<VideoFrame>&);
+    OclStatus process (const SharedPtr<VideoFrame>&, const SharedPtr<VideoFrame>&, const SharedPtr<VideoFrame>&);
     const char* getKernelFileName () { return "blend"; }
+    const char* getKernelName() { return "blend"; }
 
 private:
     OclStatus blend_helper ();
@@ -43,8 +44,12 @@ private:
     guint32   m_src_w;
     guint32   m_src_h;
 
-    OclCLMemInfo *m_src;
+    OclCLMemInfo *m_src; //osd
+    OclCLMemInfo *m_src2; //nv12
     OclCLMemInfo *m_dst;
+
+    cl_mem clBuffer_osd;
+    cl_mem clBuffer_dst;
 
     static const bool s_registered;
 };

@@ -653,6 +653,7 @@ gst_ws_sink_get_type (void)
   return ws_sink_type;
 }
 
+#if 0
 static gboolean plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "wssink", GST_RANK_PRIMARY,
@@ -682,3 +683,4 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     "Send to data based on WebSocked",
     plugin_init, VERSION,
     "BSD", PACKAGE_NAME, GST_PACKAGE_ORIGIN);
+#endif
