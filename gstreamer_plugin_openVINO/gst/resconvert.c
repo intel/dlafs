@@ -82,9 +82,10 @@ static GstStaticPadTemplate sink_factory =
     GST_STATIC_CAPS (sink_caps_str)
     );
 
-// PIC_SRC pad caps - the same with mfxdec src pad caps
+// PIC_SRC pad caps - which should support by mfxjpegenc, only NV12 and BGRA
+//  note: BGRx is not supported by mfxjpegenc
 static const char src_pic_caps_str[] = \
-    GST_VIDEO_CAPS_MAKE ("{BGRA, BGRx}") "; " \
+    GST_VIDEO_CAPS_MAKE ("{BGRA}") "; " \
     GST_VIDEO_CAPS_MAKE ("NV12") "; ";
 
 static GstStaticPadTemplate src_pic_factory =
@@ -160,6 +161,7 @@ res_convert_send_data (ResConvert * convertor, GstBuffer * buf)
     if(convertor->pic_srcpad){
         buf = gst_buffer_ref(buf);
         gst_pad_push (convertor->pic_srcpad, buf);
+        gst_buffer_unref(buf);
     } else {
         gst_buffer_unref(buf);
     }
@@ -332,7 +334,7 @@ res_convert_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
         gst_structure_set_name(structure, "video/x-raw");
         gst_structure_remove_field(structure, "format=(string)NV12");
-        gst_structure_set(structure,"format",G_TYPE_STRING, "BGRx", NULL);
+        gst_structure_set(structure,"format",G_TYPE_STRING, "BGRA", NULL);
         g_print("structure:\n%s\n",gst_structure_to_string(structure));
         features = gst_caps_features_new_empty();
 
@@ -346,6 +348,7 @@ res_convert_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
         // set caps
         gst_pad_set_caps (otherpad, newcaps);
+        blender_init(convertor->blend_handle ,caps);
 
         // push this caps to next filter
         GstEvent *new_event = gst_event_new_caps(newcaps);
@@ -531,7 +534,10 @@ res_convert_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
         GST_BUFFER_OFFSET (buffer));
 
     // create osd pool if it not created before
-    blender_init(convertor->blend_handle ,pad);
+    //----- move it into even function
+    //Gst *caps = gst_pad_get_current_caps(pad);
+    //blender_init(convertor->blend_handle ,caps);
+    //gst_caps_unref(caps);
 
     // Process the input buffer - draw data into NV12 surface by OpenCV
     // The src_pic will connect to a queue filter to cache the data
@@ -544,7 +550,7 @@ res_convert_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     // push the result
     if(output!=NULL)
         ret = res_convert_send_data (convertor, output);
-    //gst_buffer_unref(buffer);
+    gst_buffer_unref(buffer);
 #else
    //test
     if(output!=NULL)
@@ -680,7 +686,7 @@ res_convert_init (ResConvert * convertor)
     //GstCaps *caps = gst_caps_new_any();
 
     //TODO:
-    GstCaps *caps = gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING, "BGRx", NULL);
+    GstCaps *caps = gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING, "BGRA", NULL);
     gst_caps_set_simple (caps, "width", G_TYPE_INT, sizeof(InferenceData), "height",
       G_TYPE_INT, 1, NULL);
 

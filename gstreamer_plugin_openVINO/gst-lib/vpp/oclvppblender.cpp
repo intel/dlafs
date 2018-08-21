@@ -67,27 +67,40 @@ OclVppBlender::blend_helper ()
 
     #if 1
     //cv::UMat frame;
-    //frame.create(cv::Size(m_dst_w, m_dst_h), CV_8UC3);
+    //frame.create(cv::Size(m_dst_w, m_dst_h), CV_8UC4);
     //cl_mem clBuffer = (cl_mem)frame.handle(ACCESS_RW);
 
-    cl_image_format format;
-    format.image_channel_order = CL_RGBA; // single channel
-    format.image_channel_data_type = CL_UNORM_INT8; // float data type
+    //cl_image_format format;
+    //format.image_channel_order = CL_RGBA; // single channel
+    //format.image_channel_data_type = CL_UNSIGNED_INT8;// CL_UNORM_INT8; // float data type
 
-    void *temp = (void *)m_src->cl_memory[0];//(char *)malloc(m_dst_w * m_dst_h * 4);
+
+    //clCreateImage (cl_context context,cl_mem_flags flags,const cl_image_format *image_format,
+    //               const cl_image_desc *image_desc, void *host_ptr, cl_int *errcode_ret);
     cl_int err;
     cl_context context = m_context->getContext();
-    clBuffer_osd = clCreateImage2D(context, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR ,
-                    &format, m_dst_w, m_dst_h, 0, temp, &err);
+    cl_image_desc desc =
+    {
+        CL_MEM_OBJECT_IMAGE2D,
+        m_dst_w,
+        m_dst_h,
+        0, 0, // depth, array size (unused)
+        m_dst_w*4,
+        0, 0, 0, 0
+    };
+    cl_image_format format;
+    format.image_channel_order = CL_BGRA;
+    format.image_channel_data_type = CL_UNORM_INT8;
+    clBuffer_osd = clCreateImage(context, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR ,&format,
+                    (const cl_image_desc *)&desc, (void *)m_src->cl_memory[0], &err);
     status = clSetKernelArg (m_kernel, 2, sizeof(cl_mem), &clBuffer_osd);
     if(status != CL_SUCCESS){
         CL_ERROR_PRINT (status, "clSetKernelArg");
         return OCL_FAIL;
     }
 
-    temp = (void *)m_dst->cl_memory[0];
-    clBuffer_dst = clCreateImage2D(context, CL_MEM_WRITE_ONLY | CL_MEM_USE_HOST_PTR ,
-                    &format, m_dst_w, m_dst_h, 0, temp, &err);
+    clBuffer_dst = clCreateImage(context, CL_MEM_WRITE_ONLY | CL_MEM_USE_HOST_PTR ,&format,
+                    (const cl_image_desc *)&desc, (void *)m_dst->cl_memory[0], &err);
     status = clSetKernelArg (m_kernel, 3, sizeof(cl_mem), &clBuffer_dst);
     if(status != CL_SUCCESS){
         CL_ERROR_PRINT (status, "clSetKernelArg");
@@ -96,6 +109,11 @@ OclVppBlender::blend_helper ()
 
 
     #else
+    //cv::UMat frame;
+    //frame.create(cv::Size(m_dst_w, m_dst_h), CV_8UC4);
+    //cl_mem clBuffer = (cl_mem)frame.handle(ACCESS_READ);
+    //status = clSetKernelArg (m_kernel, 2, sizeof(cl_mem), &clBuffer);
+
     status = clSetKernelArg (m_kernel, 2, sizeof(cl_mem), &m_src->cl_memory[0]);
     if(status != CL_SUCCESS){
         CL_ERROR_PRINT (status, "clSetKernelArg");

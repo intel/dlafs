@@ -103,6 +103,10 @@ __kernel void blend( __read_only image2d_t src_y,
     p2 = (float4)(R2, G2, B2, 0.5) + rgba[2];
     p3 = (float4)(R3, G3, B3, 0.5) + rgba[3];
 
+	//p0 = rgba[0];
+	//p1 = rgba[1];//(float4) (0.5, 0.3, 0.2, 0.5);
+	//p2 = rgba[2];//(float4) (0.5, 0.3, 0.2, 0.5);
+	//p3 = rgba[3];//(float4) (0.5, 0.3, 0.2, 0.5);
     write_imagef(dst_rgb, (int2)(id_z    , id_w    ), p0);
     write_imagef(dst_rgb, (int2)(id_z + 1, id_w    ), p1);
     write_imagef(dst_rgb, (int2)(id_z    , id_w + 1), p2);

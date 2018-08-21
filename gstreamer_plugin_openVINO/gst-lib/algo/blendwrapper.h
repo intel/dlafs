@@ -46,7 +46,7 @@ typedef CvdlBlender* BlendHandle;
 
 BlendHandle blender_create();
 void blender_destroy(BlendHandle handle);
-void blender_init(BlendHandle handle, GstPad* pad);
+void blender_init(BlendHandle handle, GstCaps* caps);
 GstBuffer* blender_process_cvdl_buffer(BlendHandle handle, GstBuffer* buffer);
 
 

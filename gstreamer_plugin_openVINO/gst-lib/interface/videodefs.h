@@ -77,10 +77,11 @@ extern "C" {
          ((uint32_t)(uint8_t)(ch2) << 16)  | ((uint32_t)(uint8_t)(ch3) << 24))
 
 #define OCL_FOURCC_NV12 OCL_FOURCC('N','V','1','2')
-#define OCL_FOURCC_RGBX OCL_FOURCC('R','G','B','X')
-#define OCL_FOURCC_RGBA OCL_FOURCC('R','G','B','A')
+#define OCL_FOURCC_BGRX OCL_FOURCC('B','G','R','X')
+#define OCL_FOURCC_BGRA OCL_FOURCC('B','G','R','A')
 #define OCL_FOURCC_BGR3 OCL_FOURCC('B','G','G','3')
 #define OCL_FOURCC_BGRP OCL_FOURCC('B','G','G','P')
+#define OCL_FOURCC_GRAY OCL_FOURCC('G','R','A','Y')
 
 
 typedef enum {

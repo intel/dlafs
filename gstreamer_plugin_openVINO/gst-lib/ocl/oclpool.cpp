@@ -81,8 +81,10 @@ ocl_pool_set_config (GstBufferPool* pool, GstStructure* config)
 
     //FIXME: support BGR3 and GRAY8 only
     if( (info.finfo->format != GST_VIDEO_FORMAT_GRAY8) &&
+        (info.finfo->format != GST_VIDEO_FORMAT_BGRA) &&
         (info.finfo->format != GST_VIDEO_FORMAT_BGR) ) {
         GST_WARNING_OBJECT (pool, "Got invalid format when config pool!");
+        g_print("%s() - got invalid format when config pool, format=%d\n",__func__, info.finfo->format);
         return FALSE;
     }
 
@@ -99,10 +101,12 @@ ocl_pool_set_config (GstBufferPool* pool, GstStructure* config)
     priv->caps = gst_caps_ref (caps);
     priv->add_videometa = TRUE;   //TODO
 
-    // Only support BRG/Gray8 format
+    // Only support BGRA/BRG/Gray8 format
     info.offset[1] = info.offset[2] = 0;
     if(info.finfo->format == GST_VIDEO_FORMAT_BGR)
         info.stride[0] = info.width * 3;
+    else if(info.finfo->format == GST_VIDEO_FORMAT_BGRA)
+        info.stride[0] = info.width * 4;
     else if(info.finfo->format == GST_VIDEO_FORMAT_GRAY8)
         info.stride[0] = info.width;
     info.size = MAX (size, info.size);
@@ -127,7 +131,6 @@ ocl_memory_alloc (OclPool* oclpool)
     OclPoolPrivate *priv = oclpool->priv;
     OclMemory *ocl_mem = g_new0(OclMemory, 1);
 
-    OCL_MEMORY_FOURCC (ocl_mem) = OCL_FOURCC_BGR3;
     OCL_MEMORY_WIDTH (ocl_mem) = GST_VIDEO_INFO_WIDTH (&priv->info);
     OCL_MEMORY_HEIGHT (ocl_mem) = GST_VIDEO_INFO_HEIGHT (&priv->info);
     OCL_MEMORY_SIZE (ocl_mem) = GST_VIDEO_INFO_SIZE (&priv->info);
@@ -135,13 +138,16 @@ ocl_memory_alloc (OclPool* oclpool)
     switch(priv->info.finfo->format) {
         case GST_VIDEO_FORMAT_GRAY8:
             ocl_mem->frame.create(cv::Size(OCL_MEMORY_WIDTH (ocl_mem),OCL_MEMORY_HEIGHT (ocl_mem)), CV_8UC1);
+            OCL_MEMORY_FOURCC (ocl_mem) = OCL_FOURCC_GRAY;
             break;
         case GST_VIDEO_FORMAT_BGR:
             ocl_mem->frame.create(cv::Size(OCL_MEMORY_WIDTH (ocl_mem),OCL_MEMORY_HEIGHT (ocl_mem)), CV_8UC3);
+            OCL_MEMORY_FOURCC (ocl_mem) = OCL_FOURCC_BGR3;
             break;
-        case GST_VIDEO_FORMAT_BGRx:
+        case GST_VIDEO_FORMAT_BGRA:
             // For blender module
             ocl_mem->frame.create(cv::Size(OCL_MEMORY_WIDTH (ocl_mem),OCL_MEMORY_HEIGHT (ocl_mem)), CV_8UC4);
+            OCL_MEMORY_FOURCC (ocl_mem) = OCL_FOURCC_BGRA;
             break;
         default:
             g_print("Not support format = %d\n", priv->info.finfo->format);
@@ -151,8 +157,15 @@ ocl_memory_alloc (OclPool* oclpool)
     g_return_val_if_fail(ocl_mem->frame.offset == 0, NULL);
     g_return_val_if_fail(ocl_mem->frame.isContinuous(), NULL);
 
-    // CRC is ACCESS_WRITE, but blender is ACCESS_READ
-    OCL_MEMORY_MEM (ocl_mem) = (cl_mem)ocl_mem->frame.handle(ACCESS_RW);
+    if(priv->info.finfo->format == GST_VIDEO_FORMAT_BGRA) {
+         // OclVppBlender::blend_helper () - clCreateImage2D
+         OCL_MEMORY_MEM (ocl_mem) = (cl_mem)ocl_mem->frame.getMat(0).ptr();;
+    }
+    else
+    {
+        // CRC is ACCESS_WRITE, but blender is ACCESS_READ or ACCESS_WRITE
+        OCL_MEMORY_MEM (ocl_mem) = (cl_mem)ocl_mem->frame.handle(ACCESS_RW);
+    }
 
     GstMemory *memory = GST_MEMORY_CAST (ocl_mem);
     gst_memory_init (memory, GST_MEMORY_FLAG_NO_SHARE, priv->allocator, NULL,
@@ -176,6 +189,7 @@ ocl_pool_alloc (GstBufferPool* pool, GstBuffer** buffer,
     if (!ocl_mem) {
         gst_buffer_unref (ocl_buf);
         GST_ERROR_OBJECT (pool, "failed to alloc ocl memory");
+        g_print ("%s() - failed to alloc ocl memory\n",__func__);
         return GST_FLOW_ERROR;
     }
 
@@ -192,13 +206,14 @@ ocl_pool_alloc (GstBufferPool* pool, GstBuffer** buffer,
         info->width, info->height, info->size,
         info->offset[0], info->offset[1], info->stride[0], info->stride[1]);
 
+    // For resconvert, it will make mfxenc can parse this buffer
     if (priv->add_videometa) {
         GST_DEBUG_OBJECT (pool, "adding GstVideoMeta");
         /* these are just the defaults for now */
         gst_buffer_add_video_meta_full (ocl_buf, GST_VIDEO_FRAME_FLAG_NONE,
-        GST_VIDEO_INFO_FORMAT (info), GST_VIDEO_INFO_WIDTH (info),
-        GST_VIDEO_INFO_HEIGHT (info), GST_VIDEO_INFO_N_PLANES (info),
-        info->offset, info->stride);
+            GST_VIDEO_INFO_FORMAT (info), GST_VIDEO_INFO_WIDTH (info),
+            GST_VIDEO_INFO_HEIGHT (info), GST_VIDEO_INFO_N_PLANES (info),
+            info->offset, info->stride);
     }
     *buffer = ocl_buf;
 

@@ -271,6 +271,7 @@ OclDevice::getInstance (VADisplay display)
         return device;
 
     device.reset (new OclDevice);
+
     // init ocl based on VADisplay
     device->m_ocvContext = cv::va_intel::ocl::initializeContextFromVA(display, true);
 
@@ -484,7 +485,7 @@ OclDevice::createProgramFromSource (const char* filename)
     }
 
     //char buildOptions[] = "-I. -Werror -cl-fast-relaxed-math";
-    char buildOptions[] = "-I. -cl-fast-relaxed-math";
+    char buildOptions[] = "-I. -cl-fast-relaxed-math -cl-kernel-arg-info";
     if (CL_ERROR_PRINT (clBuildProgram (program, 1, &m_device,
                         buildOptions, NULL, NULL), "clBuildProgram")) {
         char log[1024];
@@ -767,7 +768,6 @@ checkCLError (cl_int status, const char* func, const char* file, const int line)
 {
     if (status != CL_SUCCESS) {
         g_print ("(%s,%d) %s failed: %s\n", file, line, func, getCLErrorString(status));
-        while(1); //test
         return TRUE;
     }
     return FALSE;

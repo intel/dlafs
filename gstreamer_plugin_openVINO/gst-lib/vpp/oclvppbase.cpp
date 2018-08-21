@@ -82,6 +82,7 @@ OclVppBase::printOclKernelInfo()
     cl_int status = CL_SUCCESS;
     char kernel_name[128];
     cl_context ctx;
+    cl_uint i;
     if(m_kernel) {
         status = clGetKernelInfo (m_kernel, CL_KERNEL_FUNCTION_NAME, sizeof(kernel_name), kernel_name, NULL);
         if(status == CL_SUCCESS) {
@@ -95,6 +96,24 @@ OclVppBase::printOclKernelInfo()
             g_print("m_kernel = %p, context = %p\n", m_kernel, ctx);
         } else {
             g_print("printOclKernelInfo context failed = %d\n", status);
+        }
+
+        cl_uint num = 0;
+        status = clGetKernelInfo (m_kernel, CL_KERNEL_NUM_ARGS, sizeof(cl_uint), &num, NULL);
+        if(status == CL_SUCCESS) {
+            g_print("m_kernel = %p, arg_num = %d\n", m_kernel, num);
+        } else {
+            g_print("printOclKernelInfo context - CL_KERNEL_NUM_ARGS failed = %d\n", status);
+        }
+        // CL_KERNEL_ARG_ACCESS_QUALIFIER
+        char arg_name[128];
+        for(i=0;i<num;i++){
+            cl_kernel_arg_access_qualifier arg_access;
+            status = clGetKernelArgInfo (m_kernel, i, CL_KERNEL_ARG_ACCESS_QUALIFIER, sizeof(arg_access), &arg_access, NULL);
+            status = clGetKernelArgInfo (m_kernel, i, CL_KERNEL_ARG_TYPE_NAME, sizeof(arg_name), &arg_name, NULL);
+            cl_kernel_arg_address_qualifier arg_adress;
+            status = clGetKernelArgInfo (m_kernel, i, CL_KERNEL_ARG_ADDRESS_QUALIFIER, sizeof(arg_adress), &arg_adress, NULL);
+            g_print("Arg %d - access = %x, arg_type_name = %s, arg_adress = %x\n",i, arg_access, arg_name, arg_adress); 
         }
     }
 
