@@ -19,16 +19,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
+#include "oclcommon.h"
 #include "oclcontext.h"
 
 #include <vector>
 #include <iterator>
 #include <CL/va_ext.h>
-
-#include <opencv2/opencv.hpp>
-#include <opencv2/core/ocl.hpp>
-#include <opencv2/core/va_intel.hpp>
 
 #include "common/log.h"
 #ifdef HAVE_CONFIG_H
@@ -64,6 +60,8 @@ public:
         cl_uint num_events_in_wait_list = 0, const cl_event *event_wait_list = NULL, cl_event *ocl_event = NULL);
     gboolean finish ();
 
+    cv::ocl::Kernel acquireKernelCV(const char* name, const char* file);
+
     virtual ~OclDevice ();
 
 private:
@@ -80,15 +78,18 @@ private:
     gboolean saveProgramBinary (cl_program program, const char* filename);
     gpointer getExtensionFunctionAddress (const char* name);
     gboolean releaseKernelMap ();
+    gboolean releaseKernelCVMap ();
+    cv::ocl::Kernel loadKernelCV (const char* name, const char* file);
 
     static WeakPtr<OclDevice> m_instance;
     static Lock m_lock;
 
     cv::ocl::Context m_ocvContext;
+    OclKernelCVMap m_kernel_cv_map;
 
+    OclKernelMap m_kernel_map;
     cl_context m_context;
     cl_command_queue m_queue;
-    OclKernelMap m_kernel_map;
 
     VADisplay m_display;
     //all operations need procted by m_lock
@@ -156,6 +157,16 @@ OclContext::acquireKernel (const char* name, const char* file)
     return m_device->acquireKernel (name, file);
 }
 
+cv::ocl::Kernel
+OclContext::acquireKernelCV (const char* name, const char* file)
+{
+    if (!name) {
+        g_print ("OclContext: please specify the kernel file and kernel name.\
+                 If kernel name is same with kernel file, kernel file could be null.\n");
+        return cv::ocl::Kernel();
+    }
+    return m_device->acquireKernelCV(name, file);
+}
 
 gpointer
 OclContext::acquireMemoryCL (cl_mem mem, const cl_uint num_planes)
@@ -256,10 +267,14 @@ OclDevice::OclDevice () : m_context(0), m_queue(0),
 
 OclDevice::~OclDevice ()
 {
+#ifdef USE_CV_OCL
+    releaseKernelCVMap ();
+#else
     releaseKernelMap ();
     finish ();
     clReleaseCommandQueue (m_queue);
     clReleaseContext (m_context);
+#endif
 }
 
 SharedPtr<OclDevice>
@@ -694,6 +709,81 @@ OclDevice::releaseKernelMap ()
     return succ;
 }
 
+
+cv::ocl::Kernel
+OclDevice::loadKernelCV (const char* name, const char* file)
+{
+    cv::ocl::Kernel kernel;
+    cv::ocl::Program program;
+
+    GString *fullname = g_string_new (NULL);
+    g_string_printf (fullname, "%s%s.cl", KERNEL_DIR, (file ? file : name));
+
+    guint8 *data = NULL;
+    if (!readFile (fullname->str, &data))
+        return cv::ocl::Kernel();
+    g_string_free (fullname, TRUE);
+
+    cv::ocl::ProgramSource programSource((const char*)data);
+    //if (programSource.empty()) {
+    //    g_print("Error in create programSource...\n");
+    //    return cv::ocl::Kernel();
+    //}
+
+    cv::String buildOptions("-I. -cl-fast-relaxed-math -cl-kernel-arg-info");
+    cv::String buildError;
+    program = cv::ocl::Program(programSource, buildOptions, buildError);
+    g_print("Build program: %s\n", buildError.c_str());
+    g_free (data);
+    //if(program.empty()) {
+    //    g_print("Error in build program...\n");
+    //    return cv::ocl::Kernel();
+    //}
+
+    kernel.create(name, program);
+    if(kernel.empty()){
+        g_print("Error in create kernel...\n");
+        return cv::ocl::Kernel();
+    }
+
+    m_kernel_cv_map[name] = kernel;
+    return kernel;
+}
+
+
+cv::ocl::Kernel
+OclDevice::acquireKernelCV(const char* name, const char* file)
+{
+    if (!name) {
+        g_print ("OclDevice: please specify the kernel file and kernel name.\
+                 If kernel name is same with kernel file, kernel file could be null.\n");
+        return cv::ocl::Kernel();
+    }
+
+    AutoLock lock(m_lock);
+
+    OclKernelCVMapIterator it = m_kernel_cv_map.find (name);
+
+    return ((it == m_kernel_cv_map.end()) ? loadKernelCV(name, file) : it->second);
+}
+
+
+gboolean
+OclDevice::releaseKernelCVMap ()
+{
+    gboolean succ = TRUE;
+
+    AutoLock lock(m_lock);
+
+    for(OclKernelCVMapIterator it = m_kernel_cv_map.begin(); it != m_kernel_cv_map.end(); ++it) {
+            it->second = cv::ocl::Kernel();
+            succ = FALSE;
+    }
+
+    m_kernel_cv_map.clear();
+    return succ;
+}
+
 gboolean
 OclDevice::createFromVA_Intel (cl_mem_flags flags, VASurfaceID* surface, cl_uint plane, cl_mem* mem)
 {
@@ -703,10 +793,10 @@ OclDevice::createFromVA_Intel (cl_mem_flags flags, VASurfaceID* surface, cl_uint
     *mem = clCreateFromVA_APIMediaSurfaceINTEL (m_context, flags, surface, plane, &status);
 
     if (CL_ERROR_PRINT (status, "clCreateFromVA_APIMediaSurfaceINTEL")) {
-        g_print("error - surface = %d, plane = %d, flags = %ld, m_context = %p\n", *surface, plane, flags, m_context);
+        GST_ERROR("error - surface = %d, plane = %d, flags = %ld, m_context = %p\n", *surface, plane, flags, m_context);
         return FALSE;
     }
-    g_print("surface = %d, plane = %d, flags = %ld, m_context = %p\n", *surface, plane, flags, m_context);
+    GST_LOG("surface = %d, plane = %d, flags = %ld, m_context = %p\n", *surface, plane, flags, m_context);
     return TRUE;
 }
 

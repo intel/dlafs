@@ -66,7 +66,7 @@ static void algo_item_link(AlgoItem* from, AlgoItem* to)
 {
     CvdlAlgoBase *algoFrom, *algoTo;
     if(!from || !to || !from->algo || !to->algo) {
-        g_print("algo link failed!\n");
+        GST_ERROR("algo link failed!\n");
         return;
     }
     algoFrom = static_cast<CvdlAlgoBase *>(from->algo);
@@ -145,7 +145,7 @@ void algo_pipeline_destroy(AlgoPipelineHandle handle)
     int i;
     CvdlAlgoBase* algo;
     if(pipeline==NULL) {
-        g_print("%s - algo pipeline handle is NULL!\n", __func__);
+        GST_ERROR("%s - algo pipeline handle is NULL!\n", __func__);
         return;
     }
     for(i=0; i< pipeline->algo_num; i++){
@@ -160,7 +160,7 @@ void algo_pipeline_set_caps(AlgoPipelineHandle handle, int algo_id, GstCaps* cap
      AlgoPipeline *pipeline = (AlgoPipeline *) handle;
      CvdlAlgoBase* algo = NULL;
      if(pipeline==NULL) {
-         g_print("%s - algo pipeline handle is NULL!\n", __func__);
+         GST_ERROR("%s - algo pipeline handle is NULL!\n", __func__);
          return;
      }
 
@@ -179,7 +179,7 @@ void algo_pipeline_set_caps_all(AlgoPipelineHandle handle, GstCaps* caps)
     CvdlAlgoBase* algo = NULL;
     int i;
     if(pipeline==NULL) {
-        g_print("%s - algo pipeline handle is NULL!\n", __func__);
+        GST_ERROR("%s - algo pipeline handle is NULL!\n", __func__);
         return;
     }
     for(i=0; i< pipeline->algo_num; i++){
@@ -196,7 +196,7 @@ void algo_pipeline_start(AlgoPipelineHandle handle)
 
     int i;
     if(pipeline==NULL) {
-        g_print("%s - algo pipeline handle is NULL!\n", __func__);
+        GST_ERROR("%s - algo pipeline handle is NULL!\n", __func__);
         return;
     }
     for(i=0; i< pipeline->algo_num; i++){
@@ -211,7 +211,7 @@ void algo_pipeline_stop(AlgoPipelineHandle handle)
     int i;
 
     if(pipeline==NULL) {
-        g_print("%s - algo pipeline handle is NULL!\n", __func__);
+        GST_ERROR("%s - algo pipeline handle is NULL!\n", __func__);
         return;
     }
 
@@ -226,7 +226,7 @@ void algo_pipeline_put_buffer(AlgoPipelineHandle handle, GstBuffer *buf)
     CvdlAlgoBase* algo = NULL;
 
     if(pipeline==NULL) {
-        g_print("algo pipeline handle is NULL!\n");
+        GST_ERROR("algo pipeline handle is NULL!\n");
         return;
     }
     algo = static_cast<CvdlAlgoBase *>(pipeline->first);
@@ -245,7 +245,7 @@ int algo_pipeline_get_input_queue_size(AlgoPipelineHandle handle)
     CvdlAlgoBase* algo = NULL;
 
     if(pipeline==NULL) {
-        g_print("algo pipeline handle is NULL!\n");
+        GST_ERROR("algo pipeline handle is NULL!\n");
         return 0;
     }
     algo = static_cast<CvdlAlgoBase *>(pipeline->first);
@@ -256,6 +256,29 @@ int algo_pipeline_get_input_queue_size(AlgoPipelineHandle handle)
 
     return algo->get_in_queue_size();
 }
+
+
+int algo_pipeline_get_all_queue_size(AlgoPipelineHandle handle)
+{
+    AlgoPipeline *pipeline = (AlgoPipeline *) handle;
+    CvdlAlgoBase* algo = NULL;
+    int size = 0;
+
+    if(pipeline==NULL) {
+        GST_ERROR("algo pipeline handle is NULL!\n");
+        return 0;
+    }
+    algo = static_cast<CvdlAlgoBase *>(pipeline->first);
+    while(algo) {
+        size += algo->get_in_queue_size() + algo->get_out_queue_size();
+        size += algo->mInferCnt;
+        algo=algo->mNext;
+    }
+
+    return size;
+}
+
+
 void algo_pipeline_get_buffer(AlgoPipelineHandle handle, GstBuffer **buf)
 {
     AlgoPipeline *pipeline = (AlgoPipeline *) handle;
@@ -279,9 +302,9 @@ void algo_pipeline_flush_buffer(AlgoPipelineHandle handle)
     //TODO: need support multiple output buffer
     if(pipeline) {
         algo = static_cast<CvdlAlgoBase *>(pipeline->last[0]);
-
+        g_print("%s() - put EOS buffer!\n",__func__);
         // send a empty buffer to make this get_buffer_task exit 
-        algo->queue_buffer(NULL);
+        algo->queue_out_buffer(NULL);
     }
 }
 #ifdef __cplusplus

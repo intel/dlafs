@@ -138,7 +138,7 @@ res_convert_fill_txt_data(ResMemory *res_mem, CvdlMeta *cvdl_meta)
 }
 
 static GstFlowReturn
-res_convert_send_data (ResConvert * convertor, GstBuffer * buf)
+res_convert_send_data (ResConvert * convertor, GstBuffer * buf, GstBuffer * inbuf)
 {
     GstFlowReturn result = GST_FLOW_OK;
     GstBuffer *txt_buf;
@@ -148,7 +148,7 @@ res_convert_send_data (ResConvert * convertor, GstBuffer * buf)
     GST_LOG_OBJECT (convertor, "pushing buffer...");
 
     // For txt data: 1) allocate buffer,  2) fill buffer, 3) push it
-    cvdl_meta = gst_buffer_get_cvdl_meta (buf);
+    cvdl_meta = gst_buffer_get_cvdl_meta (inbuf);
     if(convertor->txt_srcpad && cvdl_meta){
         txt_buf = res_buffer_alloc(convertor->src_pool);
         txt_mem = RES_MEMORY_CAST(res_memory_acquire(txt_buf));
@@ -156,12 +156,17 @@ res_convert_send_data (ResConvert * convertor, GstBuffer * buf)
         gst_pad_push (convertor->txt_srcpad, txt_buf);
     }
 
+    void *data = NULL;
+    g_print("resconvert out: inbuf = %p(%d), buffer = %p(%d), surface = %d\n",
+        inbuf, GST_MINI_OBJECT_REFCOUNT(inbuf),
+        buf, GST_MINI_OBJECT_REFCOUNT(buf),
+        gst_get_mfx_surface(inbuf, NULL, &data));
+
     // For pic data which has been blended already:
     //  1) push the buffer directly
     if(convertor->pic_srcpad){
-        buf = gst_buffer_ref(buf);
+        // gst_pad_push will unref this buffer.
         gst_pad_push (convertor->pic_srcpad, buf);
-        gst_buffer_unref(buf);
     } else {
         gst_buffer_unref(buf);
     }
@@ -177,7 +182,7 @@ res_convert_send_event (ResConvert * convertor, GstEvent * event)
 {
   gboolean ret = TRUE;
 
-  if (!gst_pad_push_event (convertor->pic_srcpad, gst_event_ref (event))) {
+  if (convertor->pic_srcpad && !gst_pad_push_event (convertor->pic_srcpad, gst_event_ref (event))) {
        GST_DEBUG_OBJECT (convertor->pic_srcpad, "%s event was not handled by pic_pad",
             GST_EVENT_TYPE_NAME (event));
        ret = FALSE;
@@ -187,7 +192,7 @@ res_convert_send_event (ResConvert * convertor, GstEvent * event)
             GST_EVENT_TYPE_NAME (event));
   }
 
-  if (!gst_pad_push_event (convertor->txt_srcpad, gst_event_ref (event))) {
+  if (convertor->txt_srcpad && !gst_pad_push_event (convertor->txt_srcpad, gst_event_ref (event))) {
        GST_DEBUG_OBJECT (convertor->txt_srcpad, "%s event was not handled by txt_pad",
             GST_EVENT_TYPE_NAME (event));
        ret = FALSE;
@@ -314,11 +319,11 @@ res_convert_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
         // set pic_src pad
         prev_incaps = gst_pad_get_current_caps (otherpad);
-        g_print("caps = %s\n", gst_caps_to_string(caps));
-        g_print("1.prev_incaps = %s\n", gst_caps_to_string(prev_incaps));
+        GST_LOG("caps = %s\n", gst_caps_to_string(caps));
+        GST_LOG("1.prev_incaps = %s\n", gst_caps_to_string(prev_incaps));
         if(!prev_incaps)
             prev_incaps = gst_pad_get_pad_template_caps(otherpad);
-        g_print("2.prev_incaps = %s\n", gst_caps_to_string(prev_incaps));
+        GST_LOG("2.prev_incaps = %s\n", gst_caps_to_string(prev_incaps));
 
         // create a new caps based on input caps of event
         GstStructure *structure;
@@ -329,18 +334,18 @@ res_convert_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
         structure  = gst_structure_copy(gst_caps_get_structure(caps, 0));
         //features = gst_caps_features_copy(gst_caps_get_features(caps, 0));
-        g_print("structure:\n%s\n",gst_structure_to_string(structure));
+        GST_LOG("structure:\n%s\n",gst_structure_to_string(structure));
         //g_printf("features:\n%s\n",gst_caps_features_to_string(features));
 
         gst_structure_set_name(structure, "video/x-raw");
         gst_structure_remove_field(structure, "format=(string)NV12");
         gst_structure_set(structure,"format",G_TYPE_STRING, "BGRA", NULL);
-        g_print("structure:\n%s\n",gst_structure_to_string(structure));
+        GST_LOG("structure:\n%s\n",gst_structure_to_string(structure));
         features = gst_caps_features_new_empty();
 
         gst_caps_append_structure_full(newcaps, structure, features);
-        g_print("caps =\n %s\n", gst_caps_to_string(caps));
-        g_print("newcaps =\n %s\n", gst_caps_to_string(newcaps));
+        GST_LOG("caps =\n %s\n", gst_caps_to_string(caps));
+        GST_LOG("newcaps =\n %s\n", gst_caps_to_string(newcaps));
         newcaps = gst_caps_intersect_full (newcaps, prev_incaps, GST_CAPS_INTERSECT_FIRST);
         g_print("intersect newcaps =\n %s\n", gst_caps_to_string(newcaps));
 
@@ -427,11 +432,8 @@ res_convert_query (GstPad * pad, GstObject * parent, GstQuery * query)
         else
             temp = gst_pad_get_pad_template_caps (convertor->sinkpad);
 
-        //GstVideoInfo info;
-        //gst_video_info_from_caps(&info, temp);
-        //gst_video_info_from_caps(&info, caps);
-        g_print("pad_caps = %s\n", gst_caps_to_string(temp));
-        g_print("caps = %s\n", gst_caps_to_string(caps));
+        GST_LOG("pad_caps = %s\n", gst_caps_to_string(temp));
+        GST_LOG("caps = %s\n", gst_caps_to_string(caps));
 
         ret = gst_caps_can_intersect (caps, temp);
         if(ret==TRUE) {
@@ -459,12 +461,8 @@ res_convert_query (GstPad * pad, GstObject * parent, GstQuery * query)
 
         caps = gst_caps_intersect_full (filter, temp, GST_CAPS_INTERSECT_FIRST);
 
-        //GstVideoInfo info;
-        //gst_video_info_from_caps(&info, filter);
-        //gst_video_info_from_caps(&info, caps);
-
-        g_print("filter_caps = %s\n", gst_caps_to_string(filter));
-        g_print("caps = %s\n", gst_caps_to_string(caps));
+        GST_LOG("filter_caps = %s\n", gst_caps_to_string(filter));
+        GST_LOG("caps = %s\n", gst_caps_to_string(caps));
 
         if(caps){
             gst_query_set_caps_result (query, caps);
@@ -549,7 +547,7 @@ res_convert_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 #if 1
     // push the result
     if(output!=NULL)
-        ret = res_convert_send_data (convertor, output);
+        ret = res_convert_send_data (convertor, output, buffer);
     gst_buffer_unref(buffer);
 #else
    //test

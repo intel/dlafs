@@ -34,7 +34,6 @@ extern "C" {
 
 typedef struct _cvdl_blender{
     GstBufferPool* mOsdPool;
-    //ImageProcessor* mImgProcessor;
     void *mImgProcessor;
     int mImageWidth;
     int mImageHeight;

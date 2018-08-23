@@ -65,9 +65,9 @@ void crop_resize_csc_planar(
     float r_h = 1.0 * crop_h / dst_h;
 
     float dst_x0 = dst_x;
-    float dst_x1 = dst_x + 2.0;
+    float dst_x1 = dst_x + 1.0;
     float dst_y0 = dst_y;
-    float dst_y1 = dst_y + 2.0;
+    float dst_y1 = dst_y + 1.0;
     float src_xf_00 = fma(r_w, dst_x0, crop_x) / src_w;
     float src_yf_00 = fma(r_h, dst_y0, crop_y) / src_h;
     float src_xf_10 = fma(r_w, dst_x1, crop_x) / src_w;
@@ -157,9 +157,9 @@ void crop_resize_csc(
     float r_w = 1.0 * crop_w / dst_w;
     float r_h = 1.0 * crop_h / dst_h;
     float dst_x0 = dst_x;
-    float dst_x1 = dst_x + 2.0;
+    float dst_x1 = dst_x + 1.0;
     float dst_y0 = dst_y;
-    float dst_y1 = dst_y + 2.0;
+    float dst_y1 = dst_y + 1.0;
     float src_xf_00 = fma(r_w, dst_x0, crop_x) / src_w;
     float src_yf_00 = fma(r_h, dst_y0, crop_y) / src_h;
     float src_xf_10 = fma(r_w, dst_x1, crop_x) / src_w;
@@ -244,9 +244,9 @@ void crop_resize_csc_gray(
     float r_w = 1.0 * crop_w / dst_w;
     float r_h = 1.0 * crop_h / dst_h;
     float dst_x0 = dst_x;
-    float dst_x1 = dst_x + 2.0;
+    float dst_x1 = dst_x + 1.0;
     float dst_y0 = dst_y;
-    float dst_y1 = dst_y + 2.0;
+    float dst_y1 = dst_y + 1.0;
     float src_xf_00 = fma(r_w, dst_x0, crop_x) / src_w;
     float src_yf_00 = fma(r_h, dst_y0, crop_y) / src_h;
     float src_xf_10 = fma(r_w, dst_x1, crop_x) / src_w;

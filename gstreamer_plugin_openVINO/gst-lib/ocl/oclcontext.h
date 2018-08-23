@@ -31,6 +31,10 @@
 #include <va/va.h>
 #include <CL/cl.h>
 
+#include <opencv2/opencv.hpp>
+#include <opencv2/core/ocl.hpp>
+#include <opencv2/core/va_intel.hpp>
+
 #include "common/lock.h"
 #include "interface/videodefs.h"
 
@@ -49,6 +53,9 @@ class OclDevice;
 
 typedef std::map<std::string, cl_kernel> OclKernelMap;
 typedef OclKernelMap::iterator OclKernelMapIterator;
+typedef std::map<std::string, cv::ocl::Kernel> OclKernelCVMap;
+typedef OclKernelCVMap::iterator OclKernelCVMapIterator;
+
 
 class OclContext
 {
@@ -58,8 +65,10 @@ public:
     cl_context getContext ();
     cl_command_queue getCommandQueue ();
     cl_kernel acquireKernel (const char* name, const char* file = NULL);
+    cv::ocl::Kernel acquireKernelCV (const char* name, const char* file = NULL);
 
-    gpointer acquireVAMemoryCL (VASurfaceID* surface, const cl_uint num_planes, const cl_mem_flags flags = CL_MEM_READ_WRITE);
+    gpointer acquireVAMemoryCL (VASurfaceID* surface, const cl_uint num_planes,
+                                        const cl_mem_flags flags = CL_MEM_READ_ONLY);
     gpointer acquireMemoryCL (cl_mem mem, const cl_uint num_planes);
     void releaseVAMemoryCL (gpointer info);
     void releaseMemoryCL (gpointer info);

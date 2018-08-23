@@ -108,6 +108,8 @@ static GstBuffer *get_free_buf(BlendHandle handle)
         gst_buffer_unref(free_buf);
         return NULL;
     }
+
+    free_mem->purpose = 1;
     return free_buf;
 }
 
@@ -117,16 +119,11 @@ static void buffer_test(GstBuffer *buf)
 
     buf_mem = ocl_memory_acquire(buf);
     if(!buf_mem) {
-        g_print("%s() - Failed to get ocl memory!\n",__func__);
+        GST_ERROR("%s() - Failed to get ocl memory!\n",__func__);
         return;
     }
 
     cv::Mat mdraw = buf_mem->frame.getMat(0);
-    //int i;
-    //for(i=0; i<16;i+=2){
-    //    cv::rectangle(mdraw, cv::Rect(i*100,0,100,100), cv::Scalar(255, 0, 255), 2);
-    //    cv::rectangle(mdraw, cv::Rect(i*100+100,100,100,100), cv::Scalar(255, 0, 0), 2);
-    //}
     cv::rectangle(mdraw, cv::Rect(0,0,100,100), cv::Scalar(0, 255, 0), 2);
     cv::rectangle(mdraw, cv::Rect(buf_mem->width-100,0,100,100), cv::Scalar(0, 255, 0), 2);
     cv::rectangle(mdraw, cv::Rect(0,buf_mem->height-100,100,100), cv::Scalar(0, 255, 0), 2);
@@ -152,6 +149,7 @@ static GstBuffer *generate_osd(BlendHandle handle, GstBuffer *input_buf)
         return NULL;
     }
     osd_mem = ocl_memory_acquire(osd_buf);
+    osd_mem->purpose = 2;
 
     InferenceMeta *inference_result = cvdl_meta->inference_result;
     int meta_count = cvdl_meta->meta_count;
@@ -192,7 +190,6 @@ GstBuffer* blender_process_cvdl_buffer(BlendHandle handle, GstBuffer* buffer)
     GstBuffer *osd_buf = NULL, *out_buf = NULL, *dst_buf = NULL;
     VideoRect rect = {0, 0 , (unsigned int)cvdl_blender->mImageWidth,
                              (unsigned int)cvdl_blender->mImageHeight};
-    //GstFlowReturn ret = GST_FLOW_OK;
 
     osd_buf = generate_osd(handle, buffer);
     if(!osd_buf) {
@@ -206,19 +203,22 @@ GstBuffer* blender_process_cvdl_buffer(BlendHandle handle, GstBuffer* buffer)
     out_buf = dst_buf;
     ImageProcessor *img_processor = static_cast<ImageProcessor *>(cvdl_blender->mImgProcessor);
     img_processor->process_image(osd_buf, buffer, &out_buf, &rect);
+    //release osd
+    gst_buffer_unref(osd_buf);
 
     buffer_test(out_buf);
 
-    // TODO: Set cvdl_meta to this buffer
+    // Set cvdl_meta to this buffer
+    //cvdl_meta = gst_buffer_get_cvdl_meta(buffer);
+    //if(cvdl_meta)
+    //    gst_buffer_set_cvdl_meta(out_buf, cvdl_meta);
 
-    //release osd
-    gst_buffer_unref(osd_buf);
+
+    // set pts for it
+    GST_BUFFER_TIMESTAMP(out_buf) = GST_BUFFER_TIMESTAMP (buffer);
+    GST_BUFFER_DURATION (out_buf) = GST_BUFFER_DURATION (buffer);
  
     // TODO: Where to release Nv12 buffer and dst buffer?
-
-
-
-    // TODO: how to make out_buf can be accepted by jpeg enc - RGBA or NV12?
 
     return dst_buf;
 }

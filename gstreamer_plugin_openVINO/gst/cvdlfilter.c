@@ -71,23 +71,25 @@ static GstFlowReturn
 cvdl_handle_buffer(CvdlFilter *cvdlfilter, GstBuffer* buffer)
 {
     GstFlowReturn ret = GST_FLOW_OK;
+    int cache_buf_size = algo_pipeline_get_all_queue_size(cvdlfilter->algoHandle);
 
-#if 1
     // wait algo task
-    while(algo_pipeline_get_input_queue_size(cvdlfilter->algoHandle) >=1 ) {
-        g_usleep(30000);
+    while(cache_buf_size >= 6) {
+        g_usleep(8000);
+        cache_buf_size = algo_pipeline_get_all_queue_size(cvdlfilter->algoHandle);
+        //g_print("loop - cache buffer size = %d\n", cache_buf_size);
     }
     // put buffer into a queue
     algo_pipeline_put_buffer(cvdlfilter->algoHandle, buffer);
-#else
-    buffer = gst_buffer_ref(buffer);
-#endif
+
     cvdlfilter->frame_num_in++;
     void *data;
-    g_print("input buffer num = %d, buffer = %p, refcount = %d, surface = %d\n",
+    g_print("cvdlfilter input: index = %d, buffer = %p, refcount = %d, surface = %d\n",
         cvdlfilter->frame_num_in, buffer, GST_MINI_OBJECT_REFCOUNT (buffer),
         gst_get_mfx_surface(buffer, NULL, &data));
 
+    cache_buf_size = algo_pipeline_get_all_queue_size(cvdlfilter->algoHandle);
+    //g_print("cache buffer size = %d\n", cache_buf_size);
     return ret;;
 }
 
@@ -107,16 +109,18 @@ cvdl_filter_transform_chain (GstPad * pad, GstObject * parent, GstBuffer * buffe
     duration = GST_BUFFER_DURATION (buffer);
 
     //debug
+    #if 0
     if(duration>0)
         g_usleep(duration/1000);
     else
         g_usleep(30000);
-
+    #endif
 
     if (G_UNLIKELY (!priv->negotiated)) {
         GST_ELEMENT_ERROR (cvdlfilter, CORE, NOT_IMPLEMENTED, (NULL), ("unknown format"));
         return GST_FLOW_NOT_NEGOTIATED;
     }
+
     GST_LOG_OBJECT (cvdlfilter, "input buffer caps: %" GST_PTR_FORMAT, buffer);
 
     /* vpp will not called in main pipeline thread, but it should be called in algo thread*/
@@ -139,7 +143,7 @@ cvdl_filter_transform_chain (GstPad * pad, GstObject * parent, GstBuffer * buffe
     cvdlfilter->frame_num++;
     GST_DEBUG_OBJECT (trans, "src_info: index=%d ",cvdlfilter->frame_num);
     GST_DEBUG_OBJECT (trans, "got buffer with timestamp %" GST_TIME_FORMAT,
-                                              GST_TIME_ARGS (duration));
+                              GST_TIME_ARGS (duration));
     GST_DEBUG ("timestamp %" GST_TIME_FORMAT, GST_TIME_ARGS (timestamp));
 
     return GST_FLOW_OK;
@@ -247,7 +251,6 @@ cvdl_filter_set_property (GObject* object, guint prop_id, const GValue* value, G
 {
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
     return;
-    //gst_base_transform_reconfigure_src (GST_BASE_TRANSFORM (plugin));
 }
 
 static void
@@ -261,7 +264,6 @@ cvdl_filter_propose_allocation (GstBaseTransform* trans, GstQuery* decide_query,
 {
    GstCaps *caps = NULL;
    gboolean need_pool = FALSE;
-
    //CvdlFilter *cvdlfilter = CVDL_FILTER (trans);
 
    gst_query_parse_allocation (query, &caps, &need_pool);
@@ -459,17 +461,24 @@ static void push_buffer_func(gpointer userData)
     CvdlFilter* cvdl_filter = (CvdlFilter* )userData;
     GstBaseTransform *trans = GST_BASE_TRANSFORM_CAST (userData);
     GstBuffer *outbuf;
+    void *data;
 
     // get data from output queue, and attach it into outbuf
     // if no data in output queue, return NULL;
     algo_pipeline_get_buffer(cvdl_filter->algoHandle, &outbuf);
 
     cvdl_filter->frame_num_out++;
-    g_print("%d: push_buffer_func - get output buffer = %p\n", cvdl_filter->frame_num_out, outbuf);
+    if(outbuf)
+        g_print("cvdlfilter out: index = %d, buffer = %p, refcount = %d, surface = %d\n",
+            cvdl_filter->frame_num_out, outbuf, GST_MINI_OBJECT_REFCOUNT(outbuf),
+            gst_get_mfx_surface(outbuf, NULL, &data));
 
     //push the buffer only when can get an output data 
     if(outbuf)
         gst_pad_push(trans->srcpad, outbuf);
+
+    // gst_pad+push will unref this buffer, we need not do it again.
+    // gst_buffer_unref(outbuf);
 }
 
 

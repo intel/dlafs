@@ -29,7 +29,6 @@
 #include <glib.h>
 #include <va/va.h>
 
-//#include "oclcontext.h"
 #include "interface/videodefs.h"
 
 #define RGBA_PIXAL_SIZE 4

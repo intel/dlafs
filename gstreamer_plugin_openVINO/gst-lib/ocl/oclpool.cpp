@@ -79,7 +79,7 @@ ocl_pool_set_config (GstBufferPool* pool, GstStructure* config)
         return FALSE;
     }
 
-    //FIXME: support BGR3 and GRAY8 only
+    //FIXME: support BGR/BGRA and GRAY8 only
     if( (info.finfo->format != GST_VIDEO_FORMAT_GRAY8) &&
         (info.finfo->format != GST_VIDEO_FORMAT_BGRA) &&
         (info.finfo->format != GST_VIDEO_FORMAT_BGR) ) {
@@ -159,13 +159,19 @@ ocl_memory_alloc (OclPool* oclpool)
 
     if(priv->info.finfo->format == GST_VIDEO_FORMAT_BGRA) {
          // OclVppBlender::blend_helper () - clCreateImage2D
-         OCL_MEMORY_MEM (ocl_mem) = (cl_mem)ocl_mem->frame.getMat(0).ptr();;
+         //OCL_MEMORY_MEM (ocl_mem) = (cl_mem)ocl_mem->frame.getMat(0).ptr();//System address
+         OCL_MEMORY_MEM (ocl_mem) = (cl_mem)ocl_mem->frame.handle(ACCESS_RW);//CL address
     }
     else
     {
         // CRC is ACCESS_WRITE, but blender is ACCESS_READ or ACCESS_WRITE
-        OCL_MEMORY_MEM (ocl_mem) = (cl_mem)ocl_mem->frame.handle(ACCESS_RW);
+        OCL_MEMORY_MEM (ocl_mem) = (cl_mem)ocl_mem->frame.handle(ACCESS_RW);//CL address
     }
+
+    /* find the real parent */
+    GstMemory *parent;
+    if ((parent = ocl_mem->parent.parent) == NULL)
+      parent = (GstMemory *) ocl_mem;
 
     GstMemory *memory = GST_MEMORY_CAST (ocl_mem);
     gst_memory_init (memory, GST_MEMORY_FLAG_NO_SHARE, priv->allocator, NULL,
@@ -189,7 +195,6 @@ ocl_pool_alloc (GstBufferPool* pool, GstBuffer** buffer,
     if (!ocl_mem) {
         gst_buffer_unref (ocl_buf);
         GST_ERROR_OBJECT (pool, "failed to alloc ocl memory");
-        g_print ("%s() - failed to alloc ocl memory\n",__func__);
         return GST_FLOW_ERROR;
     }
 

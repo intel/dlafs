@@ -33,13 +33,16 @@
 namespace HDDLStreamFilter
 {
 
-OclVppBase::OclVppBase () : m_meta_list(NULL), m_pixel_size(1), m_kernel(0)
+OclVppBase::OclVppBase () : m_pixel_size(1)
 {
+#ifdef USE_CV_OCL
+#else
+    m_kernel = 0;
+#endif
 }
 
 OclVppBase::~OclVppBase ()
 {
-    destroyMetaList ();
     m_context.reset();
 }
 
@@ -56,42 +59,56 @@ OclVppBase::process (const SharedPtr<VideoFrame>&,const SharedPtr<VideoFrame>&)
 }
 
 OclStatus
-OclVppBase::process (const SharedPtr<VideoFrame>&,const SharedPtr<VideoFrame>&, const SharedPtr<VideoFrame>&)
+OclVppBase::process (const SharedPtr<VideoFrame>&,const SharedPtr<VideoFrame>&,
+                       const SharedPtr<VideoFrame>&)
 {
     return OCL_SUCCESS;
 }
+
 
 OclStatus
 OclVppBase::setOclContext (const SharedPtr<OclContext>& context)
 {
     m_context = context;
 
-    m_kernel = m_context->acquireKernel (getKernelName(), getKernelFileName());
-    if (!m_kernel) {
-        g_print ("invalid kernel file: %s.cl\n", getKernelFileName());
+#ifdef USE_CV_OCL
+    m_kernel = m_context->acquireKernelCV (getKernelName(), getKernelFileName());
+    GST_LOG("kernel:%s - m_kernel = %p\n", getKernelName(), &m_kernel);
+    if (m_kernel.empty()) {
+        GST_ERROR("invalid kernel file: %s.cl\n", getKernelFileName());
         return OCL_FAIL;
     }
-    g_print("kernel:%s - m_kernel = %p\n", getKernelName(), m_kernel);
-
+#else
+    m_kernel = m_context->acquireKernel (getKernelName(), getKernelFileName());
+    GST_LOG("kernel:%s - m_kernel = %p\n", getKernelName(), m_kernel);
+    if (!m_kernel) {
+        GST_ERROR("invalid kernel file: %s.cl\n", getKernelFileName());
+        return OCL_FAIL;
+    }
+#endif
     return OCL_SUCCESS;
 }
 
 OclStatus
 OclVppBase::printOclKernelInfo()
 {
+#ifdef USE_CV_OCL
+#else
     cl_int status = CL_SUCCESS;
     char kernel_name[128];
     cl_context ctx;
     cl_uint i;
     if(m_kernel) {
-        status = clGetKernelInfo (m_kernel, CL_KERNEL_FUNCTION_NAME, sizeof(kernel_name), kernel_name, NULL);
+        status = clGetKernelInfo (m_kernel, CL_KERNEL_FUNCTION_NAME,
+                 sizeof(kernel_name), kernel_name, NULL);
         if(status == CL_SUCCESS) {
             g_print("m_kernel = %p, name = %s\n", m_kernel, kernel_name);
         } else {
             g_print("printOclKernelInfo name failed = %d\n", status);
         }
 
-        status = clGetKernelInfo (m_kernel, CL_KERNEL_CONTEXT, sizeof(cl_context), &ctx, NULL);
+        status = clGetKernelInfo (m_kernel, CL_KERNEL_CONTEXT,
+            sizeof(cl_context), &ctx, NULL);
         if(status == CL_SUCCESS) {
             g_print("m_kernel = %p, context = %p\n", m_kernel, ctx);
         } else {
@@ -99,24 +116,29 @@ OclVppBase::printOclKernelInfo()
         }
 
         cl_uint num = 0;
-        status = clGetKernelInfo (m_kernel, CL_KERNEL_NUM_ARGS, sizeof(cl_uint), &num, NULL);
+        status = clGetKernelInfo (m_kernel, CL_KERNEL_NUM_ARGS,
+            sizeof(cl_uint), &num, NULL);
         if(status == CL_SUCCESS) {
             g_print("m_kernel = %p, arg_num = %d\n", m_kernel, num);
         } else {
-            g_print("printOclKernelInfo context - CL_KERNEL_NUM_ARGS failed = %d\n", status);
+            g_print("printOclKernelInfo arg num failed = %d\n", status);
         }
-        // CL_KERNEL_ARG_ACCESS_QUALIFIER
+
         char arg_name[128];
         for(i=0;i<num;i++){
             cl_kernel_arg_access_qualifier arg_access;
-            status = clGetKernelArgInfo (m_kernel, i, CL_KERNEL_ARG_ACCESS_QUALIFIER, sizeof(arg_access), &arg_access, NULL);
-            status = clGetKernelArgInfo (m_kernel, i, CL_KERNEL_ARG_TYPE_NAME, sizeof(arg_name), &arg_name, NULL);
+            status = clGetKernelArgInfo (m_kernel, i, CL_KERNEL_ARG_ACCESS_QUALIFIER,
+                     sizeof(arg_access), &arg_access, NULL);
+            status = clGetKernelArgInfo (m_kernel, i, CL_KERNEL_ARG_TYPE_NAME,
+                     sizeof(arg_name), &arg_name, NULL);
             cl_kernel_arg_address_qualifier arg_adress;
-            status = clGetKernelArgInfo (m_kernel, i, CL_KERNEL_ARG_ADDRESS_QUALIFIER, sizeof(arg_adress), &arg_adress, NULL);
-            g_print("Arg %d - access = %x, arg_type_name = %s, arg_adress = %x\n",i, arg_access, arg_name, arg_adress); 
+            status = clGetKernelArgInfo (m_kernel, i, CL_KERNEL_ARG_ADDRESS_QUALIFIER,
+                     sizeof(arg_adress), &arg_adress, NULL);
+            g_print("Arg %d - access = %x, arg_type_name = %s, arg_adress = %x\n",
+                    i, arg_access, arg_name, arg_adress); 
         }
     }
-
+#endif
     return OCL_SUCCESS;
 }
 
@@ -125,40 +147,6 @@ OclStatus
 OclVppBase::setNativeDisplay (const VADisplay, const OclNativeDisplayType)
 {
     return OCL_SUCCESS;
-}
-
-GList*
-OclVppBase::getMetaList ()
-{
-    return m_meta_list;
-}
-
-void
-OclVppBase::addMetaList (GList* meta_list)
-{
-    checkMetaList (&meta_list);
-
-    if (meta_list)
-        m_meta_list = (m_meta_list ? g_list_concat (m_meta_list, meta_list) : meta_list);
-}
-
-void
-OclVppBase::resetMetaList (GList* meta_list)
-{
-    if (m_meta_list) {
-        destroyMetaList ();
-    }
-
-    m_meta_list = meta_list;
-}
-
-void
-OclVppBase::destroyMetaList ()
-{
-    if (m_meta_list) {
-        g_list_free_full (m_meta_list, (GDestroyNotify) NULL);
-        m_meta_list = NULL;
-    }
 }
 
 }

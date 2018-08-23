@@ -63,7 +63,7 @@ public:
     CvdlAlgoData(){};
     CvdlAlgoData(GstBuffer *buf) {
         if(buf){
-            mGstBuffer = gst_buffer_ref(buf);
+            mGstBuffer = buf;//gst_buffer_ref(buf);
         }else{
             mGstBuffer = NULL;
         }
@@ -77,21 +77,6 @@ public:
         }
         mObjectVec.clear();
     }
-   /*
-    CvdlAlgoData& operator=(CvdlAlgoData &data) {
-        if(data.mGstBuffer){
-            mGstBuffer = gst_buffer_ref(data.mGstBuffer);
-        }
-        mFrameId = data.mFrameId;
-        mPts     = data.mPts;
-        mResultValid = data.mResultValid;
-        mGstBufferOcl = data.mGstBufferOcl;
-        mObjectVec = data.mObjectVec;
-        algoBase = data.algoBase;
-
-        return *this;
-    }
-    */
     GstBuffer *mGstBuffer;
     guint64 mFrameId;
     guint64 mPts;
@@ -118,10 +103,13 @@ public:
 
     void algo_connect(CvdlAlgoBase *algoTo);
     void queue_buffer(GstBuffer *buffer);
+    void queue_out_buffer(GstBuffer *buffer);
     void start_algo_thread();
     void stop_algo_thread();
 
     int get_in_queue_size();
+    int get_out_queue_size();
+    void save_buffer(unsigned char *buf, int w, int h, int p, char *info);
 
     virtual void set_data_caps(GstCaps *incaps)
     {
@@ -146,10 +134,6 @@ public:
     GstTask *mTask;
     GRecMutex mMutex;
 
-    /* orignal input video size */
-    //int mOrignalVideoWidth;
-    //int mOrignalVideoHeight;
-
     /* The image size into the actual algo processing */
     int mInputWidth;
     int mInputHeight;
@@ -163,18 +147,14 @@ public:
        */
     //GstBufferPool *mPool;
 
-#if 0
-    /* queue for input buffer, the pointer to CvdlAlgoData*/
-    GstAtomicQueue *mInQueue;
-    /* queue for output buffer, which shoule be created in the next linked algorithm */
-    GstAtomicQueue *mOutQueue;
-#else
+    // queue input buffer
     thread_queue<CvdlAlgoData> mInQueue;
-#endif
+
+    // only used by last algo in pipeline
+    thread_queue<CvdlAlgoData> mOutQueue;
+
     /* pool for allocate buffer for inference result, CPU buffer */
     GstBufferPool *mResultPool;
-    /* algo result data, which will*/
-    //gpoint *result;
 
     std::atomic<int> mInferCnt;
 	std::atomic<guint64> mInferCntTotal;

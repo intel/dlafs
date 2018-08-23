@@ -84,7 +84,6 @@ inference_meta_free (gpointer meta)
         infer_meta = infer_meta->next;
         g_free(temp);
     }
-    g_free(meta);
     return ;
 }
 
@@ -125,7 +124,8 @@ inference_meta_holder_free (GstMeta *meta,
   InferenceMetaHolder *meta_holder = (InferenceMetaHolder *)meta;
   if (meta_holder->meta)
     inference_meta_free (meta_holder->meta);
-  g_free(meta_holder);
+  // Don't free it due to it will be freed in gst_buffer_foreach_meta
+  // g_free(meta_holder);
 }
 
 static gboolean
@@ -150,7 +150,8 @@ inference_meta_get_info (void)
     if (g_once_init_enter (&meta_info)) {
         const GstMetaInfo *mi = gst_meta_register (
             INFERENCE_META_API_TYPE, "InferenceMetaHolder", sizeof (InferenceMetaHolder),
-            inference_meta_holder_init, inference_meta_holder_free, inference_meta_holder_transform);
+            inference_meta_holder_init, inference_meta_holder_free,
+            inference_meta_holder_transform);
         g_once_init_leave (&meta_info, mi);
     }
 
@@ -190,21 +191,23 @@ gst_buffer_get_inference_meta (GstBuffer * buffer)
   return meta;
 }
 
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------
 //
 // cvdl meta data
 //
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------
 
 /* called when allocate cvdlfilter output buffer*/
 gpointer
-cvdl_meta_create (VADisplay display, VASurfaceID surface, VideoRect *rect, const char *label, guint32 color)
+cvdl_meta_create (VADisplay display, VASurfaceID surface,
+                       VideoRect *rect, const char *label, guint32 color)
 {
     CvdlMeta *meta = g_new0 (CvdlMeta, 1);
 
     meta->surface_id = surface;
     meta->display_id = display;
-    meta->inference_result = (InferenceMeta *)inference_meta_create(rect, label, color);
+    meta->inference_result =
+        (InferenceMeta *)inference_meta_create(rect, label, color);
 
     return (gpointer) meta;
 }
@@ -213,10 +216,10 @@ cvdl_meta_create (VADisplay display, VASurfaceID surface, VideoRect *rect, const
 gpointer
 cvdl_meta_add (gpointer meta, VideoRect *rect, const char *label, guint32 color)
 {
-    //CvdlMeta *cvdl_meta = ( CvdlMeta *)meta;
+    CvdlMeta *cvdl_meta = ( CvdlMeta *)meta;
 
     //inference_meta_add((gpointer)cvdl_meta->inference_result);
-    inference_meta_add(meta, rect, label, color);
+    inference_meta_add(cvdl_meta->inference_result, rect, label, color);
     return (gpointer) meta;
 }
 
@@ -241,7 +244,6 @@ cvdl_meta_copy(CvdlMeta *meta_src) {
 
     return meta_dst;
 }
-
 
 GType
 cvdl_meta_api_get_type (void)
@@ -282,7 +284,9 @@ cvdl_meta_holder_free (GstMeta * meta,
     if (meta_holder->meta)
         cvdl_meta_free (meta_holder->meta);
     meta_holder->meta = NULL;
-    g_free(meta_holder);
+
+    // Don't free it due to it will be freed in gst_buffer_foreach_meta
+    //g_free(meta_holder);
 }
 
 static gboolean

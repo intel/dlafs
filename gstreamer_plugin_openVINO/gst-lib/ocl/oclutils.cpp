@@ -89,8 +89,6 @@ ocl_compare_caps (GstCaps* incaps, GstCaps* outcaps)
 
     if (gst_value_compare (gst_structure_get_value (s1, "format"),
                            gst_structure_get_value (s2, "format")) ||
-        //gst_value_compare (gst_structure_get_value (s1, "tiled"),
-        //                   gst_structure_get_value (s2, "tiled")) ||
         gst_value_compare (gst_structure_get_value (s1, "width"),
                            gst_structure_get_value (s2, "width")) ||
         gst_value_compare (gst_structure_get_value (s1, "height"),
@@ -104,22 +102,6 @@ ocl_compare_caps (GstCaps* incaps, GstCaps* outcaps)
 gboolean
 ocl_fixate_caps (GstCaps* caps)
 {
-#if 0
-    GstStructure* structure;
-    const GValue* value;
-
-    if (!caps || gst_caps_is_empty (caps))
-        return FALSE;
-
-    guint count = gst_caps_get_size (caps);
-    for (guint idx = 0; idx < count; ++idx) {
-        structure = gst_caps_get_structure (caps, idx);
-        //value = gst_structure_get_value (structure, "tiled");
-        //if (value && !gst_value_is_fixed (value)) {
-        //    gst_structure_fixate_field_boolean (structure, "tiled", TRUE);
-        //}
-    }
-#endif
     return TRUE;
 }
 

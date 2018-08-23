@@ -66,13 +66,19 @@ res_memory_alloc (ResPool* respool)
 {
     ResPoolPrivate *priv = respool->priv;
     ResMemory *res_mem = g_new0(ResMemory, 1);
+    GstMemory *parent;
 
     res_mem->data = g_new0(InferenceData, 1);
     res_mem->data_count = 1;
     res_mem->pts  = 0;
 
+    /* find the real parent */
+    if ((parent = res_mem->parent.parent) == NULL)
+      parent = (GstMemory *) res_mem;
+
     GstMemory *memory = GST_MEMORY_CAST (res_mem);
-    gst_memory_init (memory, GST_MEMORY_FLAG_NO_SHARE, priv->allocator, NULL, 0, 0, 0, 0); //TODO
+    gst_memory_init (memory, GST_MEMORY_FLAG_NO_SHARE, priv->allocator, parent,
+         sizeof(InferenceData), 0, 0, sizeof(InferenceData)); //TODO
 
     return memory;
 }

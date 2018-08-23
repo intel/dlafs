@@ -193,32 +193,11 @@ GstFlowReturn IELoader::convert_input_to_blob(const cv::UMat& img, InferenceEngi
 
         if (inputBlobDataPtr != nullptr) {
             unsigned char *inputDataPtr = inputBlobDataPtr->data();
-#if 1
+
             // Src data has been converted to be BGR planar format
             int nPixels = w * h * numBlobChannels;
             for (int i = 0; i < nPixels; i++)
                 inputDataPtr[i] = src.data[i];
-#else
-            //--reverse_input_channels
-            cv::Mat dst0 = cv::Mat(h, w, CV_8UC1, inputDataPtr + h*w*0, w);
-            cv::Mat dst1 = cv::Mat(h, w, CV_8UC1, inputDataPtr + h*w*1, w);
-            cv::Mat dst2 = cv::Mat(h, w, CV_8UC1, inputDataPtr + h*w*2, w);
-
-    #ifndef CV_SPLIT_NO_OPENCL
-            std::vector<cv::UMat> dstUMats;
-            dstUMats.push_back(dst2.getUMat(0));
-            dstUMats.push_back(dst1.getUMat(0));
-            dstUMats.push_back(dst0.getUMat(0));
-            cv::split(src, dstUMats);
-    #else
-            std::vector<cv::Mat> dstMats;
-            dstMats.push_back(dst2);
-            dstMats.push_back(dst1);
-            dstMats.push_back(dst0);
-            cv::Mat srcMat = src.getMat(0);
-            cv::split(srcMat, dstMats);
-    #endif
-#endif
         }
     }else{
         GST_ERROR("InferenceEngine::Precision not support: %d", (int)mInputPrecision);
@@ -285,10 +264,12 @@ GstFlowReturn IELoader::do_inference_async(CvdlAlgoData *algoData, uint64_t frmI
                 //parser_inference_result(resultBlobFp32->data(), sizeof(float), algoData);
                 //algo = static_cast<CvdlAlgoBase*>(algoData->algoBase);
                 CvdlAlgoBase *algo = algoData->algoBase;
-                g_print("==========WaitAsync - do_inference_async begin: algo = %p(%p), algoData = %p\n", algo, algoData->algoBase, algoData);
+                GST_LOG("==========WaitAsync - do_inference_async begin: algo = %p(%p), algoData = %p\n",
+                    algo, algoData->algoBase, algoData);
                 g_usleep(10);
                 algo->parse_inference_result(resultBlobPtr, sizeof(float), algoData, objId);
-                g_print("==========WaitAsync - do_inference_async finish: algo = %p(%p), algoData = %p\n", algo,algoData->algoBase, algoData);
+                GST_LOG("==========WaitAsync - do_inference_async finish: algo = %p(%p), algoData = %p\n",
+                    algo,algoData->algoBase, algoData);
             } else {
                 GST_ERROR("Don't support other output precision except FP32!");
                 return;

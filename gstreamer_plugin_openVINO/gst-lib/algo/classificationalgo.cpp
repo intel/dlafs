@@ -27,7 +27,6 @@
 #include <ocl/metadata.h>
 
 using namespace std;
-//using namespace HDDLStreamFilter;
 
 static std::string g_vehicleLabel[] =
 {
@@ -70,12 +69,13 @@ static void try_process_algo_data(CvdlAlgoData *algoData)
         }
         if(objectVec.size()>0) {
             //put valid algoData;
-            g_print("Classification algo - output GstBuffer = %p(%d)\n",
+            GST_LOG("Classification algo - output GstBuffer = %p(%d)\n",
                    algoData->mGstBuffer, GST_MINI_OBJECT_REFCOUNT(algoData->mGstBuffer));
             classificationAlgo->mOutQueue.put(*algoData);
         } else {
             g_print("Classification algo - unref GstBuffer = %p(%d)\n",
                 algoData->mGstBuffer, GST_MINI_OBJECT_REFCOUNT(algoData->mGstBuffer));
+            gst_buffer_unref(algoData->mGstBuffer);
             delete algoData;
         }
     }
@@ -92,7 +92,6 @@ static void process_one_object(CvdlAlgoData *algoData, ObjectData &objectData, i
     if(crop.width<=0 || crop.height<=0 || crop.x<0 || crop.y<0) {
         GST_ERROR("classfication: crop = (%d,%d) %dx%d", crop.x, crop.y, crop.width, crop.height);
         objectData.flags |= CLASSIFICATION_OBJECT_FLAG_DONE;
-        //objectData.flags.fetch_or(CLASSIFICATION_OBJECT_FLAG_DONE);
         try_process_algo_data(algoData);
         return;
     }
@@ -100,7 +99,6 @@ static void process_one_object(CvdlAlgoData *algoData, ObjectData &objectData, i
     if(ocl_buf==NULL) {
         GST_WARNING("Failed to do image process!");
         objectData.flags |= CLASSIFICATION_OBJECT_FLAG_DONE;
-        //objectData.flags.fetch_or(CLASSIFICATION_OBJECT_FLAG_DONE);
         try_process_algo_data(algoData);
         return;
     }
@@ -118,6 +116,10 @@ static void process_one_object(CvdlAlgoData *algoData, ObjectData &objectData, i
         try_process_algo_data(algoData);
         return;
     }
+    //test
+    //classificationAlgo->save_buffer(ocl_mem->frame.getMat(0).ptr(), classificationAlgo->mInputWidth,
+    //    classificationAlgo->mInputHeight,3, "classification");
+
 
     // Classification callback function
     auto onClassificationResult = [&objectData](CvdlAlgoData* algoData)
@@ -128,7 +130,7 @@ static void process_one_object(CvdlAlgoData *algoData, ObjectData &objectData, i
 
         classificationAlgo->mInferCnt--;
         objectData.flags |= CLASSIFICATION_OBJECT_FLAG_DONE;
-        //objectData.flags.fetch_or(CLASSIFICATION_OBJECT_FLAG_DONE);
+
         // check and process algoData
         try_process_algo_data(algoData);
     };
@@ -155,8 +157,7 @@ static void classification_algo_func(gpointer userData)
 {
     ClassificationAlgo *classificationAlgo = static_cast<ClassificationAlgo*> (userData);
     CvdlAlgoData *algoData = new CvdlAlgoData;
-    //GstFlowReturn ret;
-    g_print("\nclassification_algo_func - new an algoData = %p\n", algoData);
+    GST_LOG("\nclassification_algo_func - new an algoData = %p\n", algoData);
 
     if(!classificationAlgo->mNext) {
         GST_LOG("The classification algo's next algo is NULL");
@@ -172,19 +173,20 @@ static void classification_algo_func(gpointer userData)
     algoData->algoBase = static_cast<CvdlAlgoBase *>(classificationAlgo);
 
     if(algoData->mGstBuffer==NULL) {
-        g_print("%s() - get null buffer\n", __func__);
+        GST_ERROR("%s() - get null buffer\n", __func__);
         return;
     }
-    g_print("%s() - classification = %p, algoData->mFrameId = %ld\n", __func__, classificationAlgo, algoData->mFrameId);
-    g_print("----------------------classfication-----------------------------\n");
-    g_print("%s() - get one buffer, GstBuffer = %p, refcout = %d, queueSize = %d, algoData = %p, algoBase = %p\n",
+    GST_LOG("%s() - classification = %p, algoData->mFrameId = %ld\n", __func__,
+            classificationAlgo, algoData->mFrameId);
+    GST_LOG("%s() - get one buffer, GstBuffer = %p, refcout = %d, queueSize = %d,"\
+            "algoData = %p, algoBase = %p\n",
         __func__, algoData->mGstBuffer, GST_MINI_OBJECT_REFCOUNT (algoData->mGstBuffer),
         classificationAlgo->mInQueue.size(), algoData, algoData->algoBase);
 
 
     for(unsigned int i=0; i< algoData->mObjectVec.size(); i++) {
-        algoData->mObjectVec[i].flags &= ~(CLASSIFICATION_OBJECT_FLAG_DONE|CLASSIFICATION_OBJECT_FLAG_VALID);
-        //algoData->mObjectVec[i].flags.fetch_and(~(CLASSIFICATION_OBJECT_FLAG_DONE|CLASSIFICATION_OBJECT_FLAG_VALID));
+        algoData->mObjectVec[i].flags &=
+              ~(CLASSIFICATION_OBJECT_FLAG_DONE|CLASSIFICATION_OBJECT_FLAG_VALID);
     }
 
     // get input data and process it here, put the result into algoData
@@ -192,18 +194,10 @@ static void classification_algo_func(gpointer userData)
     for(unsigned int i=0; i< algoData->mObjectVec.size(); i++)
         process_one_object(algoData, algoData->mObjectVec[i], i);
 
-
-    /**
-        * Save current images to 'detectPoolTrck' that will be used for tracking.
-        * Detect result will be saved to '_detectRsltPool' in the callback function ''.
-        */
-    //global->detectPoolTrck.put(DetectObjRslt { img, bDetect });
-
 }
 
 ClassificationAlgo::ClassificationAlgo() : CvdlAlgoBase(classification_algo_func, this, NULL)
 {
-    //mImageProcessor.set_ocl_kernel_name(CRC_FORMAT_BGR_PLANNAR);
     mInputWidth = CLASSIFICATION_INPUT_W;
     mInputHeight = CLASSIFICATION_INPUT_H;
     mIeInited = false;
@@ -222,9 +216,6 @@ void ClassificationAlgo::set_data_caps(GstCaps *incaps)
     if(mInCaps)
         gst_caps_unref(mInCaps);
     mInCaps = gst_caps_copy(incaps);
-
-    //if(mOclCaps)
-    //    gst_caps_unref(mOclCaps);
 
     //int oclSize = mInputWidth * mInputHeight * 3;
     mOclCaps = gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING, "BGR", NULL);
@@ -259,8 +250,8 @@ GstFlowReturn ClassificationAlgo::algo_dl_init(const char* modeFileName)
     std::string strModelXml(modeFileName);
     std::string tmpFn = strModelXml.substr(0, strModelXml.rfind("."));
     std::string strModelBin = tmpFn + ".bin";
-    GST_DEBUG("ClassificationModel bin = %s", strModelBin.c_str());
-    GST_DEBUG("ClassificationModel xml = %s", strModelXml.c_str());
+    GST_LOG("ClassificationModel bin = %s", strModelBin.c_str());
+    GST_LOG("ClassificationModel xml = %s", strModelXml.c_str());
     ret = mIeLoader.read_model(strModelXml, strModelBin, IE_MODEL_CLASSFICATION);
     
     if(ret != GST_FLOW_OK){
@@ -274,7 +265,7 @@ GstFlowReturn ClassificationAlgo::algo_dl_init(const char* modeFileName)
 GstFlowReturn ClassificationAlgo::parse_inference_result(InferenceEngine::Blob::Ptr &resultBlobPtr,
                                                   int precision, CvdlAlgoData *outData, int objId)
 {
-    g_print("ClassificationAlgo::parse_inference_result begin: outData = %p\n", outData);
+    GST_LOG("ClassificationAlgo::parse_inference_result begin: outData = %p\n", outData);
 
     if (precision == sizeof(short)) {
         GST_ERROR("Don't support FP16!");
@@ -312,9 +303,15 @@ GstBuffer* ClassificationAlgo::dequeue_buffer()
     CvdlAlgoData algoData;
     gpointer meta_data;
 
-    while(true) {
+    while(true)
+    {
         if(!mOutQueue.get(algoData)) {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            return NULL;
+        }
+        // Send an invalid buffer for quit this task
+        if(algoData.mGstBuffer==NULL) {
+            g_print("%s() - got EOS buffer!\n",__func__);
             return NULL;
         }
         if(algoData.mObjectVec.size()>0)
@@ -322,11 +319,9 @@ GstBuffer* ClassificationAlgo::dequeue_buffer()
     }
     buf = algoData.mGstBuffer;
 
-    g_print("cvdlfilter-dequeue: buf = %p(%d)\n", algoData.mGstBuffer, GST_MINI_OBJECT_REFCOUNT(algoData.mGstBuffer));
+    GST_LOG("cvdlfilter-dequeue: buf = %p(%d)\n", algoData.mGstBuffer, GST_MINI_OBJECT_REFCOUNT(algoData.mGstBuffer));
 
-    // Send an invalid buffer for quit this task
-    if(buf==NULL)
-        return NULL;
+
     
     // put object data as meta data
     VASurfaceID surface;

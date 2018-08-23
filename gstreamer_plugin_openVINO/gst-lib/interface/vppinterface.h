@@ -41,7 +41,8 @@ class VppInterface
     process (const SharedPtr<VideoFrame>&, const SharedPtr<VideoFrame>&) = 0;
 
     virtual OclStatus
-    process (const SharedPtr<VideoFrame>&, const SharedPtr<VideoFrame>&, const SharedPtr<VideoFrame>&) = 0;
+    process (const SharedPtr<VideoFrame>&, const SharedPtr<VideoFrame>&,
+                const SharedPtr<VideoFrame>&) = 0;
 
     virtual gboolean
     setParameters (gpointer) = 0;
@@ -57,15 +58,6 @@ class VppInterface
 
     virtual void
     setOclFormat(CRCFormat crc_format) = 0;
-
-    virtual GList*
-    getMetaList () = 0;
-
-    virtual void
-    addMetaList (GList*) = 0;
-
-    virtual void
-    resetMetaList (GList*) = 0;
 
     virtual
     ~VppInterface () {}

@@ -97,8 +97,7 @@ static void detection_algo_func(gpointer userData)
     CvdlAlgoData *algoData = new CvdlAlgoData;
     GstFlowReturn ret;
 
-    g_print("\ndetection_algo_func - new an algoData = %p\n", algoData);
-
+    GST_LOG("\ndetection_algo_func - new an algoData = %p\n", algoData);
     if(!detectionAlgo->mNext) {
         GST_WARNING("The next algo is NULL, return");
         return;
@@ -112,11 +111,12 @@ static void detection_algo_func(gpointer userData)
 
     // bind algoTask into algoData, so that can be used when sync callback
     algoData->algoBase = static_cast<CvdlAlgoBase *>(detectionAlgo);
-    g_print("%s() - detectionAlgo = %p, algoData->mFrameId = %ld\n", __func__, detectionAlgo, algoData->mFrameId);
-    g_print("%s() - get one buffer, GstBuffer = %p, refcout = %d, queueSize = %d, algoData = %p, algoBase = %p\n",
+    GST_LOG("%s() - detectionAlgo = %p, algoData->mFrameId = %ld\n",
+            __func__, detectionAlgo, algoData->mFrameId);
+    GST_LOG("%s() - get one buffer, GstBuffer = %p, refcout = %d, "\
+        "queueSize = %d, algoData = %p, algoBase = %p\n",
         __func__, algoData->mGstBuffer, GST_MINI_OBJECT_REFCOUNT (algoData->mGstBuffer),
         detectionAlgo->mInQueue.size(), algoData, algoData->algoBase);
-
 
     // get input data and process it here, put the result into algoData
     // NV12-->BGR_Plannar
@@ -139,43 +139,43 @@ static void detection_algo_func(gpointer userData)
         return;
     }
 
+    //test
+    //detectionAlgo->save_buffer(ocl_mem->frame.getMat(0).ptr(), detectionAlgo->mInputWidth,
+    //                   detectionAlgo->mInputHeight, 3, "detection");
+
+
     // Detect callback function
     auto onDetectResult = [](CvdlAlgoData* algoData)
     {
         //DetectionAlgo *detectionAlgo = static_cast<DetectionAlgo *>(algoData->algoBase);
         CvdlAlgoBase *algo = algoData->algoBase;
-        g_print("onDetectResult - detect algo = %p, OclBuffer = %p(%d)\n", algo, algoData->mGstBufferOcl,
+        GST_LOG("onDetectResult - detect algo = %p, OclBuffer = %p(%d)\n", algo, algoData->mGstBufferOcl,
             GST_MINI_OBJECT_REFCOUNT(algoData->mGstBufferOcl));
         gst_buffer_unref(algoData->mGstBufferOcl);
 
         if(algoData->mResultValid){
-            g_print("detection_algo_func - pass down GstBuffer = %p(%d)\n",
+            GST_LOG("detection_algo_func - pass down GstBuffer = %p(%d)\n",
                 algoData->mGstBuffer, GST_MINI_OBJECT_REFCOUNT(algoData->mGstBuffer));
             algo->mNext->mInQueue.put(*algoData);
         }else{
             //g_print("delete algoData = %p\n", algoData);
             g_print("detection_algo_func - unref GstBuffer = %p(%d)\n", 
                 algoData->mGstBuffer, GST_MINI_OBJECT_REFCOUNT(algoData->mGstBuffer));
+            gst_buffer_unref(algoData->mGstBuffer);
             delete algoData;
         }
         algo->mInferCnt--;
     };
 
     // ASync detect, directly return after pushing request.
-    ret = detectionAlgo->mIeLoader.do_inference_async(algoData, algoData->mFrameId, -1, ocl_mem->frame, onDetectResult);
+    ret = detectionAlgo->mIeLoader.do_inference_async(
+            algoData, algoData->mFrameId, -1, ocl_mem->frame, onDetectResult);
     detectionAlgo->mInferCnt++;
     detectionAlgo->mInferCntTotal++;
 
     if (ret!=GST_FLOW_OK) {
         GST_ERROR("IE: detect FAIL");
     }
-
-    /**
-        * Save current images to 'detectPoolTrck' that will be used for tracking.
-        * Detect result will be saved to '_detectRsltPool' in the callback function ''.
-        */
-    //global->detectPoolTrck.put(DetectObjRslt { img, bDetect });
-
 }
 
 
@@ -217,9 +217,6 @@ void DetectionAlgo::set_data_caps(GstCaps *incaps)
     if(mInCaps)
         gst_caps_unref(mInCaps);
     mInCaps = gst_caps_copy(incaps);
-
-    //if(mOclCaps)
-    //    gst_caps_unref(mOclCaps);
 
     //int oclSize = mInputWidth * mInputHeight * 3;
     mOclCaps = gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING, "BGR", NULL);
@@ -329,7 +326,8 @@ void DetectionAlgo::get_detection_boxes(
             int pIndex = cGrideSize * cGrideSize * cClassNum + idx * cBoxNumEachBlock + n;
             float scale = predictions[pIndex];
             // box_index = 7 * 7 * (9 + 2) + 4 * (2 *index +n)
-            int32_t box_index = cGrideSize * cGrideSize * (cClassNum + cBoxNumEachBlock) + (idx * cBoxNumEachBlock + n) * 4;
+            int32_t box_index = cGrideSize * cGrideSize * (cClassNum + cBoxNumEachBlock)
+                                + (idx * cBoxNumEachBlock + n) * 4;
             internalData->mBoxes[index].x = (predictions[box_index + 0] + col) / cGrideSize * w;
             internalData->mBoxes[index].y = (predictions[box_index + 1] + row) / cGrideSize * h;
             internalData->mBoxes[index].w = pow(predictions[box_index + 2], 1) * w;
@@ -445,7 +443,7 @@ void DetectionAlgo::get_result(DetectionInternalData *internalData, CvdlAlgoData
 GstFlowReturn DetectionAlgo::parse_inference_result(InferenceEngine::Blob::Ptr &resultBlobPtr,
                                                             int precision, CvdlAlgoData *outData, int objId)
 {
-    g_print("DetectionAlgo::parse_inference_result begin: outData = %p\n", outData);
+    GST_LOG("DetectionAlgo::parse_inference_result begin: outData = %p\n", outData);
 
     auto resultBlobFp32 = std::dynamic_pointer_cast<InferenceEngine::TBlob<float> >(resultBlobPtr);
 

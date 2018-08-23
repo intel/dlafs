@@ -29,7 +29,7 @@
 #include <gst/gstbuffer.h>
 #include <gst/gstpad.h>
 #include <opencv2/opencv.hpp>
-//#include "mathutils.h"
+
 
 class TrackObjAttribute;
 
@@ -42,6 +42,7 @@ public:
 
     void verify_detection_result(std::vector<ObjectData> &objectVec);
     void track_objects(CvdlAlgoData* &algoData);
+    void track_objects_fast(CvdlAlgoData* &algoData);
     void push_track_object(CvdlAlgoData* &algoData);
     void update_track_object(std::vector<ObjectData> &objectVec);
 
@@ -66,11 +67,11 @@ public:
 
 private:
     cv::UMat& get_umat(GstBuffer *buffer);
-    
+    cv::Mat get_mat(GstBuffer *buffer);
     std::vector<cv::Point2f> calc_feature_points(cv::UMat &gray);
     std::vector<cv::Point2f> find_points_in_ROI(cv::Rect roi);
     void calc_average_shift_moment(TrackObjAttribute& curObj, float& offx, float& offy);
-    bool track_one_object(cv::UMat& curFrame, TrackObjAttribute& curObj, cv::Rect& outRoi);
+    bool track_one_object(cv::Mat& curFrame, TrackObjAttribute& curObj, cv::Rect& outRoi);
     void figure_out_trajectory_points(ObjectData &objectVec, TrackObjAttribute& curObj);
     cv::Rect compare_detect_predict(std::vector<ObjectData>& objectVec, TrackObjAttribute& curObj, 
                                                cv::Rect predictRt, bool& bDetect);
@@ -94,8 +95,6 @@ public:
 
 	std::vector<cv::Rect> vecPos;	/* Every frame vehicle position based on tracking size */
 
-	//std::vector<cv::Mat> _vecRoi;	/* Max 3 object, is used for classification and report.[brg24] */
-	//std::vector<cv::Mat> _vecSrc;	/* NVR show src image[had resize to NVR show window size][brg24] */
 	std::vector<bool> _vecRoiBRecognized;	/* Whether if had recognized. */
  	std::vector<cv::Rect> _vecRoiPosInSrc;	/* Detect position in _vecSrc; */
 

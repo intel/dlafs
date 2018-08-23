@@ -123,6 +123,21 @@ res_memory_free (GstAllocator* allocator, GstMemory* memory)
     g_free (memory);
 }
 
+static gpointer
+res_memory_map (GstMemory* memory, gsize size, GstMapFlags flags)
+{
+    gpointer data = 0;
+    ResMemory *res_mem = RES_MEMORY_CAST(memory);
+
+    data = (gpointer)res_mem->data;
+    return data;
+}
+static void
+res_memory_unmap (GstMemory* memory)
+{
+    return;
+}
+
 
 G_DEFINE_TYPE (ResAllocator, res_allocator, GST_TYPE_ALLOCATOR);
 
@@ -144,8 +159,8 @@ res_allocator_init (ResAllocator* res_alloc)
 {
     GstAllocator* allocator = GST_ALLOCATOR_CAST (res_alloc);
 
-    allocator->mem_map = NULL;
-    allocator->mem_unmap = NULL;
+    allocator->mem_map = res_memory_map;
+    allocator->mem_unmap = res_memory_unmap;
     allocator->mem_type = RES_ALLOCATOR_NAME;
 
     GST_OBJECT_FLAG_SET (allocator, GST_ALLOCATOR_FLAG_CUSTOM_ALLOC);

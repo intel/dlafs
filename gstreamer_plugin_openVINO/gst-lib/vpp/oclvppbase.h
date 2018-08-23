@@ -26,7 +26,12 @@
 #include <va/va.h>
 #include <CL/opencl.h>
 
+#include <opencv2/opencv.hpp>
+#include <opencv2/core/ocl.hpp>
+#include <opencv2/core/va_intel.hpp>
+
 #include <interface/vppinterface.h>
+#include <ocl/oclcommon.h>
 
 namespace HDDLStreamFilter
 {
@@ -67,28 +72,15 @@ public:
     virtual void
     setOclFormat(CRCFormat crc_format) {}
 
-    virtual void
-    checkMetaList (GList**) { }
-
-    virtual GList*
-    getMetaList ();
-
-    virtual void
-    addMetaList (GList*);
-
-    virtual void
-    resetMetaList (GList*);
-
-    virtual void
-    destroyMetaList ();
-
     OclStatus
     printOclKernelInfo();
 protected:
-    GList*    m_meta_list;
     guint16   m_pixel_size;
+    #ifdef USE_CV_OCL
+    cv::ocl::Kernel m_kernel;
+    #else
     cl_kernel m_kernel;
-
+    #endif
     SharedPtr<OclContext> m_context;
 };
 

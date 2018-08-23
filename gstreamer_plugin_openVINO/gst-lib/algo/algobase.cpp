@@ -63,6 +63,10 @@ CvdlAlgoBase::CvdlAlgoBase(GstTaskFunction func, gpointer user_data, GDestroyNot
 
 CvdlAlgoBase::~CvdlAlgoBase()
 {
+    while(mInferCnt>0) {
+         // wait IE infer tread finished
+         g_usleep(10000);
+    }
     if((gst_task_get_state(mTask) == GST_TASK_STARTED) ||
        (gst_task_get_state(mTask) == GST_TASK_PAUSED)) {
          gst_task_set_state(mTask, GST_TASK_STOPPED);
@@ -103,10 +107,35 @@ void CvdlAlgoBase::queue_buffer(GstBuffer *buffer)
     if(buffer)
         algoData.mPts = GST_BUFFER_TIMESTAMP (buffer);
     mInQueue.put(algoData);
-    g_print("InQueue size = %d\n", mInQueue.size());
+    GST_LOG("InQueue size = %d\n", mInQueue.size());
 }
 
+void CvdlAlgoBase::queue_out_buffer(GstBuffer *buffer)
+{
+    CvdlAlgoData algoData(buffer);
+    algoData.mFrameId = mFrameIndex++;
+    if(buffer)
+        algoData.mPts = GST_BUFFER_TIMESTAMP (buffer);
+    mOutQueue.put(algoData);
+    GST_LOG("OutQueue size = %d\n", mOutQueue.size());
+}
 int CvdlAlgoBase::get_in_queue_size()
 {
     return mInQueue.size();
+}
+
+int CvdlAlgoBase::get_out_queue_size()
+{
+    return mOutQueue.size();
+}
+void CvdlAlgoBase::save_buffer(unsigned char *buf, int w, int h, int p, char *info)
+{
+    char filename[128];
+    sprintf(filename, "~/temp/temp/%s-%dx%dx%d-%d.rgb",info,w,h,p,mFrameIndex);
+
+    FILE *fp = fopen (filename, "wb");
+    if (fp) {
+         fwrite (buf, 1, w*h*p, fp);
+         fclose (fp);
+    }
 }

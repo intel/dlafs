@@ -22,8 +22,6 @@
 #ifndef __ALGO_PIPELINE_H__
 #define __ALGO_PIPELINE_H__
 
-//#include "algobase.h"
-//class CvdlAlgoBase;
 
 #ifdef __cplusplus
 extern "C" {
@@ -108,6 +106,7 @@ void algo_pipeline_get_buffer(AlgoPipelineHandle handle, GstBuffer **buf);
 
 void algo_pipeline_flush_buffer(AlgoPipelineHandle handle);
 int algo_pipeline_get_input_queue_size(AlgoPipelineHandle handle);
+int algo_pipeline_get_all_queue_size(AlgoPipelineHandle handle);
 
 #ifdef __cplusplus
 };

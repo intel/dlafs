@@ -43,6 +43,157 @@ static const __constant float d1                = BT601_BLACK_RANGE / CV_8U_MAX;
 static const __constant float d2                = CV_8U_HALF / CV_8U_MAX;
 
 
+#if 1
+__kernel void blend( read_only image2d_t src_y,
+                     read_only image2d_t src_uv,
+                     __global unsigned char* src_osd,
+                    __global unsigned char* pBGRA,
+                     int dst_w, int dst_h)
+{
+    int id_x = get_global_id(0);
+    int id_y = get_global_id(1);
+    int id_z = 2 * id_x;
+    int id_w = 2 * id_y;
+
+    float4 Y0, Y1, Y2, Y3, UV;
+    //float4 rgba[4];
+
+    if (id_z >= dst_w || id_w >= dst_h)
+        return;
+
+ #if 0
+	sampler_t sampler = CLK_NORMALIZED_COORDS_TRUE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_NEAREST;
+	float x = 1.0*id_z;
+	float y = 1.0*id_w;
+    Y0 = read_imagef(src_y, sampler, (float2)( x/dst_w   , (y/dst_h)));
+    Y1 = read_imagef(src_y, sampler, (float2)((x+1.0)/dst_w, (y/dst_h)));
+    Y2 = read_imagef(src_y, sampler, (float2)( x/dst_w   , (y+1.0)/dst_h));
+    Y3 = read_imagef(src_y, sampler, (float2)((x+1.0)/dst_w, (y+1.0)/dst_h));
+#endif
+	sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_NEAREST;
+    Y0 = read_imagef(src_y, sampler, (int2)(id_z    , id_w));
+    Y1 = read_imagef(src_y, sampler, (int2)(id_z + 1, id_w));
+    Y2 = read_imagef(src_y, sampler, (int2)(id_z    , id_w + 1));
+    Y3 = read_imagef(src_y, sampler, (int2)(id_z + 1, id_w + 1));
+    UV = read_imagef(src_uv,sampler,(int2)(id_z/2  , id_w / 2)) - d2;
+
+    __global uchar* pDstRow1 = pBGRA + (id_w * dst_w + id_z) * 4;
+    __global uchar* pDstRow2 = pDstRow1 + dst_w * 4;
+
+    __global uchar* pOsdRow1 = src_osd + (id_w * dst_w + id_z) * 4;
+    __global uchar* pOsdRow2 = pOsdRow1 + dst_w * 4;
+
+    #if 0
+    rgba[0].x = pOsdRow1[0] ;
+    rgba[0].y = pOsdRow1[1] ;
+    rgba[0].z = pOsdRow1[2] ;
+    rgba[0].w = pOsdRow1[3] ;
+    rgba[1].x = pOsdRow1[4] ;
+    rgba[1].y = pOsdRow1[5] ;
+    rgba[1].z = pOsdRow1[6] ;
+    rgba[1].w = pOsdRow1[7] ;
+    rgba[2].x = pOsdRow2[0] ;
+    rgba[2].y = pOsdRow2[1] ;
+    rgba[2].z = pOsdRow2[2] ;
+    rgba[2].w = pOsdRow2[3] ;
+    rgba[3].x = pOsdRow2[4] ;
+    rgba[3].y = pOsdRow2[5] ;
+    rgba[3].z = pOsdRow2[6] ;
+    rgba[3].w = pOsdRow2[7] ;
+    #endif
+
+#if 1
+    __constant float* coeffs = c_YUV2RGBCoeffs_420;
+
+    Y0 = max(0.f, Y0 - d1) * coeffs[0];
+    Y1 = max(0.f, Y1 - d1) * coeffs[0];
+    Y2 = max(0.f, Y2 - d1) * coeffs[0];
+    Y3 = max(0.f, Y3 - d1) * coeffs[0];
+
+    float ruv = fma(coeffs[4], UV.y, 0.0f);
+    float guv = fma(coeffs[3], UV.y, fma(coeffs[2], UV.x, 0.0f));
+    float buv = fma(coeffs[1], UV.x, 0.0f);
+
+    float R0 = (Y0.x + ruv) * CV_8U_MAX + pOsdRow1[0];
+    float G0 = (Y0.x + guv) * CV_8U_MAX + pOsdRow1[1];
+    float B0 = (Y0.x + buv) * CV_8U_MAX + pOsdRow1[2];
+
+    float R1 = (Y1.x + ruv) * CV_8U_MAX + pOsdRow1[4];
+    float G1 = (Y1.x + guv) * CV_8U_MAX + pOsdRow1[5];
+    float B1 = (Y1.x + buv) * CV_8U_MAX + pOsdRow1[6];
+
+    float R2 = (Y2.x + ruv) * CV_8U_MAX + pOsdRow2[0];
+    float G2 = (Y2.x + guv) * CV_8U_MAX + pOsdRow2[1];
+    float B2 = (Y2.x + buv) * CV_8U_MAX + pOsdRow2[2];
+
+    float R3 = (Y3.x + ruv) * CV_8U_MAX + pOsdRow2[4];
+    float G3 = (Y3.x + guv) * CV_8U_MAX + pOsdRow2[5];
+    float B3 = (Y3.x + buv) * CV_8U_MAX + pOsdRow2[6];
+
+
+    pDstRow1[0] = convert_uchar_sat(B0);
+    pDstRow1[1] = convert_uchar_sat(G0);
+    pDstRow1[2] = convert_uchar_sat(R0);
+    pDstRow1[3] = pOsdRow1[3];
+
+    pDstRow1[4] = convert_uchar_sat(B1);
+    pDstRow1[5] = convert_uchar_sat(G1);
+    pDstRow1[6] = convert_uchar_sat(R1);
+    pDstRow1[7] = pOsdRow1[7];
+
+    pDstRow2[0] = convert_uchar_sat(B2);
+    pDstRow2[1] = convert_uchar_sat(G2);
+    pDstRow2[2] = convert_uchar_sat(R2);
+    pDstRow2[3] = pOsdRow2[3];
+
+    pDstRow2[4] = convert_uchar_sat(B3);
+    pDstRow2[5] = convert_uchar_sat(G3);
+    pDstRow2[6] = convert_uchar_sat(R3);
+    pDstRow2[7] = pOsdRow2[7];
+
+#else
+    //test
+    pDstRow1[0] = convert_uchar_sat(Y0.x * CV_8U_MAX);
+    pDstRow1[1] = convert_uchar_sat(Y0.x * CV_8U_MAX);
+    pDstRow1[2] = convert_uchar_sat(Y0.x * CV_8U_MAX);
+    pDstRow1[3] = convert_uchar_sat(Y0.x * CV_8U_MAX);
+    pDstRow1[4] = convert_uchar_sat(Y1.x * CV_8U_MAX);
+    pDstRow1[5] = convert_uchar_sat(Y1.x * CV_8U_MAX);
+    pDstRow1[6] = convert_uchar_sat(Y1.x * CV_8U_MAX);
+    pDstRow1[7] = convert_uchar_sat(Y1.x * CV_8U_MAX);
+    pDstRow2[0] = convert_uchar_sat(Y2.x * CV_8U_MAX);
+    pDstRow2[1] = convert_uchar_sat(Y2.x * CV_8U_MAX);
+    pDstRow2[2] = convert_uchar_sat(Y2.x * CV_8U_MAX);
+    pDstRow2[3] = convert_uchar_sat(Y2.x * CV_8U_MAX);
+    pDstRow2[4] = convert_uchar_sat(Y3.x * CV_8U_MAX);
+    pDstRow2[5] = convert_uchar_sat(Y3.x * CV_8U_MAX);
+    pDstRow2[6] = convert_uchar_sat(Y3.x * CV_8U_MAX);
+    pDstRow2[7] = convert_uchar_sat(Y3.x * CV_8U_MAX);
+#endif
+
+    #if 0
+    //test
+    pDstRow1[0] = pOsdRow1[0];
+    pDstRow1[1] = pOsdRow1[1];
+    pDstRow1[2] = pOsdRow1[2];
+    pDstRow1[3] = pOsdRow1[3];
+    pDstRow1[4] = pOsdRow1[4];
+    pDstRow1[5] = pOsdRow1[5];
+    pDstRow1[6] = pOsdRow1[6];
+    pDstRow1[7] = pOsdRow1[7];
+    
+    pDstRow2[0] = pOsdRow2[0];
+    pDstRow2[1] = pOsdRow2[1];
+    pDstRow2[2] = pOsdRow2[2];
+    pDstRow2[3] = pOsdRow2[3];
+    pDstRow2[4] = pOsdRow2[4];
+    pDstRow2[5] = pOsdRow2[5];
+    pDstRow2[6] = pOsdRow2[6];
+    pDstRow2[7] = pOsdRow2[7];
+    #endif
+}
+
+#else
 __kernel void blend( __read_only image2d_t src_y,
                      __read_only image2d_t src_uv,
                      __read_only image2d_t src_osd,
@@ -107,11 +258,16 @@ __kernel void blend( __read_only image2d_t src_y,
 	//p1 = rgba[1];//(float4) (0.5, 0.3, 0.2, 0.5);
 	//p2 = rgba[2];//(float4) (0.5, 0.3, 0.2, 0.5);
 	//p3 = rgba[3];//(float4) (0.5, 0.3, 0.2, 0.5);
+	p0 = (float4) (0.5, 0.3, 0.2, 0.5);
+	p1 = (float4) (0.5, 0.3, 0.2, 0.5);
+	p2 = (float4) (0.5, 0.3, 0.2, 0.5);
+	p3 = (float4) (0.5, 0.3, 0.2, 0.5);
     write_imagef(dst_rgb, (int2)(id_z    , id_w    ), p0);
     write_imagef(dst_rgb, (int2)(id_z + 1, id_w    ), p1);
     write_imagef(dst_rgb, (int2)(id_z    , id_w + 1), p2);
     write_imagef(dst_rgb, (int2)(id_z + 1, id_w + 1), p3);
 }
+#endif
 
 #if 0
 static const __constant float CV_8U_MAX         = 255.0f;

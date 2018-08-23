@@ -49,11 +49,9 @@ public:
     int mImageProcessorInVideoHeight;
 
     guint64 mCurPts;
-    //ClassificationResultData mResultData;
-    //std::vector<GstBuffer *> mGstBufferOclVec;
 
     // The last algo should have an out queue
-    thread_queue<CvdlAlgoData> mOutQueue;
+    //thread_queue<CvdlAlgoData> mOutQueue;
 };
 
 #endif

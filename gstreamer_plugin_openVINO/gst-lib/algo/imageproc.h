@@ -66,6 +66,9 @@ public:
         *h = mInVideoInfo.height;
     }
 
+    void ocl_lock();
+    void ocl_unlock();
+
     GstBufferPool*   mPool;   /* create buffer in src_pool */
     GstVideoInfo     mInVideoInfo;
     GstVideoInfo     mOutVideoInfo;
@@ -84,7 +87,6 @@ private:
     GstFlowReturn process_image_blend(GstBuffer* inbuf, GstBuffer* inbuf2, GstBuffer** outbuf, VideoRect *rect);
 
     VADisplay mDisplay;
-    //cl_context mContext;
     SharedPtr<OclContext> mContext;
     gboolean   mOclInited;
     CRCFormat   mOclFormat;

@@ -25,5 +25,7 @@
 
 #include <gst/gst.h>
 
+/* Use cv::ocl to do ocl kernwl work */
+#define USE_CV_OCL
 
 #endif

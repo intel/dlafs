@@ -107,7 +107,7 @@ void ImageProcessor::setup_ocl_context(VADisplay display)
 
     mContext = OclContext::create(display);
     if (!SHARED_PTR_IS_VALID (mContext)) {
-        GST_DEBUG ("oclcrc: failed to create ocl ctx");
+        GST_ERROR("oclcrc: failed to create ocl ctx");
         return;
     }
 
@@ -115,31 +115,36 @@ void ImageProcessor::setup_ocl_context(VADisplay display)
         case IMG_PROC_TYPE_OCL_CRC:
              mOclVpp.reset (NEW_VPP_SHARED_PTR (OCL_VPP_CRC));
              // CRC has 3 kernel to output different format surface
-             //if(mOclVppType==IMG_PROC_TYPE_OCL_CRC) {
-             // Let OclVppCrc to choose the right kernel
              mOclVpp->setOclFormat(mOclFormat);
-             //}
             break;
         case IMG_PROC_TYPE_OCL_BLENDER:
              mOclVpp.reset (NEW_VPP_SHARED_PTR (OCL_VPP_BLENDER));
              break;
         default:
-            g_print("ocl: invalid vpp type!!!\n");
+            GST_ERROR("ocl: invalid vpp type!!!\n");
             break;
     }
 
     if (!SHARED_PTR_IS_VALID (mOclVpp) ||
         (OCL_SUCCESS != mOclVpp->setOclContext (mContext))) {
-        GST_DEBUG ("oclcrc: failed to init ocl_vpp");
-        mOclVpp.reset ();
-        g_print("oclcrc: failed to init ocl_vpp\n");
+            GST_ERROR ("oclcrc: failed to init ocl_vpp");
+            mOclVpp.reset ();
     }
 
-    g_print("oclcrc: success to init ocl_vpp\n");
+    GST_LOG("oclcrc: success to init ocl_vpp\n");
     mOclInited = true;
     mDisplay = display;
 }
 
+
+void ImageProcessor::ocl_lock()
+{
+    vpp_mutext.lock();
+}
+void ImageProcessor::ocl_unlock()
+{
+    vpp_mutext.unlock();
+}
 
 GstFlowReturn ImageProcessor::process_image_crc(GstBuffer* inbuf, GstBuffer** outbuf, VideoRect *crop)
 {
@@ -175,9 +180,10 @@ GstFlowReturn ImageProcessor::process_image_crc(GstBuffer* inbuf, GstBuffer** ou
 
     ocl_video_rect_set (&mSrcFrame->crop, crop);
 
-    vpp_mutext.lock();
+    // need lock it ?
+    ocl_lock();
     OclStatus status = mOclVpp->process (mSrcFrame, mDstFrame);
-    vpp_mutext.unlock();
+    ocl_unlock();
 
     if(status == OCL_SUCCESS) {
         *outbuf = out_buf;
@@ -215,20 +221,20 @@ GstFlowReturn ImageProcessor::process_image_blend(GstBuffer* inbuf, GstBuffer* i
         GST_ERROR ("Failed to acquire ocl memory from osd_buf");
         return GST_FLOW_ERROR;
     }
-    //osd
+    //osd is RGBA
     mSrcFrame->fourcc = osd_mem->fourcc;
     mSrcFrame->mem    = osd_mem->mem;
     mSrcFrame->width  = rect->width;
     mSrcFrame->height = rect->height;
 
-    /* Output data must be NV12 surface from mfxdec element */
+    /* input data must be NV12 surface from mfxdec element */
     // NV12 input
     mSrcFrame2->fourcc = video_format_to_va_fourcc (GST_VIDEO_INFO_FORMAT (&mInVideoInfo));
     mSrcFrame2->surface= gst_get_mfx_surface (inbuf2, &mInVideoInfo, &display);
     mSrcFrame2->width  = mInVideoInfo.width;
     mSrcFrame2->height = mInVideoInfo.height;
 
-    // output is RGB format
+    // output is RGBA format
     mDstFrame->fourcc = dst_mem->fourcc;
     mDstFrame->mem    = dst_mem->mem;
     mDstFrame->width  = rect->width;
@@ -246,9 +252,9 @@ GstFlowReturn ImageProcessor::process_image_blend(GstBuffer* inbuf, GstBuffer* i
     }
     ocl_video_rect_set (&mSrcFrame->crop, rect);
 
-    vpp_mutext.lock();
+    ocl_lock();
     OclStatus status = mOclVpp->process (mSrcFrame, mSrcFrame2, mDstFrame);
-    vpp_mutext.unlock();
+    ocl_unlock();
 
     if(status == OCL_SUCCESS)
         return GST_FLOW_OK;

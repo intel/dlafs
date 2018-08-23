@@ -59,6 +59,7 @@ struct _OclMemory {
     gint        width;
     gint        height;
     size_t      size;
+    gint        purpose;
 
     HDDLStreamFilter::Lock        lock;
 };
