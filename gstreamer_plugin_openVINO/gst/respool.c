@@ -103,9 +103,9 @@ res_pool_alloc (GstBufferPool* pool, GstBuffer** buffer,
     }
 
     //TODO: GDestroyNotify need to release InferenceData?
-    gst_mini_object_set_qdata (GST_MINI_OBJECT_CAST (res_mem),
-        RES_MEMORY_QUARK, GST_MEMORY_CAST (res_mem),
-        (GDestroyNotify) gst_memory_unref);
+    //gst_mini_object_set_qdata (GST_MINI_OBJECT_CAST (res_mem),
+    //    RES_MEMORY_QUARK, GST_MEMORY_CAST (res_mem),
+    //    (GDestroyNotify) gst_memory_unref);
     gst_buffer_append_memory (res_buf, (GstMemory *)res_mem);
 
     *buffer = res_buf;

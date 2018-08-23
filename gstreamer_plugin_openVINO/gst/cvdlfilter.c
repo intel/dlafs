@@ -74,8 +74,8 @@ cvdl_handle_buffer(CvdlFilter *cvdlfilter, GstBuffer* buffer)
     int cache_buf_size = algo_pipeline_get_all_queue_size(cvdlfilter->algoHandle);
 
     // wait algo task
-    while(cache_buf_size >= 6) {
-        g_usleep(8000);
+    while(cache_buf_size >= 5) {
+        g_usleep(10000);// 10ms
         cache_buf_size = algo_pipeline_get_all_queue_size(cvdlfilter->algoHandle);
         //g_print("loop - cache buffer size = %d\n", cache_buf_size);
     }
@@ -108,14 +108,6 @@ cvdl_filter_transform_chain (GstPad * pad, GstObject * parent, GstBuffer * buffe
     timestamp = GST_BUFFER_TIMESTAMP (buffer);
     duration = GST_BUFFER_DURATION (buffer);
 
-    //debug
-    #if 0
-    if(duration>0)
-        g_usleep(duration/1000);
-    else
-        g_usleep(30000);
-    #endif
-
     if (G_UNLIKELY (!priv->negotiated)) {
         GST_ELEMENT_ERROR (cvdlfilter, CORE, NOT_IMPLEMENTED, (NULL), ("unknown format"));
         return GST_FLOW_NOT_NEGOTIATED;
@@ -145,6 +137,12 @@ cvdl_filter_transform_chain (GstPad * pad, GstObject * parent, GstBuffer * buffe
     GST_DEBUG_OBJECT (trans, "got buffer with timestamp %" GST_TIME_FORMAT,
                               GST_TIME_ARGS (duration));
     GST_DEBUG ("timestamp %" GST_TIME_FORMAT, GST_TIME_ARGS (timestamp));
+
+    //debug
+    if((duration>0) &&(duration<=50000000))
+        g_usleep(duration/1000);
+    else
+        g_usleep(40000);//40ms
 
     return GST_FLOW_OK;
 }

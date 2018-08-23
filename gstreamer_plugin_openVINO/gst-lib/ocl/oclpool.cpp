@@ -198,9 +198,10 @@ ocl_pool_alloc (GstBufferPool* pool, GstBuffer** buffer,
         return GST_FLOW_ERROR;
     }
 
-    gst_mini_object_set_qdata (GST_MINI_OBJECT_CAST (ocl_mem),
-        OCL_MEMORY_QUARK, GST_MEMORY_CAST (ocl_mem),
-        (GDestroyNotify) gst_memory_unref);
+    // We can set other mem as the qdata of ocl_mem
+    //gst_mini_object_set_qdata (GST_MINI_OBJECT_CAST (ocl_mem),
+    //    OCL_MEMORY_QUARK, GST_MEMORY_CAST (other_mem),
+    //    (GDestroyNotify) gst_memory_unref);
 
     gst_buffer_append_memory (ocl_buf, (GstMemory *)ocl_mem);
 
@@ -233,6 +234,7 @@ ocl_pool_finalize (GObject* object)
 
     GST_LOG_OBJECT (pool, "finalize ocl pool %p", pool);
 
+    // ref=2 ???
     if (priv->caps)
         gst_caps_unref (priv->caps);
 
