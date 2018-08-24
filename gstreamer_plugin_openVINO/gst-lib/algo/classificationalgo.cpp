@@ -118,8 +118,7 @@ static void process_one_object(CvdlAlgoData *algoData, ObjectData &objectData, i
     }
     //test
     //classificationAlgo->save_buffer(ocl_mem->frame.getMat(0).ptr(), classificationAlgo->mInputWidth,
-    //    classificationAlgo->mInputHeight,3, "classification");
-
+    //    classificationAlgo->mInputHeight,3,algoData->mFrameId*10000 + objId, "classification");
 
     // Classification callback function
     auto onClassificationResult = [&objectData](CvdlAlgoData* algoData)

@@ -128,10 +128,10 @@ int CvdlAlgoBase::get_out_queue_size()
 {
     return mOutQueue.size();
 }
-void CvdlAlgoBase::save_buffer(unsigned char *buf, int w, int h, int p, char *info)
+void CvdlAlgoBase::save_buffer(unsigned char *buf, int w, int h, int p, int id, char *info)
 {
     char filename[128];
-    sprintf(filename, "~/temp/temp/%s-%dx%dx%d-%d.rgb",info,w,h,p,mFrameIndex);
+    sprintf(filename, "~/temp/temp/%s-%dx%dx%d-%d.rgb",info,w,h,p,id);
 
     FILE *fp = fopen (filename, "wb");
     if (fp) {

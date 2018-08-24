@@ -53,8 +53,12 @@ class OclDevice;
 
 typedef std::map<std::string, cl_kernel> OclKernelMap;
 typedef OclKernelMap::iterator OclKernelMapIterator;
+
 typedef std::map<std::string, cv::ocl::Kernel> OclKernelCVMap;
 typedef OclKernelCVMap::iterator OclKernelCVMapIterator;
+
+typedef std::map<std::string, cv::ocl::Program> OclProgramCVMap;
+typedef OclProgramCVMap::iterator OclProgramCVMapIterator;
 
 
 class OclContext

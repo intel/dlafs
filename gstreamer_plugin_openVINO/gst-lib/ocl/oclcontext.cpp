@@ -85,7 +85,8 @@ private:
     static Lock m_lock;
 
     cv::ocl::Context m_ocvContext;
-    OclKernelCVMap m_kernel_cv_map;
+    //OclKernelCVMap m_kernel_cv_map;
+    OclProgramCVMap m_program_cv_map;
 
     OclKernelMap m_kernel_map;
     cl_context m_context;
@@ -745,9 +746,11 @@ OclDevice::loadKernelCV (const char* name, const char* file)
         g_print("Error in create kernel...\n");
         return cv::ocl::Kernel();
     }
-
-    m_kernel_cv_map[name] = kernel;
+    m_program_cv_map[file] = program;
     return kernel;
+
+    //m_kernel_cv_map[name] = kernel;
+    //return kernel;
 }
 
 
@@ -759,12 +762,22 @@ OclDevice::acquireKernelCV(const char* name, const char* file)
                  If kernel name is same with kernel file, kernel file could be null.\n");
         return cv::ocl::Kernel();
     }
-
     AutoLock lock(m_lock);
 
+    #if 0
     OclKernelCVMapIterator it = m_kernel_cv_map.find (name);
-
     return ((it == m_kernel_cv_map.end()) ? loadKernelCV(name, file) : it->second);
+    #else
+    OclProgramCVMapIterator it = m_program_cv_map.find (file);
+    if(it == m_program_cv_map.end()) {
+        return loadKernelCV(name, file);
+    }
+
+    // kernel must be created every time, if not NV12 plane will be got with garbage
+    cv::ocl::Kernel kernel;
+    kernel.create(name, it->second);
+    return kernel;
+    #endif
 }
 
 
@@ -775,12 +788,17 @@ OclDevice::releaseKernelCVMap ()
 
     AutoLock lock(m_lock);
 
-    for(OclKernelCVMapIterator it = m_kernel_cv_map.begin(); it != m_kernel_cv_map.end(); ++it) {
-            it->second = cv::ocl::Kernel();
-            succ = FALSE;
-    }
+    //for(OclKernelCVMapIterator it = m_kernel_cv_map.begin(); it != m_kernel_cv_map.end(); ++it) {
+    //    it->second = cv::ocl::Kernel();
+    //    succ = FALSE;
+    //}
+    //m_kernel_cv_map.clear();
 
-    m_kernel_cv_map.clear();
+    for(OclProgramCVMapIterator it = m_program_cv_map.begin(); it != m_program_cv_map.end(); ++it) {
+        it->second = cv::ocl::Program();
+        succ = FALSE;
+    }
+    m_program_cv_map.clear();
     return succ;
 }
 
@@ -804,6 +822,7 @@ gboolean
 OclDevice::clEnqueueAcquireVA_Intel(cl_uint num_objects, const cl_mem *mem_objects,
     cl_uint num_events_in_wait_list, const cl_event *event_wait_list, cl_event *ocl_event)
 {
+    m_queue = (cl_command_queue)Queue::getDefault().ptr();
     if (CL_ERROR_PRINT (clEnqueueAcquireVA_APIMediaSurfacesINTEL (m_queue, num_objects, mem_objects,
             num_events_in_wait_list, event_wait_list, ocl_event), "clEnqueueAcquireVA_APIMediaSurfacesINTEL"))
         return FALSE;

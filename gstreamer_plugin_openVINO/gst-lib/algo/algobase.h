@@ -109,7 +109,7 @@ public:
 
     int get_in_queue_size();
     int get_out_queue_size();
-    void save_buffer(unsigned char *buf, int w, int h, int p, char *info);
+    void save_buffer(unsigned char *buf, int w, int h, int p, int id, char *info);
 
     virtual void set_data_caps(GstCaps *incaps)
     {

@@ -141,8 +141,7 @@ static void detection_algo_func(gpointer userData)
 
     //test
     //detectionAlgo->save_buffer(ocl_mem->frame.getMat(0).ptr(), detectionAlgo->mInputWidth,
-    //                   detectionAlgo->mInputHeight, 3, "detection");
-
+    //                   detectionAlgo->mInputHeight, 3,algoData->mFrameId, "detection");
 
     // Detect callback function
     auto onDetectResult = [](CvdlAlgoData* algoData)

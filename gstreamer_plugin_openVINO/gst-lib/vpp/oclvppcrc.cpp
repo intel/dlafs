@@ -45,7 +45,7 @@ OclVppCrc::crc_helper()
 {
     gboolean ret;
     m_kernel.args(m_src->cl_memory[0], m_src->cl_memory[1], m_src_w, m_src_h, m_crop_x, m_crop_y,
-                  m_crop_w, m_crop_h, m_dst->cl_memory[0],m_src_w, m_src_h);
+                  m_crop_w, m_crop_h, m_dst->cl_memory[0],m_dst_w, m_dst_h);
 
 
     size_t globalWorkSize[2], localWorkSize[2];
@@ -110,7 +110,6 @@ OclVppCrc::crc_helper()
     if(CL_ERROR_PRINT (status, "clSetKernelArg")) {
         return OCL_FAIL;
     }
-
 
     status = clSetKernelArg (m_kernel, 8, sizeof(cl_mem), &m_dst->cl_memory[0]);
     if(CL_ERROR_PRINT (status, "clSetKernelArg")) {
