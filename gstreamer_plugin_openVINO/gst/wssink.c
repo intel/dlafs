@@ -170,7 +170,7 @@ static void process_sink_buffers(gpointer userData)
 static GstCaps *
 gst_ws_sink_query_caps (GstWsSink * bsink, GstPad * pad, GstCaps * filter)
 {
-  GstCaps *caps = NULL, *temp;
+  GstCaps *caps = NULL, *temp=NULL;
   GstPadDirection direction = GST_PAD_DIRECTION (pad);
 
   if(direction==GST_PAD_SRC) {
@@ -556,6 +556,9 @@ gst_ws_sink_init (GstWsSink * basesink, gpointer g_class)
 {
     GstPadTemplate *pad_template;
     GstWsSinkPrivate *priv;
+
+    GST_DEBUG_CATEGORY_INIT (gst_ws_sink_debug, "wssink", 0,
+            "Send data out by WebSocket");
 
     basesink->priv = priv = GST_WS_SINK_GET_PRIVATE (basesink);
 

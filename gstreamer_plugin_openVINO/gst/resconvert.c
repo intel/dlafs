@@ -108,6 +108,7 @@ GST_STATIC_PAD_TEMPLATE (
     );
 
 /*static guint res_convert_signals[LAST_SIGNAL] = { 0 };*/
+extern VASurfaceID gst_get_mfx_surface(GstBuffer* inbuf, GstVideoInfo *info, VADisplay *display);
 
 static GstFlowReturn
 res_convert_fill_txt_data(ResMemory *res_mem, CvdlMeta *cvdl_meta)
@@ -261,6 +262,12 @@ res_convert_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         break;
     case GST_EVENT_CAPS:
         gst_event_parse_caps (event, &caps);
+
+        //test
+        GstCaps *current_caps = gst_pad_get_current_caps (pad);
+        g_print("current_caps =\n %s\n", gst_caps_to_string(current_caps));
+        if(current_caps) gst_caps_unref(current_caps);
+        g_print("event_caps =\n %s\n", gst_caps_to_string(caps));
 
         // get info of caps
         gst_video_info_from_caps (&convertor->sink_info, caps);
@@ -480,6 +487,9 @@ res_convert_query (GstPad * pad, GstObject * parent, GstQuery * query)
     ret = gst_pad_query_default (pad, parent, query);
   #endif
 
+  //GstPadDirection direction = GST_PAD_DIRECTION (pad);
+  GST_LOG("%s() - name = %s, query = %s\n",__func__, gst_pad_get_name(pad), GST_QUERY_TYPE_NAME (query));
+
   ret = gst_pad_query_default (pad, parent, query);
 
   switch (GST_QUERY_TYPE (query)) {
@@ -552,6 +562,16 @@ res_convert_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     GST_LOG_OBJECT (convertor,
         "Received buffer with offset %" G_GUINT64_FORMAT,
         GST_BUFFER_OFFSET (buffer));
+
+    //test
+    GstCaps *current_caps = gst_pad_get_current_caps (pad);
+    GST_LOG("chain_caps(%s) =\n %s\n", gst_pad_get_name(pad), gst_caps_to_string(current_caps));
+    if(current_caps) gst_caps_unref(current_caps);
+
+    current_caps = gst_pad_get_current_caps (convertor->pic_srcpad);
+    GST_LOG("chain_caps(%s) =\n %s\n", gst_pad_get_name(convertor->pic_srcpad), gst_caps_to_string(current_caps));
+    if(current_caps) gst_caps_unref(current_caps);
+
 
     // create osd pool if it not created before
     //----- move it into even function
@@ -704,6 +724,9 @@ res_convert_init (ResConvert * convertor)
 {
     ResConvertClass *klass = RES_CONVERT_GET_CLASS (convertor);
     //GstCaps *caps = gst_caps_new_any();
+
+    GST_DEBUG_CATEGORY_INIT (resconvert_debug, "resconvert", 0,
+            "Convert inference result into OSD");
 
     //TODO:
     GstCaps *caps = gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING, "BGRA", NULL);

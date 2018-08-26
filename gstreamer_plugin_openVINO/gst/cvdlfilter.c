@@ -71,13 +71,17 @@ static GstFlowReturn
 cvdl_handle_buffer(CvdlFilter *cvdlfilter, GstBuffer* buffer)
 {
     GstFlowReturn ret = GST_FLOW_OK;
+
+    GST_LOG("cache begin\n");
+    // will crash here sometimes, why?
     int cache_buf_size = algo_pipeline_get_all_queue_size(cvdlfilter->algoHandle);
+    GST_LOG("cache buffer size = %d\n", cache_buf_size);
 
     // wait algo task
     while(cache_buf_size >= 5) {
         g_usleep(10000);// 10ms
         cache_buf_size = algo_pipeline_get_all_queue_size(cvdlfilter->algoHandle);
-        //g_print("loop - cache buffer size = %d\n", cache_buf_size);
+        GST_LOG("loop - cache buffer size = %d\n", cache_buf_size);
     }
     // put buffer into a queue
     algo_pipeline_put_buffer(cvdlfilter->algoHandle, buffer);
