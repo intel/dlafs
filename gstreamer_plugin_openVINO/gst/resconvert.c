@@ -406,8 +406,6 @@ res_convert_query (GstPad * pad, GstObject * parent, GstQuery * query)
 
     GST_LOG_OBJECT (convertor, "Have query of type %d on pad %" GST_PTR_FORMAT,
         GST_QUERY_TYPE (query), pad);
-    g_print("Have query of type %d on pad %" GST_PTR_FORMAT "\n",
-        GST_QUERY_TYPE (query), pad);
 
     // It will make transform filter get empty out/in caps
     #if 0
@@ -483,7 +481,31 @@ res_convert_query (GstPad * pad, GstObject * parent, GstQuery * query)
   #endif
 
   ret = gst_pad_query_default (pad, parent, query);
-  
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_ALLOCATION:
+        GST_LOG("%s() - query GST_QUERY_ALLOCATION...",__func__);
+        break;
+    case GST_QUERY_ACCEPT_CAPS:
+    {
+        GstCaps *caps;
+        gst_query_parse_accept_caps (query, &caps);
+        GST_LOG("%s() - accept caps = %s\n", __func__, gst_caps_to_string(caps));
+        //if(caps)
+        //    gst_caps_unref(caps);
+        break;
+    }
+    case GST_QUERY_CAPS:
+    {
+        GstCaps *caps;
+        gst_query_parse_caps (query, &caps);
+        GST_LOG("%s() - caps = %s\n", __func__, gst_caps_to_string(caps));
+        break;
+    }
+    default:
+      break;
+  }
+
   return ret;
 }
 

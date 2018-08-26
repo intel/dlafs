@@ -170,13 +170,25 @@ static void process_sink_buffers(gpointer userData)
 static GstCaps *
 gst_ws_sink_query_caps (GstWsSink * bsink, GstPad * pad, GstCaps * filter)
 {
-  GstCaps *caps = NULL;
-  gboolean fixed;
+  GstCaps *caps = NULL, *temp;
+  GstPadDirection direction = GST_PAD_DIRECTION (pad);
 
-  fixed = GST_PAD_IS_FIXED_CAPS (pad);
-  if (fixed ) {
-    caps = gst_pad_get_current_caps (pad);
+  if(direction==GST_PAD_SRC) {
+    g_print("It has no src pad!!!\n");
+    return NULL;
   }
+
+  if(filter) {
+    temp = gst_pad_get_pad_template_caps (pad);
+    caps = gst_caps_intersect_full (filter, temp, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref(temp);
+  } else {
+    caps = gst_pad_get_pad_template_caps (pad);
+  }
+
+  GST_LOG("filter_caps = %s\n", gst_caps_to_string(filter));
+  GST_LOG("pad_caps = %s\n", gst_caps_to_string(temp));
+  GST_LOG("caps = %s\n", gst_caps_to_string(caps));
 
   return caps;
 }
