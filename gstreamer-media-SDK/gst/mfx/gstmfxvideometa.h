@@ -76,6 +76,9 @@ gst_buffer_get_mfx_video_meta (GstBuffer * buffer);
 void
 gst_buffer_set_mfx_video_meta (GstBuffer * buffer, GstMfxVideoMeta * meta);
 
+void
+gst_buffer_update_mfx_video_meta(GstBuffer * buffer);
+
 G_END_DECLS
 
 #endif  /* GST_MFX_VIDEO_META_H */

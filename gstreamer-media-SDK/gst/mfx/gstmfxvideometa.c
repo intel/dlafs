@@ -38,6 +38,9 @@ struct _GstMfxVideoMeta
 
   /* check linear buffer */
   gboolean is_linear;
+  guint token;
+  VASurfaceID surface_id;
+  VADisplay display_id;
 };
 
 static void
@@ -287,6 +290,10 @@ gst_buffer_get_mfx_video_meta (GstBuffer * buffer)
   return meta;
 }
 
+#include <gst-libs/mfx/gstmfxdisplay.h>
+#include <gst-libs/mfx/gstmfxsurface.h>
+#include <gst-libs/mfx/gstmfxsurface_priv.h>
+
 void
 gst_buffer_set_mfx_video_meta (GstBuffer * buffer, GstMfxVideoMeta * meta)
 {
@@ -295,7 +302,31 @@ gst_buffer_set_mfx_video_meta (GstBuffer * buffer, GstMfxVideoMeta * meta)
   g_return_if_fail (GST_IS_BUFFER (buffer));
   g_return_if_fail (GST_MFX_IS_VIDEO_META (meta));
 
+  GstMfxSurface *surface = meta->surface;
+  if(surface) {
+    meta->token=0xFACED;
+    meta->surface_id = (VASurfaceID )(surface->surface_id);
+    meta->display_id = GST_MFX_DISPLAY_VADISPLAY(surface->display);
+  }
+
   m = gst_buffer_add_meta (buffer, GST_MFX_VIDEO_META_INFO, NULL);
   if (m)
     GST_MFX_VIDEO_META_HOLDER (m)->meta = gst_mfx_video_meta_ref (meta);
+}
+
+
+void gst_buffer_update_mfx_video_meta(GstBuffer * buffer)
+{
+  GstMfxVideoMeta *meta;
+  g_return_if_fail (GST_IS_BUFFER (buffer));
+
+  meta = gst_buffer_get_mfx_video_meta(buffer);
+  g_return_if_fail (GST_MFX_IS_VIDEO_META (meta));
+
+  GstMfxSurface *surface = meta->surface;
+  if(surface) {
+    meta->token=0xFACED;
+    meta->surface_id = (VASurfaceID )(surface->surface_id);
+    meta->display_id = GST_MFX_DISPLAY_VADISPLAY(surface->display);
+  }
 }

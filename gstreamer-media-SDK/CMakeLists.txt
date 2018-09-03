@@ -28,16 +28,16 @@ option (MFX_VPP "Build MSDK VPP plugin." ON)
 option (MFX_SINK "Build MSDK sink plugin." ON)
 
 CMAKE_DEPENDENT_OPTION(WITH_WAYLAND "Enable Wayland support"
-    ON "MFX_SINK" OFF)
+    OFF "MFX_SINK" OFF)
 CMAKE_DEPENDENT_OPTION(WITH_X11  "Enable X11 support"
     ON "MFX_SINK" OFF)
 
 CMAKE_DEPENDENT_OPTION(USE_WAYLAND_RENDERER "Build sink plugin with Wayland backend"
-    ON "WITH_WAYLAND" OFF)
+    OFF "WITH_WAYLAND" OFF)
 CMAKE_DEPENDENT_OPTION(USE_DRI3_RENDERER  "Build sink plugin with X11 DRI3 backend"
     ON "WITH_X11" OFF)
 CMAKE_DEPENDENT_OPTION(USE_EGL_RENDERER "Build sink plugin with EGL backend"
-    ON "MFX_SINK" OFF)
+    OFF "MFX_SINK" OFF)
 
 CMAKE_DEPENDENT_OPTION (MFX_SINK_BIN "Build MSDK sinkbin plugin."
     ON "MFX_SINK;MFX_VPP" OFF)
