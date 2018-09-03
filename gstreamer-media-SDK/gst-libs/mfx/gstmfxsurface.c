@@ -180,7 +180,6 @@ gst_mfx_surface_derive_mfx_frame_info(GstMfxSurface * surface,
       frame_info->ChromaFormat = MFX_CHROMAFORMAT_YUV422;
       break;
     case GST_VIDEO_FORMAT_BGRA:
-    case GST_VIDEO_FORMAT_BGRx:
       frame_info->ChromaFormat = MFX_CHROMAFORMAT_YUV444;
       break;
     default:

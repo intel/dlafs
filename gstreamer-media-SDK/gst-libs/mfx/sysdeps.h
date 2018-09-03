@@ -28,7 +28,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <libdrm/drm.h>
+#include <drm.h>
 
 #include <gst/gst.h>
 #include <mfxvideo.h>

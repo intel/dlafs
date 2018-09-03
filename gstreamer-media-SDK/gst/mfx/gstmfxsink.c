@@ -367,18 +367,10 @@ configure_notify_event_pending (GstMfxSink * sink, Window window,
 static gboolean
 gst_mfxsink_x11_create_window (GstMfxSink * sink, guint width, guint height)
 {
-  XID xid = 0;
-
-  if (sink->foreign_window == TRUE && sink->app_window_handle != 0) {
-    xid = sink->app_window_handle;
-    sink->window = gst_mfx_window_x11_new_with_xid (sink->display, xid);
-  } else {
-    sink->window = gst_mfx_window_x11_new (sink->display, width, height);
-  }
-
+  g_return_val_if_fail (sink->window == NULL, FALSE);
+  sink->window = gst_mfx_window_x11_new (sink->display, width, height);
   if (!sink->window)
     return FALSE;
-
   return TRUE;
 }
 
@@ -501,7 +493,6 @@ gst_mfxsink_video_overlay_set_window_handle (GstVideoOverlay * overlay,
   GstMfxSink *const sink = GST_MFXSINK (overlay);
 
   sink->foreign_window = TRUE;
-  sink->app_window_handle = window;
   if (sink->backend && sink->backend->create_window_from_handle)
     sink->backend->create_window_from_handle (sink, window);
 }
@@ -1106,9 +1097,6 @@ gst_mfxsink_destroy (GstMfxSink * sink)
   gst_mfx_display_replace (&sink->display, NULL);
 
   gst_caps_replace (&sink->caps, NULL);
-
-  sink->app_window_handle = 0;
-
   g_free (sink->display_name);
 }
 
@@ -1324,6 +1312,5 @@ gst_mfxsink_init (GstMfxSink * sink)
   sink->keep_aspect = TRUE;
   sink->no_frame_drop = FALSE;
   sink->full_color_range = FALSE;
-  sink->app_window_handle = 0;
   gst_video_info_init (&sink->video_info);
 }
