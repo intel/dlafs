@@ -386,8 +386,8 @@ void DetectionAlgo::get_result(DetectionInternalData *internalData, CvdlAlgoData
     int objectNum = 0;
     int orignalVideoWidth = mImageProcessorInVideoWidth;
     int orignalVideoHeight = mImageProcessorInVideoHeight;
-    outData->mObjectVec.clear();
 
+    outData->mObjectVec.clear();
     for (idx = 0; idx < num; ++idx) {
         int32_t nclass = utils.get_max_index(internalData->mProbData[idx], cClassNum);
         float prob = internalData->mProbData[idx][nclass];
@@ -428,6 +428,8 @@ void DetectionAlgo::get_result(DetectionInternalData *internalData, CvdlAlgoData
             object.rect = cv::Rect(left, top, right - left + 1, bot - top + 1);
             objectNum++;
             outData->mObjectVec.push_back(object);
+            g_print("%ld-%d: score = %f, label = %s, rect=(%d,%d)-(%dx%d)\n",outData->mFrameId, idx,
+                object.prob, object.label.c_str(), left, top, right - left + 1, bot - top + 1);
         }
     }
 

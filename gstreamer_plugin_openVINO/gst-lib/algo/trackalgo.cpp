@@ -127,7 +127,7 @@ static void track_algo_func(gpointer userData)
 
     //------------test---remove this code -----------------
     // update object data
-    //trackAlgo->update_track_object(algoData->mObjectVec);
+    trackAlgo->update_track_object(algoData->mObjectVec);
 
 
     // TODO: need cache 2 or more frames to choose the best one
@@ -670,16 +670,17 @@ void TrackAlgo::update_track_object(std::vector<ObjectData> &objectVec)
     std::vector<TrackObjAttribute>::iterator it;
 
     for (it = mTrackObjVec.begin(); it != mTrackObjVec.end();) {
+        // find the connected objectData
+        for(unsigned int i=0; i<objectVec.size(); i++){
+            ObjectData& objectData = objectVec[i];
+            if(objectData.id == (*it).objId) {
+                objectData.flags |= FLAGS_TRACKED_DATA_IS_PASS;
+                break;
+            }
+        }
+
         bool bButtom = is_at_buttom(*it);
         if (it->notDetectNum >= TRACK_MAX_NUM || bButtom) {
-            // find the connected objectData
-            for(unsigned int i=0; i<objectVec.size(); i++){
-                ObjectData& objectData = objectVec[i];
-                if(objectData.id == (*it).objId) {
-                    objectData.flags |= FLAGS_TRACKED_DATA_IS_PASS;
-                    break;
-                }
-            }
             it = mTrackObjVec.erase(it);    //remove item.
             continue;
         } else {
@@ -718,6 +719,14 @@ void TrackAlgo::push_track_object(CvdlAlgoData* &algoData)
     } 
     GST_LOG("track_algo_func - pass down GstBuffer = %p(%d)\n",
          algoData->mGstBuffer, GST_MINI_OBJECT_REFCOUNT(algoData->mGstBuffer));
+
+    //debug
+    for(size_t i=0; i< objectVec.size(); i++) {
+        g_print("track_output-%ld-%d: prob = %f, label = %s, rect=(%d,%d)-(%dx%d)\n",
+            algoData->mFrameId, i, objectVec[i].prob, objectVec[i].label.c_str(),
+            objectVec[i].rect.x, objectVec[i].rect.y,
+            objectVec[i].rect.width, objectVec[i].rect.height);
+    }
     mNext->mInQueue.put(*algoData);
 }
 

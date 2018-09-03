@@ -76,8 +76,8 @@ typedef struct _CvdlMetaHolder{
 }CvdlMetaHolder;
 
 
-gpointer inference_meta_create (VideoRect *rect, const char *label, guint32 color);
-gpointer inference_meta_add (gpointer meta, VideoRect *rect, const char *label, guint32 color);
+gpointer inference_meta_create (VideoRect *rect, const char *label, float prob, guint32 color);
+gpointer inference_meta_add (gpointer meta, VideoRect *rect, const char *label,float prob, guint32 color);
 void inference_meta_free (gpointer meta);
 
 
@@ -92,9 +92,9 @@ InferenceMeta* gst_buffer_get_inference_meta (GstBuffer * buffer);
 
 
 gpointer
-cvdl_meta_create (VADisplay display, VASurfaceID surface, VideoRect *rect, const char *label, guint32 color);
+cvdl_meta_create (VADisplay display, VASurfaceID surface, VideoRect *rect, const char *label, float prob, guint32 color);
 gpointer
-cvdl_meta_add (gpointer meta, VideoRect *rect, const char *label, guint32 color);
+cvdl_meta_add (gpointer meta, VideoRect *rect, const char *label, float prob, guint32 color);
 void
 cvdl_meta_free (gpointer meta);
 

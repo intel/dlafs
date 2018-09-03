@@ -89,6 +89,7 @@ static void process_one_object(CvdlAlgoData *algoData, ObjectData &objectData, i
  
     VideoRect crop = { (uint32_t)objectData.rect.x, (uint32_t)objectData.rect.y,
                        (uint32_t)objectData.rect.width, (uint32_t)objectData.rect.height};
+
     if(crop.width<=0 || crop.height<=0 || crop.x<0 || crop.y<0) {
         GST_ERROR("classfication: crop = (%d,%d) %dx%d", crop.x, crop.y, crop.width, crop.height);
         objectData.flags |= CLASSIFICATION_OBJECT_FLAG_DONE;
@@ -117,8 +118,8 @@ static void process_one_object(CvdlAlgoData *algoData, ObjectData &objectData, i
         return;
     }
     //test
-    //classificationAlgo->save_buffer(ocl_mem->frame.getMat(0).ptr(), classificationAlgo->mInputWidth,
-    //    classificationAlgo->mInputHeight,3,algoData->mFrameId*10000 + objId, "classification");
+    classificationAlgo->save_buffer(ocl_mem->frame.getMat(0).ptr(), classificationAlgo->mInputWidth,
+        classificationAlgo->mInputHeight,3,algoData->mFrameId*10000 + objId, "classification");
 
     // Classification callback function
     auto onClassificationResult = [&objectData](CvdlAlgoData* algoData)
@@ -279,7 +280,7 @@ GstFlowReturn ClassificationAlgo::parse_inference_result(InferenceEngine::Blob::
     int topnum = 1;
     ObjectData &objData = outData->mObjectVec[objId];
     InferenceEngine::TopResults(topnum, *resultBlobFp32, topIndexes);
-    if (topIndexes.size()) {
+    if (topIndexes.size()>0) {
         for (size_t i = 0; i < topIndexes.size(); i++) {
             float prob = (resultBlobFp32->data()[topIndexes[i]]);
             std::string strLabel = g_vehicleLabel[topIndexes[i]];
@@ -287,7 +288,8 @@ GstFlowReturn ClassificationAlgo::parse_inference_result(InferenceEngine::Blob::
             objData.label = strLabel;
             objData.objectClass =  topIndexes[i];
             objData.flags |= CLASSIFICATION_OBJECT_FLAG_VALID;
-            //objData.flags.fetch_or(CLASSIFICATION_OBJECT_FLAG_VALID);
+            g_print("classification-%ld-%d-%d: prob = %f, label = %s\n", 
+                outData->mFrameId,objId,i,prob, objData.label.c_str());
             break;
         }
     }
@@ -317,11 +319,8 @@ GstBuffer* ClassificationAlgo::dequeue_buffer()
             break;
     }
     buf = algoData.mGstBuffer;
-
     GST_LOG("cvdlfilter-dequeue: buf = %p(%d)\n", algoData.mGstBuffer, GST_MINI_OBJECT_REFCOUNT(algoData.mGstBuffer));
 
-
-    
     // put object data as meta data
     VASurfaceID surface;
     VADisplay display;
@@ -335,9 +334,17 @@ GstBuffer* ClassificationAlgo::dequeue_buffer()
         rect.width = algoData.mObjectVec[i].rect.width;
         rect.height= algoData.mObjectVec[i].rect.height;
         if(i==0)
-            meta_data = cvdl_meta_create(display, surface, &rect, algoData.mObjectVec[i].label.c_str(), color);
+            meta_data =
+            cvdl_meta_create(display, surface, &rect, algoData.mObjectVec[i].label.c_str(), 
+                                         algoData.mObjectVec[i].prob, color);
         else
-            cvdl_meta_add (meta_data, &rect, algoData.mObjectVec[i].label.c_str(), color);
+            cvdl_meta_add (meta_data, &rect, algoData.mObjectVec[i].label.c_str(),
+                            algoData.mObjectVec[i].prob, color);
+        //debug
+        g_print("classification_output-%ld-%d: prob = %f, label = %s, rect=(%d,%d)-(%dx%d)\n", 
+                algoData.mFrameId,i,algoData.mObjectVec[i].prob,
+                algoData.mObjectVec[i].label.c_str(),
+                rect.x, rect.y, rect.width, rect.height);
     }
     ((CvdlMeta *)meta_data)->meta_count = algoData.mObjectVec.size();
 

@@ -158,7 +158,7 @@ res_convert_send_data (ResConvert * convertor, GstBuffer * buf, GstBuffer * inbu
     }
 
     void *data = NULL;
-    g_print("resconvert out: inbuf = %p(%d), buffer = %p(%d), surface = %d\n",
+    GST_DEBUG("resconvert out: inbuf = %p(%d), buffer = %p(%d), surface = %d\n",
         inbuf, GST_MINI_OBJECT_REFCOUNT(inbuf),
         buf, GST_MINI_OBJECT_REFCOUNT(buf),
         gst_get_mfx_surface(inbuf, NULL, &data));

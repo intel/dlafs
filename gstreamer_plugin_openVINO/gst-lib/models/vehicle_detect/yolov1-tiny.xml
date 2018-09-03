@@ -35,7 +35,7 @@
 			</blobs>
 		</layer>
 		<layer id="2" name="relu1" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -96,7 +96,7 @@
 			</blobs>
 		</layer>
 		<layer id="5" name="relu2" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -157,7 +157,7 @@
 			</blobs>
 		</layer>
 		<layer id="8" name="relu3" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -218,7 +218,7 @@
 			</blobs>
 		</layer>
 		<layer id="11" name="relu4" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -279,7 +279,7 @@
 			</blobs>
 		</layer>
 		<layer id="14" name="relu5" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -340,7 +340,7 @@
 			</blobs>
 		</layer>
 		<layer id="17" name="relu6" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -401,7 +401,7 @@
 			</blobs>
 		</layer>
 		<layer id="20" name="relu7" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -443,7 +443,7 @@
 			</blobs>
 		</layer>
 		<layer id="22" name="relu8" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>

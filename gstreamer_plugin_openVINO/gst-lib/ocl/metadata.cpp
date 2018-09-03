@@ -47,7 +47,7 @@ static InferenceMeta* inference_meta_copy(InferenceMeta *meta_src) {
 }
 
 gpointer
-inference_meta_create (VideoRect *rect, const char *label, guint32 color)
+inference_meta_create (VideoRect *rect, const char *label, float prob, guint32 color)
 {
     InferenceMeta *meta = g_new0 (InferenceMeta, 1);
 
@@ -56,11 +56,12 @@ inference_meta_create (VideoRect *rect, const char *label, guint32 color)
     meta->color = color;
     meta->next = NULL;
     meta->track_count = 1;
+    meta->probility = prob;
     return (gpointer) meta;
 }
 
  gpointer
-inference_meta_add (gpointer meta, VideoRect *rect, const char *label, guint32 color)
+inference_meta_add (gpointer meta, VideoRect *rect, const char *label, float prob, guint32 color)
 {
     InferenceMeta *infer_meta = ( InferenceMeta *)meta;
 
@@ -68,7 +69,7 @@ inference_meta_add (gpointer meta, VideoRect *rect, const char *label, guint32 c
     while(infer_meta->next)
         infer_meta = infer_meta->next;
 
-    infer_meta->next = (InferenceMeta *)inference_meta_create(rect, label, color);
+    infer_meta->next = (InferenceMeta *)inference_meta_create(rect, label, prob, color);
 
     return (gpointer) meta;
 }
@@ -200,26 +201,25 @@ gst_buffer_get_inference_meta (GstBuffer * buffer)
 /* called when allocate cvdlfilter output buffer*/
 gpointer
 cvdl_meta_create (VADisplay display, VASurfaceID surface,
-                       VideoRect *rect, const char *label, guint32 color)
+                       VideoRect *rect, const char *label, float prob, guint32 color)
 {
     CvdlMeta *meta = g_new0 (CvdlMeta, 1);
 
     meta->surface_id = surface;
     meta->display_id = display;
     meta->inference_result =
-        (InferenceMeta *)inference_meta_create(rect, label, color);
-
+        (InferenceMeta *)inference_meta_create(rect, label, prob, color);
     return (gpointer) meta;
 }
 
 
 gpointer
-cvdl_meta_add (gpointer meta, VideoRect *rect, const char *label, guint32 color)
+cvdl_meta_add (gpointer meta, VideoRect *rect, const char *label, float prob, guint32 color)
 {
     CvdlMeta *cvdl_meta = ( CvdlMeta *)meta;
 
     //inference_meta_add((gpointer)cvdl_meta->inference_result);
-    inference_meta_add(cvdl_meta->inference_result, rect, label, color);
+    inference_meta_add(cvdl_meta->inference_result, rect, label, prob, color);
     return (gpointer) meta;
 }
 

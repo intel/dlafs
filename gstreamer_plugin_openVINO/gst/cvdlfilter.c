@@ -88,7 +88,7 @@ cvdl_handle_buffer(CvdlFilter *cvdlfilter, GstBuffer* buffer)
 
     cvdlfilter->frame_num_in++;
     void *data;
-    g_print("cvdlfilter input: index = %d, buffer = %p, refcount = %d, surface = %d\n",
+    GST_DEBUG("cvdlfilter input: index = %d, buffer = %p, refcount = %d, surface = %d\n",
         cvdlfilter->frame_num_in, buffer, GST_MINI_OBJECT_REFCOUNT (buffer),
         gst_get_mfx_surface(buffer, NULL, &data));
 
@@ -471,7 +471,7 @@ static void push_buffer_func(gpointer userData)
 
     cvdl_filter->frame_num_out++;
     if(outbuf)
-        g_print("cvdlfilter out: index = %d, buffer = %p, refcount = %d, surface = %d\n",
+        GST_DEBUG("cvdlfilter out: index = %d, buffer = %p, refcount = %d, surface = %d\n",
             cvdl_filter->frame_num_out, outbuf, GST_MINI_OBJECT_REFCOUNT(outbuf),
             gst_get_mfx_surface(outbuf, NULL, &data));
 

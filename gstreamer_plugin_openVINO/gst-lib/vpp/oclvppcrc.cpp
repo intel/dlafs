@@ -73,18 +73,15 @@ OclVppCrc::crc_helper()
         return OCL_FAIL;
     }
 
-
     status = clSetKernelArg (m_kernel, 1, sizeof(cl_mem), &m_src->cl_memory[1]);
     if(CL_ERROR_PRINT (status, "clSetKernelArg")) {
         return OCL_FAIL;
     }
 
-    
     status = clSetKernelArg (m_kernel, 2, sizeof(guint32), &m_src_w);
     if(CL_ERROR_PRINT (status, "clSetKernelArg")) {
         return OCL_FAIL;
     }
-
 
     status = clSetKernelArg (m_kernel, 3, sizeof(guint32), &m_src_h);
     if(CL_ERROR_PRINT (status, "clSetKernelArg")) {
@@ -149,7 +146,7 @@ OclVppCrc::process (const SharedPtr<VideoFrame>& src, const SharedPtr<VideoFrame
     m_src_w = src->width;
     m_src_h = src->height;
     m_crop_x = src->crop.x;
-    m_crop_x = src->crop.y;
+    m_crop_y = src->crop.y;
     m_crop_w = src->crop.width;
     m_crop_h = src->crop.height;
     m_dst_w  = dst->width;

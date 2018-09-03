@@ -11,7 +11,7 @@
 				</port>
 			</output>
 		</layer>
-		<layer id="1" name="Add_420" precision="FP16" type="ScaleShift">
+		<layer id="1" name="Add_" precision="FP16" type="ScaleShift">
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -57,7 +57,7 @@
 			</blobs>
 		</layer>
 		<layer id="3" name="conv1/relu_7x7" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -118,7 +118,7 @@
 			</blobs>
 		</layer>
 		<layer id="6" name="conv2/relu_3x3_reduce" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -160,7 +160,7 @@
 			</blobs>
 		</layer>
 		<layer id="8" name="conv2/relu_3x3" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -221,7 +221,7 @@
 			</blobs>
 		</layer>
 		<layer id="11" name="inception_3a/relu_1x1" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -263,7 +263,7 @@
 			</blobs>
 		</layer>
 		<layer id="13" name="inception_3a/relu_3x3_reduce" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -305,7 +305,7 @@
 			</blobs>
 		</layer>
 		<layer id="15" name="inception_3a/relu_3x3" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -347,7 +347,7 @@
 			</blobs>
 		</layer>
 		<layer id="17" name="inception_3a/relu_5x5_reduce" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -389,7 +389,7 @@
 			</blobs>
 		</layer>
 		<layer id="19" name="inception_3a/relu_5x5" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -450,7 +450,7 @@
 			</blobs>
 		</layer>
 		<layer id="22" name="inception_3a/relu_pool_proj" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -529,7 +529,7 @@
 			</blobs>
 		</layer>
 		<layer id="25" name="inception_3b/relu_1x1" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -571,7 +571,7 @@
 			</blobs>
 		</layer>
 		<layer id="27" name="inception_3b/relu_3x3_reduce" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -613,7 +613,7 @@
 			</blobs>
 		</layer>
 		<layer id="29" name="inception_3b/relu_3x3" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -655,7 +655,7 @@
 			</blobs>
 		</layer>
 		<layer id="31" name="inception_3b/relu_5x5_reduce" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -697,7 +697,7 @@
 			</blobs>
 		</layer>
 		<layer id="33" name="inception_3b/relu_5x5" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -758,7 +758,7 @@
 			</blobs>
 		</layer>
 		<layer id="36" name="inception_3b/relu_pool_proj" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -856,7 +856,7 @@
 			</blobs>
 		</layer>
 		<layer id="40" name="inception_4a/relu_1x1" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -898,7 +898,7 @@
 			</blobs>
 		</layer>
 		<layer id="42" name="inception_4a/relu_3x3_reduce" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -940,7 +940,7 @@
 			</blobs>
 		</layer>
 		<layer id="44" name="inception_4a/relu_3x3" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -982,7 +982,7 @@
 			</blobs>
 		</layer>
 		<layer id="46" name="inception_4a/relu_5x5_reduce" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1024,7 +1024,7 @@
 			</blobs>
 		</layer>
 		<layer id="48" name="inception_4a/relu_5x5" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1085,7 +1085,7 @@
 			</blobs>
 		</layer>
 		<layer id="51" name="inception_4a/relu_pool_proj" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1164,7 +1164,7 @@
 			</blobs>
 		</layer>
 		<layer id="54" name="inception_4b/relu_1x1" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1206,7 +1206,7 @@
 			</blobs>
 		</layer>
 		<layer id="56" name="inception_4b/relu_3x3_reduce" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1248,7 +1248,7 @@
 			</blobs>
 		</layer>
 		<layer id="58" name="inception_4b/relu_3x3" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1290,7 +1290,7 @@
 			</blobs>
 		</layer>
 		<layer id="60" name="inception_4b/relu_5x5_reduce" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1332,7 +1332,7 @@
 			</blobs>
 		</layer>
 		<layer id="62" name="inception_4b/relu_5x5" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1393,7 +1393,7 @@
 			</blobs>
 		</layer>
 		<layer id="65" name="inception_4b/relu_pool_proj" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1472,7 +1472,7 @@
 			</blobs>
 		</layer>
 		<layer id="68" name="inception_4c/relu_1x1" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1514,7 +1514,7 @@
 			</blobs>
 		</layer>
 		<layer id="70" name="inception_4c/relu_3x3_reduce" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1556,7 +1556,7 @@
 			</blobs>
 		</layer>
 		<layer id="72" name="inception_4c/relu_3x3" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1598,7 +1598,7 @@
 			</blobs>
 		</layer>
 		<layer id="74" name="inception_4c/relu_5x5_reduce" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1640,7 +1640,7 @@
 			</blobs>
 		</layer>
 		<layer id="76" name="inception_4c/relu_5x5" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1701,7 +1701,7 @@
 			</blobs>
 		</layer>
 		<layer id="79" name="inception_4c/relu_pool_proj" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1780,7 +1780,7 @@
 			</blobs>
 		</layer>
 		<layer id="82" name="inception_4d/relu_1x1" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1822,7 +1822,7 @@
 			</blobs>
 		</layer>
 		<layer id="84" name="inception_4d/relu_3x3_reduce" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1864,7 +1864,7 @@
 			</blobs>
 		</layer>
 		<layer id="86" name="inception_4d/relu_3x3" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1906,7 +1906,7 @@
 			</blobs>
 		</layer>
 		<layer id="88" name="inception_4d/relu_5x5_reduce" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1948,7 +1948,7 @@
 			</blobs>
 		</layer>
 		<layer id="90" name="inception_4d/relu_5x5" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2009,7 +2009,7 @@
 			</blobs>
 		</layer>
 		<layer id="93" name="inception_4d/relu_pool_proj" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2088,7 +2088,7 @@
 			</blobs>
 		</layer>
 		<layer id="96" name="inception_4e/relu_1x1" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2130,7 +2130,7 @@
 			</blobs>
 		</layer>
 		<layer id="98" name="inception_4e/relu_3x3_reduce" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2172,7 +2172,7 @@
 			</blobs>
 		</layer>
 		<layer id="100" name="inception_4e/relu_3x3" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2214,7 +2214,7 @@
 			</blobs>
 		</layer>
 		<layer id="102" name="inception_4e/relu_5x5_reduce" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2256,7 +2256,7 @@
 			</blobs>
 		</layer>
 		<layer id="104" name="inception_4e/relu_5x5" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2317,7 +2317,7 @@
 			</blobs>
 		</layer>
 		<layer id="107" name="inception_4e/relu_pool_proj" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2415,7 +2415,7 @@
 			</blobs>
 		</layer>
 		<layer id="111" name="inception_5a/relu_1x1" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2457,7 +2457,7 @@
 			</blobs>
 		</layer>
 		<layer id="113" name="inception_5a/relu_3x3_reduce" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2499,7 +2499,7 @@
 			</blobs>
 		</layer>
 		<layer id="115" name="inception_5a/relu_3x3" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2541,7 +2541,7 @@
 			</blobs>
 		</layer>
 		<layer id="117" name="inception_5a/relu_5x5_reduce" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2583,7 +2583,7 @@
 			</blobs>
 		</layer>
 		<layer id="119" name="inception_5a/relu_5x5" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2644,7 +2644,7 @@
 			</blobs>
 		</layer>
 		<layer id="122" name="inception_5a/relu_pool_proj" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2723,7 +2723,7 @@
 			</blobs>
 		</layer>
 		<layer id="125" name="inception_5b/relu_1x1" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2765,7 +2765,7 @@
 			</blobs>
 		</layer>
 		<layer id="127" name="inception_5b/relu_3x3_reduce" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2807,7 +2807,7 @@
 			</blobs>
 		</layer>
 		<layer id="129" name="inception_5b/relu_3x3" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2849,7 +2849,7 @@
 			</blobs>
 		</layer>
 		<layer id="131" name="inception_5b/relu_5x5_reduce" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2891,7 +2891,7 @@
 			</blobs>
 		</layer>
 		<layer id="133" name="inception_5b/relu_5x5" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2952,7 +2952,7 @@
 			</blobs>
 		</layer>
 		<layer id="136" name="inception_5b/relu_pool_proj" precision="FP16" type="ReLU">
-			<data engine="caffe.ReLUParameter.DEFAULT" negative_slope="0.0"/>
+			<data negative_slope="0.0"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>

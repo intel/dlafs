@@ -113,6 +113,8 @@ static GstBuffer *get_free_buf(BlendHandle handle)
     return free_buf;
 }
 
+#if 0
+// test code
 static void buffer_test(GstBuffer *buf)
 {
     OclMemory *buf_mem = NULL;
@@ -133,6 +135,8 @@ static void buffer_test(GstBuffer *buf)
 
     //memset((void *)((unsigned char *)buf_mem->mem+600*1600*4), 0x7F, 1600*4);
 }
+#endif
+
 static GstBuffer *generate_osd(BlendHandle handle, GstBuffer *input_buf)
 {
     //CvdlBlender *cvdl_blender  = (CvdlBlender *) handle;
@@ -157,6 +161,7 @@ static GstBuffer *generate_osd(BlendHandle handle, GstBuffer *input_buf)
     cv::Mat mdraw = osd_mem->frame.getMat(0);
     uint32_t x,y;
 
+    cv::rectangle(mdraw, cv::Rect(0,0,osd_mem->width, osd_mem->height), cv::Scalar(0, 0, 0), cv::FILLED);
     for(i=0;i<meta_count && inference_result;i++){
 
         VideoRect *rect = &inference_result->rect;
@@ -166,7 +171,7 @@ static GstBuffer *generate_osd(BlendHandle handle, GstBuffer *input_buf)
         stream_prob << std::fixed << std::setprecision(3) << inference_result->probility;
 
         x = rect->x;
-        y = rect->y<=30 ? 30 : (rect->y>=cvdl_meta->height/2? cvdl_meta->height/2 : rect->y );
+        y = rect->y + 30;
 
         // Write label and probility
         strTxt =std::string(inference_result->label) + "(prob= " + stream_prob.str() + ")";
@@ -176,10 +181,27 @@ static GstBuffer *generate_osd(BlendHandle handle, GstBuffer *input_buf)
         cv::Rect target_rect(rect->x, rect->y, rect->width, rect->height);
         cv::rectangle(mdraw, target_rect, cv::Scalar(0, 255, 0), 2);
 
+        //std::vector<cv::Point> vecCPt;
+        Point *points = inference_result->track;
+        cv::Point lastPt, curPt, prePt;
+        lastPt = cv::Point(points[0].x, points[0].y);
+        for (size_t m = 1; m < inference_result->track_count; m++) {
+            curPt = cv::Point(points[m].x, points[m].y);
+            if (prePt.y > lastPt.y) {
+                lastPt = prePt;
+            }
+            if (curPt.y > lastPt.y) {
+                cv::line(mdraw, lastPt, curPt, cv::Scalar(0, 255, 0), 2);
+            }
+            prePt = curPt;
+        }
+
         inference_result = inference_result->next;
     }
-    if(i!=meta_count)
+    if(i!=meta_count) {
+        gst_buffer_unref(osd_buf);
         return NULL;
+    }
 
     return osd_buf;
 }
@@ -206,7 +228,7 @@ GstBuffer* blender_process_cvdl_buffer(BlendHandle handle, GstBuffer* buffer)
     //release osd
     gst_buffer_unref(osd_buf);
 
-    buffer_test(out_buf);
+    //buffer_test(out_buf);
 
     // Set cvdl_meta to this buffer
     //cvdl_meta = gst_buffer_get_cvdl_meta(buffer);
