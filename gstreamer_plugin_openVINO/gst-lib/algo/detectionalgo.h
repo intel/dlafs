@@ -31,8 +31,8 @@
 #define DETECTION_GRIDE_SIZE  7
 #define DETECTION_CLASS_NUM   9
 #define DETECTION_BOX_NUM_FOR_EACH_BLOCK 2
-//#define DETECTION_PROB_THRESHOLD 0.200000003
-#define DETECTION_PROB_THRESHOLD 0.500000003
+#define DETECTION_PROB_THRESHOLD 0.200000003
+//#define DETECTION_PROB_THRESHOLD 0.500000003
 #define DETECTION_NMS_THRESHOLD 0.4
 
 #define DETECTION_INPUT_W 448    // detect size
@@ -82,11 +82,11 @@ public:
     int mImageProcessorInVideoWidth;
     int mImageProcessorInVideoHeight;
 
-    const int cGrideSize = DETECTION_GRIDE_SIZE;
-    const int cClassNum  = DETECTION_CLASS_NUM;
-    const int cBoxNumEachBlock = DETECTION_BOX_NUM_FOR_EACH_BLOCK;
-    const float cProbThreshold = DETECTION_PROB_THRESHOLD;
-    const float cNMSThreshold = DETECTION_NMS_THRESHOLD;
+    const int cGrideSize = DETECTION_GRIDE_SIZE;/* 7 */
+    const int cClassNum  = DETECTION_CLASS_NUM;/* 9 */
+    const int cBoxNumEachBlock = DETECTION_BOX_NUM_FOR_EACH_BLOCK; /* 2 */
+    const float cProbThreshold = DETECTION_PROB_THRESHOLD; /* 0.5 */
+    const float cNMSThreshold = DETECTION_NMS_THRESHOLD; /* 0.4 */
 
     guint64 mCurPts;
     DetectionResultData mResultData;

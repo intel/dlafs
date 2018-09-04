@@ -309,7 +309,7 @@ void DetectionAlgo::get_detection_boxes(
             float *ieResult, DetectionInternalData *internalData,
             int32_t w, int32_t h, int32_t onlyObjectness)
 {
-    float top2Thr = cProbThreshold* 4 / 3;// Top2 score threshold
+    float top2Thr = cProbThreshold * 4 / 3;// Top2 score threshold
 
     int idx, m, n;
     float *predictions = ieResult;
@@ -329,8 +329,8 @@ void DetectionAlgo::get_detection_boxes(
                                 + (idx * cBoxNumEachBlock + n) * 4;
             internalData->mBoxes[index].x = (predictions[box_index + 0] + col) / cGrideSize * w;
             internalData->mBoxes[index].y = (predictions[box_index + 1] + row) / cGrideSize * h;
-            internalData->mBoxes[index].w = pow(predictions[box_index + 2], 1) * w;
-            internalData->mBoxes[index].h = pow(predictions[box_index + 3], 1) * h;
+            internalData->mBoxes[index].w = pow(predictions[box_index + 2], 2) * w;
+            internalData->mBoxes[index].h = pow(predictions[box_index + 3], 2) * h;
 
             float ascore[2] = { 0 };
             int32_t bHave = 0;

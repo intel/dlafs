@@ -175,15 +175,16 @@ typedef struct {
 } VideoRect;
 
 typedef struct {
-    uint32_t x;
-    uint32_t y;
-} Point;
+    int32_t x;
+    int32_t y;
+} VideoPoint;
 
+#define MAX_TRAJECTORY_POINTS_NUM 128
 typedef struct _InferenceData{
     float probility;
     VideoRect rect;
     char label[128];
-    Point track[64];
+    VideoPoint track[MAX_TRAJECTORY_POINTS_NUM];
     int   track_num;
 }InferenceData;
 

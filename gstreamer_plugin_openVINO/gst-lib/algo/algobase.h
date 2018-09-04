@@ -30,7 +30,7 @@
 #include <inference_engine.hpp>
 #include <atomic>
 #include <vector>
-
+#include <interface/videodefs.h>
 enum {
     CVDL_TYPE_DL = 0,
     CVDL_TYPE_CV = 1,
@@ -46,7 +46,7 @@ public:
     std::string label;
     // It is based on the orignal video frame
     cv::Rect rect;
-    std::vector<cv::Point> trajectoryPoints; /* the trajectory Points of this object*/
+    std::vector<VideoPoint> trajectoryPoints; /* the trajectory Points of this object*/
     //std::atomic<int> flags;
     int flags;
     // Object buffer in OCL, format = BGR_Plannar

@@ -82,21 +82,23 @@ __kernel void blend( read_only image2d_t src_y,
     float guv = fma(coeffs[3], UV.y, fma(coeffs[2], UV.x, 0.0f));
     float buv = fma(coeffs[1], UV.x, 0.0f);
 
-    float R0 = (Y0.x + ruv) * CV_8U_MAX + pOsdRow1[0];
-    float G0 = (Y0.x + guv) * CV_8U_MAX + pOsdRow1[1];
-    float B0 = (Y0.x + buv) * CV_8U_MAX + pOsdRow1[2];
 
-    float R1 = (Y1.x + ruv) * CV_8U_MAX + pOsdRow1[4];
-    float G1 = (Y1.x + guv) * CV_8U_MAX + pOsdRow1[5];
-    float B1 = (Y1.x + buv) * CV_8U_MAX + pOsdRow1[6];
+	// pOsdRow - RGBA
+    float R0 = (Y0.x + ruv) * (255 - pOsdRow1[3]) + pOsdRow1[0];
+    float G0 = (Y0.x + guv) * (255 - pOsdRow1[3]) + pOsdRow1[1];
+    float B0 = (Y0.x + buv) * (255 - pOsdRow1[3]) + pOsdRow1[2];
 
-    float R2 = (Y2.x + ruv) * CV_8U_MAX + pOsdRow2[0];
-    float G2 = (Y2.x + guv) * CV_8U_MAX + pOsdRow2[1];
-    float B2 = (Y2.x + buv) * CV_8U_MAX + pOsdRow2[2];
+    float R1 = (Y1.x + ruv) * (255 - pOsdRow1[7]) + pOsdRow1[4];
+    float G1 = (Y1.x + guv) * (255 - pOsdRow1[7]) + pOsdRow1[5];
+    float B1 = (Y1.x + buv) * (255 - pOsdRow1[7]) + pOsdRow1[6];
 
-    float R3 = (Y3.x + ruv) * CV_8U_MAX + pOsdRow2[4];
-    float G3 = (Y3.x + guv) * CV_8U_MAX + pOsdRow2[5];
-    float B3 = (Y3.x + buv) * CV_8U_MAX + pOsdRow2[6];
+    float R2 = (Y2.x + ruv) * (255 - pOsdRow2[3]) + pOsdRow2[0];
+    float G2 = (Y2.x + guv) * (255 - pOsdRow2[3]) + pOsdRow2[1];
+    float B2 = (Y2.x + buv) * (255 - pOsdRow2[3]) + pOsdRow2[2];
+
+    float R3 = (Y3.x + ruv) * (255 - pOsdRow2[7]) + pOsdRow2[4];
+    float G3 = (Y3.x + guv) * (255 - pOsdRow2[7]) + pOsdRow2[5];
+    float B3 = (Y3.x + buv) * (255 - pOsdRow2[7]) + pOsdRow2[6];
 
 
     pDstRow1[0] = convert_uchar_sat(B0);

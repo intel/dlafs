@@ -118,8 +118,8 @@ static void process_one_object(CvdlAlgoData *algoData, ObjectData &objectData, i
         return;
     }
     //test
-    classificationAlgo->save_buffer(ocl_mem->frame.getMat(0).ptr(), classificationAlgo->mInputWidth,
-        classificationAlgo->mInputHeight,3,algoData->mFrameId*10000 + objId, "classification");
+    //classificationAlgo->save_buffer(ocl_mem->frame.getMat(0).ptr(), classificationAlgo->mInputWidth,
+    //    classificationAlgo->mInputHeight,3,algoData->mFrameId*10000 + objId, "classification");
 
     // Classification callback function
     auto onClassificationResult = [&objectData](CvdlAlgoData* algoData)
@@ -280,16 +280,17 @@ GstFlowReturn ClassificationAlgo::parse_inference_result(InferenceEngine::Blob::
     int topnum = 1;
     ObjectData &objData = outData->mObjectVec[objId];
     InferenceEngine::TopResults(topnum, *resultBlobFp32, topIndexes);
+    float *probBase = resultBlobFp32->data();
     if (topIndexes.size()>0) {
         for (size_t i = 0; i < topIndexes.size(); i++) {
-            float prob = (resultBlobFp32->data()[topIndexes[i]]);
+            float prob = probBase[topIndexes[i]];
             std::string strLabel = g_vehicleLabel[topIndexes[i]];
             objData.prob = prob;
             objData.label = strLabel;
             objData.objectClass =  topIndexes[i];
             objData.flags |= CLASSIFICATION_OBJECT_FLAG_VALID;
-            g_print("classification-%ld-%d-%d: prob = %f, label = %s\n", 
-                outData->mFrameId,objId,i,prob, objData.label.c_str());
+            //g_print("classification-%ld-%d-%ld: prob = %f-%f, label = %s\n", 
+            //    outData->mFrameId,objId,i,prob, probBase[topIndexes[1]], objData.label.c_str());
             break;
         }
     }
@@ -329,6 +330,13 @@ GstBuffer* ClassificationAlgo::dequeue_buffer()
 
     for(unsigned int i=0; i<algoData.mObjectVec.size(); i++) {
         VideoRect rect;
+        std::vector<VideoPoint> &trajectoryPoints = algoData.mObjectVec[i].trajectoryPoints;
+        VideoPoint points[MAX_TRAJECTORY_POINTS_NUM];
+        int count = trajectoryPoints.size();
+        if(count>MAX_TRAJECTORY_POINTS_NUM)
+            count = MAX_TRAJECTORY_POINTS_NUM;
+        for(int i=0; i<count; i++)
+            points[i] = trajectoryPoints[i];
         rect.x     = algoData.mObjectVec[i].rect.x;
         rect.y     = algoData.mObjectVec[i].rect.y;
         rect.width = algoData.mObjectVec[i].rect.width;
@@ -336,10 +344,10 @@ GstBuffer* ClassificationAlgo::dequeue_buffer()
         if(i==0)
             meta_data =
             cvdl_meta_create(display, surface, &rect, algoData.mObjectVec[i].label.c_str(), 
-                                         algoData.mObjectVec[i].prob, color);
+                             algoData.mObjectVec[i].prob, color, points, count);
         else
             cvdl_meta_add (meta_data, &rect, algoData.mObjectVec[i].label.c_str(),
-                            algoData.mObjectVec[i].prob, color);
+                            algoData.mObjectVec[i].prob, color, points, count);
         //debug
         g_print("classification_output-%ld-%d: prob = %f, label = %s, rect=(%d,%d)-(%dx%d)\n", 
                 algoData.mFrameId,i,algoData.mObjectVec[i].prob,

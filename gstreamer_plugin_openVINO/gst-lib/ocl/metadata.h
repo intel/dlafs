@@ -46,7 +46,7 @@ typedef struct _InferenceMeta{
     float     probility;
     VideoRect rect;
     char      label[LABEL_MAX_LENGTH];
-    Point     track[64];
+    VideoPoint     track[MAX_TRAJECTORY_POINTS_NUM];
     int       track_count;
     guint32   color;
     struct _InferenceMeta *next;
@@ -77,7 +77,8 @@ typedef struct _CvdlMetaHolder{
 
 
 gpointer inference_meta_create (VideoRect *rect, const char *label, float prob, guint32 color);
-gpointer inference_meta_add (gpointer meta, VideoRect *rect, const char *label,float prob, guint32 color);
+gpointer inference_meta_add (gpointer meta, VideoRect *rect, const char *label,
+                                    float prob, guint32 color, VideoPoint *points, int count);
 void inference_meta_free (gpointer meta);
 
 
@@ -92,9 +93,11 @@ InferenceMeta* gst_buffer_get_inference_meta (GstBuffer * buffer);
 
 
 gpointer
-cvdl_meta_create (VADisplay display, VASurfaceID surface, VideoRect *rect, const char *label, float prob, guint32 color);
+cvdl_meta_create (VADisplay display, VASurfaceID surface, VideoRect *rect, const char *label,
+                        float prob, guint32 color, VideoPoint *points, int count);
 gpointer
-cvdl_meta_add (gpointer meta, VideoRect *rect, const char *label, float prob, guint32 color);
+cvdl_meta_add (gpointer meta, VideoRect *rect, const char *label, float prob, guint32 color,
+                        VideoPoint *points, int count);
 void
 cvdl_meta_free (gpointer meta);
 

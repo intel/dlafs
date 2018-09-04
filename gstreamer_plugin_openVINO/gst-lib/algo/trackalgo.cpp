@@ -22,6 +22,7 @@
 #include <ocl/oclmemory.h>
 #include "mathutils.h"
 #include "trackalgo.h"
+#include <interface/videodefs.h>
 
 using namespace cv;
 
@@ -410,7 +411,7 @@ void TrackAlgo::figure_out_trajectory_points(ObjectData &objectVec, TrackObjAttr
     objectVec.trajectoryPoints.clear();
     MathUtils utils;
     for(unsigned int i=0; i<rectVec.size(); i++) {
-        cv::Point point;
+        VideoPoint point;
         rect = utils.convert_rect(rectVec[i],mInputWidth, mInputHeight,
                            mImageProcessorInVideoWidth, mImageProcessorInVideoHeight);
         point.x = rect.x + rect.width/2;
@@ -447,8 +448,9 @@ cv::Rect TrackAlgo::compare_detect_predict(std::vector<ObjectData>& objectVec, T
             objectVec[i].flags |= FLAGS_TRACKED_DATA_IS_SET;
             // put the trajectory points to it
             figure_out_trajectory_points(objectVec[i], curObj);
-            objectVec[i].trajectoryPoints.push_back(cv::Point(objRectOrig.x+objRectOrig.width/2,
-                                                           objRectOrig.y+objRectOrig.height/2));
+            VideoPoint point = {objRectOrig.x+objRectOrig.width/2,
+                                objRectOrig.y+objRectOrig.height/2};
+            objectVec[i].trajectoryPoints.push_back(point);
             // combine objectVec[i] with curObj
             objectVec[i].id = curObj.objId;
             return objRect;
@@ -523,8 +525,9 @@ void TrackAlgo::add_new_one_object(ObjectData &objectData, guint64 frameId)
 
     objectData.flags |= FLAGS_TRACKED_DATA_IS_SET;
     //objectData.flags.fetch_or(FLAGS_TRACKED_DATA_IS_SET);
-    objectData.trajectoryPoints.push_back(cv::Point(objRect.x+objRect.width/2,
-                                                    objRect.y+objRect.height/2));
+    VideoPoint point = {objRect.x+objRect.width/2,
+                        objRect.y+objRect.height/2};
+    objectData.trajectoryPoints.push_back(point);
 
     // convert it from orignal size base to tracking image base
     objRect = utils.convert_rect(objectData.rect, 
@@ -722,7 +725,7 @@ void TrackAlgo::push_track_object(CvdlAlgoData* &algoData)
 
     //debug
     for(size_t i=0; i< objectVec.size(); i++) {
-        g_print("track_output-%ld-%d: prob = %f, label = %s, rect=(%d,%d)-(%dx%d)\n",
+        g_print("track_output-%ld-%ld: prob = %f, label = %s, rect=(%d,%d)-(%dx%d)\n",
             algoData->mFrameId, i, objectVec[i].prob, objectVec[i].label.c_str(),
             objectVec[i].rect.x, objectVec[i].rect.y,
             objectVec[i].rect.width, objectVec[i].rect.height);

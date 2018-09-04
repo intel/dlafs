@@ -161,7 +161,7 @@ static GstBuffer *generate_osd(BlendHandle handle, GstBuffer *input_buf)
     cv::Mat mdraw = osd_mem->frame.getMat(0);
     uint32_t x,y;
 
-    cv::rectangle(mdraw, cv::Rect(0,0,osd_mem->width, osd_mem->height), cv::Scalar(0, 0, 0), cv::FILLED);
+    cv::rectangle(mdraw, cv::Rect(0,0,osd_mem->width, osd_mem->height), cv::Scalar(0, 0, 0, 0), cv::FILLED);
     for(i=0;i<meta_count && inference_result;i++){
 
         VideoRect *rect = &inference_result->rect;
@@ -175,23 +175,23 @@ static GstBuffer *generate_osd(BlendHandle handle, GstBuffer *input_buf)
 
         // Write label and probility
         strTxt =std::string(inference_result->label) + "(prob= " + stream_prob.str() + ")";
-        cv::putText(mdraw, strTxt, cv::Point(x, y), 1, 1.5, cv::Scalar(0, 255, 255), 2);
+        cv::putText(mdraw, strTxt, cv::Point(x, y), 1, 1.5, cv::Scalar(255, 0, 0, 255), 2);//RGBA
 
         // Draw rectangle on target object
         cv::Rect target_rect(rect->x, rect->y, rect->width, rect->height);
-        cv::rectangle(mdraw, target_rect, cv::Scalar(0, 255, 0), 2);
+        cv::rectangle(mdraw, target_rect, cv::Scalar(0, 255, 0, 255), 2);
 
         //std::vector<cv::Point> vecCPt;
-        Point *points = inference_result->track;
+        VideoPoint *points = inference_result->track;
         cv::Point lastPt, curPt, prePt;
-        lastPt = cv::Point(points[0].x, points[0].y);
-        for (size_t m = 1; m < inference_result->track_count; m++) {
+        prePt = cv::Point(points[0].x, points[0].y);
+        for (int m = 1; m < inference_result->track_count; m++) {
             curPt = cv::Point(points[m].x, points[m].y);
             if (prePt.y > lastPt.y) {
                 lastPt = prePt;
             }
             if (curPt.y > lastPt.y) {
-                cv::line(mdraw, lastPt, curPt, cv::Scalar(0, 255, 0), 2);
+                cv::line(mdraw, lastPt, curPt, cv::Scalar(0, 255, 0, 255), 2);
             }
             prePt = curPt;
         }

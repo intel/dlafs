@@ -61,16 +61,25 @@ inference_meta_create (VideoRect *rect, const char *label, float prob, guint32 c
 }
 
  gpointer
-inference_meta_add (gpointer meta, VideoRect *rect, const char *label, float prob, guint32 color)
+inference_meta_add (gpointer meta, VideoRect *rect, const char *label,
+                            float prob, guint32 color,
+                            VideoPoint *points, int count)
 {
     InferenceMeta *infer_meta = ( InferenceMeta *)meta;
 
-    infer_meta->track_count++;
+    //infer_meta->track_count++;
     while(infer_meta->next)
         infer_meta = infer_meta->next;
 
-    infer_meta->next = (InferenceMeta *)inference_meta_create(rect, label, prob, color);
+    InferenceMeta *new_infer_meta =
+        (InferenceMeta *)inference_meta_create(rect, label, prob, color);
 
+    for(int i=0; i<count; i++) {
+        new_infer_meta->track[i] = points[i];
+    }
+    new_infer_meta->track_count = count;
+
+    infer_meta->next = new_infer_meta;
     return (gpointer) meta;
 }
 
@@ -201,7 +210,9 @@ gst_buffer_get_inference_meta (GstBuffer * buffer)
 /* called when allocate cvdlfilter output buffer*/
 gpointer
 cvdl_meta_create (VADisplay display, VASurfaceID surface,
-                       VideoRect *rect, const char *label, float prob, guint32 color)
+                       VideoRect *rect, const char *label,
+                       float prob, guint32 color,
+                       VideoPoint *points, int count)
 {
     CvdlMeta *meta = g_new0 (CvdlMeta, 1);
 
@@ -209,17 +220,23 @@ cvdl_meta_create (VADisplay display, VASurfaceID surface,
     meta->display_id = display;
     meta->inference_result =
         (InferenceMeta *)inference_meta_create(rect, label, prob, color);
+
+    for(int i=0; i<count; i++) {
+        meta->inference_result->track[i] = points[i];
+    }
+    meta->inference_result->track_count = count;
     return (gpointer) meta;
 }
 
 
 gpointer
-cvdl_meta_add (gpointer meta, VideoRect *rect, const char *label, float prob, guint32 color)
+cvdl_meta_add (gpointer meta, VideoRect *rect, const char *label,
+                    float prob, guint32 color, VideoPoint *points, int count)
 {
     CvdlMeta *cvdl_meta = ( CvdlMeta *)meta;
 
     //inference_meta_add((gpointer)cvdl_meta->inference_result);
-    inference_meta_add(cvdl_meta->inference_result, rect, label, prob, color);
+    inference_meta_add(cvdl_meta->inference_result, rect, label, prob, color, points, count);
     return (gpointer) meta;
 }
 

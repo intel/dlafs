@@ -131,7 +131,7 @@ res_convert_fill_txt_data(ResMemory *res_mem, CvdlMeta *cvdl_meta)
         dst[i].rect = src->rect;
         dst[i].probility = src->probility;
         memcpy(dst[i].label, src->label, 128);
-        memcpy(dst[i].track, src->track, 64*sizeof(Point));
+        memcpy(dst[i].track, src->track, src->track_count*sizeof(VideoPoint));
         dst[i].track_num = src->track_count;
         src = src->next;
     }
