@@ -38,8 +38,8 @@ static std::string g_vehicleLabel[] =
 #define CLASSIFICATION_OBJECT_FLAG_VALID 0x100
 
 
-#define CLASSIFICATION_INPUT_W 448
-#define CLASSIFICATION_INPUT_H 448
+#define CLASSIFICATION_INPUT_W 224
+#define CLASSIFICATION_INPUT_H 224
 
 
 static void try_process_algo_data(CvdlAlgoData *algoData)
@@ -119,7 +119,7 @@ static void process_one_object(CvdlAlgoData *algoData, ObjectData &objectData, i
     }
     //test
     //classificationAlgo->save_buffer(ocl_mem->frame.getMat(0).ptr(), classificationAlgo->mInputWidth,
-    //    classificationAlgo->mInputHeight,3,algoData->mFrameId*10000 + objId, "classification");
+    //    classificationAlgo->mInputHeight,3,algoData->mFrameId*1000 + objId, "classification");
 
     // Classification callback function
     auto onClassificationResult = [&objectData](CvdlAlgoData* algoData)

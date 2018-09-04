@@ -174,7 +174,7 @@ GstFlowReturn IELoader::convert_input_to_blob(const cv::UMat& img, InferenceEngi
     int w = (int)inputBlobPtr->dims()[0];
     int h = (int)inputBlobPtr->dims()[1];
     if (img.cols != w || img.rows != h) {
-        GST_LOG("WARNNING: resize from %dx%d to %dx%d !\n", src.cols, src.rows, w, h);
+        GST_ERROR("WARNNING: resize from %dx%d to %dx%d !\n", src.cols, src.rows, w, h);
         cv::resize(img, src, cv::Size(w, h));
     } else {
         src = img.getMat(0);

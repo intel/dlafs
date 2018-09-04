@@ -131,11 +131,26 @@ int CvdlAlgoBase::get_out_queue_size()
 void CvdlAlgoBase::save_buffer(unsigned char *buf, int w, int h, int p, int id, char *info)
 {
     char filename[128];
-    sprintf(filename, "~/temp/temp/%s-%dx%dx%d-%d.rgb",info,w,h,p,id);
+    sprintf(filename, "~/temp/%s-%dx%dx%d-%d.rgb",info,w,h,p,id);
 
+#if 1
+    int size = w*h;
+    char *rgb = (char *)g_new0(char, w*h*p);
+    for(int i=0;i<size;i++) {
+        for(int j=0; j<p; j++)
+            rgb[3*i + j] = buf[size * j + i];
+    }
+    FILE *fp = fopen (filename, "wb");
+    if (fp) {
+         fwrite (rgb, 1, w*h*p, fp);
+         fclose (fp);
+    }
+    g_free(rgb);
+#else
     FILE *fp = fopen (filename, "wb");
     if (fp) {
          fwrite (buf, 1, w*h*p, fp);
          fclose (fp);
     }
+#endif
 }
