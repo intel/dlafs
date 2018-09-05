@@ -169,13 +169,27 @@ static GstBuffer *generate_osd(BlendHandle handle, GstBuffer *input_buf)
         // Create an output string stream
         std::ostringstream stream_prob;
         stream_prob << std::fixed << std::setprecision(3) << inference_result->probility;
+        std::ostringstream stream_ts;
+        GstClockTime ts_ms = GST_BUFFER_PTS (input_buf)/1000000; //ms
+        int hour,minute,second,ms;
+        second = ts_ms/1000;
+        hour = second/3600;
+        minute = (second - hour*3600)/60;
+        second = second % 60;
+        ms = ts_ms % 1000;
+        stream_ts << std::setfill('0') << std::setw(2) << hour << ":" << std::setfill('0') << std::setw(2) << minute << ":";
+        stream_ts << std::setfill('0') << std::setw(2) << second << "." << std::setw(3) << ms;
 
         x = rect->x;
         y = rect->y + 30;
 
         // Write label and probility
-        strTxt =std::string(inference_result->label) + "(prob= " + stream_prob.str() + ")";
-        cv::putText(mdraw, strTxt, cv::Point(x, y), 1, 1.5, cv::Scalar(255, 0, 0, 255), 2);//RGBA
+        strTxt = std::string(inference_result->label);
+        cv::putText(mdraw, strTxt, cv::Point(x, y), 1, 1.25, cv::Scalar(255, 0, 255, 255), 2);//RGBA
+        strTxt = std::string("prob = ") + stream_prob.str();
+        cv::putText(mdraw, strTxt, cv::Point(x, y+30), 1, 1.25, cv::Scalar(255, 0, 255, 255), 2);//RGBA
+        strTxt = std::string("time = ") + stream_ts.str();
+        cv::putText(mdraw, strTxt, cv::Point(x, y+60), 1, 1.25, cv::Scalar(255, 0, 255, 255), 2);//RGBA
 
         // Draw rectangle on target object
         cv::Rect target_rect(rect->x, rect->y, rect->width, rect->height);

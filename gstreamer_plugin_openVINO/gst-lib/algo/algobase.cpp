@@ -131,7 +131,7 @@ int CvdlAlgoBase::get_out_queue_size()
 void CvdlAlgoBase::save_buffer(unsigned char *buf, int w, int h, int p, int id, char *info)
 {
     char filename[128];
-    sprintf(filename, "~/temp/%s-%dx%dx%d-%d.rgb",info,w,h,p,id);
+    sprintf(filename, "/home/lijunjie/temp/temp/%s-%dx%dx%d-%d.rgb",info,w,h,p,id);
 
 #if 1
     int size = w*h;

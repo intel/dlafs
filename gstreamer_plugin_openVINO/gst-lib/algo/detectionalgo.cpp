@@ -158,7 +158,7 @@ static void detection_algo_func(gpointer userData)
             algo->mNext->mInQueue.put(*algoData);
         }else{
             //g_print("delete algoData = %p\n", algoData);
-            g_print("detection_algo_func - unref GstBuffer = %p(%d)\n", 
+            GST_LOG("detection_algo_func - unref GstBuffer = %p(%d)\n", 
                 algoData->mGstBuffer, GST_MINI_OBJECT_REFCOUNT(algoData->mGstBuffer));
             gst_buffer_unref(algoData->mGstBuffer);
             delete algoData;
@@ -371,8 +371,6 @@ void DetectionAlgo::get_detection_boxes(
     }
 }
 
-
-
 /*    num = 7 * 7 * 2
  *    thresh = 0.2
  *    classes = 9
@@ -428,7 +426,7 @@ void DetectionAlgo::get_result(DetectionInternalData *internalData, CvdlAlgoData
             object.rect = cv::Rect(left, top, right - left + 1, bot - top + 1);
             objectNum++;
             outData->mObjectVec.push_back(object);
-            g_print("%ld-%d: score = %f, label = %s, rect=(%d,%d)-(%dx%d)\n",outData->mFrameId, idx,
+            GST_LOG("%ld-%d: prob = %f, label = %s, rect=(%d,%d)-(%dx%d)\n",outData->mFrameId, idx,
                 object.prob, object.label.c_str(), left, top, right - left + 1, bot - top + 1);
         }
     }

@@ -468,6 +468,11 @@ cv::Rect TrackAlgo::compare_detect_predict(std::vector<ObjectData>& objectVec, T
 void TrackAlgo::get_roi_rect(cv::Rect& roiRect, cv::Rect curRect)
 {
     MathUtils utils;
+
+    // The ROI is the car's face part
+    // another method is to use LP to detect car's face
+    curRect.y = curRect.y + curRect.height/2;
+    curRect.height = curRect.height/2;
     roiRect = utils.convert_rect(curRect, mInputWidth, mInputHeight,
                        mImageProcessorInVideoWidth, mImageProcessorInVideoHeight);
 }
@@ -504,7 +509,7 @@ void TrackAlgo::add_track_obj(CvdlAlgoData* &algoData, cv::Rect curRt, TrackObjA
                 get_roi_rect(roiRect, curRt);
 
                 // save ROI rectange based on the orignal image
-                curObj.putImg(roiRect);
+                curObj.putImgROI(roiRect);
             }
         }
     }
@@ -517,6 +522,8 @@ void TrackAlgo::add_new_one_object(ObjectData &objectData, guint64 frameId)
     MathUtils utils;
 
     obj.objId = mCurObjId;
+    obj.score = 0.0;
+    obj.fliped = false;
     obj.startFrameId = frameId;
     obj.curFrameId = obj.startFrameId;
 
@@ -524,23 +531,24 @@ void TrackAlgo::add_new_one_object(ObjectData &objectData, guint64 frameId)
     obj.bBottom = false;
 
     objectData.flags |= FLAGS_TRACKED_DATA_IS_SET;
-    //objectData.flags.fetch_or(FLAGS_TRACKED_DATA_IS_SET);
+
     VideoPoint point = {objRect.x+objRect.width/2,
                         objRect.y+objRect.height/2};
     objectData.trajectoryPoints.push_back(point);
 
     // convert it from orignal size base to tracking image base
     objRect = utils.convert_rect(objectData.rect, 
-                                      mImageProcessorInVideoWidth, mImageProcessorInVideoHeight,
-                                      mInputWidth, mInputHeight);
+                                 mImageProcessorInVideoWidth,
+                                 mImageProcessorInVideoHeight,
+                                 mInputWidth, mInputHeight);
     obj.vecPos.push_back(objRect);
 
     // vec is based on the orignal video size
     CKECK_ROI(objectData.rect, mImageProcessorInVideoWidth, mImageProcessorInVideoHeight);
 
     cv::Rect roiRect = objectData.rect;
-    //get_roi_rect(roiRect, objectData.vec);
-    obj.putImg(roiRect);
+    get_roi_rect(roiRect, objRect);
+    obj.putImgROI(roiRect);
 
     mTrackObjVec.push_back(obj);
 
@@ -601,7 +609,7 @@ void TrackAlgo::track_objects_fast(CvdlAlgoData* &algoData)
 
     if(mPreFrame)
         gst_buffer_unref(mPreFrame);
-    // DOn't use preFrame
+    // Don't use preFrame
     mPreFrame = NULL;
 }
 void TrackAlgo::track_objects(CvdlAlgoData* &algoData)
@@ -671,13 +679,20 @@ bool TrackAlgo::is_at_buttom(TrackObjAttribute& curObj)
 void TrackAlgo::update_track_object(std::vector<ObjectData> &objectVec)
 {
     std::vector<TrackObjAttribute>::iterator it;
+    float score = 0.0;
 
     for (it = mTrackObjVec.begin(); it != mTrackObjVec.end();) {
         // find the connected objectData
         for(unsigned int i=0; i<objectVec.size(); i++){
             ObjectData& objectData = objectVec[i];
             if(objectData.id == (*it).objId) {
-                objectData.flags |= FLAGS_TRACKED_DATA_IS_PASS;
+                score = objectData.figure_score(mImageProcessorInVideoWidth, mImageProcessorInVideoHeight);
+                if((score > 1.0) && (score >= (*it).score) && (*it).fliped==false) {
+                    objectData.flags |= FLAGS_TRACKED_DATA_IS_PASS;
+                    (*it).fliped = true;
+                }
+                (*it).score = score;
+                objectData.score = score;
                 break;
             }
         }
@@ -704,7 +719,6 @@ void TrackAlgo::update_track_object(std::vector<ObjectData> &objectVec)
 
 }
 
-
 void TrackAlgo::push_track_object(CvdlAlgoData* &algoData)
 {
     std::vector<ObjectData> &objectVec = algoData->mObjectVec;
@@ -714,21 +728,22 @@ void TrackAlgo::push_track_object(CvdlAlgoData* &algoData)
 
     // Not tracking data need to pass to next algo component
     if(objectVec.size()==0) {
-        g_print("track_algo_func - unref GstBuffer = %p(%d)\n",
+        GST_LOG("track_algo_func - unref GstBuffer = %p(%d)\n",
             algoData->mGstBuffer, GST_MINI_OBJECT_REFCOUNT(algoData->mGstBuffer));
         gst_buffer_unref(algoData->mGstBuffer);
         delete algoData;
         return;
-    } 
+    }
+
     GST_LOG("track_algo_func - pass down GstBuffer = %p(%d)\n",
          algoData->mGstBuffer, GST_MINI_OBJECT_REFCOUNT(algoData->mGstBuffer));
 
     //debug
     for(size_t i=0; i< objectVec.size(); i++) {
-        g_print("track_output-%ld-%ld: prob = %f, label = %s, rect=(%d,%d)-(%dx%d)\n",
+        g_print("track_output-%ld-%ld: prob = %f, label = %s, rect=(%d,%d)-(%dx%d), score = %f\n",
             algoData->mFrameId, i, objectVec[i].prob, objectVec[i].label.c_str(),
             objectVec[i].rect.x, objectVec[i].rect.y,
-            objectVec[i].rect.width, objectVec[i].rect.height);
+            objectVec[i].rect.width, objectVec[i].rect.height, objectVec[i].score);
     }
     mNext->mInQueue.put(*algoData);
 }

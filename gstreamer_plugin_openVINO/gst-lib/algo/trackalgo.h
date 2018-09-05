@@ -90,6 +90,8 @@ public:
 	int objId;			// Object index
 	uint64_t startFrameId;
 	uint64_t curFrameId;
+    float score;
+    bool fliped; // whether it is fliped into next component.
 
 	int notDetectNum;	/* The object is not detected in the continuous notDetectNum, stop tracking and report. */
 
@@ -103,7 +105,7 @@ public:
 	/**
 	 * @brief Put src image and vehicle roi image,
 	 */
-	void putImg(/*cv::Mat src, cv::Mat roi, */cv::Rect rtRoiInsrc)
+	void putImgROI(/*cv::Mat src, cv::Mat roi, */cv::Rect rtRoiInsrc)
 	{
 		//_vecSrc.push_back(src);
 		//_vecRoi.push_back(roi);
@@ -111,6 +113,12 @@ public:
 		_vecRoiBRecognized.push_back(false);
 	}
 
+    cv::Rect getImgROI()
+    {
+        if(_vecRoiPosInSrc.size()>0)
+            return _vecRoiPosInSrc[_vecRoiPosInSrc.size() - 1];
+        return cv::Rect(0, 0, 0, 0);
+    }
 	/**
 	 * @brief Get current last vehicle for NVR show.
 	 */

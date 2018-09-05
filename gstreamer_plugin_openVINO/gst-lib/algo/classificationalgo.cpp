@@ -37,6 +37,7 @@ static std::string g_vehicleLabel[] =
 #define CLASSIFICATION_OBJECT_FLAG_DONE 0x10
 #define CLASSIFICATION_OBJECT_FLAG_VALID 0x100
 
+#define THRESHOLD_PROB 0.2
 
 #define CLASSIFICATION_INPUT_W 224
 #define CLASSIFICATION_INPUT_H 224
@@ -86,9 +87,13 @@ static void process_one_object(CvdlAlgoData *algoData, ObjectData &objectData, i
     GstFlowReturn ret = GST_FLOW_OK;
     GstBuffer *ocl_buf = NULL;
     ClassificationAlgo *classificationAlgo = static_cast<ClassificationAlgo*>(algoData->algoBase);
- 
-    VideoRect crop = { (uint32_t)objectData.rect.x, (uint32_t)objectData.rect.y,
-                       (uint32_t)objectData.rect.width, (uint32_t)objectData.rect.height};
+
+    // The classification model will use the car face to do inference, that means we should
+    //  crop the front part of car's object to be ROI, which is done in TrackAlgo::get_roi_rect
+    VideoRect crop = { (uint32_t)objectData.rect.x, 
+                       (uint32_t)objectData.rect.y + objectData.rect.height/2,
+                       (uint32_t)objectData.rect.width,
+                       (uint32_t)objectData.rect.height/2};
 
     if(crop.width<=0 || crop.height<=0 || crop.x<0 || crop.y<0) {
         GST_ERROR("classfication: crop = (%d,%d) %dx%d", crop.x, crop.y, crop.width, crop.height);
@@ -284,6 +289,8 @@ GstFlowReturn ClassificationAlgo::parse_inference_result(InferenceEngine::Blob::
     if (topIndexes.size()>0) {
         for (size_t i = 0; i < topIndexes.size(); i++) {
             float prob = probBase[topIndexes[i]];
+            if(prob < THRESHOLD_PROB)
+                continue;
             std::string strLabel = g_vehicleLabel[topIndexes[i]];
             objData.prob = prob;
             objData.label = strLabel;

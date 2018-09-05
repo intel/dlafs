@@ -45,13 +45,31 @@ public:
     float prob;
     std::string label;
     // It is based on the orignal video frame
-    cv::Rect rect;
+    cv::Rect rect;  // rect of detection
+    cv::Rect rectROI; // rect to be classified
+
+    /*score to decide whether is should be do classification */
+    float score;
+
     std::vector<VideoPoint> trajectoryPoints; /* the trajectory Points of this object*/
     //std::atomic<int> flags;
     int flags;
     // Object buffer in OCL, format = BGR_Plannar
     // It will be used for IE inputdata
     GstBuffer *oclBuf;
+    float figure_score(int w, int h) {
+        float score = 0.0;
+        int dx, dy;
+        int centX = rect.x + rect.width/2;
+        int centY = rect.y + rect.height/2;
+        dx = fabs(centX - w/2);
+        dy = fabs(centY - h/2);
+        if((centY < h/3) || (centY > 2*h/3) || (rect.y + rect.height > 5*h/6))
+            score =0.0;
+        else
+            score = 1.0*(rect.width * rect.height) / (dx*dy + w*h/16);
+        return score;
+    }
 };
 
 class CvdlAlgoBase;
