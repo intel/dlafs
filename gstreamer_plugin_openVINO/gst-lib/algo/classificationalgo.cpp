@@ -212,6 +212,7 @@ ClassificationAlgo::ClassificationAlgo() : CvdlAlgoBase(classification_algo_func
 
 ClassificationAlgo::~ClassificationAlgo()
 {
+    wait_work_done();
     if(mInCaps)
         gst_caps_unref(mInCaps);
 }

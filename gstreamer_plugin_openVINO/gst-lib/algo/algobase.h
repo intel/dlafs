@@ -125,6 +125,11 @@ public:
     void start_algo_thread();
     void stop_algo_thread();
 
+    void wait_work_done() {
+         // wait IE infer thread finished
+         while((mInferCnt>0) ||(mInQueue.size()>0))
+            g_usleep(10000);
+    }
     int get_in_queue_size();
     int get_out_queue_size();
     void save_buffer(unsigned char *buf, int w, int h, int p, int id, char *info);

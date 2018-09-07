@@ -78,7 +78,7 @@ static void track_algo_func(gpointer userData)
 
     // bind algoTask into algoData, so that can be used when sync callback
     algoData->algoBase = static_cast<CvdlAlgoBase *>(trackAlgo);
-    trackAlgo->mInferCnt=0;
+    trackAlgo->mInferCnt=1;
 
     GST_LOG("%s() - trackAlgo = %p, algoData->mFrameId = %ld\n",
             __func__, trackAlgo, algoData->mFrameId);
@@ -95,6 +95,7 @@ static void track_algo_func(gpointer userData)
     trackAlgo->mImageProcessor.process_image(algoData->mGstBuffer,NULL, &ocl_buf, &crop);
     if(ocl_buf==NULL) {
         GST_WARNING("Failed to do image process!");
+        trackAlgo->mInferCnt=0;
         return;
     }
     algoData->mGstBufferOcl = ocl_buf;
@@ -103,6 +104,7 @@ static void track_algo_func(gpointer userData)
     ocl_mem = ocl_memory_acquire (ocl_buf);
     if(ocl_mem==NULL){
         GST_WARNING("Failed get ocl_mem after image process!");
+        trackAlgo->mInferCnt=0;
         return;
     }
 

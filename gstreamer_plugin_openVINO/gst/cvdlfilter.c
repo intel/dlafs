@@ -72,8 +72,6 @@ cvdl_handle_buffer(CvdlFilter *cvdlfilter, GstBuffer* buffer)
 {
     GstFlowReturn ret = GST_FLOW_OK;
 
-    GST_LOG("cache begin\n");
-    // will crash here sometimes, why?
     int cache_buf_size = algo_pipeline_get_all_queue_size(cvdlfilter->algoHandle);
     GST_LOG("cache buffer size = %d\n", cache_buf_size);
 
@@ -92,8 +90,6 @@ cvdl_handle_buffer(CvdlFilter *cvdlfilter, GstBuffer* buffer)
         cvdlfilter->frame_num_in, buffer, GST_MINI_OBJECT_REFCOUNT (buffer),
         gst_get_mfx_surface(buffer, NULL, &data));
 
-    cache_buf_size = algo_pipeline_get_all_queue_size(cvdlfilter->algoHandle);
-    //g_print("cache buffer size = %d\n", cache_buf_size);
     return ret;;
 }
 
@@ -142,12 +138,13 @@ cvdl_filter_transform_chain (GstPad * pad, GstObject * parent, GstBuffer * buffe
                               GST_TIME_ARGS (duration));
     GST_DEBUG ("timestamp %" GST_TIME_FORMAT, GST_TIME_ARGS (timestamp));
 
+#if 1
     //debug
     if((duration>0) &&(duration<=50000000))
         g_usleep(duration/1000);
     else
         g_usleep(40000);//40ms
-
+#endif
     return GST_FLOW_OK;
 }
 

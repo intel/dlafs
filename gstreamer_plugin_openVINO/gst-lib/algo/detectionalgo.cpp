@@ -192,6 +192,7 @@ DetectionAlgo::DetectionAlgo() : CvdlAlgoBase(detection_algo_func, this, NULL)
 
 DetectionAlgo::~DetectionAlgo()
 {
+    wait_work_done();
     if(mInCaps)
         gst_caps_unref(mInCaps);
 }

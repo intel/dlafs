@@ -46,6 +46,9 @@ CvdlAlgoBase::CvdlAlgoBase(GstTaskFunction func, gpointer user_data, GDestroyNot
 {
     g_rec_mutex_init (&mMutex);
 
+    mNext = NULL;
+    mPrev = NULL;
+
     mInferCnt = 0;
     mInferCntTotal = 0;
     mFrameIndex = 0;
@@ -63,10 +66,7 @@ CvdlAlgoBase::CvdlAlgoBase(GstTaskFunction func, gpointer user_data, GDestroyNot
 
 CvdlAlgoBase::~CvdlAlgoBase()
 {
-    while(mInferCnt>0) {
-         // wait IE infer tread finished
-         g_usleep(10000);
-    }
+    wait_work_done();
     if((gst_task_get_state(mTask) == GST_TASK_STARTED) ||
        (gst_task_get_state(mTask) == GST_TASK_PAUSED)) {
          gst_task_set_state(mTask, GST_TASK_STOPPED);
