@@ -21,6 +21,7 @@
  */
 
 #include "gstmfxvideomemory.h"
+#include "../gst-libs/mfx/gstmfxsurface_priv.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_debug_mfxvideomemory);
 #define GST_CAT_DEFAULT gst_debug_mfxvideomemory
@@ -228,8 +229,13 @@ void
 gst_mfx_video_memory_reset_surface (GstMfxVideoMemory * mem)
 {
   gst_mfx_surface_replace (&mem->surface, NULL);
-  if (mem->meta)
+  if (mem->meta) {
+    GstMfxSurface * surface = gst_mfx_video_meta_get_surface(mem->meta);
+    if(surface) {
+        surface->flipping = FALSE;
+    }
     gst_mfx_video_meta_set_surface (mem->meta, NULL);
+  }
 }
 
 static gpointer

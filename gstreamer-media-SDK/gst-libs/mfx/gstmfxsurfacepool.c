@@ -24,6 +24,7 @@
 #include "gstmfxsurface.h"
 #include "gstmfxsurface_vaapi.h"
 #include "gstmfxminiobject.h"
+#include "gstmfxsurface_priv.h"
 
 #define DEBUG 1
 #include "gstmfxdebug.h"
@@ -63,7 +64,7 @@ release_surfaces (gpointer surface, gpointer pool)
   GstMfxSurfacePool *_pool = (GstMfxSurfacePool *) pool;
 
   mfxFrameSurface1 *surf = gst_mfx_surface_get_frame_surface (_surface);
-  if (surf && !surf->Data.Locked)
+  if (surf && !surf->Data.Locked && !_surface->flipping)
     gst_mfx_surface_pool_put_surface (_pool, _surface);
 }
 
@@ -226,6 +227,13 @@ gst_mfx_surface_pool_get_surface_unlocked (GstMfxSurfacePool * pool)
 
   surface = g_queue_pop_head (&pool->free_surfaces);
   if (!surface) {
+    // all surfaces are locked, wait but not allocate new
+    int num_surfaces = 0;
+    if(pool->task)
+        num_surfaces = gst_mfx_task_get_num_surfaces(pool->task);
+    if( pool->used_count >= num_surfaces && num_surfaces > 0)
+	return NULL;
+
     g_mutex_unlock (&pool->mutex);
     if (pool->task) {
       surface = gst_mfx_surface_new_from_task (pool->task);
@@ -244,7 +252,7 @@ gst_mfx_surface_pool_get_surface_unlocked (GstMfxSurfacePool * pool)
 
   ++pool->used_count;
   pool->used_surfaces = g_list_prepend (pool->used_surfaces, surface);
-
+  surface->flipping = FALSE;
   return gst_mfx_surface_ref (surface);
 }
 

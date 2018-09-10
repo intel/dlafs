@@ -150,6 +150,7 @@ gst_mfx_task_aggregator_create_session (GstMfxTaskAggregator * aggregator,
   sts = MFXInitEx (init_params, &session);
   if (sts < 0) {
     GST_ERROR ("Error initializing internal MFX session");
+    printf("MFXInitEx error: Version= %d.%d\n",init_params.Version.Major, init_params.Version.Minor);
     return NULL;
   }
 

@@ -321,7 +321,12 @@ gst_mfx_surface_new_from_pool(GstMfxSurfacePool * pool)
 {
   g_return_val_if_fail(pool != NULL, NULL);
 
-  return gst_mfx_surface_pool_get_surface(pool);
+  GstMfxSurface *surface = gst_mfx_surface_pool_get_surface(pool);
+  while(surface==NULL) {
+     g_usleep(1000);
+     surface = gst_mfx_surface_pool_get_surface(pool);
+  }
+  return surface;
 }
 
 GstMfxSurface *

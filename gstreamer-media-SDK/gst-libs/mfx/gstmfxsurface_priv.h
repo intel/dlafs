@@ -65,6 +65,8 @@ struct _GstMfxSurface
   gint gem_bo_handle;
   gboolean is_gem_linear;
   gint drm_fd;
+
+  gboolean flipping;
 };
 
 struct _GstMfxSurfaceClass

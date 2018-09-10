@@ -328,5 +328,6 @@ void gst_buffer_update_mfx_video_meta(GstBuffer * buffer)
     meta->token=0xFACED;
     meta->surface_id = (VASurfaceID )(surface->surface_id);
     meta->display_id = GST_MFX_DISPLAY_VADISPLAY(surface->display);
+    surface->flipping = TRUE;
   }
 }
