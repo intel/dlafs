@@ -33,6 +33,8 @@ G_DEFINE_TYPE (CvdlFilter, cvdl_filter, GST_TYPE_BASE_TRANSFORM);
 #define CVDL_FILTER_GET_PRIVATE(obj)  \
     (G_TYPE_INSTANCE_GET_PRIVATE ((obj), CVDL_FILTER_TYPE, CvdlFilterPrivate))
 
+//#define SYNC_WITH_DECODER
+
 /* GstVideoFlip properties */
 enum
 {
@@ -75,12 +77,14 @@ cvdl_handle_buffer(CvdlFilter *cvdlfilter, GstBuffer* buffer)
     int cache_buf_size = algo_pipeline_get_all_queue_size(cvdlfilter->algoHandle);
     GST_LOG("cache buffer size = %d\n", cache_buf_size);
 
+#ifdef SYNC_WITH_DECODER
     // wait algo task
     while(cache_buf_size >= 5) {
         g_usleep(10000);// 10ms
         cache_buf_size = algo_pipeline_get_all_queue_size(cvdlfilter->algoHandle);
         GST_LOG("loop - cache buffer size = %d\n", cache_buf_size);
     }
+#endif
     // put buffer into a queue
     algo_pipeline_put_buffer(cvdlfilter->algoHandle, buffer);
 
@@ -138,7 +142,7 @@ cvdl_filter_transform_chain (GstPad * pad, GstObject * parent, GstBuffer * buffe
                               GST_TIME_ARGS (duration));
     GST_DEBUG ("timestamp %" GST_TIME_FORMAT, GST_TIME_ARGS (timestamp));
 
-#if 1
+#ifdef SYNC_WITH_DECODER
     //debug
     if((duration>0) &&(duration<=50000000))
         g_usleep(duration/1000);
@@ -476,7 +480,7 @@ static void push_buffer_func(gpointer userData)
     if(outbuf)
         gst_pad_push(trans->srcpad, outbuf);
 
-    // gst_pad+push will unref this buffer, we need not do it again.
+    // gst_pad_push will unref this buffer, we need not do it again.
     // gst_buffer_unref(outbuf);
 }
 
