@@ -24,6 +24,8 @@
 #  include "config.h"
 #endif
 
+#include <interface/videodefs.h>
+#include "resmemory.h"
 #include "wssink.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_ws_sink_debug);
@@ -70,7 +72,7 @@ static void gst_ws_sink_get_times (GstWsSink * basesink, GstBuffer * buffer, Gst
 #define INVALID_BUFFER_TS (-1)
 // get the bit buffer and txt buffer with the same ts
 // if not, find the earliest buffer as the output
-static void get_buffers_with_same_ts(GstWsSink * basesink, GstBuffer **bit_buf, GstBuffer **txt_buf)
+static gboolean get_buffers_with_same_ts(GstWsSink * basesink, GstBuffer **bit_buf, GstBuffer **txt_buf)
 {
     GstBuffer *bit_buf_temp, *txt_buf_temp;
     GstClockTime bit_ts=INVALID_BUFFER_TS;
@@ -102,7 +104,7 @@ static void get_buffers_with_same_ts(GstWsSink * basesink, GstBuffer **bit_buf, 
     if(G_UNLIKELY((!bit_buf_temp && !txt_buf_temp))) {
         *txt_buf = NULL;
         *bit_buf = NULL;
-        return;
+        return FALSE;
     }
 
     // bit buffer is early, only return it
@@ -113,7 +115,7 @@ static void get_buffers_with_same_ts(GstWsSink * basesink, GstBuffer **bit_buf, 
         priv->bit_processed_num++;
         *txt_buf = NULL;
         *bit_buf = bit_buf_temp;
-        return;
+        return TRUE;
     }
 
     // txt buffer is early, only return it
@@ -124,7 +126,7 @@ static void get_buffers_with_same_ts(GstWsSink * basesink, GstBuffer **bit_buf, 
         priv->txt_processed_num++;
         *txt_buf = txt_buf_temp;
         *bit_buf = NULL;
-        return;
+        return TRUE;
     }
 
     GST_WS_SINK_BIT_LOCK(basesink);
@@ -140,7 +142,7 @@ static void get_buffers_with_same_ts(GstWsSink * basesink, GstBuffer **bit_buf, 
     *txt_buf = txt_buf_temp;
     *bit_buf = bit_buf_temp;
 
-    return;
+    return TRUE;
 }
 // Main function to processed buffer into next filter
 //      1. package jpeg bitstream and inference result data
@@ -150,15 +152,61 @@ static void process_sink_buffers(gpointer userData)
     GstWsSink *basesink;
     basesink = GST_WS_SINK (userData);
     GstBuffer *bit_buf = NULL, *txt_buf = NULL;
+    gboolean ret = FALSE;
+    int i = 0;
     //GstWsSinkPrivate *priv = basesink->priv;
 
-    get_buffers_with_same_ts(basesink, &bit_buf, &txt_buf);
-    if(!bit_buf && !txt_buf){
-        GST_INFO("No buffers, do nothing!");
+    ret = get_buffers_with_same_ts(basesink, &bit_buf, &txt_buf);
+    if(ret==FALSE) {
+        g_usleep(10000);
         return;
     }
 
     // TODO: parse gstbuffer and package them
+    g_print("wssink process buffer...\n");
+
+    // txt data
+    if(txt_buf) {
+        ResMemory *txt_mem;
+        txt_mem = RES_MEMORY_CAST(res_memory_acquire(txt_buf));
+        if(!txt_mem || !txt_mem->data || !txt_mem->data_count) {
+            g_print("Failed to get data from txt buffer!!!\n");
+        }
+        // packaged txt data into websocket
+        InferenceData *infer_data = txt_mem->data;
+        int count = txt_mem->data_count;
+        g_print("object num = %d\n",count);
+        for(i=0; i<count; i++) {
+            g_print("\tindex=%d, name=%s, prob=%f, rect=(%d,%d)@%dx%d\n",
+                i, infer_data->label, infer_data->probility,
+                infer_data->rect.x, infer_data->rect.y,
+                infer_data->rect.width, infer_data->rect.height);
+        }
+    }
+
+    // jpeg bitstream data
+    if(bit_buf) {
+        int n = gst_buffer_n_memory (bit_buf);
+        GstMemory *mem = NULL;
+        gpointer data_base = 0;
+        gsize data_len = 0, size = 0;
+        // It will be released automatically when the current stack frame is cleaned up
+        GstMapInfo *mapInfo = g_newa (GstMapInfo, n);
+        g_print("bitstream block num = %d\n",n);
+        for (i = 0; i < n; ++i) {
+            mem = gst_buffer_peek_memory (bit_buf, i);
+            if (gst_memory_map (mem, &mapInfo[i], GST_MAP_READ)) {
+                data_base = mapInfo[i].data;
+                data_len = mapInfo[i].size;
+            }
+            size += data_len;
+            g_print("\tindex=%d, data_base = %p, data_len = %ld, sum = %ld\n",
+                i, data_base, data_len, size);
+        }
+
+        for (i = 0; i < n; ++i)
+            gst_memory_unmap (mapInfo[i].memory, &mapInfo[i]);
+   }
 
     // release buffer
     if(bit_buf)
@@ -240,7 +288,6 @@ gst_ws_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstWsSink *basesink;
   gboolean result = TRUE;
-  //GstWsSinkClass *bclass;
 
   basesink = GST_WS_SINK_CAST (parent);
   //bclass = GST_WS_SINK_GET_CLASS (basesink);
@@ -275,7 +322,16 @@ gst_ws_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         gst_element_post_message (GST_ELEMENT_CAST (basesink), msg);
       break;
     }
+    case GST_EVENT_EOS:
+    {
+      // EOS message is used to trigger the state change
+      GstMessage *message = gst_message_new_eos (GST_OBJECT_CAST (basesink));
+      //gst_message_set_seqnum (message, seqnum);
+      gst_element_post_message (GST_ELEMENT_CAST (basesink), message);
+      break;
+    }
     default:
+      //GST_ELEMENT_CAST (basesink)->event (GST_ELEMENT_CAST (basesink), event);
       break;
   }
 
@@ -330,7 +386,7 @@ gst_ws_sink_txt_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     GST_WS_SINK_TXT_LOCK(parent);
     buf = gst_buffer_ref(buf);
     gst_buffer_list_add(basesink->txt_list, buf);
-    priv->bit_received_num++;
+    priv->txt_received_num++;
     GST_WS_SINK_TXT_UNLOCK(parent);
 
     return GST_FLOW_OK;
