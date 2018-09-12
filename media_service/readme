@@ -1,0 +1,16 @@
+1. download and build uWebSocket
+uwebsockets: https://github.com/uNetworking/uWebSockets
+download and make install
+
+
+2. setup nodejs enviroment:
+
+apt-get install nodejs-legacy npm
+npm config set proxy <proxy>
+npm install ws
+npm install -g n
+
+3. run servre
+
+n use 10.10.0 server.js
+
