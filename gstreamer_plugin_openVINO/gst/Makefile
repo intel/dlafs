@@ -25,7 +25,7 @@ LIB_PATH := -L$(SYS_LIB_DIR) -L$(OPENCL_DIR) $(OPENCV_LIBS) $(IE_LIBS)
 LDFLAGS := --sysroot=$(PREFIX) -shared -fPIC -Wl,-no-as-needed -lOpenCL -ldrm -ldrm_intel -lva -lva-drm -lglib-2.0 -lgstallocators-1.0 -lgstvideo-1.0 $(LIB_PATH)
 
 CFLAGS  := -g -Wall -fpic -pthread $(GLIB_CFLAGS) $(GST_CFLAGS) $(DRM_CFLAGS) $(OPENCL_CFLAGS) $(IE_CFLAGS) $(OPENCV_CFLAGS)
-LIBS    := $(OPENCV_LIBS) $(IE_LIBS)
+LIBS    := $(OPENCV_LIBS) $(IE_LIBS) -luWS -lcrypto -lssl
 
 DIR_INC := .
 DIR_SRC := .
@@ -42,7 +42,7 @@ DYNAMIC_LIB := $(LIB_OCL_PATH)/$(LIB_NAME).a
 
 INC := -I$(DIR_INC) -I$(GST_LIBS_DIR) -I$(GST_LIBS_DIR)/interface/ -I$(SYS_INC_DIR)
 OBJS := $(patsubst %.c, %.o, $(SRCS))
-GST_LIBS := $(GST_LIBS_DIR)/common/libocl_common.a $(GST_LIBS_DIR)/ocl/libocl_ocl.a $(GST_LIBS_DIR)/algo/libcvdl_algo.a $(GST_LIBS_DIR)/vpp/libocl_vpp.a
+GST_LIBS := $(GST_LIBS_DIR)/common/libocl_common.a $(GST_LIBS_DIR)/ocl/libocl_ocl.a $(GST_LIBS_DIR)/algo/libcvdl_algo.a $(GST_LIBS_DIR)/vpp/libocl_vpp.a $(GST_LIBS_DIR)/ws/libws_client.a
 
 all: $(OBJS)
 #	$(LD) $(LDFLAGS) -o $(DIR_LIB)/libgstcvdlfilterbase.so $(OBJS)

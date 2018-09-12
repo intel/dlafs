@@ -25,6 +25,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/base-prelude.h>
+#include <ws/wsclient.h>
 
 G_BEGIN_DECLS
 
@@ -100,6 +101,9 @@ struct _GstWsSink {
   // task for websock
   GstTask *task;
   GRecMutex task_lock;
+
+  // wsclient
+  WsClientHandle wsclient_handle;
 
   /*< private >*/
   GstWsSinkPrivate *priv;

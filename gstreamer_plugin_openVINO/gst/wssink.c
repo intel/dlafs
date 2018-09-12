@@ -198,6 +198,7 @@ static void process_sink_buffers(gpointer userData)
             if (gst_memory_map (mem, &mapInfo[i], GST_MAP_READ)) {
                 data_base = mapInfo[i].data;
                 data_len = mapInfo[i].size;
+                wsclient_send_data(basesink->wsclient_handle, (char *)data_base, data_len);
             }
             size += data_len;
             g_print("\tindex=%d, data_base = %p, data_len = %ld, sum = %ld\n",
@@ -667,6 +668,9 @@ gst_ws_sink_init (GstWsSink * basesink, gpointer g_class)
     gst_task_set_enter_callback (basesink->task, NULL, NULL, NULL);
     gst_task_set_leave_callback (basesink->task, NULL, NULL, NULL);
 
+    //setup wsclient
+    basesink->wsclient_handle = wsclient_setup(NULL);
+
     // start task
     gst_task_start(basesink->task);
     
@@ -677,6 +681,9 @@ gst_ws_sink_finalize (GObject * object)
 {
     GstWsSink *basesink;
     basesink = GST_WS_SINK (object);
+
+    wsclient_destroy(basesink->wsclient_handle);
+    basesink->wsclient_handle = NULL;
 
     gst_task_stop(basesink->task);
     gst_task_join(basesink->task);
