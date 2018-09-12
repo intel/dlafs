@@ -162,6 +162,10 @@ static void process_sink_buffers(gpointer userData)
         return;
     }
 
+    //setup wsclient
+    if(!basesink->wsclient_handle)
+        basesink->wsclient_handle = wsclient_setup(NULL);
+
     // TODO: parse gstbuffer and package them
     g_print("wssink process buffer...\n");
 
@@ -617,6 +621,8 @@ gst_ws_sink_init (GstWsSink * basesink, gpointer g_class)
     GST_DEBUG_CATEGORY_INIT (gst_ws_sink_debug, "wssink", 0,
             "Send data out by WebSocket");
 
+    basesink->wsclient_handle = NULL;
+
     basesink->priv = priv = GST_WS_SINK_GET_PRIVATE (basesink);
 
     priv->bit_received_num = 0;
@@ -667,9 +673,6 @@ gst_ws_sink_init (GstWsSink * basesink, gpointer g_class)
     gst_task_set_lock (basesink->task, &basesink->task_lock);
     gst_task_set_enter_callback (basesink->task, NULL, NULL, NULL);
     gst_task_set_leave_callback (basesink->task, NULL, NULL, NULL);
-
-    //setup wsclient
-    basesink->wsclient_handle = wsclient_setup(NULL);
 
     // start task
     gst_task_start(basesink->task);

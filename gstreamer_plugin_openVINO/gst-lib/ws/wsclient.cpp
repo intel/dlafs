@@ -25,6 +25,8 @@
 #include "wsclient.h"
 #include <uWS/uWS.h>
 
+using namespace std;
+#include <thread>
 
 #ifdef __cplusplus
 extern "C" {
@@ -32,7 +34,7 @@ extern "C" {
 
 struct _wsclient{
     uWS::WebSocket<uWS::CLIENT> *client;
-    uWS::Hub hub;
+    //uWS::Hub hub;
 };
 typedef struct _wsclient WsClient;
 
@@ -44,10 +46,34 @@ WsClientHandle wsclient_setup(char *serverUri)
         return 0;
     }
 
-    if(!serverUri)
-        wsclient->hub.connect("wss://localhost:8124/sendData", nullptr);
-    else
-        wsclient->hub.connect(serverUri, nullptr);
+    std::thread t([&wsclient, serverUri]{
+        uWS::Hub hub;
+
+        hub.onConnection([wsclient](uWS::WebSocket<uWS::CLIENT> *ws, uWS::HttpRequest req) {
+            wsclient->client = ws;
+            g_print("Sucess: connected!\n");
+        });
+
+        hub.onError([](void *user) {
+            g_print("FAILURE: Connection failed! Timeout?\n");
+            exit(-1);
+        });
+
+        hub.onDisconnection([](uWS::WebSocket<uWS::CLIENT> *ws, int code, char *message, size_t length) {
+            g_print("CLIENT CLOSE: %d: %s\n", code, message);
+        });
+
+        if(!serverUri){
+            hub.connect("wss://localhost:8124/sendData", nullptr);
+        }else{
+            hub.connect(serverUri, nullptr);
+        }
+        hub.run();
+    });
+    t.detach();
+
+    while(!wsclient->client)
+        g_usleep(1000);
 
     return (WsClientHandle)wsclient;
 }
@@ -61,28 +87,13 @@ void wsclient_send_data(WsClientHandle handle, char *data, int len)
         g_print("Invalid WsClientHandle!!!\n");
         return;
     }
-
-    wsclient->hub.onConnection([data, len, &client](uWS::WebSocket<uWS::CLIENT> *ws, uWS::HttpRequest req) {
-            client = ws;
-            ws->send(data, len, uWS::OpCode::BINARY);
-    });
-
-    wsclient->client = client;
-
-    wsclient->hub.onError([](void *user) {
-        g_print("FAILURE: Connection failed! Timeout?\n");
-        exit(-1);
-    });
-
-    //h.onDisconnection([](uWS::WebSocket<uWS::CLIENT> *ws, int code, char *message, size_t length) {
-     //   std::cout << "CLIENT CLOSE: " << code << std::endl;
-    //});
-
-    wsclient->hub.run();
+    wsclient->client->send(data, len, uWS::OpCode::BINARY);
 }
 
 void wsclient_destroy(WsClientHandle handle)
 {
+    WsClient *wsclient = (WsClient *)handle;
+    wsclient->client->close();
     if(handle)
         g_free(handle);
 }
