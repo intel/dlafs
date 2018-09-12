@@ -45,6 +45,7 @@ WsClientHandle wsclient_setup(char *serverUri)
         g_print("Failed to calloc WsClient!\n");
         return 0;
     }
+    wsclient->client = NULL;
 
     std::thread t([&wsclient, serverUri]{
         uWS::Hub hub;
@@ -64,7 +65,7 @@ WsClientHandle wsclient_setup(char *serverUri)
         });
 
         if(!serverUri){
-            hub.connect("wss://localhost:8124/sendData", nullptr);
+            hub.connect("wss://localhost:8123/binaryEchoWithSize", nullptr);
         }else{
             hub.connect(serverUri, nullptr);
         }
@@ -81,7 +82,7 @@ WsClientHandle wsclient_setup(char *serverUri)
 void wsclient_send_data(WsClientHandle handle, char *data, int len)
 {
     WsClient *wsclient = (WsClient *)handle;
-    uWS::WebSocket<uWS::CLIENT> *client;
+    //uWS::WebSocket<uWS::CLIENT> *client;
 
     if(!handle) {
         g_print("Invalid WsClientHandle!!!\n");
@@ -94,6 +95,8 @@ void wsclient_destroy(WsClientHandle handle)
 {
     WsClient *wsclient = (WsClient *)handle;
     wsclient->client->close();
+    g_usleep(1000);
+
     if(handle)
         g_free(handle);
 }
