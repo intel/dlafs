@@ -43,12 +43,15 @@ struct _GstWsSinkPrivate
     guint64 txt_processed_num;
 };
 
-/* BaseSink properties */
+/* WsSink properties */
 enum
 {
   PROP_0,
+  PROP_WS_SERVER_URI,
   PROP_LAST
 };
+
+#define TXT_BUFFER_SIZE_MAX 1024
 
 static const char gst_ws_bit_src_caps_str[] = "image/jpeg";
 static GstStaticPadTemplate gst_ws_bit_src_factory =
@@ -154,6 +157,8 @@ static void process_sink_buffers(gpointer userData)
     GstBuffer *bit_buf = NULL, *txt_buf = NULL;
     gboolean ret = FALSE;
     int i = 0;
+    gchar txt_cache[TXT_BUFFER_SIZE_MAX]={0};
+    gsize data_len = 0, size = 0;
     //GstWsSinkPrivate *priv = basesink->priv;
 
     ret = get_buffers_with_same_ts(basesink, &bit_buf, &txt_buf);
@@ -164,10 +169,7 @@ static void process_sink_buffers(gpointer userData)
 
     //setup wsclient
     if(!basesink->wsclient_handle)
-        basesink->wsclient_handle = wsclient_setup(NULL);
-
-    // TODO: parse gstbuffer and package them
-    g_print("wssink process buffer...\n");
+        basesink->wsclient_handle = wsclient_setup(basesink->wss_uri);
 
     // txt data
     if(txt_buf) {
@@ -179,12 +181,16 @@ static void process_sink_buffers(gpointer userData)
         // packaged txt data into websocket
         InferenceData *infer_data = txt_mem->data;
         int count = txt_mem->data_count;
-        g_print("object num = %d\n",count);
+        GST_LOG("object num = %d\n",count);
         for(i=0; i<count; i++) {
-            g_print("\tindex=%d, name=%s, prob=%f, rect=(%d,%d)@%dx%d\n",
-                i, infer_data->label, infer_data->probility,
+            data_len = g_snprintf(txt_cache, TXT_BUFFER_SIZE_MAX,
+                "ts=%.3fs, prob=%f,name=%s, rect=(%d,%d)@%dx%d\n",
+                txt_mem->pts/1000000000.0, infer_data->probility, infer_data->label,
                 infer_data->rect.x, infer_data->rect.y,
                 infer_data->rect.width, infer_data->rect.height);
+            g_print("ws send txt_data: size=%ld, %s",data_len, txt_cache);
+            wsclient_send_data(basesink->wsclient_handle, (char *)txt_cache, data_len);
+            size += data_len;
         }
     }
 
@@ -193,10 +199,10 @@ static void process_sink_buffers(gpointer userData)
         int n = gst_buffer_n_memory (bit_buf);
         GstMemory *mem = NULL;
         gpointer data_base = 0;
-        gsize data_len = 0, size = 0;
+        size = 0;
         // It will be released automatically when the current stack frame is cleaned up
         GstMapInfo *mapInfo = g_newa (GstMapInfo, n);
-        g_print("bitstream block num = %d\n",n);
+        GST_LOG("bitstream block num = %d\n",n);
         for (i = 0; i < n; ++i) {
             mem = gst_buffer_peek_memory (bit_buf, i);
             if (gst_memory_map (mem, &mapInfo[i], GST_MAP_READ)) {
@@ -205,8 +211,8 @@ static void process_sink_buffers(gpointer userData)
                 wsclient_send_data(basesink->wsclient_handle, (char *)data_base, data_len);
             }
             size += data_len;
-            g_print("\tindex=%d, data_base = %p, data_len = %ld, sum = %ld\n",
-                i, data_base, data_len, size);
+            g_print("ws send bit_data: size=%ld, ts=%.3fs, data=%p\n\n", data_len,
+                GST_BUFFER_PTS(bit_buf)/1000000000.0, data_base);
         }
 
         for (i = 0; i < n; ++i)
@@ -266,9 +272,12 @@ static void
 gst_ws_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  //GstWsSink *sink = GST_WS_SINK (object);
+  GstWsSink *sink = GST_WS_SINK (object);
 
   switch (prop_id) {
+    case PROP_WS_SERVER_URI:
+        sink->wss_uri = g_value_dup_string (value);
+        break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -279,9 +288,12 @@ static void
 gst_ws_sink_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  //GstWsSink *sink = GST_WS_SINK (object);
+  GstWsSink *sink = GST_WS_SINK (object);
 
   switch (prop_id) {
+    case PROP_WS_SERVER_URI:
+        g_value_set_string (value, sink->wss_uri);
+        break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -591,6 +603,11 @@ gst_ws_sink_class_init (GstWsSinkClass * klass)
       "Send inference data(jpeg and parameters) based on WebSock",
       "River,Li <river.li@intel.com>");
 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_WS_SERVER_URI,
+      g_param_spec_string ("wssuri", "WebSocketUri",
+          "The URI of WebSocket Server", "wss://localhost:8123/binaryEchoWithSize",
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   /* src pad */
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_ws_bit_src_factory));
@@ -622,6 +639,7 @@ gst_ws_sink_init (GstWsSink * basesink, gpointer g_class)
             "Send data out by WebSocket");
 
     basesink->wsclient_handle = NULL;
+    basesink->wss_uri = NULL;
 
     basesink->priv = priv = GST_WS_SINK_GET_PRIVATE (basesink);
 
@@ -699,6 +717,10 @@ gst_ws_sink_finalize (GObject * object)
     gst_buffer_list_unref (basesink->txt_list);
     //g_mutex_clear(&basesink->bit_lock);
     //g_mutex_clear(&basesink->txt_lock);
+
+    if(basesink->wss_uri)
+        g_free (basesink->wss_uri);
+    basesink->wss_uri=NULL;
 
     G_OBJECT_CLASS (parent_class)->finalize (object);
 }

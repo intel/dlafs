@@ -38,6 +38,8 @@ struct _wsclient{
 };
 typedef struct _wsclient WsClient;
 
+#define DEFAULT_WSS_URI "wss://localhost:8123/binaryEchoWithSize"
+
 WsClientHandle wsclient_setup(char *serverUri)
 {
     WsClient *wsclient = (WsClient *)g_new0 (WsClient, 1);
@@ -50,9 +52,9 @@ WsClientHandle wsclient_setup(char *serverUri)
     std::thread t([&wsclient, serverUri]{
         uWS::Hub hub;
 
-        hub.onConnection([wsclient](uWS::WebSocket<uWS::CLIENT> *ws, uWS::HttpRequest req) {
+        hub.onConnection([wsclient, serverUri](uWS::WebSocket<uWS::CLIENT> *ws, uWS::HttpRequest req) {
             wsclient->client = ws;
-            g_print("Sucess: connected!\n");
+            g_print("SUCCESS to CONNECTE with %s!\n", serverUri);
         });
 
         hub.onError([](void *user) {
@@ -65,9 +67,17 @@ WsClientHandle wsclient_setup(char *serverUri)
         });
 
         if(!serverUri){
-            hub.connect("wss://localhost:8123/binaryEchoWithSize", nullptr);
+            hub.connect(DEFAULT_WSS_URI, nullptr);
+            g_print("Try to default websocket server: %s\n", DEFAULT_WSS_URI);
+            /*
+                    g_print("\n\nError: no websocker server!\n");
+                    g_print("Please set WebSocket Server URI:\n");
+                    g_print("\tExample: wssuri=wss://localhost:8123/binaryEchoWithSize\n");
+                    exit(-1);
+                  */
         }else{
             hub.connect(serverUri, nullptr);
+            g_print("Try to connect websocket server: %s\n", serverUri);
         }
         hub.run();
     });
@@ -94,11 +104,15 @@ void wsclient_send_data(WsClientHandle handle, char *data, int len)
 void wsclient_destroy(WsClientHandle handle)
 {
     WsClient *wsclient = (WsClient *)handle;
-    wsclient->client->close();
-    g_usleep(1000);
 
-    if(handle)
-        g_free(handle);
+    if(!handle)
+        return;
+    if(wsclient->client) {
+        wsclient->client->close();
+        g_usleep(1000);
+    }
+
+    g_free(handle);
 }
 
 #ifdef __cplusplus

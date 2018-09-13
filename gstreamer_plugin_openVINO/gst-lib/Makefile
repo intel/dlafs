@@ -11,4 +11,4 @@ clean:
 	@$(MAKE) clean -C common
 	@$(MAKE) clean -C ocl
 	@$(MAKE) clean -C algo
-	@$(MAKE) clean -C algo
+	@$(MAKE) clean -C ws
