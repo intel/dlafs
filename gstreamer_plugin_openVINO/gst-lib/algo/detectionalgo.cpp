@@ -214,23 +214,35 @@ void DetectionAlgo::set_label_names(const char** label_names)
 
 void DetectionAlgo::set_data_caps(GstCaps *incaps)
 {
+    // load IE and cnn model
+    std::string filenameXML = std::string(MODEL_DIR"/vehicle_detect/yolov1-tiny.xml");
+    algo_dl_init(filenameXML.c_str());
+
+    //get data size of ie input
+    GstFlowReturn ret = GST_FLOW_OK;
+    int w, h, c;
+    ret = mIeLoader.get_input_size(&w, &h, &c);
+
     if(mInCaps)
         gst_caps_unref(mInCaps);
     mInCaps = gst_caps_copy(incaps);
 
+    if(ret==GST_FLOW_OK) {
+        g_print("DetectionAlgo: parse out the input size whc= %dx%dx%d\n", w, h, c);
+        mInputWidth = w;
+        mInputHeight = h;
+    }
+
     //int oclSize = mInputWidth * mInputHeight * 3;
     mOclCaps = gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING, "BGR", NULL);
     gst_caps_set_simple (mOclCaps, "width", G_TYPE_INT, mInputWidth, "height",
-      G_TYPE_INT, mInputHeight, NULL);
+                         G_TYPE_INT, mInputHeight, NULL);
 
     mImageProcessor.ocl_init(incaps, mOclCaps, IMG_PROC_TYPE_OCL_CRC, CRC_FORMAT_BGR_PLANNAR);
     mImageProcessor.get_input_video_size(&mImageProcessorInVideoWidth,
                                          &mImageProcessorInVideoHeight);
     gst_caps_unref (mOclCaps);
 
-    // load IE and cnn model
-    std::string filenameXML = std::string(MODEL_DIR"/vehicle_detect/yolov1-tiny.xml");
-    algo_dl_init(filenameXML.c_str());
 }
 
 GstFlowReturn DetectionAlgo::algo_dl_init(const char* modeFileName)

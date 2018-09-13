@@ -219,6 +219,22 @@ ClassificationAlgo::~ClassificationAlgo()
 
 void ClassificationAlgo::set_data_caps(GstCaps *incaps)
 {
+    // load IE and cnn model
+    // TODO: filename can be passed from application 
+    std::string filenameXML = std::string(MODEL_DIR"/vehicle_classify/carmodel_fine_tune_1062_bn_iter_370000.xml");
+    algo_dl_init(filenameXML.c_str());
+
+    //get data size of ie input
+    GstFlowReturn ret = GST_FLOW_OK;
+    int w, h, c;
+    ret = mIeLoader.get_input_size(&w, &h, &c);
+
+    if(ret==GST_FLOW_OK) {
+        g_print("ClassificationAlgo: parse out the input size whc= %dx%dx%d\n", w, h, c);
+        mInputWidth = w;
+        mInputHeight = h;
+    }
+
     if(mInCaps)
         gst_caps_unref(mInCaps);
     mInCaps = gst_caps_copy(incaps);
@@ -233,10 +249,6 @@ void ClassificationAlgo::set_data_caps(GstCaps *incaps)
                                          &mImageProcessorInVideoHeight);
     gst_caps_unref (mOclCaps);
 
-    // load IE and cnn model
-    // TODO: filename can be passed from application 
-    std::string filenameXML = std::string(MODEL_DIR"/vehicle_classify/carmodel_fine_tune_1062_bn_iter_370000.xml");
-    algo_dl_init(filenameXML.c_str());
 }
 
 GstFlowReturn ClassificationAlgo::algo_dl_init(const char* modeFileName)

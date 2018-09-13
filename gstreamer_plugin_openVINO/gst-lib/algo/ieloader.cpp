@@ -226,6 +226,31 @@ int IELoader::get_enable_request()
     return target_id;
 }
 
+GstFlowReturn IELoader::get_input_size(int *w, int *h, int *c)
+{
+    GstFlowReturn ret = GST_FLOW_ERROR;
+    InferenceEngine::ResponseDesc resp;
+
+    int reqestId = get_enable_request();
+    if(reqestId >= 0)
+    {
+        InferenceEngine::IInferRequest::Ptr inferRequestAsyn = mInferRequest[reqestId];
+        InferenceEngine::Blob::Ptr inputBlobPtr;
+        IECALLNORET(inferRequestAsyn->GetBlob(mFirstInputName.c_str(), inputBlobPtr, &resp));
+        *w = (int)inputBlobPtr->dims()[0];
+        *h = (int)inputBlobPtr->dims()[1];
+        *c = (int)inputBlobPtr->dims()[2];
+        ret = GST_FLOW_OK;
+    }
+
+    {
+        std::unique_lock<std::mutex> lk(mRequstMutex);
+        mRequestEnable[reqestId] = true;
+        mCondVar.notify_all();
+    }
+    return ret;
+}
+
 GstFlowReturn IELoader::do_inference_async(CvdlAlgoData *algoData, uint64_t frmId, int objId,
                                                   cv::UMat &src, AsyncCallback cb)
 {

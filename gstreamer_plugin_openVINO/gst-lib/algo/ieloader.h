@@ -65,6 +65,7 @@ public:
     GstFlowReturn do_inference_async(CvdlAlgoData *algoData, uint64_t frmId, int objId,
                                             cv::UMat &src, AsyncCallback cb);
     int get_enable_request();
+    GstFlowReturn get_input_size(int *w, int *h, int *c);
 
     InferenceEngine::TargetDevice mTargetDev;
 	InferenceEngine::Precision mInputPrecision = InferenceEngine::Precision::U8;
