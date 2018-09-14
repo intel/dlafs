@@ -9,8 +9,11 @@ apt-get install nodejs-legacy npm
 npm config set proxy <proxy>
 npm install ws
 npm install -g n
+npm install child_process
+npm install arraybuffer-to-string
 
 3. run servre
 
 n use 10.10.0 server.js
+
 
