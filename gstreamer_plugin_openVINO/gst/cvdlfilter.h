@@ -58,6 +58,7 @@ struct _CvdlFilter
     AlgoPipelineHandle algoHandle;
 
     CvdlFilterPrivate*  priv;
+    gchar* algo_pipeline_desc;
 
     GstTask *mPushTask;
     GRecMutex mMutex;

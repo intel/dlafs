@@ -600,7 +600,7 @@ gst_ws_sink_class_init (GstWsSinkClass * klass)
 
   gst_element_class_set_details_simple (gstelement_class,
       "WsSink", "Sink",
-      "Send inference data(jpeg and parameters) based on WebSock",
+      "Send inference data(jpeg and parameters) based on WebSocket",
       "River,Li <river.li@intel.com>");
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_WS_SERVER_URI,

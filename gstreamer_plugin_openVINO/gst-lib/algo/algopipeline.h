@@ -40,9 +40,16 @@ enum {
     ALGO_MAX_NUM,
 };
 
+
+#define ALGO_DETECTION_NAME "detection"
+#define ALGO_TRACKING_NAME "track"
+#define ALGO_CLASSIFICATION_NAME "classification"
+
+
+
 // Each algo in the algo chain can link to multiple downstream algo
 // Here we set 1 by default
-#define MAX_DOWN_STREAM_ALGO_NUM 1
+#define MAX_DOWN_STREAM_ALGO_NUM 2
 
 // PIPELINE can output multiple output,  one output with one buffer_queue
 // Here we set 1
@@ -96,6 +103,9 @@ typedef void* AlgoPipelineHandle;
 
 AlgoPipelineHandle algo_pipeline_create(AlgoPipelineConfig* config, int num);
 AlgoPipelineHandle algo_pipeline_create_default();
+void algo_pipeline_config_destroy(AlgoPipelineConfig *config);
+AlgoPipelineConfig *algo_pipeline_config_create(gchar *desc, int *num);
+
 void algo_pipeline_destroy(AlgoPipelineHandle handle);
 void algo_pipeline_set_caps(AlgoPipelineHandle handle, int algo_id, GstCaps* caps);
 void algo_pipeline_set_caps_all(AlgoPipelineHandle handle, GstCaps* caps);

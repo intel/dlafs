@@ -74,6 +74,137 @@ static void algo_item_link(AlgoItem* from, AlgoItem* to)
     algoFrom->algo_connect(algoTo);
 }
 
+static int get_str_count(gchar *str, gchar *token, int len)
+{
+    int count = 0;
+    gchar *p = str;
+
+    if(!str || !token || !len)
+        return 0;
+
+    p=g_strstr_len(p,len,token);
+    while(p){
+        count++;
+        p++;
+        p=g_strstr_len(p,len,token);
+    }
+    return count;
+}
+
+void algo_pipeline_config_destroy(AlgoPipelineConfig *config)
+{
+    if(config)
+        g_free(config);
+    return;
+}
+
+// create a AlgoPipelineConfig from description string
+// The format is:
+//  case 1.   "detection ! track ! classification"
+//  case 2.   "detection ! track name=tk ! tk.vehicle_classification  ! tk.person_face_detection ! face_recognication"
+AlgoPipelineConfig *algo_pipeline_config_create(gchar *desc, int *num)
+{
+    AlgoPipelineConfig *config = NULL;
+    gchar *p = desc, *pDot, *pName, *pParentName, *descStrip;
+    gchar **items = NULL;// **names;
+    int count = 0, i, j, index, len, out_index = 1;// nameNum = 0, nameIndex = 0;
+    //gboolean newSubBranch = FALSE;
+    if(!desc)
+        return NULL;
+
+    //TODO: need to support case 2 better
+
+    g_print("algo pipeline congig description: %s\n", desc);
+    // delete the blank char
+    descStrip = g_strstrip(desc);
+    p = descStrip;
+    items = g_strsplit(p, "!", 6);/* 6 items at most */
+
+    //nameNum = get_str_count(p, "name=");
+    //if(nameNum > 0) {
+    //    names = g_new0(gchar *, nameNum);
+    //}
+
+    count = g_strv_length(items);
+    if(count==0){
+        g_print("Invalid algp pipeline description: %s\n",p);
+        return NULL;
+    }
+    for(i=0;i<count;i++)
+        items[i] = g_strstrip(items[i]);
+
+    config = g_new0 (AlgoPipelineConfig, count);
+    for(i=0;i<count;i++) {
+        // get curId
+        config[i].curId = i;
+        p = items[i];
+
+        // get nextNum
+        pName = g_strstr_len(p, strlen(p),"name=");
+        if(pName) {
+            // get branch algo name list
+            //names[nameIndex++] = g_strndup(pName+5,g_strlen(pName+5));
+            config[i].nextNum = get_str_count(descStrip, pName+5, strlen(descStrip)) - 1;
+            // set nextId
+            index = 0;
+            pName = pName + 5;
+            for(j=0;j<count;j++) {
+                if(!strncmp(items[j],pName,strlen(pName)))
+                    config[i].nextId[index++] = j;
+            }
+        } else {
+            config[i].nextNum = 1;
+            // next is the end or other sub branch, set -1
+            if((i==count-1) || (g_strstr_len(items[i+1], strlen(items[i+1]),"."))) {
+                config[i].nextId[0] = -1 * out_index;
+                out_index ++;
+            } else {
+                config[i].nextId[0] = i+1;
+            }
+        }
+
+        // set preId
+        // get parent branch name
+        pDot = g_strstr_len(p, strlen(items[i]),".");
+        if(pDot) {
+            // It is a sub branch
+            pName = p;
+            p = pDot + 1;
+            len = pDot - pName;
+            // find parent branch id
+            for(j=0;j<count;j++) {
+                pParentName = g_strstr_len(items[j], strlen(items[j]),"name=");
+                if(!pParentName)
+                    continue;
+                if(!strncmp(pParentName+5,pName, len)) {
+                    config[i].preId = j;
+                    break;
+                }
+            }
+        } else {
+            if(i==0) {
+                config[i].preId = -1;
+            } else {
+                config[i].preId = i - 1;
+            }
+        }
+
+        // get algo type
+        if(!strncmp(p, ALGO_DETECTION_NAME, sizeof(ALGO_DETECTION_NAME))) {
+            config[i].curType = ALGO_DETECTION;
+        } else if(!strncmp(p, ALGO_TRACKING_NAME, sizeof(ALGO_TRACKING_NAME))) {
+            config[i].curType = ALGO_TRACKING;
+        } else if(!strncmp(p, ALGO_CLASSIFICATION_NAME, sizeof(ALGO_CLASSIFICATION_NAME))) {
+            config[i].curType = ALGO_CLASSIFICATION;
+        }
+    }
+    *num = count;
+
+    g_strfreev(items);
+    return config;
+}
+
+
 AlgoPipelineHandle algo_pipeline_create(AlgoPipelineConfig* config, int num)
 {
     AlgoPipelineHandle handle = 0;

@@ -35,10 +35,14 @@ G_DEFINE_TYPE (CvdlFilter, cvdl_filter, GST_TYPE_BASE_TRANSFORM);
 
 //#define SYNC_WITH_DECODER
 
+char default_algo_pipeline_desc[] = "detection ! track ! classification";
+char default_algo_pipeline_desc2[] = "detection ! track name=tk ! tk.vehicle_classification  ! tk.person_face_detection ! face_recognication";
+
 /* GstVideoFlip properties */
 enum
 {
     PROP_0,
+    PROP_ALGO_PIPELINE_DESC,
     PROP_METHOD
 };
 
@@ -211,17 +215,31 @@ cvdl_filter_finalize (GObject * object)
         algo_pipeline_destroy(cvdlfilter->algoHandle);
     cvdlfilter->algoHandle = 0;
 
+    if(cvdlfilter->algo_pipeline_desc)
+        g_free(cvdlfilter->algo_pipeline_desc);
+    cvdlfilter->algo_pipeline_desc = NULL;
+
     G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 static GstStateChangeReturn
 cvdl_filter_change_state (GstElement * element, GstStateChange transition)
 {
   CvdlFilter *cvdlfilter = CVDL_FILTER (element);
+  AlgoPipelineConfig *config = NULL;
+  int count = 0;
   GstStateChangeReturn result;
+
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       // create the process task(thread) and start it
-
+      if(cvdlfilter->algo_pipeline_desc==NULL)
+          config = algo_pipeline_config_create(default_algo_pipeline_desc, &count);
+      else
+          config = algo_pipeline_config_create(cvdlfilter->algo_pipeline_desc, &count);
+      cvdlfilter->algoHandle = algo_pipeline_create(config, count);
+      algo_pipeline_start(cvdlfilter->algoHandle);
+      if(config)
+          algo_pipeline_config_destroy(config);
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       break;
@@ -252,14 +270,36 @@ cvdl_filter_change_state (GstElement * element, GstStateChange transition)
 static void
 cvdl_filter_set_property (GObject* object, guint prop_id, const GValue* value, GParamSpec* pspec)
 {
-    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+    CvdlFilter *cvdlfilter = CVDL_FILTER (object);
+
+    switch (prop_id) {
+        case PROP_ALGO_PIPELINE_DESC:
+            cvdlfilter->algo_pipeline_desc = g_value_dup_string (value);
+            break;
+        default:
+            G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+            break;
+    }
+
     return;
 }
 
 static void
 cvdl_filter_get_property (GObject* object, guint prop_id, GValue* value, GParamSpec* pspec)
 {
-    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+    CvdlFilter *cvdlfilter = CVDL_FILTER (object);
+
+    switch (prop_id) {
+        case PROP_ALGO_PIPELINE_DESC:
+            if(cvdlfilter->algo_pipeline_desc)
+                g_value_set_string (value, cvdlfilter->algo_pipeline_desc);
+            else
+                g_value_set_string (value, default_algo_pipeline_desc);
+            break;
+        default:
+            G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+            break;
+    }
 }
 
 static gboolean
@@ -444,6 +484,12 @@ cvdl_filter_class_init (CvdlFilterClass * klass)
         "Video CV/DL algorithm processing based on OpenVINO",
         "River,Li <river.li@intel.com>");
 
+    g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_ALGO_PIPELINE_DESC,
+         g_param_spec_string ("algopipeline", "AlgoPipelineDesc",
+             "CV/DL algo pipeline string, support detection, track, classification",
+             "detection ! track ! classification",
+             G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
     gst_element_class_add_pad_template (elem_class, gst_static_pad_template_get (&cvdl_src_factory));
     gst_element_class_add_pad_template (elem_class, gst_static_pad_template_get (&cvdl_sink_factory));
 
@@ -507,8 +553,5 @@ cvdl_filter_init (CvdlFilter* cvdl_filter)
     gst_task_set_lock (cvdl_filter->mPushTask, &cvdl_filter->mMutex);
     gst_task_set_enter_callback (cvdl_filter->mPushTask, NULL, NULL, NULL);
     gst_task_set_leave_callback (cvdl_filter->mPushTask, NULL, NULL, NULL);
-
-    cvdl_filter->algoHandle = algo_pipeline_create_default();
-    algo_pipeline_start(cvdl_filter->algoHandle);
 
 }
