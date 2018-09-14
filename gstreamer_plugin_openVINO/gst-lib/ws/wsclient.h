@@ -29,7 +29,7 @@ extern "C" {
 
 typedef void * WsClientHandle;
 
-WsClientHandle wsclient_setup(char *serverUri);
+WsClientHandle wsclient_setup(char *serverUri, int client_id);
 
 void wsclient_send_data(WsClientHandle handle, char *data, int len);
 

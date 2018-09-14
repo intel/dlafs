@@ -48,6 +48,7 @@ enum
 {
   PROP_0,
   PROP_WS_SERVER_URI,
+  PROP_WS_CLIENT_ID,
   PROP_LAST
 };
 
@@ -169,7 +170,7 @@ static void process_sink_buffers(gpointer userData)
 
     //setup wsclient
     if(!basesink->wsclient_handle)
-        basesink->wsclient_handle = wsclient_setup(basesink->wss_uri);
+        basesink->wsclient_handle = wsclient_setup(basesink->wss_uri, basesink->wsc_id);
 
     // txt data
     if(txt_buf) {
@@ -278,6 +279,9 @@ gst_ws_sink_set_property (GObject * object, guint prop_id,
     case PROP_WS_SERVER_URI:
         sink->wss_uri = g_value_dup_string (value);
         break;
+    case PROP_WS_CLIENT_ID:
+        sink->wsc_id = g_value_get_int(value);
+        break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -293,6 +297,9 @@ gst_ws_sink_get_property (GObject * object, guint prop_id, GValue * value,
   switch (prop_id) {
     case PROP_WS_SERVER_URI:
         g_value_set_string (value, sink->wss_uri);
+        break;
+    case PROP_WS_CLIENT_ID:
+        g_value_set_int (value, sink->wsc_id);
         break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -608,6 +615,12 @@ gst_ws_sink_class_init (GstWsSinkClass * klass)
           "The URI of WebSocket Server", "wss://localhost:8123/binaryEchoWithSize",
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_WS_CLIENT_ID,
+      g_param_spec_int ("wsclientid", "WS client Index",
+          "WebSocket client index to connected to WebSocket server(default: 0)",
+          0, G_MAXINT, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   /* src pad */
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_ws_bit_src_factory));
@@ -640,6 +653,7 @@ gst_ws_sink_init (GstWsSink * basesink, gpointer g_class)
 
     basesink->wsclient_handle = NULL;
     basesink->wss_uri = NULL;
+    basesink->wsc_id = 0;
 
     basesink->priv = priv = GST_WS_SINK_GET_PRIVATE (basesink);
 

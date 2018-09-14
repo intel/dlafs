@@ -105,6 +105,7 @@ struct _GstWsSink {
   // wsclient
   WsClientHandle wsclient_handle;
   gchar* wss_uri;
+  int wsc_id;
 
   /*< private >*/
   GstWsSinkPrivate *priv;

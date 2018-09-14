@@ -40,7 +40,7 @@ typedef struct _wsclient WsClient;
 
 #define DEFAULT_WSS_URI "wss://localhost:8123/binaryEchoWithSize"
 
-WsClientHandle wsclient_setup(char *serverUri)
+WsClientHandle wsclient_setup(char *serverUri, int client_id)
 {
     WsClient *wsclient = (WsClient *)g_new0 (WsClient, 1);
     if(!wsclient) {
@@ -49,11 +49,14 @@ WsClientHandle wsclient_setup(char *serverUri)
     }
     wsclient->client = NULL;
 
-    std::thread t([&wsclient, serverUri]{
+    std::thread t([&wsclient, serverUri, client_id]{
         uWS::Hub hub;
 
-        hub.onConnection([wsclient, serverUri](uWS::WebSocket<uWS::CLIENT> *ws, uWS::HttpRequest req) {
+        hub.onConnection([wsclient, serverUri, client_id](uWS::WebSocket<uWS::CLIENT> *ws, uWS::HttpRequest req) {
             wsclient->client = ws;
+            char msg[16];
+            g_snprintf(msg,16,"client_id=%d", client_id);
+            ws->send(msg, strlen(msg), uWS::OpCode::TEXT);
             g_print("SUCCESS to CONNECTE with %s!\n", serverUri);
         });
 
