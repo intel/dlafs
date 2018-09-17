@@ -1,22 +1,16 @@
 GXX := g++
 AR := ar
 
-#export GST_CFLAGS = $(shell pkg-config --cflags glib-2.0) $(shell pkg-config --cflags gstreamer-1.0)
+SYS_INC_DIR := /usr/include
+SYS_LIB_DIR := /usr/lib/x86_64-linux-gnu
 
-SYS_INC_DIR := $(PREFIX)/usr/include
-SYS_LIB_DIR := $(PREFIX)/usr/lib
-OPENCL_DIR := $(PREFIX)/opt/intel/opencl
-
-#GLIB_CFLAGS := -I$(SYS_INC_DIR)/glib-2.0 -I$(SYS_LIB_DIR)/glib-2.0/include
-#GST_CFLAGS  := -I$(SYS_INC_DIR)/gstreamer-1.0 -I$(SYS_LIB_DIR)/gstreamer-1.0/include
-DRM_CFLAGS  := -I$(SYS_INC_DIR)/libdrm
-OPENCL_CFLAGS := -I$(OPENCL_DIR)/include/
-GST_CFLAGS    := $(shell pkg-config --cflags gstreamer-1.0)
-
-
+GST_CFLAGS  := $(shell pkg-config --cflags glib-2.0) $(shell pkg-config --cflags gstreamer-1.0)
+DRM_CFLAGS  := -I$(SYS_INC_DIR)/drm
+OPENCL_CFLAGS := -I$(INTELOPENCLSDK)/include/
+OPENCV_CFLAGS := -I${INTEL_CVSDK_DIR}/opencv/include
 
 ARFLAGS := -rc
-CFLAGS  := -g -Wall -fpic $(GLIB_CFLAGS) $(GST_CFLAGS) $(DRM_CFLAGS) $(OPENCL_CFLAGS)
+CFLAGS  := -g -Wall -fpic $(GLIB_CFLAGS) $(GST_CFLAGS) $(DRM_CFLAGS) $(OPENCL_CFLAGS) $(OPENCV_CFLAGS)
 
 DIR_SRC := .
 DIR_OBJ := .

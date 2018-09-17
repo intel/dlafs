@@ -252,7 +252,7 @@ GstFlowReturn DetectionAlgo::algo_dl_init(const char* modeFileName)
         return ret;
     mIeInited = true;
 
-    ret = mIeLoader.set_device(InferenceEngine::TargetDevice::eHDDL);
+    ret = mIeLoader.set_device(InferenceEngine::TargetDevice::eMYRIAD);
     if(ret != GST_FLOW_OK){
         GST_ERROR("IE failed to set device be eHDDL!");
         return GST_FLOW_ERROR;

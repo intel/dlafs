@@ -24,7 +24,7 @@
 #define __GST_WS_SINK_H__
 
 #include <gst/gst.h>
-#include <gst/base/base-prelude.h>
+//#include <gst/base/base-prelude.h>
 #include <ws/wsclient.h>
 
 G_BEGIN_DECLS

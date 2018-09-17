@@ -1,7 +1,7 @@
 .PHONY: all clean
 
-SYS_INC_DIR := $(PREFIX)/usr/local/include
-SYS_LIB_DIR := $(PREFIX)/usr/local/lib
+SYS_INC_DIR := /usr/include/
+SYS_LIB_DIR := /usr/lib/x86_64-linux-gnu/
 
 all:
 	@$(MAKE) -C gst-lib

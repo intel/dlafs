@@ -76,7 +76,7 @@ GstFlowReturn IELoader::set_device(InferenceEngine::TargetDevice dev)
     case InferenceEngine::TargetDevice::eGPU:
         mIEPlugin = InferenceEnginePluginPtr("libclDNNPlugin.so");
         break;
-    case InferenceEngine::TargetDevice::eHDDL:
+    case InferenceEngine::TargetDevice::eMYRIAD:
         mIEPlugin = InferenceEnginePluginPtr(HDDL_PLUGIN);
         break;
     default:
@@ -129,7 +129,7 @@ GstFlowReturn IELoader::read_model(std::string strModelXml, std::string strModel
 
     std::map<std::string, std::string> networkConfig;
     networkConfig[InferenceEngine::PluginConfigParams::KEY_LOG_LEVEL] = InferenceEngine::PluginConfigParams::LOG_INFO;
-    networkConfig[VPU_CONFIG_KEY(HW_STAGES_OPTIMIZATION)] = CONFIG_VALUE(YES);
+    //networkConfig[VPU_CONFIG_KEY(HW_STAGES_OPTIMIZATION)] = CONFIG_VALUE(YES);
 
     switch(modelType) {
         case IE_MODEL_DETECTION:

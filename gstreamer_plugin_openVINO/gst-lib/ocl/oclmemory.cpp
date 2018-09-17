@@ -22,8 +22,8 @@
 
 #include <memory.h>
 #include <string.h>
-#include <xf86drm.h>
-#include <xf86drmMode.h>
+//#include <xf86drm.h>
+//#include <xf86drmMode.h>
 #include <va/va_drmcommon.h>
 #include <gst/allocators/gstdmabuf.h>
 

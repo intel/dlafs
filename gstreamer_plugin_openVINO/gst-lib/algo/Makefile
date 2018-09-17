@@ -1,21 +1,20 @@
 GXX := g++
 AR := ar
 
-GST_CFLAGS := $(shell pkg-config --cflags glib-2.0) $(shell pkg-config --cflags gstreamer-1.0)
+SYS_INC_DIR := /usr/include
+SYS_LIB_DIR := /usr/lib/x86_64-linux-gnu
 
-SYS_INC_DIR := $(PREFIX)/usr/include
-SYS_LIB_DIR := $(PREFIX)/usr/lib
-OPENCL_DIR := $(PREFIX)/opt/intel/opencl
-IE_DIR := $(PREFIX)/usr/local/include
+GST_CFLAGS  := $(shell pkg-config --cflags glib-2.0) $(shell pkg-config --cflags gstreamer-1.0)
+DRM_CFLAGS  := -I$(SYS_INC_DIR)/drm
+OPENCL_CFLAGS := -I$(INTELOPENCLSDK)/include/
+IE_CFLAGS   := -I${INTEL_CVSDK_DIR}/inference_engine/include
+OPENCV_CFLAGS := -I${INTEL_CVSDK_DIR}/opencv/include
 
-#GLIB_CFLAGS := -I$(SYS_INC_DIR)/glib-2.0 -I$(SYS_LIB_DIR)/glib-2.0/include
-#GST_CFLAGS  := -I$(SYS_INC_DIR)/gstreamer-1.0 -I$(SYS_LIB_DIR)/gstreamer-1.0/include
-DRM_CFLAGS  := -I$(SYS_INC_DIR)/libdrm
-OPENCL_CFLAGS := -I$(OPENCL_DIR)/include/
-IE_CFLAGS := -I$(IE_DIR)
+OPENCV_LIBS := -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_shape
+IE_LIBS := -L${INTEL_CVSDK_DIR}/inference_engine/lib/ubuntu_16.04/intel64 -linference_engine
 
 ARFLAGS := -rc
-CFLAGS  := -g -Wall -fpic -std=c++11 $(GLIB_CFLAGS) $(GST_CFLAGS) $(DRM_CFLAGS) $(OPENCL_CFLAGS) $(IE_CFLAGS)
+CFLAGS  := -g -Wall -fpic -std=c++11 $(GLIB_CFLAGS) $(GST_CFLAGS) $(DRM_CFLAGS) $(OPENCL_CFLAGS) $(IE_CFLAGS) $(OPENCV_CFLAGS)
 
 DIR_SRC := .
 DIR_OBJ := .

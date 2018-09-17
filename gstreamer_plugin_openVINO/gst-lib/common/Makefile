@@ -1,7 +1,7 @@
 GXX := g++
 AR := ar
 
-SYS_INC_DIR := $(PREFIX)/usr/include
+SYS_INC_DIR := /usr/include
 
 ARFLAGS := -rc
 CFLAGS  := -g -Wall -fpic

@@ -1,18 +1,15 @@
 GXX := g++
 AR := ar
 
-# export GST_CFLAGS = $(shell pkg-config --cflags glib-2.0)
+SYS_INC_DIR := /usr/include
+SYS_LIB_DIR := /usr/lib/x86_64-linux-gnu
 
-SYS_INC_DIR := $(PREFIX)/usr/include
-SYS_LIB_DIR := $(PREFIX)/usr/lib
-
-GLIB_CFLAGS := $(shell pkg-config --cflags glib-2.0)
-GST_CFLAGS  := $(shell pkg-config --cflags gstreamer-1.0)
-#GLIB_CFLAGS := -I$(SYS_INC_DIR)/glib-2.0 -I$(SYS_LIB_DIR)/glib-2.0/include
-#GST_CFLAGS  := -I$(SYS_INC_DIR)/gstreamer-1.0 -I$(SYS_LIB_DIR)/gstreamer-1.0/include
+GST_CFLAGS  := $(shell pkg-config --cflags glib-2.0) $(shell pkg-config --cflags gstreamer-1.0)
+OPENCL_CFLAGS := -I$(INTELOPENCLSDK)/include/
+OPENCV_CFLAGS := -I${INTEL_CVSDK_DIR}/opencv/include/
 
 ARFLAGS := -rc
-CFLAGS  := -g -Wall -fpic $(GLIB_CFLAGS) $(GST_CFLAGS)
+CFLAGS  := -g -Wall -fpic $(GLIB_CFLAGS) $(GST_CFLAGS) $(OPENCV_CFLAGS)
 
 DIR_INC := ../interface
 DIR_SRC := .
@@ -29,7 +26,7 @@ DYNAMIC_LIB := $(LIB_NAME).a
 SYS_INC_DIR := $(PREFIX)/usr/include
 OPENCL_DIR := $(PREFIX)/opt/intel/opencl
 
-INC := -I$(DIR_INC) -I$(OPENCL_DIR)/include/ -I$(SYS_INC_DIR) -I../ -I./
+INC := -I$(DIR_INC) -I$(OPENCL_CFLAGS) -I$(SYS_INC_DIR) -I../ -I./
 
 all: $(OBJS)
 	$(AR) $(ARFLAGS) $(DIR_LIB)/$(DYNAMIC_LIB) $(OBJS)
