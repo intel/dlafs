@@ -6,10 +6,12 @@ SYS_LIB_DIR := /usr/lib/x86_64-linux-gnu
 
 GST_CFLAGS  := $(shell pkg-config --cflags glib-2.0) $(shell pkg-config --cflags gstreamer-1.0)
 OPENCL_CFLAGS := -I$(INTELOPENCLSDK)/include/
-OPENCV_CFLAGS := -I${INTEL_CVSDK_DIR}/opencv/include/
+#OPENCV_CFLAGS := -I${INTEL_CVSDK_DIR}/opencv/include/
+OPENCV_CFLAGS := $(shell pkg-config --cflags opencv)
+VA_CFLAGS   :=  $(shell pkg-config --cflags libva)
 
 ARFLAGS := -rc
-CFLAGS  := -g -Wall -fpic $(GLIB_CFLAGS) $(GST_CFLAGS) $(OPENCV_CFLAGS)
+CFLAGS  := -g -Wall -fpic $(GLIB_CFLAGS) $(GST_CFLAGS) $(OPENCV_CFLAGS) $(VA_CFLAGS)
 
 DIR_INC := ../interface
 DIR_SRC := .

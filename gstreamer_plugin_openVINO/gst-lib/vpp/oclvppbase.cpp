@@ -75,7 +75,7 @@ OclVppBase::setOclContext (const SharedPtr<OclContext>& context)
     m_kernel = m_context->acquireKernelCV (getKernelName(), getKernelFileName());
     GST_LOG("kernel:%s - m_kernel = %p\n", getKernelName(), &m_kernel);
     if (m_kernel.empty()) {
-        GST_ERROR("invalid kernel file: %s.cl\n", getKernelFileName());
+        g_print("invalid kernel file: %s.cl\n", getKernelFileName());
         return OCL_FAIL;
     }
 #else

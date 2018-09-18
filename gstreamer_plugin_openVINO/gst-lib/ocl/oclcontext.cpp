@@ -39,7 +39,7 @@ using namespace cv::va_intel;
 namespace HDDLStreamFilter {
 
 #ifndef KERNEL_DIR
-#define KERNEL_DIR "/usr/local/lib/libgstcvdl/kernels/"
+#define KERNEL_DIR "/usr/lib/x86_64-linux-gnu/libgstcvdl/kernels/"
 #endif
 
 ///internal class hold device id and make sure *.cl compile in serial
