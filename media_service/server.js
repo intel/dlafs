@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 "use strict"; // http://ejohn.org/blog/ecmascript-5-strict-mode-json-and-more/
 const WebSocketServer = require('ws').Server;
 const WebSocket = require('ws');

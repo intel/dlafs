@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 const WebSocket = require('ws');
 var ab2str = require('arraybuffer-to-string');
 const fs = require('fs');
