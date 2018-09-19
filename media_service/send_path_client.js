@@ -6,8 +6,6 @@ const rl = readline.createInterface({
   output: process.stdout
 });
 
-
-
 const ws = new WebSocket("wss://localhost:8126/sendPath", {
     rejectUnauthorized: false
   });
@@ -22,20 +20,23 @@ ws.on('open', function () {
 
 ws.on('message',function(data){
 	console.log(`right now we have ${data} pipes`);
-	if(ws.readyState === WebSocket.OPEN){
-    rl.question('how many pipes do you want to start? ', (answer) => {
-    	if(typeof answer === 'numbers'){
-    		console.log(`all right, we will start new ${answer} pipes`);
-            ws.send(answer);
-    	} else{
-    		console.log('pleae type right format');
-    		rl.close();
-    		ws.close();
-    	}
 
-    
-    });
-  }  
+	if(ws.readyState === WebSocket.OPEN){
+
+        rl.question('how many pipes do you want to start? ', (answer) => {
+
+        	if(typeof answer === 'numbers'){
+        		console.log(`all right, we will start new ${answer} pipes`);
+                ws.send(answer);
+
+        	} else {
+        		console.log('pleae type right format');
+        		rl.close();
+        		ws.close();
+        	}
+
+        });
+    }  
 
 });
 
