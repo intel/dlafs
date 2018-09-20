@@ -25,8 +25,8 @@ ws.on('message',function(data){
 	if(ws.readyState === WebSocket.OPEN){
 
         rl.question('how many pipes do you want to start? ', (answer) => {
-
-        	if(typeof answer === 'numbers'){
+           console.log(parseInt(answer));
+        	if(!isNaN(parseInt(answer))){
         		console.log(`all right, we will start new ${answer} pipes`);
                 ws.send(answer);
 
