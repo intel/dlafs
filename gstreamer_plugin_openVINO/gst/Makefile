@@ -26,7 +26,7 @@ DIR_SRC := .
 DIR_OBJ := .
 DIR_LIB := .
 LIB_OCL_PATH := ..
-GST_LIBS_DIR := ../gst-lib
+GST_LIBS_DIR := ../gst-libs
 
 SRCS = cvdlfilter.c resconvert.c resmemory.c respool.c wssink.c plugin.c
 
