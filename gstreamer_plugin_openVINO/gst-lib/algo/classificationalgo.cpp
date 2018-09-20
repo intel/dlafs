@@ -290,7 +290,8 @@ GstFlowReturn ClassificationAlgo::parse_inference_result(InferenceEngine::Blob::
         return GST_FLOW_ERROR;
     }
 
-    auto resultBlobFp32 = std::dynamic_pointer_cast<InferenceEngine::TBlob<float> >(resultBlobPtr);
+    auto resultBlobFp32 
+        = std::dynamic_pointer_cast<InferenceEngine::TBlob<float> >(resultBlobPtr);
     //float *input = static_cast<float*>(resultBlobFp32->data());
 
     // Get top N results
@@ -340,7 +341,8 @@ GstBuffer* ClassificationAlgo::dequeue_buffer()
             break;
     }
     buf = algoData.mGstBuffer;
-    GST_LOG("cvdlfilter-dequeue: buf = %p(%d)\n", algoData.mGstBuffer, GST_MINI_OBJECT_REFCOUNT(algoData.mGstBuffer));
+    GST_LOG("cvdlfilter-dequeue: buf = %p(%d)\n", algoData.mGstBuffer,
+        GST_MINI_OBJECT_REFCOUNT(algoData.mGstBuffer));
 
     // put object data as meta data
     VASurfaceID surface;
@@ -350,7 +352,8 @@ GstBuffer* ClassificationAlgo::dequeue_buffer()
 
     for(unsigned int i=0; i<algoData.mObjectVec.size(); i++) {
         VideoRect rect;
-        std::vector<VideoPoint> &trajectoryPoints = algoData.mObjectVec[i].trajectoryPoints;
+        std::vector<VideoPoint> &trajectoryPoints 
+            = algoData.mObjectVec[i].trajectoryPoints;
         VideoPoint points[MAX_TRAJECTORY_POINTS_NUM];
         int count = trajectoryPoints.size();
         if(count>MAX_TRAJECTORY_POINTS_NUM)

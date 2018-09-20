@@ -86,7 +86,8 @@ GstFlowReturn IELoader::set_device(InferenceEngine::TargetDevice dev)
     }
     return GST_FLOW_OK;
 }
-GstFlowReturn IELoader::read_model(std::string strModelXml, std::string strModelBin, int modelType)
+GstFlowReturn IELoader::read_model(std::string strModelXml,
+        std::string strModelBin, int modelType)
 {
     std::unique_lock<std::mutex> _lock(requestCreateMutex);
 
@@ -128,7 +129,8 @@ GstFlowReturn IELoader::read_model(std::string strModelXml, std::string strModel
     mFirstOutputName = firstOutputInfo->first;
 
     std::map<std::string, std::string> networkConfig;
-    networkConfig[InferenceEngine::PluginConfigParams::KEY_LOG_LEVEL] = InferenceEngine::PluginConfigParams::LOG_INFO;
+    networkConfig[InferenceEngine::PluginConfigParams::KEY_LOG_LEVEL]
+        = InferenceEngine::PluginConfigParams::LOG_INFO;
     //networkConfig[VPU_CONFIG_KEY(HW_STAGES_OPTIMIZATION)] = CONFIG_VALUE(YES);
 
     switch(modelType) {
@@ -163,7 +165,8 @@ GstFlowReturn IELoader::read_model(std::string strModelXml, std::string strModel
     return GST_FLOW_OK;
 }
 
-GstFlowReturn IELoader::convert_input_to_blob(const cv::UMat& img, InferenceEngine::Blob::Ptr& inputBlobPtr)
+GstFlowReturn IELoader::convert_input_to_blob(const cv::UMat& img,
+    InferenceEngine::Blob::Ptr& inputBlobPtr)
 {
     if (inputBlobPtr->precision() != mInputPrecision) {
         GST_ERROR("loadImage error: blob must have only U8 precision");
@@ -285,9 +288,6 @@ GstFlowReturn IELoader::do_inference_async(CvdlAlgoData *algoData, uint64_t frmI
 
             if (this->mOutputPrecision == InferenceEngine::Precision::FP32)
             {
-                //auto resultBlobFp32 = std::dynamic_pointer_cast<InferenceEngine::TBlob<float> >(resultBlobPtr);
-                //parser_inference_result(resultBlobFp32->data(), sizeof(float), algoData);
-                //algo = static_cast<CvdlAlgoBase*>(algoData->algoBase);
                 CvdlAlgoBase *algo = algoData->algoBase;
                 GST_LOG("==========WaitAsync - do_inference_async begin: algo = %p(%p), algoData = %p\n",
                     algo, algoData->algoBase, algoData);

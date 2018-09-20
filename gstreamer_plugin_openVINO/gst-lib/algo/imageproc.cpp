@@ -53,12 +53,8 @@ ImageProcessor::~ImageProcessor()
     gst_video_info_init (&mInVideoInfo);
     gst_video_info_init (&mOutVideoInfo);
 
-    // relsease them by SharedPtr automatically
-    //mSrcFrame = NULL;
-    //mDstFrame = NULL;
-
-    //TODO - destory OCL context
-    // It will be done in OclVppBase::~OclVppBase ()
+    // mSrcFrame/mDstFrame will be relseased by SharedPtr automatically
+    // OCL context will be done in OclVppBase::~OclVppBase ()
 }
 GstFlowReturn ImageProcessor::ocl_init(GstCaps *incaps, GstCaps *oclcaps, int vppType, int vppSubType)
 {
@@ -146,7 +142,8 @@ void ImageProcessor::ocl_unlock()
     vpp_mutext.unlock();
 }
 
-GstFlowReturn ImageProcessor::process_image_crc(GstBuffer* inbuf, GstBuffer** outbuf, VideoRect *crop)
+GstFlowReturn ImageProcessor::process_image_crc(GstBuffer* inbuf,
+    GstBuffer** outbuf, VideoRect *crop)
 {
     VADisplay display;
 
@@ -200,7 +197,8 @@ GstFlowReturn ImageProcessor::process_image_crc(GstBuffer* inbuf, GstBuffer** ou
  *   *output: nv12 video buffer
  *    rect: the size of osd buffer
  */
-GstFlowReturn ImageProcessor::process_image_blend(GstBuffer* inbuf, GstBuffer* inbuf2, GstBuffer** outbuf, VideoRect *rect)
+GstFlowReturn ImageProcessor::process_image_blend(GstBuffer* inbuf,
+        GstBuffer* inbuf2, GstBuffer** outbuf, VideoRect *rect)
 {
     VADisplay display;
     GstBuffer *osd_buf, *dst_buf;
@@ -266,7 +264,8 @@ GstFlowReturn ImageProcessor::process_image_blend(GstBuffer* inbuf, GstBuffer* i
 
 }
 
-GstFlowReturn ImageProcessor::process_image(GstBuffer* inbuf, GstBuffer* inbuf2, GstBuffer** outbuf, VideoRect *crop)
+GstFlowReturn ImageProcessor::process_image(GstBuffer* inbuf,
+    GstBuffer* inbuf2, GstBuffer** outbuf, VideoRect *crop)
 {
     GstFlowReturn ret = GST_FLOW_OK;
     switch(mOclVppType){

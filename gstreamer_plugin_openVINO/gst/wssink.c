@@ -46,10 +46,10 @@ struct _GstWsSinkPrivate
 /* WsSink properties */
 enum
 {
-  PROP_0,
-  PROP_WS_SERVER_URI,
-  PROP_WS_CLIENT_ID,
-  PROP_LAST
+    PROP_0,
+    PROP_WS_SERVER_URI,
+    PROP_WS_CLIENT_ID,
+    PROP_LAST
 };
 
 #define TXT_BUFFER_SIZE_MAX 1024
@@ -230,27 +230,27 @@ static void process_sink_buffers(gpointer userData)
 static GstCaps *
 gst_ws_sink_query_caps (GstWsSink * bsink, GstPad * pad, GstCaps * filter)
 {
-  GstCaps *caps = NULL, *temp=NULL;
-  GstPadDirection direction = GST_PAD_DIRECTION (pad);
+    GstCaps *caps = NULL, *temp=NULL;
+    GstPadDirection direction = GST_PAD_DIRECTION (pad);
 
-  if(direction==GST_PAD_SRC) {
-    g_print("It has no src pad!!!\n");
-    return NULL;
-  }
+    if(direction==GST_PAD_SRC) {
+        g_print("It has no src pad!!!\n");
+        return NULL;
+    }
 
-  if(filter) {
-    temp = gst_pad_get_pad_template_caps (pad);
-    caps = gst_caps_intersect_full (filter, temp, GST_CAPS_INTERSECT_FIRST);
-    gst_caps_unref(temp);
-  } else {
-    caps = gst_pad_get_pad_template_caps (pad);
-  }
+    if(filter) {
+        temp = gst_pad_get_pad_template_caps (pad);
+        caps = gst_caps_intersect_full (filter, temp, GST_CAPS_INTERSECT_FIRST);
+        gst_caps_unref(temp);
+    } else {
+        caps = gst_pad_get_pad_template_caps (pad);
+    }
 
-  GST_LOG("filter_caps = %s\n", gst_caps_to_string(filter));
-  GST_LOG("pad_caps = %s\n", gst_caps_to_string(temp));
-  GST_LOG("caps = %s\n", gst_caps_to_string(caps));
+    GST_LOG("filter_caps = %s\n", gst_caps_to_string(filter));
+    GST_LOG("pad_caps = %s\n", gst_caps_to_string(temp));
+    GST_LOG("caps = %s\n", gst_caps_to_string(caps));
 
-  return caps;
+    return caps;
 }
 
 static GstCaps *
@@ -588,57 +588,56 @@ static void gst_ws_sink_finalize (GObject * object);
 static void
 gst_ws_sink_class_init (GstWsSinkClass * klass)
 {
-  GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
+    GObjectClass *gobject_class;
+    GstElementClass *gstelement_class;
 
-  gobject_class = G_OBJECT_CLASS (klass);
-  gstelement_class = GST_ELEMENT_CLASS (klass);
+    gobject_class = G_OBJECT_CLASS (klass);
+    gstelement_class = GST_ELEMENT_CLASS (klass);
 
-  GST_DEBUG_CATEGORY_INIT (gst_ws_sink_debug, "basesink", 0,
-      "basesink element");
+    GST_DEBUG_CATEGORY_INIT (gst_ws_sink_debug, "basesink", 0,
+        "basesink element");
 
-  g_type_class_add_private (klass, sizeof (GstWsSinkPrivate));
+    g_type_class_add_private (klass, sizeof (GstWsSinkPrivate));
+    parent_class = g_type_class_peek_parent (klass);
 
-  parent_class = g_type_class_peek_parent (klass);
+    gobject_class->finalize = gst_ws_sink_finalize;
+    gobject_class->set_property = gst_ws_sink_set_property;
+    gobject_class->get_property = gst_ws_sink_get_property;
 
-  gobject_class->finalize = gst_ws_sink_finalize;
-  gobject_class->set_property = gst_ws_sink_set_property;
-  gobject_class->get_property = gst_ws_sink_get_property;
-
-  gst_element_class_set_details_simple (gstelement_class,
+    gst_element_class_set_details_simple (gstelement_class,
       "WsSink", "Sink",
       "Send inference data(jpeg and parameters) based on WebSocket",
       "River,Li <river.li@intel.com>");
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_WS_SERVER_URI,
+    g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_WS_SERVER_URI,
       g_param_spec_string ("wssuri", "WebSocketUri",
           "The URI of WebSocket Server", "wss://localhost:8123/binaryEchoWithSize",
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_WS_CLIENT_ID,
+    g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_WS_CLIENT_ID,
       g_param_spec_int ("wsclientid", "WS client Index",
           "WebSocket client index to connected to WebSocket server(default: 0)",
           0, G_MAXINT, 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  /* src pad */
-  gst_element_class_add_pad_template (gstelement_class,
+    /* src pad */
+    gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_ws_bit_src_factory));
-  gst_element_class_add_pad_template (gstelement_class,
+    gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_ws_txt_src_factory));
 
-  gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_ws_sink_change_state);
-  gstelement_class->send_event = GST_DEBUG_FUNCPTR (gst_ws_sink_send_event);
-  gstelement_class->query = GST_DEBUG_FUNCPTR (default_element_query);
+    gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_ws_sink_change_state);
+    gstelement_class->send_event = GST_DEBUG_FUNCPTR (gst_ws_sink_send_event);
+    gstelement_class->query = GST_DEBUG_FUNCPTR (default_element_query);
 
-  /* Registering debug symbols for function pointers */
-  GST_DEBUG_REGISTER_FUNCPTR (gst_ws_sink_fixate);
-  GST_DEBUG_REGISTER_FUNCPTR (gst_ws_sink_pad_activate);
-  GST_DEBUG_REGISTER_FUNCPTR (gst_ws_sink_pad_activate_mode);
-  GST_DEBUG_REGISTER_FUNCPTR (gst_ws_sink_event);
-  GST_DEBUG_REGISTER_FUNCPTR (gst_ws_sink_bit_chain);
-  GST_DEBUG_REGISTER_FUNCPTR (gst_ws_sink_txt_chain);
-  GST_DEBUG_REGISTER_FUNCPTR (gst_ws_sink_sink_query);
+    /* Registering debug symbols for function pointers */
+    GST_DEBUG_REGISTER_FUNCPTR (gst_ws_sink_fixate);
+    GST_DEBUG_REGISTER_FUNCPTR (gst_ws_sink_pad_activate);
+    GST_DEBUG_REGISTER_FUNCPTR (gst_ws_sink_pad_activate_mode);
+    GST_DEBUG_REGISTER_FUNCPTR (gst_ws_sink_event);
+    GST_DEBUG_REGISTER_FUNCPTR (gst_ws_sink_bit_chain);
+    GST_DEBUG_REGISTER_FUNCPTR (gst_ws_sink_txt_chain);
+    GST_DEBUG_REGISTER_FUNCPTR (gst_ws_sink_sink_query);
 }
 
 

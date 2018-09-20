@@ -21,7 +21,6 @@
  */
 
 /*
- * barrier_block_queue.h
  *
  *  Created on: Oct 17, 2017
  *      Author: xiping

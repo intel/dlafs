@@ -138,8 +138,9 @@ public:
     {
 
     }
-    virtual GstFlowReturn parse_inference_result(InferenceEngine::Blob::Ptr &resultBlobPtr,
-                                                  int precision, CvdlAlgoData *outData, int objId)
+    virtual GstFlowReturn parse_inference_result(
+        InferenceEngine::Blob::Ptr &resultBlobPtr,
+        int precision, CvdlAlgoData *outData, int objId)
     {
         return GST_FLOW_OK;
     }
@@ -164,11 +165,6 @@ public:
     /* link algo to form a algo chain/pipeline */
     CvdlAlgoBase *mNext;
     CvdlAlgoBase *mPrev;
-
-    /* pool to allocate buffer for cv/dl algorithm processing, OCL buffer 
-       *    buffer size is: mInputWidth x mInputHeight
-       */
-    //GstBufferPool *mPool;
 
     // queue input buffer
     thread_queue<CvdlAlgoData> mInQueue;

@@ -51,16 +51,12 @@ res_memory_acquire (GstBuffer* buffer)
     GstMemory *memory = gst_buffer_peek_memory (buffer, 0);
 
     if (memory ) {
-        // Do not use qdata
-        //ResMemory* res_mem = (ResMemory*)
-        //    gst_mini_object_get_qdata (GST_MINI_OBJECT (memory), RES_MEMORY_QUARK);
-
         ResMemory* res_mem = (ResMemory*)memory;
         if (res_mem &&
-            !strcmp (GST_MEMORY_CAST(res_mem)->allocator->mem_type, RES_ALLOCATOR_NAME))
+            !strcmp (GST_MEMORY_CAST(res_mem)->allocator->mem_type,
+                RES_ALLOCATOR_NAME))
             return res_mem;
     }
-
     return NULL;
 }
 

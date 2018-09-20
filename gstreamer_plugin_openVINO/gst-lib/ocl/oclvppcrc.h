@@ -23,10 +23,7 @@
 #ifndef _OCL_VPP_CRC_H_
 #define _OCL_VPP_CRC_H_
 
-//#include <vector>
 #include "oclvppbase.h"
-
-//using std::vector;
 
 namespace HDDLStreamFilter
 {

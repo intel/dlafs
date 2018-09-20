@@ -371,10 +371,6 @@ gboolean
 OclDevice::init ()
 {
 #if 1
-    //cv::ocl::Context& ctx = cv::ocl::Context::getDefault();
-    //m_context = (cl_context)m_ocvContext.ptr();
-    //m_device  = (cl_device_id)m_ocvContext.device(0).ptr();
-
     m_context  = (cl_context)Context::getDefault().ptr();
     m_device  = (cl_device_id)Context::getDefault().device(0).ptr();
 

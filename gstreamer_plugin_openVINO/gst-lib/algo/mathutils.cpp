@@ -102,7 +102,9 @@ cv::Rect MathUtils::verify_rect(int W, int H, cv::Rect rt)
 /**
  * @brief Calc two rectangles overlap ratio
  */
-void MathUtils::get_overlap_ratio(cv::Rect rt1, cv::Rect rt2, float& ratio12, float& ratio21) {
+void MathUtils::get_overlap_ratio(cv::Rect rt1,
+    cv::Rect rt2, float& ratio12, float& ratio21)
+{
     int x1 = MAX(rt1.x, rt2.x);
     int y1 = MAX(rt1.y, rt2.y);
     int x2 = MIN(rt1.x + rt1.width, rt2.x + rt2.width);
@@ -119,7 +121,8 @@ void MathUtils::get_overlap_ratio(cv::Rect rt1, cv::Rect rt2, float& ratio12, fl
     ratio21 = ol / (rt1.width * rt1.height);
 }
 
-cv::Rect MathUtils::convert_rect(cv::Rect rect, int oldBaseW, int oldBaseH, int newBaseW, int newBaseH)
+cv::Rect MathUtils::convert_rect(cv::Rect rect,
+    int oldBaseW, int oldBaseH, int newBaseW, int newBaseH)
 {
     cv::Rect rt;
 

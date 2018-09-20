@@ -127,11 +127,7 @@ static void track_algo_func(gpointer userData)
     #else
     trackAlgo->track_objects_fast(algoData);
     #endif
-
-    //------------test---remove this code -----------------
-    // update object data
     trackAlgo->update_track_object(algoData->mObjectVec);
-
 
     // TODO: need cache 2 or more frames to choose the best one
 
@@ -406,7 +402,8 @@ bool TrackAlgo::track_one_object(cv::Mat& curFrame, TrackObjAttribute& curObj, c
     return true;
 }
 
-void TrackAlgo::figure_out_trajectory_points(ObjectData &objectVec, TrackObjAttribute& curObj)
+void TrackAlgo::figure_out_trajectory_points(
+    ObjectData &objectVec, TrackObjAttribute& curObj)
 {
     std::vector<cv::Rect> &rectVec = curObj.vecPos;
     cv::Rect rect;
@@ -414,8 +411,10 @@ void TrackAlgo::figure_out_trajectory_points(ObjectData &objectVec, TrackObjAttr
     MathUtils utils;
     for(unsigned int i=0; i<rectVec.size(); i++) {
         VideoPoint point;
-        rect = utils.convert_rect(rectVec[i],mInputWidth, mInputHeight,
-                           mImageProcessorInVideoWidth, mImageProcessorInVideoHeight);
+        rect = utils.convert_rect(
+            rectVec[i],mInputWidth, mInputHeight,
+            mImageProcessorInVideoWidth,
+            mImageProcessorInVideoHeight);
         point.x = rect.x + rect.width/2;
         point.y = rect.y + rect.height/2;
         objectVec.trajectoryPoints.push_back(point);
@@ -423,8 +422,9 @@ void TrackAlgo::figure_out_trajectory_points(ObjectData &objectVec, TrackObjAttr
     return ;
 }
 
-cv::Rect TrackAlgo::compare_detect_predict(std::vector<ObjectData>& objectVec, TrackObjAttribute& curObj, 
-                                                   cv::Rect predictRt, bool& bDetect)
+cv::Rect TrackAlgo::compare_detect_predict(
+    std::vector<ObjectData>& objectVec, TrackObjAttribute& curObj, 
+    cv::Rect predictRt, bool& bDetect)
 {
     cv::Rect objRect;
     MathUtils utils;
@@ -481,7 +481,8 @@ void TrackAlgo::get_roi_rect(cv::Rect& roiRect, cv::Rect curRect)
 
 // Add a new rect to tracking obj, check whether crop roi in the src image.
 //    curRT is based on trackinge size
-void TrackAlgo::add_track_obj(CvdlAlgoData* &algoData, cv::Rect curRt, TrackObjAttribute& curObj, bool bDetect)
+void TrackAlgo::add_track_obj(CvdlAlgoData* &algoData,
+    cv::Rect curRt, TrackObjAttribute& curObj, bool bDetect)
 {
     // Add real-time detect or track result.
     curObj.vecPos.push_back(curRt);
@@ -670,7 +671,6 @@ bool TrackAlgo::is_at_buttom(TrackObjAttribute& curObj)
 {
     cv::Rect rt = curObj.getLastPos();
 
-    //if (rt.height < 200 && rt.y + rt.height > RSZ_DETECT_SIZE - 10) {
     if (rt.height < 60 && rt.y + rt.height > mInputHeight - 5) {
         return true;
     }
@@ -688,7 +688,8 @@ void TrackAlgo::update_track_object(std::vector<ObjectData> &objectVec)
         for(unsigned int i=0; i<objectVec.size(); i++){
             ObjectData& objectData = objectVec[i];
             if(objectData.id == (*it).objId) {
-                score = objectData.figure_score(mImageProcessorInVideoWidth, mImageProcessorInVideoHeight);
+                score = objectData.figure_score(mImageProcessorInVideoWidth,
+                    mImageProcessorInVideoHeight);
                 if((score > 1.0) && (score >= (*it).score) && (*it).fliped==false) {
                     objectData.flags |= FLAGS_TRACKED_DATA_IS_PASS;
                     (*it).fliped = true;

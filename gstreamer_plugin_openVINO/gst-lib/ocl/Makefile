@@ -13,6 +13,7 @@ OPENCV_CFLAGS := $(shell pkg-config --cflags opencv)
 ARFLAGS := -rc
 CFLAGS  := -g -Wall -fpic $(GLIB_CFLAGS) $(GST_CFLAGS) $(DRM_CFLAGS) $(OPENCL_CFLAGS) $(OPENCV_CFLAGS) $(VA_CFLAGS)
 
+DIR_INC := ../interface
 DIR_SRC := .
 DIR_OBJ := .
 DIR_LIB := .
@@ -20,11 +21,11 @@ DIR_LIB := .
 SRC := $(wildcard *.cpp)
 OBJ := $(patsubst %.cpp, %.o, ${SRC})
 
-LIB_NAME    := libocl_ocl
+LIB_NAME    := libocl_vpp
 SHARE_LIB   := $(LIB_NAME).so
 DYNAMIC_LIB := $(LIB_NAME).a
 
-INC := -I../ -I$(SYS_INC_DIR)
+INC := -I../ -I$(SYS_INC_DIR) -I$(DIR_INC)
 
 all: $(OBJ)
 	$(AR) $(ARFLAGS) $(DIR_LIB)/$(DYNAMIC_LIB) $(OBJ)

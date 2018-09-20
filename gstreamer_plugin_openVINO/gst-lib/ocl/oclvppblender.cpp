@@ -42,30 +42,7 @@ namespace HDDLStreamFilter
 #ifdef USE_CV_OCL
 OclStatus OclVppBlender::blend_helper ()
 {
-    gboolean ret;
-
-    #if 0
-    cl_int err;
-    cl_context context = m_context->getContext();
-    cl_image_desc desc =
-    {
-        CL_MEM_OBJECT_IMAGE2D,
-        m_dst_w*4,
-        m_dst_h,
-        0, 0, // depth, array size (unused)
-        m_dst_w*4,
-        0, 0, 0, 0
-    };
-    cl_image_format format;
-    format.image_channel_order = CL_RGBA;
-    format.image_channel_data_type = CL_UNORM_INT8;
-    clBuffer_osd = clCreateImage(context, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR ,&format,
-                    (const cl_image_desc *)&desc, (void *)m_src->cl_memory[0], &err);
-    clBuffer_dst = clCreateImage(context, CL_MEM_WRITE_ONLY | CL_MEM_USE_HOST_PTR ,&format,
-                    (const cl_image_desc *)&desc, (void *)m_dst->cl_memory[0], &err);
-
-    m_kernel.args(m_src2->cl_memory[0], m_src2->cl_memory[1], clBuffer_osd, clBuffer_dst, m_dst_w, m_dst_h);
-    #endif    
+    gboolean ret;   
     m_kernel.args(m_src2->cl_memory[0], m_src2->cl_memory[1], m_src->cl_memory[0],
                   m_dst->cl_memory[0], m_dst_w, m_dst_h);
 
