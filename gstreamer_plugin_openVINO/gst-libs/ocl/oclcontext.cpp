@@ -269,7 +269,16 @@ OclDevice::OclDevice () : m_context(0), m_queue(0),
 OclDevice::~OclDevice ()
 {
 #ifdef USE_CV_OCL
+    g_print("destroy ocl begin...\n");
     releaseKernelCVMap ();
+    //cv::ocl::Context::initializeContextFromHandle(Context::getDefault(false), NULL, NULL, NULL);
+    //if(m_instance.use_count()==1)
+    {
+        Queue &q = Queue::getDefault();
+        q = Queue();
+        Context& ctx = Context::getDefault();
+        ctx = Context();
+    }
 #else
     releaseKernelMap ();
     finish ();
@@ -308,7 +317,8 @@ OclDevice::InitDevice ()
     cl_uint nDevices = 0;
 
     error = clGetDeviceIDsFromVA_APIMediaAdapterINTEL (m_platform,
-        CL_VA_API_DISPLAY_INTEL, m_display, CL_PREFERRED_DEVICES_FOR_VA_API_INTEL, 1, &m_device, &nDevices);
+        CL_VA_API_DISPLAY_INTEL, m_display, CL_PREFERRED_DEVICES_FOR_VA_API_INTEL,
+        1, &m_device, &nDevices);
 
     if (error) {
         return error;

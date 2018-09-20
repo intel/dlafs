@@ -97,6 +97,7 @@ void CvdlAlgoBase::stop_algo_thread()
 {
     gst_task_set_state(mTask, GST_TASK_STOPPED);
     mInQueue.flush();
+    wait_work_done();
     gst_task_join(mTask);
 }
 

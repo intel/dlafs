@@ -347,7 +347,6 @@ res_convert_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         // free caps
         gst_caps_unref(newcaps);
         gst_caps_unref (prev_incaps);
-        gst_caps_unref(caps);
 
         // TODO: set caps for txt_srcpad
 
