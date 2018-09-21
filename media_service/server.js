@@ -7,6 +7,7 @@ const fs = require('fs');
 const https = require('https');
 var spawn = require('child_process').spawn;
 
+var client_id = 0;
 
 const path_server = https.createServer({
   cert: fs.readFileSync('server-cert.pem'),
@@ -20,34 +21,34 @@ path_wss.on('connection', function(ws) {
     ws.on('message', function(path) {
 
         if(path.length > 3){
-
-        console.log('received path: ' + path);
-        gst_cmd='gst-launch-1.0 filesrc location=' + path + ' ! qtdemux ! h264parse ! mfxh264dec ! cvdlfilter ! resconvert name=res res.src_pic ! mfxjpegenc ! wssink name=ws res.src_txt ! ws.';
-	      console.log('gst_cmd = ' + gst_cmd);
-
+            console.log('received path: ' + path);
+            // TODO: parse path to decide to choose proper elements
+            gst_cmd_path ='gst-launch-1.0 filesrc location=' + path + ' ! qtdemux ! h264parse ! mfxh264dec ! cvdlfilter ! resconvert name=res res.src_pic ! mfxjpegenc ';
+	    gst_cmd = gst_cmd_path + ' ! wssink name=ws wsclientid=' + client_id +' res.src_txt ! ws.';
+	    console.log('gst_cmd = ' + gst_cmd);
         } else {
+            pipe  = pipe + parseInt(path);
 
-        pipe  = pipe + parseInt(path);
+            for(var i=0; i<parseInt(path);i++){
+                gst_cmd = gst_cmd_path + ' ! wssink name=ws wsclientid=' + client_id +' res.src_txt ! ws.';
+	        client_id++;
+                console.log('gst_cmd = ' + gst_cmd);
+                var child = spawn(gst_cmd , {
+                   shell: true
+                });
 
-        for(var i=0; i<parseInt(path);i++){
+                child.stderr.on('data', function (data) {
+                    console.error("STDERR:", data.toString());
+                });
 
-            var child = spawn(gst_cmd , {
-                shell: true
-            });
+                child.stdout.on('data', function (data) {
+                    console.log("STDOUT:", data.toString());
+                });
 
-            child.stderr.on('data', function (data) {
-                console.error("STDERR:", data.toString());
-            });
-
-            child.stdout.on('data', function (data) {
-                 console.log("STDOUT:", data.toString());
-             });
-
-            child.on('exit', function (exitCode) {
-                console.log("Child exited with code: " + exitCode);
-            });
-        }
-
+                child.on('exit', function (exitCode) {
+                   console.log("Child exited with code: " + exitCode);
+                });
+            }
       }
       ws.send(pipe);
     });
@@ -67,6 +68,7 @@ let userArray = [];
 let receive_client = 0;
 let pipe = 0;
 let gst_cmd = 0;
+let gst_cmd_path = 0;
 
 const data_server = https.createServer({
   cert: fs.readFileSync('server-cert.pem'),
@@ -108,13 +110,10 @@ data_wss.on('connection', function connection(ws) {
         receive_client.send(userArray.indexOf(ws));
         receive_client.send(data);
       }
-
   });
 
   ws.on('close', function (close) {
-
-        console.log("client closed");
-
+      console.log("client closed");
   });
 
 });
@@ -127,7 +126,6 @@ function ClientVerify(info) {
    params = url.parse(info.req.url, true).query;
 
    return ret;
-
 }
 
 path_server.listen(8126);

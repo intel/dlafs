@@ -12,22 +12,24 @@ const ws = new WebSocket("wss://localhost:8126/sendPath", {
   });
 
 
+function input_stream_source() {
+    rl.question('Please input the stream source: ', (answer) => {
+        console.log(answer);
+        if(answer.trim()!==""){
+            console.log(`stream source is: ${answer}`);
+            ws.send(answer);
+        } else {
+            var buf='~/1600x1200.mp4';
+            console.log(`use default stream source: ${buf}`);
+            ws.send(buf);
+        }
+    });
+}
+
 ws.on('open', function () {
     console.log(`[SEND_PATH_CLIENT] open()`);
-
-    rl.question('Please set the stream source: ', (answer) => {
-        console.log(answer);
-                if(answer.trim()!==""){
-                    console.log(`stream source is: ${answer}`);
-                    ws.send(answer);
-                } else {
-                   var buf='~/1600x1200.mp4';
-                   console.log(`use default stream source: ${buf}`);
-                   ws.send(buf);
-                }
-
-    });
-//    console.log(`[SEND_PATH_CLIENT] path send!`);
+    input_stream_source();
+//  console.log(`[SEND_PATH_CLIENT] path send!`);
 });
 
 ws.on('message',function(data){
@@ -35,16 +37,15 @@ ws.on('message',function(data){
 
 	if(ws.readyState === WebSocket.OPEN){
 
-        rl.question('how many pipes do you want to start? ', (answer) => {
+        rl.question('How many pipes do you want to start? ', (answer) => {
            console.log(parseInt(answer));
         	if(!isNaN(parseInt(answer))){
-        		console.log(`all right, we will start new ${answer} pipes`);
-                ws.send(answer);
-
+                    console.log(`We will start new ${answer} pipes`);
+                    ws.send(answer);
         	} else {
-        		console.log('pleae type right format');
-        		rl.close();
-        		ws.close();
+                    console.log('Pleae type right format');
+                    rl.close();
+                    ws.close();
         	}
 
         });
@@ -55,10 +56,9 @@ ws.on('message',function(data){
 
 ws.on('error', function () {
     console.log(`connect wrong!`);
-
 }); 
 
 ws.on('close', function () {
     console.log(`Right now I'll clear all pipes!`);
-
 });
+
