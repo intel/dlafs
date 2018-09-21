@@ -274,6 +274,7 @@ OclDevice::~OclDevice ()
     //cv::ocl::Context::initializeContextFromHandle(Context::getDefault(false), NULL, NULL, NULL);
     //if(m_instance.use_count()==1)
     {
+        Queue::getDefault().finish();
         Queue &q = Queue::getDefault();
         q = Queue();
         Context& ctx = Context::getDefault();
