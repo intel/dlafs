@@ -220,8 +220,13 @@ ClassificationAlgo::~ClassificationAlgo()
 void ClassificationAlgo::set_data_caps(GstCaps *incaps)
 {
     // load IE and cnn model
-    // TODO: filename can be passed from application 
-    std::string filenameXML = std::string(MODEL_DIR"/vehicle_classify/carmodel_fine_tune_1062_bn_iter_370000.xml");
+    std::string filenameXML;
+    const gchar *env = g_getenv("CVDL_CLASSIFICATION_MODEL_FULL_PATH");
+    if(env) {
+        filenameXML = std::string(env);
+    }else{
+        filenameXML = std::string(CVDL_MODEL_DIR_DEFAULT"/vehicle_classify/carmodel_fine_tune_1062_bn_iter_370000.xml");
+    }
     algo_dl_init(filenameXML.c_str());
 
     //get data size of ie input

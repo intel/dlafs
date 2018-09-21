@@ -215,7 +215,13 @@ void DetectionAlgo::set_label_names(const char** label_names)
 void DetectionAlgo::set_data_caps(GstCaps *incaps)
 {
     // load IE and cnn model
-    std::string filenameXML = std::string(MODEL_DIR"/vehicle_detect/yolov1-tiny.xml");
+    std::string filenameXML;
+    const gchar *env = g_getenv("CVDL_DETECTION_MODEL_FULL_PATH");
+    if(env){
+        filenameXML = std::string(env);
+    }else{
+        filenameXML = std::string(CVDL_MODEL_DIR_DEFAULT"/vehicle_detect/yolov1-tiny.xml");
+    }
     algo_dl_init(filenameXML.c_str());
 
     //get data size of ie input
