@@ -30,6 +30,10 @@
 #include <gst/gstpad.h>
 #include <opencv2/opencv.hpp>
 
+#define SET_SATURATE(X, L, H) \
+        if(X<L) X=L; \
+        else if(X>H) X=H;
+
 
 class TrackObjAttribute;
 
@@ -94,31 +98,9 @@ public:
     bool fliped; // whether it is fliped into next component.
 
 	int notDetectNum;	/* The object is not detected in the continuous notDetectNum, stop tracking and report. */
-
 	std::vector<cv::Rect> vecPos;	/* Every frame vehicle position based on tracking size */
-
-	std::vector<bool> _vecRoiBRecognized;	/* Whether if had recognized. */
- 	std::vector<cv::Rect> _vecRoiPosInSrc;	/* Detect position in _vecSrc; */
-
 	bool bBottom;	// Had arrived at image bottom; default = false;
 
-	/**
-	 * @brief Put src image and vehicle roi image,
-	 */
-	void putImgROI(/*cv::Mat src, cv::Mat roi, */cv::Rect rtRoiInsrc)
-	{
-		//_vecSrc.push_back(src);
-		//_vecRoi.push_back(roi);
-		_vecRoiPosInSrc.push_back(rtRoiInsrc);
-		_vecRoiBRecognized.push_back(false);
-	}
-
-    cv::Rect getImgROI()
-    {
-        if(_vecRoiPosInSrc.size()>0)
-            return _vecRoiPosInSrc[_vecRoiPosInSrc.size() - 1];
-        return cv::Rect(0, 0, 0, 0);
-    }
 	/**
 	 * @brief Get current last vehicle for NVR show.
 	 */
@@ -141,30 +123,14 @@ public:
 					- (vecPos[lastId].x + vecPos[lastId].width / 2);
 			shiftY = (vecPos[lastId + 1].y + vecPos[lastId + 1].height / 2)
 					- (vecPos[lastId].y + vecPos[lastId].height / 2);
-
-			// x=[-5,5]
-			// y=[1,+]
 			shiftY = MAX(1, shiftY);
-//			if (shiftY > 100) {
-//				shiftY = 100;
-//			}
-			if (shiftY < 1) {
-				shiftY = 1;
-			}
-
-			if (shiftX > 5) {
-				shiftX = 5;
-			}
-			if (shiftX < -5) {
-				shiftX = -5;
-			}
+            SET_SATURATE(shiftX, -5, 5);
 		}
 		else{
 			shiftX = 0;
 			shiftY = 2;
 		}
 	}
-
 };
 
 #endif
