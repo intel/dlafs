@@ -22,9 +22,14 @@ path_wss.on('connection', function(ws) {
 
         if(path.length > 3){
             console.log('received path: ' + path);
+
             // TODO: parse path to decide to choose proper elements
-            gst_cmd_path ='gst-launch-1.0 filesrc location=' + path + ' ! qtdemux ! h264parse ! mfxh264dec ! cvdlfilter ! resconvert name=res res.src_pic ! mfxjpegenc ';
-	    gst_cmd = gst_cmd_path + ' ! wssink name=ws wsclientid=' + client_id +' res.src_txt ! ws.';
+            if(path.indexOf("rtsp") >= 0){
+                gst_cmd_path ='gst-launch-1.0 rtspsrc location=' + path + ' udp-buff-size=800000 ! rtph264depay ! h264parse ! mfxh264dec ! cvdlfilter ! resconvert name=res res.src_pic ! mfxjpegenc ';
+            } else {
+                gst_cmd_path ='gst-launch-1.0 filesrc location=' + path + ' ! qtdemux ! h264parse ! mfxh264dec ! cvdlfilter ! resconvert name=res res.src_pic ! mfxjpegenc ';
+	    }
+            gst_cmd = gst_cmd_path + ' ! wssink name=ws wsclientid=' + client_id +' res.src_txt ! ws.';
 	    console.log('gst_cmd = ' + gst_cmd);
         } else {
             pipe  = pipe + parseInt(path);
