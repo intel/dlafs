@@ -269,7 +269,6 @@ OclDevice::OclDevice () : m_context(0), m_queue(0),
 OclDevice::~OclDevice ()
 {
 #ifdef USE_CV_OCL
-    g_print("destroy ocl begin...\n");
     releaseKernelCVMap ();
     //cv::ocl::Context::initializeContextFromHandle(Context::getDefault(false), NULL, NULL, NULL);
     //if(m_instance.use_count()==1)

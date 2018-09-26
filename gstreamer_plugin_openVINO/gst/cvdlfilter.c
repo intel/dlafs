@@ -141,6 +141,8 @@ cvdl_filter_transform_chain (GstPad * pad, GstObject * parent, GstBuffer * buffe
     if(gst_task_get_state(cvdlfilter->mPushTask) != GST_TASK_STARTED)
         gst_task_start(cvdlfilter->mPushTask);
 
+    if(cvdlfilter->frame_num==0)
+        cvdlfilter->startTimePos = g_get_monotonic_time();
     cvdlfilter->frame_num++;
     GST_DEBUG_OBJECT (trans, "src_info: index=%d ",cvdlfilter->frame_num);
     GST_DEBUG_OBJECT (trans, "got buffer with timestamp %" GST_TIME_FORMAT,
@@ -148,7 +150,7 @@ cvdl_filter_transform_chain (GstPad * pad, GstObject * parent, GstBuffer * buffe
     GST_DEBUG ("timestamp %" GST_TIME_FORMAT, GST_TIME_ARGS (timestamp));
 
 #ifdef SYNC_WITH_DECODER
-    if((duration>0) &&(duration<=50000000))
+    if((duration>0) && (duration<=50000000))
         g_usleep(duration/1000);
     else
         g_usleep(40000);//40ms
@@ -222,6 +224,7 @@ cvdl_filter_change_state (GstElement * element, GstStateChange transition)
   CvdlFilter *cvdlfilter = CVDL_FILTER (element);
   AlgoPipelineConfig *config = NULL;
   int count = 0;
+  gint32 duration = 0;
   GstStateChangeReturn result;
 
   switch (transition) {
@@ -254,6 +257,10 @@ cvdl_filter_change_state (GstElement * element, GstStateChange transition)
         if(cvdlfilter->algoHandle)
             algo_pipeline_destroy(cvdlfilter->algoHandle);
         cvdlfilter->algoHandle = 0;
+        cvdlfilter->stopTimePos = g_get_monotonic_time();
+        duration = (cvdlfilter->stopTimePos - cvdlfilter->startTimePos)/1000; //ms
+        g_print("cvdlfilter processed %d frames in %d seconds, fps = %.2f\n", cvdlfilter->frame_num,
+            duration/1000, 1000.0*cvdlfilter->frame_num/duration);
       break;
     default:
       break;

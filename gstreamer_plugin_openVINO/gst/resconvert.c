@@ -458,17 +458,22 @@ res_convert_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     ResConvert *convertor = RES_CONVERT (parent);
     GstFlowReturn ret = GST_FLOW_OK;
     GstBuffer* output = NULL;
+    gint64 start, stop;
 
     GST_LOG_OBJECT (convertor,
         "Received buffer with offset %" G_GUINT64_FORMAT,
         GST_BUFFER_OFFSET (buffer));
+    start = g_get_monotonic_time();
 
     // Process the input buffer - draw data into NV12 surface by OpenCV
     // The src_pic will connect to a queue filter to cache the data
     // step 1: create a RGB OSD and draw string/rectangle/track points on it
     // step 2: call OpenCL to blend OSD with NV12 surface, into OSD buffer?
     output = blender_process_cvdl_buffer(convertor->blend_handle, buffer);
+    convertor->frame_num++;
 
+    stop = g_get_monotonic_time();
+    convertor->cost_ms = (stop-start)/1000;
     // push the result
     if(output)
         ret = res_convert_send_data (convertor, output, buffer);
@@ -553,6 +558,8 @@ res_convert_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       res_convert_reset (convertor);
+      g_print("resconvert processed %ld frames, fps = %.2f\n", convertor->frame_num,
+          1000.0 * convertor->frame_num / (0.01 + convertor->cost_ms));
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       // stop the thread
@@ -637,6 +644,8 @@ res_convert_init (ResConvert * convertor)
     gst_video_info_init (&convertor->src_info);
 
     convertor->blend_handle = blender_create();
+    convertor->cost_ms = 0;
+    convertor->frame_num = 0;
 }
 
 

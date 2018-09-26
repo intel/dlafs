@@ -96,6 +96,7 @@ static void detection_algo_func(gpointer userData)
     DetectionAlgo *detectionAlgo = static_cast<DetectionAlgo*> (userData);
     CvdlAlgoData *algoData = new CvdlAlgoData;
     GstFlowReturn ret;
+    gint64 start, stop;
 
     GST_LOG("\ndetection_algo_func - new an algoData = %p\n", algoData);
     if(!detectionAlgo->mNext) {
@@ -123,7 +124,11 @@ static void detection_algo_func(gpointer userData)
     GstBuffer *ocl_buf = NULL;
     VideoRect crop = {0,0, (unsigned int)detectionAlgo->mImageProcessorInVideoWidth,
                            (unsigned int)detectionAlgo->mImageProcessorInVideoHeight};
+    start = g_get_monotonic_time();
     detectionAlgo->mImageProcessor.process_image(algoData->mGstBuffer,NULL, &ocl_buf, &crop);
+    stop = g_get_monotonic_time();
+    detectionAlgo->mImageProcCost += (stop - start);
+
     if(ocl_buf==NULL) {
         GST_WARNING("Failed to do image process!");
         g_print("detection_algo_func - Failed to do image process!\n");
@@ -166,11 +171,16 @@ static void detection_algo_func(gpointer userData)
         algo->mInferCnt--;
     };
 
+    start = g_get_monotonic_time();
     // ASync detect, directly return after pushing request.
     ret = detectionAlgo->mIeLoader.do_inference_async(
             algoData, algoData->mFrameId, -1, ocl_mem->frame, onDetectResult);
+    stop = g_get_monotonic_time();
+    detectionAlgo->mInferCost += (stop - start);
+
     detectionAlgo->mInferCnt++;
     detectionAlgo->mInferCntTotal++;
+    detectionAlgo->mFrameDoneNum++;
 
     if (ret!=GST_FLOW_OK) {
         GST_ERROR("IE: detect FAIL");
@@ -195,6 +205,9 @@ DetectionAlgo::~DetectionAlgo()
     wait_work_done();
     if(mInCaps)
         gst_caps_unref(mInCaps);
+    g_print("DetectionAlgo: image process %d frames, image preprocess fps = %.2f, infer fps = %.2f\n",
+        mFrameDoneNum, 1000000.0*mFrameDoneNum/mImageProcCost, 
+        1000000.0*mFrameDoneNum/mInferCost);
 }
 
 void DetectionAlgo::set_default_label_name()

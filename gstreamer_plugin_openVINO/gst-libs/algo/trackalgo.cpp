@@ -56,6 +56,7 @@ static void track_algo_func(gpointer userData)
 {
     TrackAlgo *trackAlgo = static_cast<TrackAlgo*> (userData);
     CvdlAlgoData *algoData = new CvdlAlgoData;
+    gint64 start, stop;
 
     GST_LOG("\ntrack_algo_func - new an algoData = %p\n", algoData);
 
@@ -69,6 +70,7 @@ static void track_algo_func(gpointer userData)
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         return;
     }
+    start = g_get_monotonic_time();
 
     // bind algoTask into algoData, so that can be used when sync callback
     algoData->algoBase = static_cast<CvdlAlgoBase *>(trackAlgo);
@@ -118,10 +120,14 @@ static void track_algo_func(gpointer userData)
     #endif
     trackAlgo->update_track_object(algoData->mObjectVec);
 
+    stop = g_get_monotonic_time();
+    trackAlgo->mImageProcCost += (stop - start);
+
     // push data if possible
     trackAlgo->push_track_object(algoData);
     trackAlgo->mInferCnt=0;
     trackAlgo->mInferCntTotal++;
+    trackAlgo->mFrameDoneNum++;
 }
 
 
@@ -139,6 +145,8 @@ TrackAlgo::~TrackAlgo()
 {
     if(mInCaps)
         gst_caps_unref(mInCaps);
+    g_print("TrackAlgo: image process %d frames, image preprocess fps = %.2f\n",
+        mFrameDoneNum, 1000000.0*mFrameDoneNum/mImageProcCost);
 }
 
 cv::UMat& TrackAlgo::get_umat(GstBuffer *buffer)
@@ -687,8 +695,8 @@ void TrackAlgo::push_track_object(CvdlAlgoData* &algoData)
 
     //debug
     for(size_t i=0; i< objectVec.size(); i++) {
-        g_print("track_output-%ld-%ld: prob = %f, label = %s, rect=(%d,%d)-(%dx%d), score = %f\n",
-            algoData->mFrameId, i, objectVec[i].prob, objectVec[i].label.c_str(),
+        g_print("%d - track_output-%ld-%ld: prob = %f, label = %s, rect=(%d,%d)-(%dx%d), score = %f\n",
+            mFrameDoneNum, algoData->mFrameId, i, objectVec[i].prob, objectVec[i].label.c_str(),
             objectVec[i].rect.x, objectVec[i].rect.y,
             objectVec[i].rect.width, objectVec[i].rect.height, objectVec[i].score);
     }

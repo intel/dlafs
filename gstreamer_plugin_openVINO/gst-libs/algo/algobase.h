@@ -179,5 +179,8 @@ public:
 	std::atomic<guint64> mInferCntTotal;
 
     int mFrameIndex;
+    int mFrameDoneNum;
+    gint64 mImageProcCost; /* in microseconds */
+    gint64 mInferCost; /* in microseconds */
 };
 #endif

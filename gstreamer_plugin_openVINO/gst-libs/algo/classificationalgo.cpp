@@ -87,6 +87,7 @@ static void process_one_object(CvdlAlgoData *algoData, ObjectData &objectData, i
     GstFlowReturn ret = GST_FLOW_OK;
     GstBuffer *ocl_buf = NULL;
     ClassificationAlgo *classificationAlgo = static_cast<ClassificationAlgo*>(algoData->algoBase);
+    gint64 start, stop;
 
     // The classification model will use the car face to do inference, that means we should
     //  crop the front part of car's object to be ROI, which is done in TrackAlgo::get_roi_rect
@@ -101,7 +102,10 @@ static void process_one_object(CvdlAlgoData *algoData, ObjectData &objectData, i
         try_process_algo_data(algoData);
         return;
     }
+    start = g_get_monotonic_time();
     classificationAlgo->mImageProcessor.process_image(algoData->mGstBuffer,NULL,&ocl_buf,&crop);
+    stop = g_get_monotonic_time();
+    classificationAlgo->mImageProcCost += stop - start;
     if(ocl_buf==NULL) {
         GST_WARNING("Failed to do image process!");
         objectData.flags |= CLASSIFICATION_OBJECT_FLAG_DONE;
@@ -141,8 +145,11 @@ static void process_one_object(CvdlAlgoData *algoData, ObjectData &objectData, i
     };
 
     // ASync detect, directly return after pushing request.
+    start = g_get_monotonic_time();
     ret = classificationAlgo->mIeLoader.do_inference_async(algoData, algoData->mFrameId,objId,
                                                         ocl_mem->frame, onClassificationResult);
+    stop = g_get_monotonic_time();
+    classificationAlgo->mInferCost += (stop - start);
     classificationAlgo->mInferCnt++;
     classificationAlgo->mInferCntTotal++;
 
@@ -198,6 +205,7 @@ static void classification_algo_func(gpointer userData)
     // NV12-->BGR_Plannar
     for(unsigned int i=0; i< algoData->mObjectVec.size(); i++)
         process_one_object(algoData, algoData->mObjectVec[i], i);
+    classificationAlgo->mFrameDoneNum++;
 
 }
 
@@ -215,6 +223,9 @@ ClassificationAlgo::~ClassificationAlgo()
     wait_work_done();
     if(mInCaps)
         gst_caps_unref(mInCaps);
+    g_print("ClassificationAlgo: image process %d frames, image preprocess fps = %.2f, infer fps = %.2f\n",
+        mFrameDoneNum, 1000000.0*mFrameDoneNum/mImageProcCost, 
+        1000000.0*mFrameDoneNum/mInferCost);
 }
 
 void ClassificationAlgo::set_data_caps(GstCaps *incaps)
@@ -377,8 +388,8 @@ GstBuffer* ClassificationAlgo::dequeue_buffer()
             cvdl_meta_add (meta_data, &rect, algoData.mObjectVec[i].label.c_str(),
                             algoData.mObjectVec[i].prob, color, points, count);
         //debug
-        g_print("classification_output-%ld-%d: prob = %f, label = %s, rect=(%d,%d)-(%dx%d)\n", 
-                algoData.mFrameId,i,algoData.mObjectVec[i].prob,
+        g_print("%d - classification_output-%ld-%d: prob = %f, label = %s, rect=(%d,%d)-(%dx%d)\n", 
+                mFrameDoneNum, algoData.mFrameId,i,algoData.mObjectVec[i].prob,
                 algoData.mObjectVec[i].label.c_str(),
                 rect.x, rect.y, rect.width, rect.height);
     }

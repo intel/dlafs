@@ -52,6 +52,9 @@ CvdlAlgoBase::CvdlAlgoBase(GstTaskFunction func, gpointer user_data, GDestroyNot
     mInferCnt = 0;
     mInferCntTotal = 0;
     mFrameIndex = 0;
+    mFrameDoneNum = 0;
+    mImageProcCost = 1;
+    mInferCost = 1;
 
     /* Create task for this algo */
     mTask = gst_task_new (func, user_data, notify);

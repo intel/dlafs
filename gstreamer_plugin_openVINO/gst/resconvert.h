@@ -59,6 +59,9 @@ struct _ResConvert
 
   ResOclBlendPrivate *priv;
   BlendHandle blend_handle;
+
+  gint64 cost_ms;
+  gint64 frame_num;
 };
 
 struct _ResConvertClass
