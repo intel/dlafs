@@ -42,7 +42,7 @@
 #endif
 
 #define CHECK(X) if(!(X)){ GST_ERROR("CHECK ERROR!"); std::exit(EXIT_FAILURE); }
-#define REQUEST_NUM 8
+#define REQUEST_NUM 16
 
 
 enum{
