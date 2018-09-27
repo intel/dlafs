@@ -8,6 +8,7 @@ const https = require('https');
 var spawn = require('child_process').spawn;
 
 var client_id = 0;
+var loop_times = 10000;
 
 const path_server = https.createServer({
   cert: fs.readFileSync('server-cert.pem'),
@@ -23,20 +24,15 @@ path_wss.on('connection', function(ws) {
         if(path.length > 3){
             console.log('received path: ' + path);
 
-            // TODO: parse path to decide to choose proper elements
-            if(path.indexOf("rtsp") >= 0){
-                gst_cmd_path ='gst-launch-1.0 rtspsrc location=' + path + ' udp-buff-size=800000 ! rtph264depay ! h264parse ! mfxh264dec ! cvdlfilter ! resconvert name=res res.src_pic ! mfxjpegenc ';
-            } else {
-                gst_cmd_path ='gst-launch-1.0 filesrc location=' + path + ' ! qtdemux ! h264parse ! mfxh264dec ! cvdlfilter ! resconvert name=res res.src_pic ! mfxjpegenc ';
-	    }
-            gst_cmd = gst_cmd_path + ' ! wssink name=ws wsclientid=' + client_id +' res.src_txt ! ws.';
+	    gst_cmd_path=path;
+            gst_cmd = 'hddlspipe ' + client_id + ' ' + gst_cmd_path + ' ' + loop_times;
 	    console.log('gst_cmd = ' + gst_cmd);
         } else {
             pipe  = pipe + parseInt(path);
 
             for(var i=0; i<parseInt(path);i++){
-                gst_cmd = gst_cmd_path + ' ! wssink name=ws wsclientid=' + client_id +' res.src_txt ! ws.';
-	        client_id++;
+	        gst_cmd = 'hddlspipe ' + client_id + ' ' + gst_cmd_path + ' ' + loop_times;
+                client_id++;
                 console.log('gst_cmd = ' + gst_cmd);
                 var child = spawn(gst_cmd , {
                    shell: true
