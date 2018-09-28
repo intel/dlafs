@@ -216,8 +216,9 @@ res_convert_flush (ResConvert * convertor)
   //TODO
 }
 
+
 static void
-res_convert_finalize (ResConvert * convertor)
+res_convert_clean (ResConvert * convertor)
 {
     // g_object_unref() --> gst_element_dispose
     // it has unref all the pads
@@ -230,6 +231,17 @@ res_convert_finalize (ResConvert * convertor)
     if(convertor->blend_handle)
         blender_destroy(convertor->blend_handle);
     convertor->blend_handle = 0;
+}
+
+static void
+res_convert_finalize (ResConvert * convertor)
+{
+    // g_object_unref() --> gst_element_dispose
+    // it has unref all the pads
+
+    // release pool
+    res_convert_clean(convertor);
+
     G_OBJECT_CLASS (parent_class)->finalize (G_OBJECT (convertor));
 }
 
@@ -248,7 +260,7 @@ res_convert_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     case GST_EVENT_FLUSH_STOP:
         res_convert_send_event (convertor, event);
         res_convert_flush (convertor);
-        res_convert_finalize(convertor);
+        res_convert_clean(convertor);
         break;
     case GST_EVENT_SEGMENT:
     {
@@ -563,7 +575,7 @@ res_convert_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       // stop the thread
-      res_convert_finalize(convertor);
+      res_convert_clean(convertor);
       break;
     default:
       break;

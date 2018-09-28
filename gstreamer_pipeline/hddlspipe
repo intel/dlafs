@@ -19,6 +19,7 @@ gst_cmd=""
 gst_source=""
 is_rtsp=`echo $2 | grep -i "rtsp"`
 echo "is_rtsp=$is_rtsp"
+set -e
 if [[ $is_rtsp == "" ]];
 then
 	### local file as input source
@@ -74,4 +75,5 @@ do
 	let loop_times=loop_times+1
 done
 rm -rf $script_name
+rm -rf rm temp_*.sh
 
