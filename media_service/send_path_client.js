@@ -7,7 +7,23 @@ const rl = readline.createInterface({
   output: process.stdout
 });
 
-const ws = new WebSocket("wss://localhost:8126/sendPath", {
+var fs = require('fs')
+  , filename = 'path.txt';
+var url = 0;
+fs.readFile(filename, 'utf8', function(err, data) {
+  if (err) throw err;
+  console.log('found: ' + filename);
+  console.log('server ip is:'+ data);
+  url = data;
+  url= url.replace(/[\r\n]/g,"");  
+});
+
+setTimeout(() => {
+    set_websocket();
+  }, 2000);
+
+function set_websocket(){
+const ws = new WebSocket("wss://"+url+":8126/sendPath", {
     rejectUnauthorized: false
   });
 
@@ -33,14 +49,14 @@ ws.on('open', function () {
 });
 
 ws.on('message',function(data){
-	console.log(`right now we have ${data} pipes`);
+	console.log(`${data} `);
 
 	if(ws.readyState === WebSocket.OPEN){
 
-        rl.question('How many pipes do you want to start? ', (answer) => {
+        rl.question('How many times do you want pipe run? ', (answer) => {
            console.log(parseInt(answer));
         	if(!isNaN(parseInt(answer))){
-                    console.log(`We will start new ${answer} pipes`);
+                    console.log(`We will let pipe run ${answer} times`);
                     ws.send(answer);
         	} else {
                     console.log('Pleae type right format');
@@ -61,4 +77,6 @@ ws.on('error', function () {
 ws.on('close', function () {
     console.log(`Right now I'll clear all pipes!`);
 });
+}
+
 

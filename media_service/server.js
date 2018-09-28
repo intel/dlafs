@@ -10,6 +10,7 @@ var spawn = require('child_process').spawn;
 var client_id = 0;
 var loop_times = 10000;
 
+
 const path_server = https.createServer({
   cert: fs.readFileSync('server-cert.pem'),
   key: fs.readFileSync('server-key.pem')
@@ -23,16 +24,20 @@ path_wss.on('connection', function(ws) {
 
         if(path.length > 3){
             console.log('received path: ' + path);
+            
+	          gst_cmd_path=path;
+            client_id++;
+            //gst_cmd = 'hddlspipe ' + client_id + ' ' + gst_cmd_path + ' ' + loop_times;
+            gst_cmd = 'hddlspipe ' + client_id + ' ' + gst_cmd_path;
 
-	    gst_cmd_path=path;
-            gst_cmd = 'hddlspipe ' + client_id + ' ' + gst_cmd_path + ' ' + loop_times;
-	    console.log('gst_cmd = ' + gst_cmd);
+	          console.log('gst_cmd = ' + gst_cmd);
+            console.log('please write loop times on client');
         } else {
-            pipe  = pipe + parseInt(path);
+            loop_times = parseInt(path);
 
-            for(var i=0; i<parseInt(path);i++){
-	        gst_cmd = 'hddlspipe ' + client_id + ' ' + gst_cmd_path + ' ' + loop_times;
-                client_id++;
+            
+	              gst_cmd = 'hddlspipe ' + client_id + ' ' + gst_cmd_path + ' ' + loop_times;
+                
                 console.log('gst_cmd = ' + gst_cmd);
                 var child = spawn(gst_cmd , {
                    shell: true
@@ -49,9 +54,9 @@ path_wss.on('connection', function(ws) {
                 child.on('exit', function (exitCode) {
                    console.log("Child exited with code: " + exitCode);
                 });
-            }
+           
       }
-      ws.send(pipe);
+      ws.send('pipe run out');
     });
 
     ws.on('close', function() {
@@ -97,7 +102,8 @@ data_wss.on('connection', function connection(ws) {
   } else {
 
     userArray.push(ws);
-    console.log("new pipeline joined!",userArray.indexOf(ws));
+    console.log("new pipeline joined!",client_id);
+    console.log("this is "+ userArray.indexOf(ws)+"th loop time");
   }
 
   ws.on('message', function incoming(data) {
@@ -108,13 +114,15 @@ data_wss.on('connection', function connection(ws) {
         client.send(data);
       }*/
       if (receive_client.readyState === WebSocket.OPEN){
-        receive_client.send(userArray.indexOf(ws));
+        var head = client_id+','+userArray.indexOf(ws);
+        receive_client.send(head);
         receive_client.send(data);
       }
   });
 
   ws.on('close', function (close) {
       console.log("client closed");
+      
   });
 
 });
@@ -133,3 +141,11 @@ path_server.listen(8126);
 data_server.listen(8123);
 console.log('Listening on port 8126 and 8123...');
 
+var exec = require('child_process').exec;
+exec('hostname -I', function(error, stdout, stderr) {
+    console.log('Please make sure to copy the ip address: ' + stdout);
+    //console.log('stderr: ' + stderr);
+    if (error !== null) {
+        console.log('exec error: ' + error);
+    }
+});
