@@ -41,6 +41,7 @@ using namespace cv;
  * If not detect number >= TRACK_MAX_NUM, tracking will stop.
  */
 #define TRACK_MAX_NUM 12
+#define TRACK_FRAME_NUM 8
 
 #define FLAGS_TRACKED_DATA_IS_SET   0x1
 #define FLAGS_TRACKED_DATA_IS_PASS  0x2
@@ -483,6 +484,7 @@ void TrackAlgo::add_new_one_object(ObjectData &objectData, guint64 frameId)
 
     obj.objId = mCurObjId;
     obj.score = 0.0;
+    obj.detectedNum = 0;
     obj.fliped = false;
     obj.startFrameId = frameId;
     obj.curFrameId = obj.startFrameId;
@@ -642,9 +644,14 @@ void TrackAlgo::update_track_object(std::vector<ObjectData> &objectVec)
             if(objectData.id == (*it).objId) {
                 score = objectData.figure_score(mImageProcessorInVideoWidth,
                     mImageProcessorInVideoHeight);
-                if((score == 0.0) && ((*it).score > 1.0) && (*it).fliped==false) {
+                if(score>1.0) {
+                    (*it).detectedNum ++;
+                }
+                if((score == 0.0) && ((*it).score > 1.0) &&
+                    (*it).fliped==false && ((*it).detectedNum >= TRACK_FRAME_NUM)) {
                     objectData.flags |= FLAGS_TRACKED_DATA_IS_PASS;
                     (*it).fliped = true;
+                    (*it).detectedNum = 0;
                     objectData.score = (*it).score;
                 }
                 (*it).score = score;

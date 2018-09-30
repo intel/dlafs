@@ -96,6 +96,7 @@ public:
 	uint64_t curFrameId;
     float score;
     bool fliped; // whether it is fliped into next component.
+    int detectedNum;//
 
 	int notDetectNum;	/* The object is not detected in the continuous notDetectNum, stop tracking and report. */
 	std::vector<cv::Rect> vecPos;	/* Every frame vehicle position based on tracking size */
