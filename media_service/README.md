@@ -8,3 +8,6 @@ npm cache clean -f
 n stable"
 n use 10.10.0 server.js
 
+2. run client
+receive_data_client.js
+send_path_client.js -s <stream_source> -l <loop_times>

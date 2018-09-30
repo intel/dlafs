@@ -9,6 +9,7 @@ var spawn = require('child_process').spawn;
 
 var client_id = 0;
 var loop_times = 10000;
+var pipe_num = 0;
 
 
 const path_server = https.createServer({
@@ -22,25 +23,36 @@ path_wss.on('connection', function(ws) {
     console.log('/sendPath connected');
     ws.on('message', function(path) {
 
-        if(path.length > 3){
-            console.log('received path: ' + path);
+        console.log("receive message:" + path);
+        if(path.indexOf('stream=')==0){
+            gst_cmd_path=path.substring(7);
+            console.log('path: ' + gst_cmd_path);
             
-	          gst_cmd_path=path;
-            client_id++;
+            //client_id++;
             //gst_cmd = 'hddlspipe ' + client_id + ' ' + gst_cmd_path + ' ' + loop_times;
-            gst_cmd = 'hddlspipe ' + client_id + ' ' + gst_cmd_path;
+            //gst_cmd = 'hddlspipe ' + client_id + ' ' + gst_cmd_path;
 
-	          console.log('gst_cmd = ' + gst_cmd);
-            console.log('please write loop times on client');
-        } else {
-            loop_times = parseInt(path);
+	    //console.log('gst_cmd = ' + gst_cmd);
+            //console.log('please write loop times on client');
+            ws.send('stream source is done: ' + gst_cmd_path);
+        } else if(path.indexOf('loop=')==0){
+            loop_times = parseInt(path.substring(5));
+	    //gst_cmd = 'hddlspipe ' + client_id + ' ' + gst_cmd_path + ' ' + loop_times;
+            console.log('loop_times = ' + loop_times);
+        } else if(path.indexOf('pipenum=')==0) {
+            pipe_num = parseInt(path.substring(8))
+            console.log('pipe_num = ' + pipe_num);
+            //TODO: support multiple pipe
+            pipe_num=1;
+        }
 
-            
-	              gst_cmd = 'hddlspipe ' + client_id + ' ' + gst_cmd_path + ' ' + loop_times;
-                
-                console.log('gst_cmd = ' + gst_cmd);
+        if((loop_times>0) && (pipe_num>0)) {
+            for(var i=0; i<pipe_num; i++) {
+                gst_cmd = 'hddlspipe ' + client_id + ' ' + gst_cmd_path + ' ' + loop_times;
+                client_id++;
+
                 var child = spawn(gst_cmd , {
-                   shell: true
+                    shell: true
                 });
 
                 child.stderr.on('data', function (data) {
@@ -52,11 +64,13 @@ path_wss.on('connection', function(ws) {
                 });
 
                 child.on('exit', function (exitCode) {
-                   console.log("Child exited with code: " + exitCode);
+                    console.log("Child exited with code: " + exitCode);
                 });
-           
-      }
-      ws.send('pipe run out');
+            }
+            ws.send('setup pipe done!');
+            loop_times = 0;
+            pipe_num = 0;
+       }
     });
 
     ws.on('close', function() {

@@ -44,6 +44,9 @@ const ws = new WebSocket("wss://"+url+":8123/binaryEchoWithSize?id=1", {
 });
 
 
+
+
+
 ws.on('open', function () {
     console.log(`[RECEIVE_DATA_CLIENT] open()`);
 });
