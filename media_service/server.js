@@ -43,8 +43,6 @@ path_wss.on('connection', function(ws) {
         } else if(path.indexOf('pipenum=')==0) {
             pipe_num = parseInt(path.substring(8))
             console.log('pipe_num = ' + pipe_num);
-            //TODO: support multiple pipe
-            pipe_num=1;
         }
 
         if((loop_times>0) && (pipe_num>0)) {
@@ -129,8 +127,8 @@ data_wss.on('connection', function connection(ws) {
         client.send(data);
       }*/
       if (receive_client.readyState === WebSocket.OPEN){
-        var head = client_id+','+userArray.indexOf(ws);
-        receive_client.send(head);
+//        var head = client_id+','+userArray.indexOf(ws);
+//        receive_client.send(head);
         receive_client.send(data);
       }
   });

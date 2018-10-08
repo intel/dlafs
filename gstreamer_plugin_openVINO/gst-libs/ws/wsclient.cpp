@@ -24,6 +24,7 @@
 #include <gst/gst.h>
 #include "wsclient.h"
 #include <uWS/uWS.h>
+#include <string.h>
 
 using namespace std;
 #include <thread>
@@ -35,6 +36,9 @@ extern "C" {
 struct _wsclient{
     uWS::WebSocket<uWS::CLIENT> *client;
     //uWS::Hub hub;
+    int id;
+    char *data;
+    int data_len;
 };
 typedef struct _wsclient WsClient;
 
@@ -48,6 +52,9 @@ WsClientHandle wsclient_setup(char *serverUri, int client_id)
         return 0;
     }
     wsclient->client = NULL;
+    wsclient->id = client_id;
+    wsclient->data = NULL;
+    wsclient->data_len = 0;
 
     std::thread t([&wsclient, serverUri, client_id]{
         uWS::Hub hub;
@@ -101,7 +108,16 @@ void wsclient_send_data(WsClientHandle handle, char *data, int len)
         g_print("Invalid WsClientHandle!!!\n");
         return;
     }
-    wsclient->client->send(data, len, uWS::OpCode::BINARY);
+    if(!wsclient->data) {
+       wsclient->data_len = len + 4;
+       wsclient->data = g_new0(char, wsclient->data_len);
+    } else if(wsclient->data_len < len+4) {
+       wsclient->data_len = len + 4;
+       wsclient->data = g_try_renew(char, wsclient->data, wsclient->data_len);
+    }
+    *(int *)wsclient->data = wsclient->id;
+    g_memmove(wsclient->data+4, data, len);
+    wsclient->client->send(wsclient->data, len+4, uWS::OpCode::BINARY);
 }
 
 void wsclient_destroy(WsClientHandle handle)
@@ -114,6 +130,8 @@ void wsclient_destroy(WsClientHandle handle)
         wsclient->client->close();
         g_usleep(1000);
     }
+    if(wsclient->data)
+        g_free(wsclient->data);
 
     g_free(handle);
 }
