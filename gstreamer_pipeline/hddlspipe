@@ -75,5 +75,4 @@ do
 	let loop_times=loop_times+1
 done
 rm -rf $script_name
-rm -rf rm temp_*.sh
 

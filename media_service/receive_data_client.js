@@ -7,7 +7,7 @@ var rimraf = require('rimraf');
 
 var con='';
 let count=0;
-var client_id = 0;
+var pipe_id = 0;
 
 var m = new Map();
 for(let i=0;i<100;i++){
@@ -55,8 +55,8 @@ ws.on('message', function (data) {
          return;
     }
 
-    client_id=data[0];
-    con='pipe_'+client_id.toString();
+    pipe_id=data[0];
+    con='pipe_'+pipe_id.toString();
     var path = './'+con;
     console.log("output dir: ", path);
     fs.access(path,function(err){
@@ -75,7 +75,7 @@ ws.on('message', function (data) {
     });
 
     if(data.byteLength >1024){
-         var temp = m.get(client_id);
+         var temp = m.get(pipe_id);
          var buff =  new Buffer(data);
          var image_name='image_'+temp+'.jpg';
          var path = './'+ con + '/' + image_name;
@@ -85,7 +85,7 @@ ws.on('message', function (data) {
              console.log('written', written);
          });
          temp++;
-         m.set(client_id,temp);
+         m.set(pipe_id,temp);
      } else {
          var buff =  new Buffer(data);
          var path = './'+ con + '/output.txt';
