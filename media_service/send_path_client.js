@@ -103,14 +103,14 @@ function input_pipe_number() {
     if(set_pipe_number_enable==0)
         return;
 
-    if(loop_times==0) {
+    if(pipe_num==0) {
         rl.question('How many pipes do you want run? ', (answer) => {
            console.log(parseInt(answer));
                 if(!isNaN(parseInt(answer))){
                     console.log(`We will let ${answer} pipes to run`);
                     ws.send('pipenum='+answer);
                 } else {
-                    console.log('Pleae type right format');
+                    console.log('Please type right format');
                     rl.close();
                     ws.close();
                 }
@@ -134,6 +134,7 @@ ws.on('message',function(data){
     if(ws.readyState == WebSocket.OPEN){
         if(data.indexOf('stream source is done')>=0) {
             input_loop_times();
+        } else if(data.indexOf('set loop times done')>=0) {
             input_pipe_number();
         } else if(data.indexOf('setup pipe done')>=0) {
             rl.question('Do you want to quit(y/n)? ', (answer) => {

@@ -39,6 +39,7 @@ path_wss.on('connection', function(ws) {
             loop_times = parseInt(path.substring(5));
 	    //gst_cmd = 'hddlspipe ' + client_id + ' ' + gst_cmd_path + ' ' + loop_times;
             console.log('loop_times = ' + loop_times);
+            ws.send('set loop times done!');
         } else if(path.indexOf('pipenum=')==0) {
             pipe_num = parseInt(path.substring(8))
             console.log('pipe_num = ' + pipe_num);
