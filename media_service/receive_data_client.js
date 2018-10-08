@@ -22,7 +22,6 @@ function mkdirs(dirpath) {
     fs.mkdirSync(dirpath);
 }
 
-
 var filename = 'path.txt';
 var url = 0;
 fs.readFile(filename, 'utf8', function(err, data) {
@@ -55,13 +54,17 @@ ws.on('message', function (data) {
          return;
     }
 
+    var flags = 1;
     pipe_id=data[0];
     con='pipe_'+pipe_id.toString();
     var path = './'+con;
     console.log("output dir: ", path);
-    fs.access(path,function(err){
-        console.log("access error = ", err);
-        if(err){
+
+    try{
+       fs.accessSync(path,fs.constants.F_OK);
+    }catch(ex){
+        console.log("access error for ", con);
+        if(ex){
            console.log("please build a new directory for ",con);
            fs.mkdir(con, function (err) {
               if(err) {
@@ -72,7 +75,7 @@ ws.on('message', function (data) {
             console.log("output data will be put into ", path);
             return;
         }
-    });
+    };
 
     if(data.byteLength >1024){
          var temp = m.get(pipe_id);
@@ -91,7 +94,7 @@ ws.on('message', function (data) {
          var path = './'+ con + '/output.txt';
          fs.appendFile(path, buff.toString('utf8',4,buff.length)+ "\n", function (err) {
              if (err) {
-                 console.log("append failed");
+                 console.log("append failed: ", err);
              } else {
                  // done
                  console.log("done");
