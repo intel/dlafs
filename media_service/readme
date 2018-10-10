@@ -12,14 +12,13 @@ npm install ws
 npm install -g n
 npm install child_process
 npm install arraybuffer-to-string
-
+npm install rimraf
 
 3. run websocket server and client:
 
+write ip address into path.txt
 chmod a+x server.js receive_data_client.js send_path_client.js
 ./server.js
 ./send_path_client.js
 ./receive_data_client.js
-
-
 

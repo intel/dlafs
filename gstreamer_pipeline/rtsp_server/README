@@ -1,0 +1,39 @@
+How build up RTSP server:
+
+wget https://gstreamer.freedesktop.org/src/gst-rtsp-server/gst-rtsp-server-1.14.1.tar.xz
+tar -xvf gst-rtsp-server-1.14.1.tar.xz
+cd gst-rtsp-server-1.14.1
+./autogen.sh
+cp <our test_launch.c> to examples/.
+make && sudo make install
+
+cd examples
+./test-launch --gst-debug=3 "( filesrc location=/home/rtsp/1600x1200_concat.mp4 ! qtdemux ! rtph264pay name=pay0 pt=96 )"
+
+Then we will create 24 rtsp source:
+stream ready at rtsp://10.239.85.88:8554//video0
+stream ready at rtsp://10.239.85.88:8555//video1
+stream ready at rtsp://10.239.85.88:8556//video2
+stream ready at rtsp://10.239.85.88:8557//video3
+stream ready at rtsp://10.239.85.88:8558//video4
+stream ready at rtsp://10.239.85.88:8559//video5
+stream ready at rtsp://10.239.85.88:8560//video6
+stream ready at rtsp://10.239.85.88:8561//video7
+stream ready at rtsp://10.239.85.88:8562//video8
+stream ready at rtsp://10.239.85.88:8563//video9
+stream ready at rtsp://10.239.85.88:8564//video10
+stream ready at rtsp://10.239.85.88:8565//video11
+stream ready at rtsp://10.239.85.88:8566//video12
+stream ready at rtsp://10.239.85.88:8567//video13
+stream ready at rtsp://10.239.85.88:8568//video14
+stream ready at rtsp://10.239.85.88:8569//video15
+stream ready at rtsp://10.239.85.88:8570//video16
+stream ready at rtsp://10.239.85.88:8571//video17
+stream ready at rtsp://10.239.85.88:8572//video18
+stream ready at rtsp://10.239.85.88:8573//video19
+stream ready at rtsp://10.239.85.88:8574//video20
+stream ready at rtsp://10.239.85.88:8575//video21
+stream ready at rtsp://10.239.85.88:8576//video22
+stream ready at rtsp://10.239.85.88:8577//video23
+
+

@@ -26,13 +26,7 @@
 
 using namespace cv;
 
-// On Intel GPU, UMat::getMat will map device memory into host space
-// for CPU drawing function to work, before display or further access
-// this UMat using OpenCL, we need ensure its unmapped by make sure
-// the Mat is destructed.
-
-
-#define CKECK_ROI(rt, W, H) \
+#define CHECK_ROI(rt, W, H) \
         if(rt.x < 0 || rt.y < 0 || rt.x + rt.width > W || rt.y + rt.height > H ||   \
            rt.width < 0 || rt.height < 0){  \
             GST_ERROR("check roi = [%d,%d,%d,%d]\n", rt.x, rt.y, rt.width, rt.height); \
@@ -47,6 +41,7 @@ using namespace cv;
  * If not detect number >= TRACK_MAX_NUM, tracking will stop.
  */
 #define TRACK_MAX_NUM 12
+#define TRACK_FRAME_NUM 8
 
 #define FLAGS_TRACKED_DATA_IS_SET   0x1
 #define FLAGS_TRACKED_DATA_IS_PASS  0x2
@@ -62,6 +57,7 @@ static void track_algo_func(gpointer userData)
 {
     TrackAlgo *trackAlgo = static_cast<TrackAlgo*> (userData);
     CvdlAlgoData *algoData = new CvdlAlgoData;
+    gint64 start, stop;
 
     GST_LOG("\ntrack_algo_func - new an algoData = %p\n", algoData);
 
@@ -75,6 +71,7 @@ static void track_algo_func(gpointer userData)
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         return;
     }
+    start = g_get_monotonic_time();
 
     // bind algoTask into algoData, so that can be used when sync callback
     algoData->algoBase = static_cast<CvdlAlgoBase *>(trackAlgo);
@@ -114,31 +111,24 @@ static void track_algo_func(gpointer userData)
 
     trackAlgo->verify_detection_result(algoData->mObjectVec);
 
-    // test - make sure all detection data can be pass into classification module
-    //trackAlgo->push_track_object(algoData);//test
-    //return;
-
     // Tracking every object, and get predicts.
     #if 0
-    //TODO: below code will cause memory leak
     trackAlgo->mImageProcessor.ocl_lock();
     trackAlgo->track_objects(algoData);
     trackAlgo->mImageProcessor.ocl_unlock();
     #else
     trackAlgo->track_objects_fast(algoData);
     #endif
-
-    //------------test---remove this code -----------------
-    // update object data
     trackAlgo->update_track_object(algoData->mObjectVec);
 
-
-    // TODO: need cache 2 or more frames to choose the best one
+    stop = g_get_monotonic_time();
+    trackAlgo->mImageProcCost += (stop - start);
 
     // push data if possible
     trackAlgo->push_track_object(algoData);
     trackAlgo->mInferCnt=0;
     trackAlgo->mInferCntTotal++;
+    trackAlgo->mFrameDoneNum++;
 }
 
 
@@ -146,7 +136,6 @@ TrackAlgo::TrackAlgo():CvdlAlgoBase(track_algo_func, this, NULL)
 {
     mInputWidth = TRACKING_INPUT_W;
     mInputHeight = TRACKING_INPUT_H;
-    //mImageProcessor.set_ocl_kernel_name(CRC_FORMAT_GRAY);
 
     mPreFrame = NULL;
     mOclCaps = NULL;
@@ -157,12 +146,18 @@ TrackAlgo::~TrackAlgo()
 {
     if(mInCaps)
         gst_caps_unref(mInCaps);
+    g_print("TrackAlgo: image process %d frames, image preprocess fps = %.2f\n",
+        mFrameDoneNum, 1000000.0*mFrameDoneNum/mImageProcCost);
 }
 
 cv::UMat& TrackAlgo::get_umat(GstBuffer *buffer)
 {
     OclMemory *ocl_mem = NULL;
     static cv::UMat empty_umat = cv::UMat();
+    // On Intel GPU, UMat::getMat will map device memory into host space
+    // for CPU drawing function to work, before display or further access
+    // this UMat using OpenCL, we need ensure its unmapped by make sure
+    // the Mat is destructed.
     ocl_mem = ocl_memory_acquire (buffer);
     if(ocl_mem==NULL){
         GST_WARNING("Failed get ocl_mem after image process!");
@@ -192,9 +187,6 @@ void TrackAlgo::set_data_caps(GstCaps *incaps)
     if(mInCaps)
         gst_caps_unref(mInCaps);
     mInCaps = gst_caps_copy(incaps);
-
-    //if(mOclCaps)
-    //    gst_caps_unref(mOclCaps);
 
     // set OCL surface: width and height and format
     //   Object track will use gray data format
@@ -269,19 +261,13 @@ std::vector<cv::Point2f> TrackAlgo::calc_feature_points(cv::UMat &gray)
     cv::TermCriteria termcrit(cv::TermCriteria::COUNT | cv::TermCriteria::EPS, 20, 0.03);
     const int MAX_COUNT = 100;
     cv::Size subPixWinSize(10, 10), winSize(15, 15);
-
     std::vector<cv::Point2f> vecFeatPt;
 
-    //std::cout << "goodFeaturesToTrack begin....." << std::endl;
     cv::goodFeaturesToTrack(gray, vecFeatPt, MAX_COUNT, 0.3, 7, cv::Mat(), 7, false, 0.03);
-    // std::cout << "goodFeaturesToTrack end ..... fea point num = " << vecFeatPt.size() << std::endl;
-
     if(vecFeatPt.size() == 0){
         return vecFeatPt;
     }
     cv::cornerSubPix(gray, vecFeatPt, subPixWinSize, cv::Size(-1, -1), termcrit);
-    //std::cout << "cornerSubPix end .... fea point num = " << vecFeatPt.size() << std::endl;
-
     return vecFeatPt;
 }
 
@@ -368,22 +354,10 @@ bool TrackAlgo::track_one_object(cv::Mat& curFrame, TrackObjAttribute& curObj, c
         offx /= (int) prePt.size();
         offy /= (int) prePt.size();
 
-        if (offy > 100) {
-            offy = 100;
-        }
-        if (offy < 1) {
-            offy = 1;
-        }
-
-        if (offx > 50) {
-            offx = 50;
-        }
-        if (offx < -50) {
-            offx = -50;
-        }
+        SET_SATURATE(offx, -50, 50);
+        SET_SATURATE(offy, 1, 100);
     }
 
-    //CKECK_ROI(roi, RSZ_DETECT_SIZE, RSZ_DETECT_SIZE);
     outRoi.x = MAX(0, FLT2INT(roi.x + offx));
     outRoi.y = MAX(0, FLT2INT(roi.y + offy));
     outRoi.x = MIN(mInputWidth - 1, outRoi.x);
@@ -401,12 +375,12 @@ bool TrackAlgo::track_one_object(cv::Mat& curFrame, TrackObjAttribute& curObj, c
 
     outRoi.width = MAX(1, outRoi.width);
     outRoi.height = MAX(1, outRoi.height);
-    //CKECK_ROI(outRoi, RSZ_DETECT_SIZE, RSZ_DETECT_SIZE);
 
     return true;
 }
 
-void TrackAlgo::figure_out_trajectory_points(ObjectData &objectVec, TrackObjAttribute& curObj)
+void TrackAlgo::figure_out_trajectory_points(
+    ObjectData &objectVec, TrackObjAttribute& curObj)
 {
     std::vector<cv::Rect> &rectVec = curObj.vecPos;
     cv::Rect rect;
@@ -414,8 +388,10 @@ void TrackAlgo::figure_out_trajectory_points(ObjectData &objectVec, TrackObjAttr
     MathUtils utils;
     for(unsigned int i=0; i<rectVec.size(); i++) {
         VideoPoint point;
-        rect = utils.convert_rect(rectVec[i],mInputWidth, mInputHeight,
-                           mImageProcessorInVideoWidth, mImageProcessorInVideoHeight);
+        rect = utils.convert_rect(
+            rectVec[i],mInputWidth, mInputHeight,
+            mImageProcessorInVideoWidth,
+            mImageProcessorInVideoHeight);
         point.x = rect.x + rect.width/2;
         point.y = rect.y + rect.height/2;
         objectVec.trajectoryPoints.push_back(point);
@@ -423,8 +399,9 @@ void TrackAlgo::figure_out_trajectory_points(ObjectData &objectVec, TrackObjAttr
     return ;
 }
 
-cv::Rect TrackAlgo::compare_detect_predict(std::vector<ObjectData>& objectVec, TrackObjAttribute& curObj, 
-                                                   cv::Rect predictRt, bool& bDetect)
+cv::Rect TrackAlgo::compare_detect_predict(
+    std::vector<ObjectData>& objectVec, TrackObjAttribute& curObj, 
+    cv::Rect predictRt, bool& bDetect)
 {
     cv::Rect objRect;
     MathUtils utils;
@@ -481,7 +458,8 @@ void TrackAlgo::get_roi_rect(cv::Rect& roiRect, cv::Rect curRect)
 
 // Add a new rect to tracking obj, check whether crop roi in the src image.
 //    curRT is based on trackinge size
-void TrackAlgo::add_track_obj(CvdlAlgoData* &algoData, cv::Rect curRt, TrackObjAttribute& curObj, bool bDetect)
+void TrackAlgo::add_track_obj(CvdlAlgoData* &algoData,
+    cv::Rect curRt, TrackObjAttribute& curObj, bool bDetect)
 {
     // Add real-time detect or track result.
     curObj.vecPos.push_back(curRt);
@@ -495,25 +473,6 @@ void TrackAlgo::add_track_obj(CvdlAlgoData* &algoData, cv::Rect curRt, TrackObjA
     else{
         // Only report detect result.
         curObj.notDetectNum = 0;
-
-        // Check whether to cache ROI image.
-        if (curObj._vecRoiPosInSrc.size() == 1){
-            // If center pass middle line, cache it.
-            int centerY = curRt.height / 2 + curRt.y;
-
-            // The center of vehicle had pass middle line video,
-            // we need cache it and classify it in the further.
-            if (centerY > mInputHeight / 3)
-            {
-                cv::Rect roiRect;
-                // only get the ROI rectangle, the image buffer will be crop out in the next algo(classfication)
-                // roiRect is based one orignal video size
-                get_roi_rect(roiRect, curRt);
-
-                // save ROI rectange based on the orignal image
-                curObj.putImgROI(roiRect);
-            }
-        }
     }
 }
 
@@ -525,6 +484,7 @@ void TrackAlgo::add_new_one_object(ObjectData &objectData, guint64 frameId)
 
     obj.objId = mCurObjId;
     obj.score = 0.0;
+    obj.detectedNum = 0;
     obj.fliped = false;
     obj.startFrameId = frameId;
     obj.curFrameId = obj.startFrameId;
@@ -546,12 +506,7 @@ void TrackAlgo::add_new_one_object(ObjectData &objectData, guint64 frameId)
     obj.vecPos.push_back(objRect);
 
     // vec is based on the orignal video size
-    CKECK_ROI(objectData.rect, mImageProcessorInVideoWidth, mImageProcessorInVideoHeight);
-
-    cv::Rect roiRect = objectData.rect;
-    get_roi_rect(roiRect, objRect);
-    obj.putImgROI(roiRect);
-
+    CHECK_ROI(objectData.rect, mImageProcessorInVideoWidth, mImageProcessorInVideoHeight);
     mTrackObjVec.push_back(obj);
 
     mCurObjId++;
@@ -595,12 +550,12 @@ void TrackAlgo::track_objects_fast(CvdlAlgoData* &algoData)
         cv::Rect outRoi;
         cv::Mat empty_mat = cv::Mat();
         if (track_one_object(empty_mat, curObj, outRoi)) {
-            CKECK_ROI(outRoi, mInputWidth, mInputHeight);
+            CHECK_ROI(outRoi, mInputWidth, mInputHeight);
 
             // Compare with real-time detect result.
             bool bDetect = false;
             cv::Rect curRt = compare_detect_predict(objectVec, curObj, outRoi, bDetect);
-            CKECK_ROI(curRt, mInputWidth, mInputHeight);
+            CHECK_ROI(curRt, mInputWidth, mInputHeight);
 
             add_track_obj(algoData, curRt, curObj, bDetect);
         }
@@ -643,12 +598,12 @@ void TrackAlgo::track_objects(CvdlAlgoData* &algoData)
         cv::Rect outRoi;
 
         if (track_one_object(curFrame, curObj, outRoi)) {
-            CKECK_ROI(outRoi, mInputWidth, mInputHeight);
+            CHECK_ROI(outRoi, mInputWidth, mInputHeight);
 
             // Compare with real-time detect result.
             bool bDetect = false;
             cv::Rect curRt = compare_detect_predict(objectVec, curObj, outRoi, bDetect);
-            CKECK_ROI(curRt, mInputWidth, mInputHeight);
+            CHECK_ROI(curRt, mInputWidth, mInputHeight);
 
             add_track_obj(algoData, curRt, curObj, bDetect);
         }
@@ -670,7 +625,6 @@ bool TrackAlgo::is_at_buttom(TrackObjAttribute& curObj)
 {
     cv::Rect rt = curObj.getLastPos();
 
-    //if (rt.height < 200 && rt.y + rt.height > RSZ_DETECT_SIZE - 10) {
     if (rt.height < 60 && rt.y + rt.height > mInputHeight - 5) {
         return true;
     }
@@ -688,13 +642,19 @@ void TrackAlgo::update_track_object(std::vector<ObjectData> &objectVec)
         for(unsigned int i=0; i<objectVec.size(); i++){
             ObjectData& objectData = objectVec[i];
             if(objectData.id == (*it).objId) {
-                score = objectData.figure_score(mImageProcessorInVideoWidth, mImageProcessorInVideoHeight);
-                if((score > 1.0) && (score >= (*it).score) && (*it).fliped==false) {
+                score = objectData.figure_score(mImageProcessorInVideoWidth,
+                    mImageProcessorInVideoHeight);
+                if(score>1.0) {
+                    (*it).detectedNum ++;
+                }
+                if((score == 0.0) && ((*it).score > 1.0) &&
+                    (*it).fliped==false && ((*it).detectedNum >= TRACK_FRAME_NUM)) {
                     objectData.flags |= FLAGS_TRACKED_DATA_IS_PASS;
                     (*it).fliped = true;
+                    (*it).detectedNum = 0;
+                    objectData.score = (*it).score;
                 }
                 (*it).score = score;
-                objectData.score = score;
                 break;
             }
         }
@@ -708,6 +668,7 @@ void TrackAlgo::update_track_object(std::vector<ObjectData> &objectVec)
         }
     }
 
+
     // remove the objectData which has not been set PASS flag
     std::vector<ObjectData>::iterator obj;
     for (obj = objectVec.begin(); obj != objectVec.end();) {
@@ -718,7 +679,6 @@ void TrackAlgo::update_track_object(std::vector<ObjectData> &objectVec)
             ++obj;
         }
     }
-
 }
 
 void TrackAlgo::push_track_object(CvdlAlgoData* &algoData)
@@ -742,8 +702,8 @@ void TrackAlgo::push_track_object(CvdlAlgoData* &algoData)
 
     //debug
     for(size_t i=0; i< objectVec.size(); i++) {
-        g_print("track_output-%ld-%ld: prob = %f, label = %s, rect=(%d,%d)-(%dx%d), score = %f\n",
-            algoData->mFrameId, i, objectVec[i].prob, objectVec[i].label.c_str(),
+        g_print("%d - track_output-%ld-%ld: prob = %f, label = %s, rect=(%d,%d)-(%dx%d), score = %f\n",
+            mFrameDoneNum, algoData->mFrameId, i, objectVec[i].prob, objectVec[i].label.c_str(),
             objectVec[i].rect.x, objectVec[i].rect.y,
             objectVec[i].rect.width, objectVec[i].rect.height, objectVec[i].score);
     }

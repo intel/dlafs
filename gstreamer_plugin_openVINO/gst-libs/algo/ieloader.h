@@ -36,11 +36,13 @@
 
 #include "algobase.h"
 
+#ifndef CVDL_MODEL_DIR_DEFAULT
 // model directory, alt it can be passed from app
-#define MODEL_DIR "/usr/lib/x86_64-linux-gnu/libgstcvdl/models"
+#define CVDL_MODEL_DIR_DEFAULT "/usr/lib/x86_64-linux-gnu/libgstcvdl/models"
+#endif
 
 #define CHECK(X) if(!(X)){ GST_ERROR("CHECK ERROR!"); std::exit(EXIT_FAILURE); }
-#define REQUEST_NUM 8
+#define REQUEST_NUM 16
 
 
 enum{

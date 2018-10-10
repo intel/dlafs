@@ -1,0 +1,78 @@
+#!/bin/bash
+
+#parameter
+# 1: client id
+# 2: media source
+#     example:
+#      	rtsp source: rtsp://10.239.67.136:8554/test%H.264
+#      	local source: /home/lijunjie/1600x1200.mp4
+# 3: loop times
+
+if (( $# != 3 ));
+then
+	echo "Invalid input parameter!!!"
+	echo "hddlspipe <client_id> <media_source> <loop_times>"
+	exit 1
+fi
+
+gst_cmd=""
+gst_source=""
+is_rtsp=`echo $2 | grep -i "rtsp"`
+echo "is_rtsp=$is_rtsp"
+set -e
+if [[ $is_rtsp == "" ]];
+then
+	### local file as input source
+	video_codec=`gst-discoverer-1.0 $2 | grep "video codec" | cut -d ":" -f 2`
+	echo "video_codec="$video_codec
+	if [[ $video_codec =~ "H.264" ]];
+	then
+		echo "H264 codec is detected"
+		gst_source="filesrc location=$2 ! qtdemux ! h264parse ! mfxh264dec "
+	elif [[  $video_codec =~ "H.265" ]];
+	then
+		echo "H265 codec is detected"
+		gst_source="filesrc location=$2 ! qtdemux ! h265parse ! mfxhevcdec "
+	fi
+else
+	### rtsp source as input stream
+	video_codec=`echo $2 | cut -d "%" -f 2`
+	echo "rtsp video_codec="$video_codec
+	rtsp_source=`echo $2 | cut -d "%" -f 1`
+	if [[ $video_codec =~ "H.264" ]];
+	then
+		echo "RTSP H264 codec is detected"
+		gst_source="rtspsrc location=$rtsp_source udp-buff-size=800000 ! rtph264depay ! h264parse ! mfxh264dec "
+	elif [[  $video_codec =~ "H.265" ]];
+	then
+		echo "RTSP H265 codec is detected"
+		gst_source="rtspsrc location=$rtsp_source udp-buff-size=800000 ! rtph265depay ! h265parse ! mfxhevcdec "
+	fi
+fi
+
+if [[ $gst_source == "" ]];
+then
+	echo "Cannot get valid codec type, exit!!!"
+	exit -1;
+fi;
+
+gst_cmd="$gst_source ! cvdlfilter ! resconvert name=res res.src_pic ! mfxjpegenc ! wssink name=ws wsclientid=$1  res.src_txt ! ws."
+echo "run: gst-launch-1.0 $gst_cmd"
+
+loop_times=1
+echo "loop_times = "$3
+
+script_name=temp_$1_$3_`date +%m%s%N`.sh
+echo "gst-launch-1.0 $gst_cmd" >> $script_name
+chmod a+x $script_name
+
+while [ $loop_times -le $3 ]
+do
+	echo "loop_times=$loop_times"
+	echo $gst_cmd
+	bash $script_name
+#	$(gst-launch-1.0 $gst_cmd)
+	let loop_times=loop_times+1
+done
+rm -rf $script_name
+

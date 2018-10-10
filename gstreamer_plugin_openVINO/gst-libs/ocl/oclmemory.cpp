@@ -22,8 +22,6 @@
 
 #include <memory.h>
 #include <string.h>
-//#include <xf86drm.h>
-//#include <xf86drmMode.h>
 #include <va/va_drmcommon.h>
 #include <gst/allocators/gstdmabuf.h>
 
@@ -55,10 +53,6 @@ ocl_memory_acquire (GstBuffer* buffer)
     GstMemory *memory = gst_buffer_peek_memory (buffer, 0);
 
     if (memory ) {
-        // Do not use qdata
-        //OclMemory* ocl_mem = (OclMemory*)
-        //    gst_mini_object_get_qdata (GST_MINI_OBJECT (memory), OCL_MEMORY_QUARK);
-
         OclMemory* ocl_mem = (OclMemory*)memory;
         if (ocl_mem &&
             !strcmp (GST_MEMORY_CAST(ocl_mem)->allocator->mem_type, OCL_ALLOCATOR_NAME))

@@ -216,8 +216,9 @@ res_convert_flush (ResConvert * convertor)
   //TODO
 }
 
+
 static void
-res_convert_finalize (ResConvert * convertor)
+res_convert_clean (ResConvert * convertor)
 {
     // g_object_unref() --> gst_element_dispose
     // it has unref all the pads
@@ -230,6 +231,17 @@ res_convert_finalize (ResConvert * convertor)
     if(convertor->blend_handle)
         blender_destroy(convertor->blend_handle);
     convertor->blend_handle = 0;
+}
+
+static void
+res_convert_finalize (ResConvert * convertor)
+{
+    // g_object_unref() --> gst_element_dispose
+    // it has unref all the pads
+
+    // release pool
+    res_convert_clean(convertor);
+
     G_OBJECT_CLASS (parent_class)->finalize (G_OBJECT (convertor));
 }
 
@@ -248,7 +260,7 @@ res_convert_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     case GST_EVENT_FLUSH_STOP:
         res_convert_send_event (convertor, event);
         res_convert_flush (convertor);
-        res_convert_finalize(convertor);
+        res_convert_clean(convertor);
         break;
     case GST_EVENT_SEGMENT:
     {
@@ -301,30 +313,6 @@ res_convert_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
             break;
         }
 
-        #if 0
-        prev_incaps = gst_pad_get_current_caps (mypad);      
-        g_print("current_caps =\n %s\n", gst_caps_to_string(prev_incaps));
-        g_print("caps =\n %s\n", gst_caps_to_string(caps));
-
-        //dead-loop if call below function
-        // set sink pad
-        if(prev_incaps && gst_caps_is_equal(prev_incaps, caps)) {
-            g_print("%s() - the same caps!!!\n", __func__);
-            // DO nothig
-        }else{
-            if(!prev_incaps)
-                prev_incaps = gst_pad_get_pad_template_caps(mypad);
-            newcaps = gst_caps_intersect_full (prev_incaps, caps, GST_CAPS_INTERSECT_FIRST);
-            g_print("newcaps =\n %s\n", gst_caps_to_string(newcaps));
-            // set caps
-            gst_pad_set_caps (mypad, newcaps);
-            gst_caps_unref(newcaps);
-        }
-        g_print("prev_incaps = %s\n", gst_caps_to_string(prev_incaps));
-        g_print("caps = %s\n", gst_caps_to_string(caps));
-        gst_caps_unref (prev_incaps);
-        #endif
-
         // set pic_src pad
         prev_incaps = gst_pad_get_current_caps (otherpad);
         GST_LOG("caps = %s\n", gst_caps_to_string(caps));
@@ -355,7 +343,7 @@ res_convert_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         GST_LOG("caps =\n %s\n", gst_caps_to_string(caps));
         GST_LOG("newcaps =\n %s\n", gst_caps_to_string(newcaps));
         newcaps = gst_caps_intersect_full (newcaps, prev_incaps, GST_CAPS_INTERSECT_FIRST);
-        g_print("intersect newcaps =\n %s\n", gst_caps_to_string(newcaps));
+        //g_print("intersect newcaps =\n %s\n", gst_caps_to_string(newcaps));
 
         // TODO: need to free structure and features?
 
@@ -371,10 +359,8 @@ res_convert_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         // free caps
         gst_caps_unref(newcaps);
         gst_caps_unref (prev_incaps);
-        gst_caps_unref(caps);
 
         // TODO: set caps for txt_srcpad
-
 
         // free event
         gst_event_unref (event);
@@ -415,109 +401,34 @@ res_convert_query (GstPad * pad, GstObject * parent, GstQuery * query)
     GST_LOG_OBJECT (convertor, "Have query of type %d on pad %" GST_PTR_FORMAT,
         GST_QUERY_TYPE (query), pad);
 
-    // It will make transform filter get empty out/in caps
-    #if 0
-    switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_ALLOCATION:
-        g_print("%s() - query GST_QUERY_ALLOCATION...",__func__);
-        forward = TRUE;
-        break;
-    case GST_QUERY_ACCEPT_CAPS:
-    {
-        GstCaps *caps;
-        gst_query_parse_accept_caps (query, &caps);
+    GST_LOG("%s() - name = %s, query = %s\n",__func__, gst_pad_get_name(pad),
+        GST_QUERY_TYPE_NAME (query));
 
-        if(!caps) {
-            forward = TRUE;
-            break;
-        }
-
-        GstCaps *temp = NULL;
-        if(direction==GST_PAD_SRC)
-            temp = gst_pad_get_pad_template_caps (convertor->pic_srcpad);
-        else
-            temp = gst_pad_get_pad_template_caps (convertor->sinkpad);
-
-        GST_LOG("pad_caps = %s\n", gst_caps_to_string(temp));
-        GST_LOG("caps = %s\n", gst_caps_to_string(caps));
-
-        ret = gst_caps_can_intersect (caps, temp);
-        if(ret==TRUE) {
-            gst_query_set_accept_caps_result (query, ret);
-            /* return TRUE, we answered the query */
-            ret = TRUE;
-        }
-        gst_caps_unref(caps);
-        gst_caps_unref(temp);
-        break;
-    }
-    case GST_QUERY_CAPS:
-    {
-        GstCaps *filter, *caps, *temp;
-        gst_query_parse_caps (query, &filter);
-
-        if(!filter) {
-            forward = TRUE;
-            break;
-        }
-        if(direction==GST_PAD_SRC)
-            temp = gst_pad_get_pad_template_caps (convertor->pic_srcpad);
-        else
-            temp = gst_pad_get_pad_template_caps (convertor->sinkpad);
-
-        caps = gst_caps_intersect_full (filter, temp, GST_CAPS_INTERSECT_FIRST);
-
-        GST_LOG("filter_caps = %s\n", gst_caps_to_string(filter));
-        GST_LOG("caps = %s\n", gst_caps_to_string(caps));
-
-        if(caps){
-            gst_query_set_caps_result (query, caps);
-            gst_caps_unref (caps);
-            ret = TRUE;
-        }
-        gst_caps_unref(temp);
-        gst_caps_unref(filter);
-        break;
-    }
-    default:
-      ret = gst_pad_query_default (pad, parent, query);
-      break;
-  }
-
-  if(forward == TRUE)
     ret = gst_pad_query_default (pad, parent, query);
-  #endif
 
-  //GstPadDirection direction = GST_PAD_DIRECTION (pad);
-  GST_LOG("%s() - name = %s, query = %s\n",__func__, gst_pad_get_name(pad), GST_QUERY_TYPE_NAME (query));
-
-  ret = gst_pad_query_default (pad, parent, query);
-
-  switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_ALLOCATION:
-        GST_LOG("%s() - query GST_QUERY_ALLOCATION...",__func__);
+    switch (GST_QUERY_TYPE (query)) {
+        case GST_QUERY_ALLOCATION:
+            GST_LOG("%s() - query GST_QUERY_ALLOCATION...",__func__);
+            break;
+        case GST_QUERY_ACCEPT_CAPS:
+        {
+            GstCaps *caps;
+            gst_query_parse_accept_caps (query, &caps);
+            GST_LOG("%s() - accept caps = %s\n", __func__, gst_caps_to_string(caps));
         break;
-    case GST_QUERY_ACCEPT_CAPS:
-    {
-        GstCaps *caps;
-        gst_query_parse_accept_caps (query, &caps);
-        GST_LOG("%s() - accept caps = %s\n", __func__, gst_caps_to_string(caps));
-        //if(caps)
-        //    gst_caps_unref(caps);
-        break;
+        }
+        case GST_QUERY_CAPS:
+        {
+            GstCaps *caps;
+            gst_query_parse_caps (query, &caps);
+            GST_LOG("%s() - caps = %s\n", __func__, gst_caps_to_string(caps));
+            break;
+        }
+        default:
+            break;
     }
-    case GST_QUERY_CAPS:
-    {
-        GstCaps *caps;
-        gst_query_parse_caps (query, &caps);
-        GST_LOG("%s() - caps = %s\n", __func__, gst_caps_to_string(caps));
-        break;
-    }
-    default:
-      break;
-  }
 
-  return ret;
+    return ret;
 }
 
 
@@ -559,47 +470,26 @@ res_convert_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     ResConvert *convertor = RES_CONVERT (parent);
     GstFlowReturn ret = GST_FLOW_OK;
     GstBuffer* output = NULL;
+    gint64 start, stop;
 
     GST_LOG_OBJECT (convertor,
         "Received buffer with offset %" G_GUINT64_FORMAT,
         GST_BUFFER_OFFSET (buffer));
-
-    //test
-    GstCaps *current_caps = gst_pad_get_current_caps (pad);
-    GST_LOG("chain_caps(%s) =\n %s\n", gst_pad_get_name(pad), gst_caps_to_string(current_caps));
-    if(current_caps) gst_caps_unref(current_caps);
-
-    current_caps = gst_pad_get_current_caps (convertor->pic_srcpad);
-    GST_LOG("chain_caps(%s) =\n %s\n", gst_pad_get_name(convertor->pic_srcpad), gst_caps_to_string(current_caps));
-    if(current_caps) gst_caps_unref(current_caps);
-
-
-    // create osd pool if it not created before
-    //----- move it into even function
-    //Gst *caps = gst_pad_get_current_caps(pad);
-    //blender_init(convertor->blend_handle ,caps);
-    //gst_caps_unref(caps);
+    start = g_get_monotonic_time();
 
     // Process the input buffer - draw data into NV12 surface by OpenCV
     // The src_pic will connect to a queue filter to cache the data
     // step 1: create a RGB OSD and draw string/rectangle/track points on it
     // step 2: call OpenCL to blend OSD with NV12 surface, into OSD buffer?
-    // It is better to blend OSD int NV12 surface
     output = blender_process_cvdl_buffer(convertor->blend_handle, buffer);
+    convertor->frame_num++;
 
-#if 1
+    stop = g_get_monotonic_time();
+    convertor->cost_ms = (stop-start)/1000;
     // push the result
-    if(output!=NULL)
+    if(output)
         ret = res_convert_send_data (convertor, output, buffer);
     gst_buffer_unref(buffer);
-#else
-   //test
-    if(output!=NULL)
-        gst_buffer_unref(output);
-    gst_pad_push (convertor->pic_srcpad, buffer);
-    //gst_buffer_unref(buffer);
-#endif
-
 
     return ret;
 }
@@ -607,41 +497,49 @@ res_convert_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 static gboolean
 res_convert_create_src_pad (ResConvert * convertor, gint stream_type)
 {
-  ResConvertClass *klass = RES_CONVERT_GET_CLASS (convertor);
-  GST_DEBUG_OBJECT (convertor, "create src pad, type: 0x%02x", stream_type);
+    ResConvertClass *klass = RES_CONVERT_GET_CLASS (convertor);
+    GST_DEBUG_OBJECT (convertor, "create src pad, type: 0x%02x", stream_type);
 
-  switch (stream_type) {
-    case STREAM_TYPE_TXT:
-    {
-      convertor->txt_srcpad = gst_pad_new_from_template (klass->src_txt_template, "src_txt");
-      gst_pad_set_event_function (convertor->txt_srcpad, GST_DEBUG_FUNCPTR (res_convert_src_event));
-      gst_pad_set_query_function (convertor->txt_srcpad, GST_DEBUG_FUNCPTR (res_convert_query));
-      gst_pad_use_fixed_caps (convertor->txt_srcpad);
-      if (!gst_pad_set_active (convertor->txt_srcpad, TRUE)) {
-        GST_WARNING_OBJECT (convertor, "Failed to activate pad %" GST_PTR_FORMAT, convertor->txt_srcpad);
-        return FALSE;
-      }
-      gst_element_add_pad (GST_ELEMENT (convertor), convertor->txt_srcpad);
-      break;
-    }
-    case STREAM_TYPE_PIC:
-    {
-        convertor->pic_srcpad = gst_pad_new_from_template (klass->src_pic_template, "src_pic");
-        gst_pad_set_event_function (convertor->pic_srcpad, GST_DEBUG_FUNCPTR (res_convert_src_event));
-        gst_pad_set_query_function (convertor->pic_srcpad, GST_DEBUG_FUNCPTR (res_convert_query));
-        gst_pad_use_fixed_caps (convertor->pic_srcpad);
-        if (!gst_pad_set_active (convertor->pic_srcpad, TRUE)) {
-          GST_WARNING_OBJECT (convertor, "Failed to activate pad %" GST_PTR_FORMAT, convertor->pic_srcpad);
-          return FALSE;
+    switch (stream_type) {
+        case STREAM_TYPE_TXT:
+        {
+            convertor->txt_srcpad =
+                gst_pad_new_from_template (klass->src_txt_template, "src_txt");
+            gst_pad_set_event_function (convertor->txt_srcpad,
+                GST_DEBUG_FUNCPTR (res_convert_src_event));
+            gst_pad_set_query_function (convertor->txt_srcpad,
+                GST_DEBUG_FUNCPTR (res_convert_query));
+            gst_pad_use_fixed_caps (convertor->txt_srcpad);
+            if (!gst_pad_set_active (convertor->txt_srcpad, TRUE)) {
+                GST_WARNING_OBJECT (convertor, "Failed to activate pad %" GST_PTR_FORMAT,
+                    convertor->txt_srcpad);
+                return FALSE;
+            }
+            gst_element_add_pad (GST_ELEMENT (convertor), convertor->txt_srcpad);
+            break;
         }
-        gst_element_add_pad (GST_ELEMENT (convertor), convertor->pic_srcpad);
-        break;
+        case STREAM_TYPE_PIC:
+        {
+            convertor->pic_srcpad =
+                gst_pad_new_from_template (klass->src_pic_template, "src_pic");
+            gst_pad_set_event_function (convertor->pic_srcpad,
+                GST_DEBUG_FUNCPTR (res_convert_src_event));
+            gst_pad_set_query_function (convertor->pic_srcpad,
+                GST_DEBUG_FUNCPTR (res_convert_query));
+            gst_pad_use_fixed_caps (convertor->pic_srcpad);
+            if (!gst_pad_set_active (convertor->pic_srcpad, TRUE)) {
+                GST_WARNING_OBJECT (convertor, "Failed to activate pad %" GST_PTR_FORMAT,
+                    convertor->pic_srcpad);
+                return FALSE;
+            }
+            gst_element_add_pad (GST_ELEMENT (convertor), convertor->pic_srcpad);
+            break;
+        }
+        default:
+            break;
     }
-    default:
-      break;
-  }
 
-  return TRUE;
+    return TRUE;
 }
 
 
@@ -655,27 +553,29 @@ res_convert_reset (ResConvert * convertor)
 static GstStateChangeReturn
 res_convert_change_state (GstElement * element, GstStateChange transition)
 {
-  ResConvert *convertor = RES_CONVERT (element);
-  GstStateChangeReturn result;
-  switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      // create the process task(thread) and start it
+    ResConvert *convertor = RES_CONVERT (element);
+    GstStateChangeReturn result;
+    switch (transition) {
+        case GST_STATE_CHANGE_NULL_TO_READY:
+            // create the process task(thread) and start it
 
-      break;
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-      break;
-    default:
-      break;
-  }
+            break;
+        case GST_STATE_CHANGE_READY_TO_PAUSED:
+            break;
+        default:
+            break;
+    }
 
   result = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       res_convert_reset (convertor);
+      g_print("resconvert processed %ld frames, fps = %.2f\n", convertor->frame_num,
+          1000.0 * convertor->frame_num / (0.01 + convertor->cost_ms));
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       // stop the thread
-      res_convert_finalize(convertor);
+      res_convert_clean(convertor);
       break;
     default:
       break;
@@ -688,17 +588,17 @@ res_convert_change_state (GstElement * element, GstStateChange transition)
 static void
 res_convert_base_init (ResConvertClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+    GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  klass->sink_template    = gst_static_pad_template_get (&sink_factory);
-  klass->src_pic_template = gst_static_pad_template_get (&src_pic_factory);
-  klass->src_txt_template = gst_static_pad_template_get (&src_txt_factory);
+    klass->sink_template    = gst_static_pad_template_get (&sink_factory);
+    klass->src_pic_template = gst_static_pad_template_get (&src_pic_factory);
+    klass->src_txt_template = gst_static_pad_template_get (&src_txt_factory);
 
-  gst_element_class_add_pad_template (element_class, klass->src_pic_template);
-  gst_element_class_add_pad_template (element_class, klass->src_txt_template);
-  gst_element_class_add_pad_template (element_class, klass->sink_template);
+    gst_element_class_add_pad_template (element_class, klass->src_pic_template);
+    gst_element_class_add_pad_template (element_class, klass->src_txt_template);
+    gst_element_class_add_pad_template (element_class, klass->sink_template);
 
-  gst_element_class_set_static_metadata (element_class,
+    gst_element_class_set_static_metadata (element_class,
       "Inference result convertor", "Transform/PostProcess",
       "Convert inference result into OSD", "River Li<river.li@intel.com>");
 }
@@ -706,18 +606,18 @@ res_convert_base_init (ResConvertClass * klass)
 static void
 res_convert_class_init (ResConvertClass * klass)
 {
-  GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
+    GObjectClass *gobject_class;
+    GstElementClass *gstelement_class;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+    parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
+    gobject_class = (GObjectClass *) klass;
+    gstelement_class = (GstElementClass *) klass;
 
-  gobject_class->finalize = (GObjectFinalizeFunc) res_convert_finalize;
-  gstelement_class->change_state = res_convert_change_state;
+    gobject_class->finalize = (GObjectFinalizeFunc) res_convert_finalize;
+    gstelement_class->change_state = res_convert_change_state;
 
-  g_type_class_add_private (klass, sizeof (ResOclBlendPrivate));
+    g_type_class_add_private (klass, sizeof (ResOclBlendPrivate));
 }
 
 static void
@@ -756,6 +656,8 @@ res_convert_init (ResConvert * convertor)
     gst_video_info_init (&convertor->src_info);
 
     convertor->blend_handle = blender_create();
+    convertor->cost_ms = 0;
+    convertor->frame_num = 0;
 }
 
 

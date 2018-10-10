@@ -63,6 +63,8 @@ struct _CvdlFilter
     GstTask *mPushTask;
     GRecMutex mMutex;
     int frame_num;
+    gint64 startTimePos;
+    gint64 stopTimePos;
 
     // debug
     int frame_num_in;

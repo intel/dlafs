@@ -316,6 +316,8 @@ gst_mfxdec_decide_allocation (GstVideoDecoder * vdec, GstQuery * query)
             query);
 }
 
+static GstMfxDec *g_mfxdec = NULL;
+
 static gboolean
 gst_mfxdec_create (GstMfxDec * mfxdec, GstCaps * caps)
 {
@@ -359,6 +361,8 @@ gst_mfxdec_create (GstMfxDec * mfxdec, GstCaps * caps)
 
   mfxdec->do_renego = TRUE;
 
+  g_mfxdec = mfxdec;
+
   return TRUE;
 }
 
@@ -398,6 +402,7 @@ gst_mfxdec_reset_full (GstMfxDec * mfxdec, GstCaps * caps,
   return gst_mfxdec_create (mfxdec, caps);
 }
 
+
 static void
 gst_mfxdec_finalize (GObject * object)
 {
@@ -420,6 +425,8 @@ static gboolean
 gst_mfxdec_close (GstVideoDecoder * vdec)
 {
   GstMfxDec *const mfxdec = GST_MFXDEC (vdec);
+
+//  g_mfxdec = mfxdec;
 
   gst_mfxdec_input_state_replace (mfxdec, NULL);
   gst_mfx_decoder_replace (&mfxdec->decoder, NULL);
