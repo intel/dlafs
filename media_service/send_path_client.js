@@ -12,7 +12,9 @@ program
 var loop_times = 0;
 var pipe_num = 0;
 var stream_path = "";
-
+var input_arr = "";
+var rec_pipe_arr = "";
+var is_input_valid = false;
 
 program.parse(process.argv)
 if(program.stream) {
@@ -28,10 +30,15 @@ if(program.num) {
     console.log('pipe_num = ' + pipe_num);
 }
 
-const rl = readline.createInterface({
+/*const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout
-});
+});*/
+
+const rl = readline.createInterface({
+ input: process.stdin, 
+ output: process.stdout, 
+ prompt: 'OHAI> ' }); 
 
 var fs = require('fs')
   , filename = 'path.txt';
@@ -123,6 +130,44 @@ function input_pipe_number() {
     }
 }
 
+function resume_from_pause(data) {
+    rl.prompt(); //用户输入
+
+    rl.on('line', (line) => { 
+        input_arr = line.split(',');
+        rec_pipe_arr = data.split(',');
+        for(var i =0;i<rec_pipe_arr.length;i++){
+            if(input_arr[0] ===rec_pipe_arr[i]){
+            is_input_valid = true;
+            }
+        }
+        switch ((line.indexOf(',')>=0) && (is_input_valid === true))
+        { 
+           case true: 
+             console.log('right format'); 
+             ws.send(line);
+             is_input_valid = false;
+             break; 
+           default: 
+             console.log(`please type right format(pipe id, p/c)`); 
+             rl.close();
+             ws.close();
+             break; 
+        } 
+        rl.prompt(); //用户结束了输入。 
+   })
+
+   .on('close', () => { 
+       console.log('[SEND_PATH_CLIENT] closed');
+       process.exit(0); 
+       ws.close();
+    });
+        
+}
+
+
+
+
 ws.on('open', function () {
     console.log(`[SEND_PATH_CLIENT] open()`);
     var ret = input_stream_source();
@@ -136,15 +181,12 @@ ws.on('message',function(data){
             input_loop_times();
         } else if(data.indexOf('set loop times done')>=0) {
             input_pipe_number();
-        } else if(data.indexOf('setup pipe done')>=0) {
-            rl.question('Do you want to quit(y/n)? ', (answer) => {
-                if(answer.trim()=='y') {
-                    console.log('quit client!');
-                    rl.close();
-                    ws.close();
-                }
-            });
-        }
+        } else if(data.indexOf(',')>-1) {
+            console.log('right now pipe id is: '+ data);
+            resume_from_pause(data);
+
+        } 
+
     }
 });
 
@@ -157,5 +199,6 @@ ws.on('close', function () {
     console.log(`Right now I'll clear all pipes!`);
 });
 }
+
 
 
