@@ -56,7 +56,6 @@ struct _CvdlFilterPrivate
 };
 
 const char cvdl_filter_caps_str[] = \
-    GST_VIDEO_CAPS_MAKE ("NV12") "; " \
     GST_VIDEO_CAPS_MAKE_WITH_FEATURES("memory:MFXSurface", "NV12");
 
 static GstStaticPadTemplate cvdl_sink_factory =

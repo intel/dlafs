@@ -41,7 +41,7 @@ using namespace cv;
  * If not detect number >= TRACK_MAX_NUM, tracking will stop.
  */
 #define TRACK_MAX_NUM 12
-#define TRACK_FRAME_NUM 8
+#define TRACK_FRAME_NUM 3
 
 #define FLAGS_TRACKED_DATA_IS_SET   0x1
 #define FLAGS_TRACKED_DATA_IS_PASS  0x2
