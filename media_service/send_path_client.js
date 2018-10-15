@@ -15,6 +15,7 @@ var stream_path = "";
 var input_arr = "";
 var rec_pipe_arr = "";
 var is_input_valid = false;
+var psw = "";
 
 program.parse(process.argv)
 if(program.stream) {
@@ -43,20 +44,37 @@ const rl = readline.createInterface({
 var fs = require('fs')
   , filename = 'path.txt';
 var url = 0;
+
+function read_server_ip(){
 fs.readFile(filename, 'utf8', function(err, data) {
   if (err) throw err;
   console.log('found: ' + filename);
   console.log('server ip is:'+ data);
   url = data;
-  url= url.replace(/[\r\n]/g,"");  
+  url= url.replace(/[\r\n]/g,""); 
+  set_websocket(); 
+});
+}
+
+function input_password() {
+    
+        rl.question('Please input password to connect server(c): ', (answer) => {
+           if(answer !==""){
+            psw = answer;
+            read_server_ip();
+           }
+          
 });
 
-setTimeout(() => {
-    set_websocket();
-  }, 2000);
+       
+}
+
+//setTimeout(() => {
+ //   set_websocket();
+ // }, 2000);
 
 function set_websocket(){
-const ws = new WebSocket("wss://"+url+":8126/sendPath", {
+const ws = new WebSocket("wss://"+url+":8126/sendPath?id=2"+"&key="+psw, {
     rejectUnauthorized: false
   });
 
@@ -199,6 +217,13 @@ ws.on('close', function () {
     console.log(`Right now I'll clear all pipes!`);
 });
 }
+
+input_password();
+
+
+
+
+
 
 
 

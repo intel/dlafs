@@ -1,18 +1,25 @@
 #!/usr/bin/env node
 const WebSocket = require('ws');
-var ab2str = require('arraybuffer-to-string');
+const ab2str = require('arraybuffer-to-string');
 const fs = require('fs');
 const path = require('path');
-var rimraf = require('rimraf');
+const rimraf = require('rimraf');
+const readline = require('readline');
 
 var con='';
 let count=0;
 var pipe_id = 0;
+var psw = "";
 
 var m = new Map();
 for(let i=0;i<100;i++){
   m.set(i,0);
 }
+
+const rl = readline.createInterface({
+ input: process.stdin, 
+ output: process.stdout
+}); 
 
 
 function mkdirs(dirpath) {
@@ -24,20 +31,33 @@ function mkdirs(dirpath) {
 
 var filename = 'path.txt';
 var url = 0;
+function read_server_ip(){
 fs.readFile(filename, 'utf8', function(err, data) {
   if (err) throw err;
   console.log('found: ' + filename);
   console.log('server ip is:'+ data);
   url = data;
-  url= url.replace(/[\r\n]/g,"");  
+  url= url.replace(/[\r\n]/g,""); 
+  set_websocket(); 
+});
+}
+
+function input_password() {
+    
+        rl.question('Please input password to connect server(b): ', (answer) => {
+           if(answer !==""){
+            psw = answer;
+            read_server_ip();
+           }
+          
 });
 
-setTimeout(() => {
-    set_websocket();
-  }, 2000);
+       
+}
+
 
 function set_websocket(){
-const ws = new WebSocket("wss://"+url+":8123/binaryEchoWithSize?id=1", {
+const ws = new WebSocket("wss://"+url+":8123/binaryEchoWithSize?id=1"+"&key="+psw, {
     rejectUnauthorized: false
 });
 
@@ -108,5 +128,7 @@ ws.on('error', function () {
     
 }); 
 }
+
+input_password();
 
 

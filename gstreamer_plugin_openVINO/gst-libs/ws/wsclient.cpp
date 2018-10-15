@@ -42,7 +42,7 @@ struct _wsclient{
 };
 typedef struct _wsclient WsClient;
 
-#define DEFAULT_WSS_URI "wss://localhost:8123/binaryEchoWithSize"
+#define DEFAULT_WSS_URI "wss://localhost:8123/binaryEchoWithSize?id=3"
 
 WsClientHandle wsclient_setup(char *serverUri, int client_id)
 {

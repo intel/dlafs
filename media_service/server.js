@@ -29,7 +29,7 @@ const path_server = https.createServer({
   key: fs.readFileSync('server-key.pem')
 });
 
-const path_wss = new WebSocketServer({server: path_server, path: '/sendPath'});
+const path_wss = new WebSocketServer({server: path_server, path: '/sendPath',verifyClient: ClientVerify});
 path_wss.on('connection', function(ws) {
 
     console.log('/sendPath connected');
@@ -206,9 +206,34 @@ data_wss.on('connection', function connection(ws) {
 
 function ClientVerify(info) {
 
-   var ret = true;//拒绝
+   var ret = false;//拒绝
 
    params = url.parse(info.req.url, true).query;
+
+   if (params["id"] == "1") {
+
+    if(params["key"] == "b"){
+       ret = true;//通过
+    }    
+
+   }
+
+   if (params["id"] == "2") {
+
+    if(params["key"] == "c"){
+        
+       ret = true;//通过
+    }    
+
+   }
+
+   if (params["id"] == "3") { 
+        
+       ret = true;//通  
+
+   }
+
+
 
    return ret;
 }
