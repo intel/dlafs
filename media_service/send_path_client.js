@@ -42,14 +42,14 @@ const rl = readline.createInterface({
  prompt: 'OHAI> ' }); 
 
 var fs = require('fs')
-  , filename = 'path.txt';
+  , filename = 'hostname.txt';
 var url = 0;
 
 function read_server_ip(){
 fs.readFile(filename, 'utf8', function(err, data) {
   if (err) throw err;
   console.log('found: ' + filename);
-  console.log('server ip is:'+ data);
+  console.log('host name is:'+ data);
   url = data;
   url= url.replace(/[\r\n]/g,""); 
   set_websocket(); 
@@ -75,7 +75,11 @@ function input_password() {
 
 function set_websocket(){
 const ws = new WebSocket("wss://"+url+":8126/sendPath?id=2"+"&key="+psw, {
-    rejectUnauthorized: false
+    ca: fs.readFileSync('./cert_client_8126/ca-crt.pem'),
+    key: fs.readFileSync('./cert_client_8126/client1-key.pem'),
+    cert: fs.readFileSync('./cert_client_8126/client1-crt.pem'),
+    rejectUnauthorized:true,
+    requestCert:true
   });
 
 

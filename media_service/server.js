@@ -25,8 +25,11 @@ for(let i=0;i<100;i++){
 
 
 const path_server = https.createServer({
-  cert: fs.readFileSync('server-cert.pem'),
-  key: fs.readFileSync('server-key.pem')
+    key: fs.readFileSync('./cert_server_8126/server-key.pem'), 
+    cert: fs.readFileSync('./cert_server_8126/server-crt.pem'), 
+    ca: fs.readFileSync('./cert_server_8126/ca-crt.pem'), 
+    requestCert: true, 
+    rejectUnauthorized: true
 });
 
 const path_wss = new WebSocketServer({server: path_server, path: '/sendPath',verifyClient: ClientVerify});
@@ -153,8 +156,8 @@ let gst_cmd = 0;
 let gst_cmd_path = 0;
 
 const data_server = https.createServer({
-  cert: fs.readFileSync('server-cert.pem'),
-  key: fs.readFileSync('server-key.pem'),
+  cert: fs.readFileSync('./cert_server_8123/server-cert.pem'),
+  key: fs.readFileSync('./cert_server_8123/server-key.pem'),
   strictSSL: false
 });
 
@@ -244,10 +247,20 @@ console.log('Listening on port 8126 and 8123...');
 
 var exec = require('child_process').exec;
 exec('hostname -I', function(error, stdout, stderr) {
-    console.log('Please make sure to copy the ip address: ' + stdout);
+    console.log('Please make sure to copy the ip address into path.txt: ' + stdout);
     //console.log('stderr: ' + stderr);
     if (error !== null) {
         console.log('exec error: ' + error);
     }
 });
+
+exec('cat /etc/hosts', function(error, stdout, stderr) {
+    console.log('Please make sure to copy the DNS name into hostname.txt: ' + stdout);
+    //console.log('stderr: ' + stderr);
+    if (error !== null) {
+        console.log('exec error: ' + error);
+    }
+});
+
+
 
