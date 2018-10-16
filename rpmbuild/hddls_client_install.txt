@@ -1,0 +1,42 @@
+
+1. Setup HDDL-S client in host machine
+----------------------------
+sudo apt-get install nodejs-legacy npm
+npm config set proxy <proxy>
+sudo npm install -g n
+sudo n stable
+npm install ws@6.0.0
+npm install child_process arraybuffer-to-string rimraf commander tree-kill
+chmod a+x *.js
+
+echo <server_ip>  > path.txt
+
+
+2. Run receiver client
+----------------------
+./receive_data_client.js
+
+
+
+3. Run controller client
+------------------------
+./send_path_client.js -s <stream source> -l <loop_times> -n <pipe_num>
+
+    Note: 
+      1. stream source can be local file such as: /home/<user>/<file_name.mp4>
+         Or rtsp source:  rtsp://<rtsp_addr>%<media_type>
+                          For example:  rtsp://10.239.85.88:8554/video0%H.264
+                          media_type: H.264 or H.265
+      2. command to stop and resume pipe task:
+           stop: <pipe_id>,p
+           resume: <pipe_id>,c,<loop_times>
+      3. about pipe_num
+           set 1 if rtsp source don't support multiple client access.
+
+Local file:
+        ./send_path_client.js -s <media_file> -l <loop_time> -n <media_pipe_num>
+
+Rtsp:
+        ./send_path_client.js -s <rtsp_addr>%<media_type> -l 1 -n <media_pipe_num>
+
+

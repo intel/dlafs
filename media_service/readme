@@ -12,7 +12,7 @@ npm install ws
 npm install -g n
 npm install child_process
 npm install arraybuffer-to-string
-npm install rimraf
+npm install rimraf tree-kill
 
 3. run websocket server and client:
 
