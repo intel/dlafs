@@ -75,6 +75,11 @@ if [ $? -eq 0 ]; then
 echo "===========================compressed directories==========================="
 fi
 
+if [ ! -d $RPMBUILD_PATH/SOURCES ]; then
+    mkdir -p $RPMBUILD_PATH/SOURCES
+    mkdir -p $RPMBUILD_PATH/SPECS
+fi
+
 mv Intel_Movidius_MyriadX_HDDL-S_Linux.tar.gz $RPMBUILD_PATH/SOURCES/ -f
 
 cd ..
