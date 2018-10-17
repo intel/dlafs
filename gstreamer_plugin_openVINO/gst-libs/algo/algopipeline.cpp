@@ -127,7 +127,7 @@ AlgoPipelineConfig *algo_pipeline_config_create(gchar *desc, int *num)
 
     count = g_strv_length(items);
     if(count==0){
-        g_print("Invalid algp pipeline description: %s\n",p);
+        g_print("Invalid algo pipeline description: %s\n",p);
         return NULL;
     }
     for(i=0;i<count;i++)

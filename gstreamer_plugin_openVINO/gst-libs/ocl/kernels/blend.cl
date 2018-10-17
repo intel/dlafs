@@ -58,7 +58,7 @@ __kernel void blend( read_only image2d_t src_y,
     if (id_z >= dst_w || id_w >= dst_h)
         return;
 
-	sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_NEAREST;
+    sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_NEAREST;
     Y0 = read_imagef(src_y, sampler, (int2)(id_z    , id_w));
     Y1 = read_imagef(src_y, sampler, (int2)(id_z + 1, id_w));
     Y2 = read_imagef(src_y, sampler, (int2)(id_z    , id_w + 1));
@@ -83,7 +83,7 @@ __kernel void blend( read_only image2d_t src_y,
     float buv = fma(coeffs[1], UV.x, 0.0f);
 
 
-	// pOsdRow - RGBA
+    // pOsdRow - RGBA
     float R0 = (Y0.x + ruv) * (255 - pOsdRow1[3]) + pOsdRow1[0];
     float G0 = (Y0.x + guv) * (255 - pOsdRow1[3]) + pOsdRow1[1];
     float B0 = (Y0.x + buv) * (255 - pOsdRow1[3]) + pOsdRow1[2];
