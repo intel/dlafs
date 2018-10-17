@@ -11,16 +11,15 @@ chmod a+x *.js
 
 echo <server_ip>  > path.txt
 
-
 2. Run receiver client
 ----------------------
-./receive_data_client.js
+./receiver_client.js
 
 
 
 3. Run controller client
 ------------------------
-./send_path_client.js -s <stream source> -l <loop_times> -n <pipe_num>
+./controller_client.js -s <stream source> -l <loop_times> -n <pipe_num>
 
     Note: 
       1. stream source can be local file such as: /home/<user>/<file_name.mp4>
@@ -34,9 +33,9 @@ echo <server_ip>  > path.txt
            set 1 if rtsp source don't support multiple client access.
 
 Local file:
-        ./send_path_client.js -s <media_file> -l <loop_time> -n <media_pipe_num>
+        ./controller_client.js -s <media_file> -l <loop_time> -n <media_pipe_num>
 
 Rtsp:
-        ./send_path_client.js -s <rtsp_addr>%<media_type> -l 1 -n <media_pipe_num>
+        ./controller_client.js -s <rtsp_addr>%<media_type> -l 1 -n <media_pipe_num>
 
 
