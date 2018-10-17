@@ -14,11 +14,72 @@ npm install child_process
 npm install arraybuffer-to-string
 npm install rimraf tree-kill
 
-3. run websocket server and client:
+3. setup certificate
+    please generate all these certificates in one pc!!!
+
+(1) Prepare certificates
+
+    -Generate a Certificate Authority:
+
+      openssl req -new -x509 -days 9999 -keyout ca-key.pem -out ca-crt.pem
+
+    -Insert a CA Password and remember it
+    -Specify a CA Common Name, like 'root.localhost' or 'ca.localhost'. This MUST be different from both server and client CN.
+
+(2) Server certificate
+
+    -Generate Server Key:
+
+       openssl genrsa -out server-key.pem 4096
+
+    -Generate Server certificate signing request:
+
+       openssl req -new -key server-key.pem -out server-csr.pem
+
+    -Specify server Common Name, run    cat /etc/hosts    to check valid DNS name, please don't name as'localhost'.
+    -For this example, do not insert the challenge password.
+
+(3) Sign certificate using the CA:
+
+       openssl x509 -req -days 9999 -in server-csr.pem -CA ca-crt.pem -CAkey ca-key.pem -CAcreateserial -out server-crt.pem
+
+    -insert CA Password
+
+(4) Verify server certificate:
+
+       openssl verify -CAfile ca-crt.pem server-crt.pem
+
+(5) Client certificate
+
+    -Generate Client Key:
+
+       openssl genrsa -out client1-key.pem 4096
+
+    -Generate Client certificate signing request:
+
+       openssl req -new -key client1-key.pem -out client1-csr.pem
+
+    -Specify client Common Name, like 'client.localhost'. Server should not verify this, since it should not do reverse-dns lookup.
+    -For this example, do not insert the challenge password.
+
+(6) Sign certificate using the CA:
+
+       openssl x509 -req -days 9999 -in client1-csr.pem -CA ca-crt.pem -CAkey ca-key.pem -CAcreateserial -out client1-crt.pem
+
+    -insert CA Password
+
+(7) Verify client certificate:
+
+      openssl verify -CAfile ca-crt.pem client1-crt.pem
+
+(8) After generated, please copy all file start with 'ca' and 'client' into 'cert_client_8216', and copy all file start with 'ca' and 'server' into 'cert_server_8216'.
+
+
+4. run websocket server and client:
 
 write ip address into path.txt
-chmod a+x server.js receive_data_client.js send_path_client.js
-./server.js
-./send_path_client.js
-./receive_data_client.js
+chmod a+x hddls_server.js receiver_client.js controller_client.js
+./hddls_server.js
+./controller_client.js
+./receiver_client.js
 

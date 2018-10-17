@@ -25,11 +25,14 @@ for(let i=0;i<100;i++){
 
 
 const path_server = https.createServer({
-  cert: fs.readFileSync('server-cert.pem'),
-  key: fs.readFileSync('server-key.pem')
+    key: fs.readFileSync('./cert_server_8126/server-key.pem'),
+    cert: fs.readFileSync('./cert_server_8126/server-crt.pem'),
+    ca: fs.readFileSync('./cert_server_8126/ca-crt.pem'),
+    requestCert: true,
+    rejectUnauthorized: true
 });
 
-const path_wss = new WebSocketServer({server: path_server, path: '/sendPath'});
+const path_wss = new WebSocketServer({server: path_server, path: '/sendPath',verifyClient: ClientVerify});
 path_wss.on('connection', function(ws) {
 
     console.log('/sendPath connected');
@@ -40,26 +43,15 @@ path_wss.on('connection', function(ws) {
         if(path.indexOf('stream=')==0){
             gst_cmd_path=path.substring(7);
             console.log('path: ' + gst_cmd_path);
-            
-            //client_id++;
             //gst_cmd = 'hddlspipe ' + client_id + ' ' + gst_cmd_path + ' ' + loop_times;
-            //gst_cmd = 'hddlspipe ' + client_id + ' ' + gst_cmd_path;
-
-	          //console.log('gst_cmd = ' + gst_cmd);
-            //console.log('please write loop times on client');
             ws.send('stream source is done: ' + gst_cmd_path);
         } else if(path.indexOf('loop=')==0){
-
             loop_times = parseInt(path.substring(5));
-	          //gst_cmd = 'hddlspipe ' + client_id + ' ' + gst_cmd_path + ' ' + loop_times;
             console.log('loop_times = ' + loop_times);
             ws.send('set loop times done!');
-
         } else if(path.indexOf('pipenum=')==0) {
-
             pipe_num = parseInt(path.substring(8))
             console.log('pipe_num = ' + pipe_num);
-
         } else if (path.indexOf(',')>-1){
 
           console.log(path);
@@ -153,8 +145,8 @@ let gst_cmd = 0;
 let gst_cmd_path = 0;
 
 const data_server = https.createServer({
-  cert: fs.readFileSync('server-cert.pem'),
-  key: fs.readFileSync('server-key.pem'),
+  cert: fs.readFileSync('./cert_server_8123/server-cert.pem'),
+  key: fs.readFileSync('./cert_server_8123/server-key.pem'),
   strictSSL: false
 });
 
@@ -206,9 +198,24 @@ data_wss.on('connection', function connection(ws) {
 
 function ClientVerify(info) {
 
-   var ret = true;//拒绝
-
+   var ret = false;//refuse
    params = url.parse(info.req.url, true).query;
+
+   if (params["id"] == "1") {
+     if(params["key"] == "b"){
+       ret = true;//pass
+     }
+   }
+
+   if (params["id"] == "2") {
+     if(params["key"] == "c"){
+       ret = true;//pass
+     }
+   }
+
+   if (params["id"] == "3") {
+     ret = true;//pass
+   }
 
    return ret;
 }
@@ -219,10 +226,20 @@ console.log('Listening on port 8126 and 8123...');
 
 var exec = require('child_process').exec;
 exec('hostname -I', function(error, stdout, stderr) {
-    console.log('Please make sure to copy the ip address: ' + stdout);
+    console.log('Please make sure to copy the ip address into path.txt: ' + stdout);
     //console.log('stderr: ' + stderr);
     if (error !== null) {
         console.log('exec error: ' + error);
     }
 });
+
+exec('hostname', function(error, stdout, stderr) {
+    console.log('Please make sure to copy the DNS name into hostname.txt: ' + stdout);
+    //console.log('stderr: ' + stderr);
+    if (error !== null) {
+        console.log('exec error: ' + error);
+    }
+});
+
+
 

@@ -15,6 +15,7 @@ var stream_path = "";
 var input_arr = "";
 var rec_pipe_arr = "";
 var is_input_valid = false;
+var psw = "";
 
 program.parse(process.argv)
 if(program.stream) {
@@ -41,23 +42,41 @@ const rl = readline.createInterface({
  prompt: 'OHAI> ' }); 
 
 var fs = require('fs')
-  , filename = 'path.txt';
+  , filename = 'hostname.txt';
 var url = 0;
+
+function read_server_ip(){
 fs.readFile(filename, 'utf8', function(err, data) {
   if (err) throw err;
   console.log('found: ' + filename);
-  console.log('server ip is:'+ data);
+  console.log('host name is:'+ data);
   url = data;
-  url= url.replace(/[\r\n]/g,"");  
+  url= url.replace(/[\r\n]/g,"");
+  set_websocket();
 });
+}
 
-setTimeout(() => {
-    set_websocket();
-  }, 2000);
+function input_password() {
+
+  rl.question('Please input password to connect server(default: c): ', (answer) => {
+    if(answer !==""){
+       psw = answer;
+       read_server_ip();
+    }
+  });
+}
+
+//setTimeout(() => {
+ //   set_websocket();
+ // }, 2000);
 
 function set_websocket(){
-const ws = new WebSocket("wss://"+url+":8126/sendPath", {
-    rejectUnauthorized: false
+const ws = new WebSocket("wss://"+url+":8126/sendPath?id=2"+"&key="+psw, {
+    ca: fs.readFileSync('./cert_client_8126/ca-crt.pem'),
+    key: fs.readFileSync('./cert_client_8126/client1-key.pem'),
+    cert: fs.readFileSync('./cert_client_8126/client1-crt.pem'),
+    rejectUnauthorized:true,
+    requestCert:true
   });
 
 
@@ -131,7 +150,7 @@ function input_pipe_number() {
 }
 
 function resume_from_pause(data) {
-    rl.prompt(); //用户输入
+    rl.prompt(); //user input
 
     rl.on('line', (line) => { 
         input_arr = line.split(',');
@@ -154,7 +173,7 @@ function resume_from_pause(data) {
              ws.close();
              break; 
         } 
-        rl.prompt(); //用户结束了输入。 
+        rl.prompt(); // user input end
    })
 
    .on('close', () => { 
@@ -164,9 +183,6 @@ function resume_from_pause(data) {
     });
         
 }
-
-
-
 
 ws.on('open', function () {
     console.log(`[SEND_PATH_CLIENT] open()`);
@@ -200,5 +216,6 @@ ws.on('close', function () {
 });
 }
 
+input_password();
 
 
