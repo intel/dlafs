@@ -5,20 +5,20 @@ const WebSocket = require('ws');
 const http = require('http');
 const fs = require('fs');
 const https = require('https');
-var spawn = require('child_process').spawn;
-var kill = require('tree-kill');
+const spawn = require('child_process').spawn;
+const kill = require('tree-kill');
 
 
-var client_id = 0;
-var loop_times = 10000;
-var pipe_num = 0;
-var child_pid = 0;
-var pipeid_to_number = 0;
-var pipe_all = "";
-var contin_loop_times = 0;
+let client_id = 0;
+let loop_times = 10000;
+let pipe_num = 0;
+let child_pid = 0;
+let pipeid_to_number = 0;
+let pipe_all = "";
+let contin_loop_times = 0;
 
 
-var pipe_map = new Map();
+let pipe_map = new Map();
 for(let i=0;i<100;i++){
   pipe_map.set(i,0);
 }
@@ -36,6 +36,7 @@ const path_wss = new WebSocketServer({server: path_server, path: '/sendPath',ver
 path_wss.on('connection', function(ws) {
 
     console.log('/sendPath connected');
+    pipe_all = "";
     ws.on('message', function(path) {
 
         console.log("receive message:" + path);
@@ -55,7 +56,7 @@ path_wss.on('connection', function(ws) {
         } else if (path.indexOf(',')>-1){
 
           console.log(path);
-          var arr = path.split(',');
+          let arr = path.split(',');
           if(arr[1]==='p'){
             pipeid_to_number = parseInt(arr[0]);
             child_pid = pipe_map.get(pipeid_to_number);
@@ -68,7 +69,7 @@ path_wss.on('connection', function(ws) {
                pipeid_to_number = parseInt(arr[0]);
                contin_loop_times = parseInt(arr[2]);
                gst_cmd = 'hddlspipe ' + pipeid_to_number + ' ' + gst_cmd_path + ' ' + contin_loop_times;
-                var child = spawn(gst_cmd , {
+                let child = spawn(gst_cmd , {
                     shell: true
                 });
                 pipe_map.set(pipeid_to_number,child.pid);
@@ -90,10 +91,10 @@ path_wss.on('connection', function(ws) {
         } 
 
         if((loop_times>0) && (pipe_num>0)) {
-            for(var i=0; i<pipe_num; i++) {
+            for(let i=0; i<pipe_num; i++) {
                 gst_cmd = 'hddlspipe ' + client_id + ' ' + gst_cmd_path + ' ' + loop_times;
 
-                var child = spawn(gst_cmd , {
+                let child = spawn(gst_cmd , {
                     shell: true
                 });
 
@@ -198,7 +199,7 @@ data_wss.on('connection', function connection(ws) {
 
 function ClientVerify(info) {
 
-   var ret = false;//refuse
+   let ret = false;//refuse
    params = url.parse(info.req.url, true).query;
 
    if (params["id"] == "1") {
@@ -224,7 +225,7 @@ path_server.listen(8126);
 data_server.listen(8123);
 console.log('Listening on port 8126 and 8123...');
 
-var exec = require('child_process').exec;
+const exec = require('child_process').exec;
 exec('hostname -I', function(error, stdout, stderr) {
     console.log('Please make sure to copy the ip address into path.txt: ' + stdout);
     //console.log('stderr: ' + stderr);
