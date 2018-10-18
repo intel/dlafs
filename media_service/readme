@@ -12,11 +12,11 @@ npm install ws
 npm install -g n
 npm install child_process
 npm install arraybuffer-to-string
-npm install rimraf
+npm install rimraf tree-kill
 
 3. setup certificate
     please generate all these certificates in one pc!!!
- 
+
 (1) Prepare certificates
 
     -Generate a Certificate Authority:
@@ -78,8 +78,7 @@ npm install rimraf
 4. run websocket server and client:
 
 write ip address into path.txt
-chmod a+x server.js receive_data_client.js send_path_client.js
-./server.js
-./send_path_client.js
-./receive_data_client.js
-
+chmod a+x hddls_server.js receiver_client.js controller_client.js
+./hddls_server.js
+./controller_client.js
+./receiver_client.js

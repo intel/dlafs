@@ -51,22 +51,19 @@ fs.readFile(filename, 'utf8', function(err, data) {
   console.log('found: ' + filename);
   console.log('host name is:'+ data);
   url = data;
-  url= url.replace(/[\r\n]/g,""); 
-  set_websocket(); 
+  url= url.replace(/[\r\n]/g,"");
+  set_websocket();
 });
 }
 
 function input_password() {
-    
-        rl.question('Please input password to connect server(c): ', (answer) => {
-           if(answer !==""){
-            psw = answer;
-            read_server_ip();
-           }
-          
-});
 
-       
+  rl.question('Please input password to connect server(default: c): ', (answer) => {
+    if(answer !==""){
+       psw = answer;
+       read_server_ip();
+    }
+  });
 }
 
 //setTimeout(() => {
@@ -153,7 +150,7 @@ function input_pipe_number() {
 }
 
 function resume_from_pause(data) {
-    rl.prompt(); //用户输入
+    rl.prompt(); //user input
 
     rl.on('line', (line) => { 
         input_arr = line.split(',');
@@ -176,7 +173,7 @@ function resume_from_pause(data) {
              ws.close();
              break; 
         } 
-        rl.prompt(); //用户结束了输入。 
+        rl.prompt(); // user input end
    })
 
    .on('close', () => { 
@@ -187,9 +184,6 @@ function resume_from_pause(data) {
         
 }
 
-
-
-
 ws.on('open', function () {
     console.log(`[SEND_PATH_CLIENT] open()`);
     var ret = input_stream_source();
@@ -197,7 +191,7 @@ ws.on('open', function () {
 });
 
 ws.on('message',function(data){
-	console.log(`message = ${data} `);
+  console.log(`message = ${data} `);
     if(ws.readyState == WebSocket.OPEN){
         if(data.indexOf('stream source is done')>=0) {
             input_loop_times();
@@ -223,11 +217,4 @@ ws.on('close', function () {
 }
 
 input_password();
-
-
-
-
-
-
-
 

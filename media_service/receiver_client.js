@@ -17,9 +17,9 @@ for(let i=0;i<100;i++){
 }
 
 const rl = readline.createInterface({
- input: process.stdin, 
+ input: process.stdin,
  output: process.stdout
-}); 
+});
 
 
 function mkdirs(dirpath) {
@@ -37,27 +37,25 @@ fs.readFile(filename, 'utf8', function(err, data) {
   console.log('found: ' + filename);
   console.log('server ip is:'+ data);
   url = data;
-  url= url.replace(/[\r\n]/g,""); 
-  set_websocket(); 
+  url= url.replace(/[\r\n]/g,"");
+  set_websocket();
 });
 }
 
 function input_password() {
-    
-        rl.question('Please input password to connect server(b): ', (answer) => {
-           if(answer !==""){
-            psw = answer;
-            read_server_ip();
-           }
-          
+
+  rl.question('Please input password to connect server(default:b): ', (answer) => {
+     if(answer !==""){
+        psw = answer;
+        read_server_ip();
+     }
 });
 
-       
 }
 
 
 function set_websocket(){
-const ws = new WebSocket("wss://"+url+":8123/binaryEchoWithSize?id=1"+"&key="+psw, {
+  const ws = new WebSocket("wss://"+url+":8123/binaryEchoWithSize?id=1"+"&key="+psw, {
     rejectUnauthorized: false
 });
 
@@ -130,5 +128,4 @@ ws.on('error', function () {
 }
 
 input_password();
-
 

@@ -64,31 +64,6 @@ void crop_resize_csc_planar(
 	if(dst_x >= dst_w || dst_y>= dst_h)
 		return;
 
-#if 1
-    sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE |
-                        CLK_ADDRESS_CLAMP_TO_EDGE   |
-                        CLK_FILTER_LINEAR;
-
-    int dst_x0 = dst_x;
-    int dst_x1 = dst_x + 1;
-    int dst_y0 = dst_y;
-    int dst_y1 = dst_y + 1;
-
-	int x0 = crop_x + (dst_x0 * crop_w + dst_w/2)/dst_w;
-	int y0 = crop_y + (dst_y0 * crop_h + dst_h/2)/dst_h;
-	int x1 = crop_x + (dst_x1 * crop_w + dst_w/2)/dst_w;
-	int y1 = crop_y + (dst_y0 * crop_h + dst_h/2)/dst_h;
-	int x2 = crop_x + (dst_x0 * crop_w + dst_w/2)/dst_w;
-	int y2 = crop_y + (dst_y1 * crop_h + dst_h/2)/dst_h;
-	int x3 = crop_x + (dst_x1 * crop_w + dst_w/2)/dst_w;
-	int y3 = crop_y + (dst_y1 * crop_h + dst_h/2)/dst_h;
-
-	float4  Y0 = read_imagef (img_y_src, sampler, (int2)(x0, y0));
-    float4  Y1 = read_imagef (img_y_src, sampler, (int2)(x1, y1));
-    float4  Y2 = read_imagef (img_y_src, sampler, (int2)(x2, y2));
-    float4  Y3 = read_imagef (img_y_src, sampler, (int2)(x3, y3));
-    float4  UV = read_imagef (img_uv_src, sampler,(int2)(x0/2, y0/2)) - d2;
-#else
     sampler_t sampler = CLK_NORMALIZED_COORDS_TRUE  |
                         CLK_ADDRESS_CLAMP_TO_EDGE   |
                         CLK_FILTER_LINEAR;
@@ -97,22 +72,20 @@ void crop_resize_csc_planar(
     float dst_y0 = dst_y;
     float dst_y1 = dst_y + 1;
 
-	float x0 = (crop_x + dst_x0 * crop_w / dst_w) / (1.0 * src_w);
-	float y0 = (crop_y + dst_y0 * crop_h / dst_h) / (1.0 * src_h);
-	float x1 = (crop_x + dst_x1 * crop_w / dst_w) / (1.0 * src_w);
-	float y1 = (crop_y + dst_y0 * crop_h / dst_h) / (1.0 * src_h);
-	float x2 = (crop_x + dst_x0 * crop_w / dst_w) / (1.0 * src_w);
-	float y2 = (crop_y + dst_y1 * crop_h / dst_h) / (1.0 * src_h);
-	float x3 = (crop_x + dst_x1 * crop_w / dst_w) / (1.0 * src_w);
-	float y3 = (crop_y + dst_y1 * crop_h / dst_h) / (1.0 * src_h);
+    float x0 = (crop_x + dst_x0 * crop_w / dst_w) / (1.0 * src_w);
+    float y0 = (crop_y + dst_y0 * crop_h / dst_h) / (1.0 * src_h);
+    float x1 = (crop_x + dst_x1 * crop_w / dst_w) / (1.0 * src_w);
+    float y1 = (crop_y + dst_y0 * crop_h / dst_h) / (1.0 * src_h);
+    float x2 = (crop_x + dst_x0 * crop_w / dst_w) / (1.0 * src_w);
+    float y2 = (crop_y + dst_y1 * crop_h / dst_h) / (1.0 * src_h);
+    float x3 = (crop_x + dst_x1 * crop_w / dst_w) / (1.0 * src_w);
+    float y3 = (crop_y + dst_y1 * crop_h / dst_h) / (1.0 * src_h);
 
-	float4  Y0 = read_imagef (img_y_src, sampler, (float2)(x0, y0));
+    float4  Y0 = read_imagef (img_y_src, sampler, (float2)(x0, y0));
     float4  Y1 = read_imagef (img_y_src, sampler, (float2)(x1, y1));
     float4  Y2 = read_imagef (img_y_src, sampler, (float2)(x2, y2));
     float4  Y3 = read_imagef (img_y_src, sampler, (float2)(x3, y3));
     float4  UV = read_imagef (img_uv_src, sampler,(float2)(x0, y0)) - d2;
-
-#endif
 
     __constant float* coeffs = c_YUV2RGBCoeffs_420;
 
@@ -184,16 +157,16 @@ void crop_resize_csc_planar(
     int dst_y0 = dst_y;
     int dst_y1 = dst_y + 1;
 
-	int x0 = crop_x + (dst_x0 * crop_w + dst_w/2)/dst_w;
-	int y0 = crop_y + (dst_y0 * crop_h + dst_h/2)/dst_h;
-	int x1 = crop_x + (dst_x1 * crop_w + dst_w/2)/dst_w;
-	int y1 = crop_y + (dst_y0 * crop_h + dst_h/2)/dst_h;
-	int x2 = crop_x + (dst_x0 * crop_w + dst_w/2)/dst_w;
-	int y2 = crop_y + (dst_y1 * crop_h + dst_h/2)/dst_h;
-	int x3 = crop_x + (dst_x1 * crop_w + dst_w/2)/dst_w;
-	int y3 = crop_y + (dst_y1 * crop_h + dst_h/2)/dst_h;
+    int x0 = crop_x + (dst_x0 * crop_w + dst_w/2)/dst_w;
+    int y0 = crop_y + (dst_y0 * crop_h + dst_h/2)/dst_h;
+    int x1 = crop_x + (dst_x1 * crop_w + dst_w/2)/dst_w;
+    int y1 = crop_y + (dst_y0 * crop_h + dst_h/2)/dst_h;
+    int x2 = crop_x + (dst_x0 * crop_w + dst_w/2)/dst_w;
+    int y2 = crop_y + (dst_y1 * crop_h + dst_h/2)/dst_h;
+    int x3 = crop_x + (dst_x1 * crop_w + dst_w/2)/dst_w;
+    int y3 = crop_y + (dst_y1 * crop_h + dst_h/2)/dst_h;
 
-	float4  Y0 = read_imagef (img_y_src, sampler, (int2)(x0, y0));
+    float4  Y0 = read_imagef (img_y_src, sampler, (int2)(x0, y0));
     float4  Y1 = read_imagef (img_y_src, sampler, (int2)(x1, y1));
     float4  Y2 = read_imagef (img_y_src, sampler, (int2)(x2, y2));
     float4  Y3 = read_imagef (img_y_src, sampler, (int2)(x3, y3));
@@ -276,16 +249,16 @@ void crop_resize_csc(
     int dst_y0 = dst_y;
     int dst_y1 = dst_y + 1;
 
-	int x0 = crop_x + (dst_x0 * crop_w + dst_w/2)/dst_w;
-	int y0 = crop_y + (dst_y0 * crop_h + dst_h/2)/dst_h;
-	int x1 = crop_x + (dst_x1 * crop_w + dst_w/2)/dst_w;
-	int y1 = crop_y + (dst_y0 * crop_h + dst_h/2)/dst_h;
-	int x2 = crop_x + (dst_x0 * crop_w + dst_w/2)/dst_w;
-	int y2 = crop_y + (dst_y1 * crop_h + dst_h/2)/dst_h;
-	int x3 = crop_x + (dst_x1 * crop_w + dst_w/2)/dst_w;
-	int y3 = crop_y + (dst_y1 * crop_h + dst_h/2)/dst_h;
+    int x0 = crop_x + (dst_x0 * crop_w + dst_w/2)/dst_w;
+    int y0 = crop_y + (dst_y0 * crop_h + dst_h/2)/dst_h;
+    int x1 = crop_x + (dst_x1 * crop_w + dst_w/2)/dst_w;
+    int y1 = crop_y + (dst_y0 * crop_h + dst_h/2)/dst_h;
+    int x2 = crop_x + (dst_x0 * crop_w + dst_w/2)/dst_w;
+    int y2 = crop_y + (dst_y1 * crop_h + dst_h/2)/dst_h;
+    int x3 = crop_x + (dst_x1 * crop_w + dst_w/2)/dst_w;
+    int y3 = crop_y + (dst_y1 * crop_h + dst_h/2)/dst_h;
 
-	float4  Y0 = read_imagef (img_y_src, sampler, (int2)(x0, y0));
+    float4  Y0 = read_imagef (img_y_src, sampler, (int2)(x0, y0));
     float4  Y1 = read_imagef (img_y_src, sampler, (int2)(x1, y1));
     float4  Y2 = read_imagef (img_y_src, sampler, (int2)(x2, y2));
     float4  Y3 = read_imagef (img_y_src, sampler, (int2)(x3, y3));
@@ -362,16 +335,16 @@ void crop_resize_csc_gray(
     int dst_y0 = dst_y;
     int dst_y1 = dst_y + 1;
 
-	int x0 = crop_x + (dst_x0 * crop_w + dst_w/2)/dst_w;
-	int y0 = crop_y + (dst_y0 * crop_h + dst_h/2)/dst_h;
-	int x1 = crop_x + (dst_x1 * crop_w + dst_w/2)/dst_w;
-	int y1 = crop_y + (dst_y0 * crop_h + dst_h/2)/dst_h;
-	int x2 = crop_x + (dst_x0 * crop_w + dst_w/2)/dst_w;
-	int y2 = crop_y + (dst_y1 * crop_h + dst_h/2)/dst_h;
-	int x3 = crop_x + (dst_x1 * crop_w + dst_w/2)/dst_w;
-	int y3 = crop_y + (dst_y1 * crop_h + dst_h/2)/dst_h;
+    int x0 = crop_x + (dst_x0 * crop_w + dst_w/2)/dst_w;
+    int y0 = crop_y + (dst_y0 * crop_h + dst_h/2)/dst_h;
+    int x1 = crop_x + (dst_x1 * crop_w + dst_w/2)/dst_w;
+    int y1 = crop_y + (dst_y0 * crop_h + dst_h/2)/dst_h;
+    int x2 = crop_x + (dst_x0 * crop_w + dst_w/2)/dst_w;
+    int y2 = crop_y + (dst_y1 * crop_h + dst_h/2)/dst_h;
+    int x3 = crop_x + (dst_x1 * crop_w + dst_w/2)/dst_w;
+    int y3 = crop_y + (dst_y1 * crop_h + dst_h/2)/dst_h;
 
-	float4  Y0 = read_imagef (img_y_src, sampler, (int2)(x0, y0));
+    float4  Y0 = read_imagef (img_y_src, sampler, (int2)(x0, y0));
     float4  Y1 = read_imagef (img_y_src, sampler, (int2)(x1, y1));
     float4  Y2 = read_imagef (img_y_src, sampler, (int2)(x2, y2));
     float4  Y3 = read_imagef (img_y_src, sampler, (int2)(x3, y3));

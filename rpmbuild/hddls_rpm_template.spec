@@ -36,7 +36,7 @@ cp -a usr/* $RPM_BUILD_ROOT%{usrpath}
 
 %post
 echo "Setup enviroment variables:"
-source /usr/local/bin/hddls_prepare.sh
+bash /usr/local/bin/hddls_prepare.sh
 
 %clean
 rm -rf $RPM_BUILD_ROOT
