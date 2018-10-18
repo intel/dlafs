@@ -6,12 +6,12 @@ const path = require('path');
 const rimraf = require('rimraf');
 const readline = require('readline');
 
-var con='';
+let con='';
 let count=0;
-var pipe_id = 0;
-var psw = "";
+let pipe_id = 0;
+let psw = "";
 
-var m = new Map();
+let m = new Map();
 for(let i=0;i<100;i++){
   m.set(i,0);
 }
@@ -29,8 +29,8 @@ function mkdirs(dirpath) {
     fs.mkdirSync(dirpath);
 }
 
-var filename = 'path.txt';
-var url = 0;
+const filename = 'path.txt';
+let url = 0;
 function read_server_ip(){
 fs.readFile(filename, 'utf8', function(err, data) {
   if (err) throw err;
@@ -72,10 +72,10 @@ ws.on('message', function (data) {
          return;
     }
 
-    var flags = 1;
+    
     pipe_id=data[0];
     con='pipe_'+pipe_id.toString();
-    var path = './'+con;
+    let path = './'+con;
     console.log("output dir: ", path);
 
     try{
@@ -96,11 +96,11 @@ ws.on('message', function (data) {
     };
 
     if(data.byteLength >1024){
-         var temp = m.get(pipe_id);
-         var buff =  new Buffer(data);
-         var image_name='image_'+temp+'.jpg';
-         var path = './'+ con + '/' + image_name;
-         var fd = fs.openSync(path, 'w');
+         let temp = m.get(pipe_id);
+         let buff =  new Buffer(data);
+         let image_name='image_'+temp+'.jpg';
+         let path = './'+ con + '/' + image_name;
+         let fd = fs.openSync(path, 'w');
          fs.write(fd, buff, 4, buff.length-4, 0, function(err, written) {
              console.log('err', err);
              console.log('written', written);
@@ -108,8 +108,8 @@ ws.on('message', function (data) {
          temp++;
          m.set(pipe_id,temp);
      } else {
-         var buff =  new Buffer(data);
-         var path = './'+ con + '/output.txt';
+         let buff =  new Buffer(data);
+         let path = './'+ con + '/output.txt';
          fs.appendFile(path, buff.toString('utf8',4,buff.length)+ "\n", function (err) {
              if (err) {
                  console.log("append failed: ", err);
@@ -128,4 +128,5 @@ ws.on('error', function () {
 }
 
 input_password();
+
 

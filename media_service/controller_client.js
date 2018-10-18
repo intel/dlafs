@@ -3,19 +3,19 @@ const WebSocket = require('ws');
 const readline = require('readline');
 
 
-var program = require('commander');
+const program = require('commander');
 program
     .option('-s, --stream <string>', 'video stream source address')
     .option('-l, --loop <n>', 'loop times')
     .option('-n, --num <n>', 'pipe number')
     .parse(process.argv);
-var loop_times = 0;
-var pipe_num = 0;
-var stream_path = "";
-var input_arr = "";
-var rec_pipe_arr = "";
-var is_input_valid = false;
-var psw = "";
+let loop_times = 0;
+let pipe_num = 0;
+let stream_path = "";
+let input_arr = "";
+let rec_pipe_arr = "";
+let is_input_valid = false;
+let psw = "";
 
 program.parse(process.argv)
 if(program.stream) {
@@ -41,9 +41,9 @@ const rl = readline.createInterface({
  output: process.stdout, 
  prompt: 'OHAI> ' }); 
 
-var fs = require('fs')
+const fs = require('fs')
   , filename = 'hostname.txt';
-var url = 0;
+let url = 0;
 
 function read_server_ip(){
 fs.readFile(filename, 'utf8', function(err, data) {
@@ -99,7 +99,7 @@ function input_stream_source() {
     return 1;
 }
 
-var set_loop_times_enable = 1;
+const set_loop_times_enable = 1;
 function input_loop_times() {
     if(set_loop_times_enable==0)
         return;
@@ -124,7 +124,7 @@ function input_loop_times() {
 }
 
 
-var set_pipe_number_enable = 1;
+const set_pipe_number_enable = 1;
 function input_pipe_number() {
     if(set_pipe_number_enable==0)
         return;
@@ -155,7 +155,7 @@ function resume_from_pause(data) {
     rl.on('line', (line) => { 
         input_arr = line.split(',');
         rec_pipe_arr = data.split(',');
-        for(var i =0;i<rec_pipe_arr.length;i++){
+        for(let i =0;i<rec_pipe_arr.length;i++){
             if(input_arr[0] ===rec_pipe_arr[i]){
             is_input_valid = true;
             }
@@ -186,12 +186,12 @@ function resume_from_pause(data) {
 
 ws.on('open', function () {
     console.log(`[SEND_PATH_CLIENT] open()`);
-    var ret = input_stream_source();
+    let ret = input_stream_source();
     //console.log("input_stream_source return: " + ret);
 });
 
 ws.on('message',function(data){
-  console.log(`message = ${data} `);
+	console.log(`message = ${data} `);
     if(ws.readyState == WebSocket.OPEN){
         if(data.indexOf('stream source is done')>=0) {
             input_loop_times();
@@ -217,4 +217,5 @@ ws.on('close', function () {
 }
 
 input_password();
+
 
