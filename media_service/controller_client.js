@@ -99,7 +99,7 @@ function input_stream_source() {
     return 1;
 }
 
-const set_loop_times_enable = 1;
+var set_loop_times_enable = 1;
 function input_loop_times() {
     if(set_loop_times_enable==0)
         return;
@@ -124,7 +124,7 @@ function input_loop_times() {
 }
 
 
-const set_pipe_number_enable = 1;
+var set_pipe_number_enable = 1;
 function input_pipe_number() {
     if(set_pipe_number_enable==0)
         return;
