@@ -23,6 +23,7 @@ install:
 	@rm -rf $(SYS_INC_DIR)/gstcvdl
 	@mkdir -p $(SYS_INC_DIR)/gstcvdl
 	@cp gst-libs/ocl/oclcommon.h $(SYS_INC_DIR)/gstcvdl/.
+	@cp gst-libs/ws/wsclient.h $(SYS_INC_DIR)/gstcvdl/.
 	@echo "ocl kernel are installed into " $(SYS_LIB_DIR)/libgstcvdl
 	@echo "cvdl model are installed into" $(SYS_LIB_DIR)/libgstcvdl
 	@echo ""

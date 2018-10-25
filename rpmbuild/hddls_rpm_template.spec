@@ -1,6 +1,6 @@
 Name:           Intel_Movidius_MyriadX_HDDL-S_Linux
-Version:0.1
-Release:ww41
+Version:0.1.1
+Release:ww42
 Summary:        This is hddl-s projects.
 License:        GPL
 #URL:

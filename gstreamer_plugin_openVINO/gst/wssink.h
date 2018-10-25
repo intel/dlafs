@@ -103,6 +103,7 @@ struct _GstWsSink {
 
   // wsclient
   WsClientHandle wsclient_handle;
+  WsClientHandle wsclient_handle_proxy;
   gchar* wss_uri;
   int wsc_id;
 

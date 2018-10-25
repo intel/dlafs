@@ -1,0 +1,28 @@
+{
+    "client_id":<int>,     // -1 if has not got
+    "command_type": <int> ,
+    "command_create": // create pipe
+    {
+         "pipe_num": <int>,          // how many pipes to be created
+         "stream_source": "<string>",
+         "codec_type": "<string>",     //H.264 or H.265
+         "cvdlfilter0":
+        {
+             "algo_pipeline: "<string>"
+        }
+    },
+
+   "command_destroy":   // destroy pipe
+   {
+        "pipe_id":<int>,
+   },
+
+   "command_set_property": 
+   {
+        "pipe_id":<int>,
+        "cvdlfilter0":     // filter name
+        {
+            "algo_pipeline": "<string>",
+        }
+   }
+ }

@@ -175,6 +175,15 @@ data_wss.on('connection', function connection(ws) {
     console.log("this is "+ userArray.indexOf(ws)+"th loop time");
   }
 
+    if (params["id"] == "3") {
+           fs.readFile("create_hddlspipe.config", 'utf8', function(err, data) {
+  		if (err) throw err;
+		console.log("read create_hddlspipe.config: ", data);
+		ws.send(data);
+           });
+  }
+  
+
   ws.on('message', function incoming(data) {
     // Broadcast to everyone else.
      //console.log(data);

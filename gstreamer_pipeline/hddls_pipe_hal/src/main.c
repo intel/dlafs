@@ -20,28 +20,23 @@
  * SOFTWARE.
  */
 
-#ifndef __GST_WS_CLIENT_H__
-#define __GST_WS_CLIENT_H__
- 
-#ifdef __cplusplus
- extern "C" {
-#endif
- 
- typedef void * WsClientHandle;
- typedef struct MessageItem_{
-     char *data;
-     gint len;
- }MessageItem;
- 
- WsClientHandle wsclient_setup(char *serverUri, int client_id);
- void wsclient_send_data(WsClientHandle handle, char *data, int len);
- void wsclient_destroy(WsClientHandle handle);
- MessageItem * wsclient_get_data(WsClientHandle handle);
- MessageItem *wsclient_get_data_timed(WsClientHandle handle);
- void wsclient_free_item(MessageItem *item);
-#ifdef __cplusplus
- };
-#endif
- 
-#endif
- 
+#include "hddlspipe.h"
+
+int  main(int argc, char **argv)
+{
+    HddlsPipe*   pipe = NULL;
+    hddlspipe_prepare(argc, argv);
+
+    pipe = hddlspipe_create( );
+    if(!pipe) {
+        g_print("Error: failed to create pipel ine!\n");
+        return 1;
+    }
+
+   // blocked until hddpspipe_stop.
+   hddlspipe_start(pipe);
+   hddlspipe_destroy (pipe);
+
+   return 0;
+}
+

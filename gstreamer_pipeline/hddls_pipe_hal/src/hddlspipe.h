@@ -19,29 +19,46 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+#ifndef __HDDLS_PIPE_H__
+#define __HDDLS_PIPE_H__
 
-#ifndef __GST_WS_CLIENT_H__
-#define __GST_WS_CLIENT_H__
- 
-#ifdef __cplusplus
- extern "C" {
-#endif
- 
- typedef void * WsClientHandle;
- typedef struct MessageItem_{
-     char *data;
-     gint len;
- }MessageItem;
- 
- WsClientHandle wsclient_setup(char *serverUri, int client_id);
- void wsclient_send_data(WsClientHandle handle, char *data, int len);
- void wsclient_destroy(WsClientHandle handle);
- MessageItem * wsclient_get_data(WsClientHandle handle);
- MessageItem *wsclient_get_data_timed(WsClientHandle handle);
- void wsclient_free_item(MessageItem *item);
-#ifdef __cplusplus
+#include <string.h>
+#include <assert.h>
+#include <glib.h>
+#include <gst/gst.h>
+#include <wsclient.h>
+#include <stdlib.h>
+#include <getopt.h>
+
+enum E_PIPE_STATE {
+    ePipeState_Null = 0,
+    ePipeState_Ready = 1,
+    ePipeState_Running = 2,
+    ePipeState_Pause = 3,
  };
-#endif
+
+enum E_CODEC_TYPE{
+    eCodecTypeNone=-1,
+    eCodecTypeH264 = 0,
+    eCodecTypeH265 = 1,
+};
+
+typedef struct _HddlsPipe {
+    enum E_PIPE_STATE      state;
+    GMainLoop           *loop;
+    GstElement          *pipeline;
+    guint               bus_watch_id;
+    struct json_object  *config;
+    WsClientHandle ws;
+    GThread              *message_handle_thread;   
+}HddlsPipe;
+
+void hddlspipe_prepare(int argc, char **argv);
+HddlsPipe*   hddlspipe_create( );
+void  hddlspipe_start(HddlsPipe * hp);
+void  hddlspipe_stop(HddlsPipe * hp);
+void hddlspipe_resume(HddlsPipe *pipe);
+void hddlspipe_pause(HddlsPipe *pipe);
+void hddlspipe_destroy(HddlsPipe *pipe);
  
 #endif
- 

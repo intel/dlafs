@@ -49,9 +49,11 @@ enum
     PROP_0,
     PROP_WS_SERVER_URI,
     PROP_WS_CLIENT_ID,
+    PROP_WS_CLIENT_PROXY,
     PROP_LAST
 };
 
+#define INVALID_WSC_PROXY  ((void *)(-1))
 #define TXT_BUFFER_SIZE_MAX 1024
 
 static const char gst_ws_bit_src_caps_str[] = "image/jpeg";
@@ -169,8 +171,12 @@ static void process_sink_buffers(gpointer userData)
     }
 
     //setup wsclient
-    if(!basesink->wsclient_handle)
-        basesink->wsclient_handle = wsclient_setup(basesink->wss_uri, basesink->wsc_id);
+    if(!basesink->wsclient_handle) {
+        if(basesink->wsclient_handle_proxy)
+               basesink->wsclient_handle = basesink->wsclient_handle_proxy;
+        else
+                basesink->wsclient_handle = wsclient_setup(basesink->wss_uri, basesink->wsc_id);
+    }
 
     // txt data
     if(txt_buf) {
@@ -282,6 +288,9 @@ gst_ws_sink_set_property (GObject * object, guint prop_id,
     case PROP_WS_CLIENT_ID:
         sink->wsc_id = g_value_get_int(value);
         break;
+     case PROP_WS_CLIENT_PROXY:
+        sink->wsclient_handle_proxy=g_value_get_pointer(value);
+        break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -300,6 +309,9 @@ gst_ws_sink_get_property (GObject * object, guint prop_id, GValue * value,
         break;
     case PROP_WS_CLIENT_ID:
         g_value_set_int (value, sink->wsc_id);
+        break;
+    case PROP_WS_CLIENT_PROXY:
+        g_value_set_pointer(value, sink->wsclient_handle_proxy);
         break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -620,6 +632,11 @@ gst_ws_sink_class_init (GstWsSinkClass * klass)
           0, G_MAXINT, 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+    g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_WS_CLIENT_PROXY,
+      g_param_spec_pointer ("wsclientproxy", "WS client proxy",
+          "WebSocket client proxy to connected to WebSocket server.",
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
     /* src pad */
     gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_ws_bit_src_factory));
@@ -651,6 +668,7 @@ gst_ws_sink_init (GstWsSink * basesink, gpointer g_class)
             "Send data out by WebSocket");
 
     basesink->wsclient_handle = NULL;
+    basesink->wsclient_handle_proxy = INVALID_WSC_PROXY;
     basesink->wss_uri = NULL;
     basesink->wsc_id = 0;
 
@@ -716,8 +734,11 @@ gst_ws_sink_finalize (GObject * object)
     GstWsSink *basesink;
     basesink = GST_WS_SINK (object);
 
-    wsclient_destroy(basesink->wsclient_handle);
-    basesink->wsclient_handle = NULL;
+   if((basesink->wsclient_handle_proxy==INVALID_WSC_PROXY)
+    &&( basesink->wsclient_handle) ) {
+        wsclient_destroy(basesink->wsclient_handle);
+        basesink->wsclient_handle = NULL;
+    }
 
     gst_task_stop(basesink->task);
     gst_task_join(basesink->task);
