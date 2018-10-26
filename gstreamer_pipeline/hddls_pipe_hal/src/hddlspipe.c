@@ -28,8 +28,11 @@
 #define RESCONVERT_NAME "resconvert0"
 #define WSSINK_NAME "wssink0"
 
+static gchar g_pipe_desc[1024] = "null";
 static gchar g_server_uri[128] = "null"; 
 static gint g_pipe_id = 0;
+static gint g_loop_times = 1;
+
 static gchar g_default_server_uri[]= "wss://localhost:8123/binaryEchoWithSize?id=3";
 
 
@@ -50,16 +53,18 @@ static gchar g_default_server_uri[]= "wss://localhost:8123/binaryEchoWithSize?id
     g_print (
         " -u --specify uri of ws server.\n"
         " -i --specify id of ws client.\n"
-         " -h --help Display this usage information.\n");
+        " -l --specify the loop times.\n"
+         "-h --help Display this usage information.\n");
     exit (exit_code);
   }
 
 static gboolean  parse_cmdline (int argc, char *argv[])
 {
-     const char* const brief = "hu:i:";
+     const char* const brief = "hu:i:l:";
       const struct option details[] = {
                 { "serveruri", 1, NULL, 'u'},
                 { "clientid", 1, NULL, 'i',},
+                { "looptimes", 1, NULL, 'l'},
                 { "help", 0, NULL, 'h'},
                 { NULL, 0, NULL, 0 }
        };
@@ -73,6 +78,9 @@ static gboolean  parse_cmdline (int argc, char *argv[])
                 break;
             case 'i':
                  g_pipe_id  = atoi(optarg);
+                break;
+            case 'l':
+                g_loop_times = atoi(optarg);
                 break;
             case 'h': /* help */
                 print_usage (argv[0], 0);
@@ -167,7 +175,6 @@ static void process_commands(HddlsPipe *hp, char *desc)
       }
 }
 
-
 static gpointer thread_handle_message(void *data)
 {
         HddlsPipe *hp = (HddlsPipe*)data;
@@ -179,21 +186,18 @@ static gpointer thread_handle_message(void *data)
                      process_commands(hp, item->data);
                      wsclient_free_item(item);
                 }
-                if(hp->state==ePipeState_Null)
+                if(hp->state==ePipeState_Null) //for thread quit
                     break;
         }
         return NULL;
 }
 
-static GstElement* parse_and_create_pipeline(char *desc,  gint pipe_id )
+static gchar* parse_create_command(char *desc,  gint pipe_id )
 {
       struct json_object *root = NULL;
-      GstElement   *pipeline = NULL;
-      GError     *error = NULL;
       struct json_object *object = NULL;
       const char *stream_source = NULL;
       const char *stream_codec_type = NULL;
-      char pipe_desc[1024] = " ";
       const char *algo_pipeline_desc = NULL;
       E_CODEC_TYPE codec_type = eCodecTypeNone;
 
@@ -252,13 +256,13 @@ static GstElement* parse_and_create_pipeline(char *desc,  gint pipe_id )
      if( g_strrstr_len(stream_source, 256, "rtsp")  || g_strrstr_len(stream_source, 256, "RTSP")) {
            // rtsp
            if(codec_type == eCodecTypeH264)
-                g_snprintf (pipe_desc, 1024, "rtspsrc location=%s udp-buff-size=800000 ! rtph264depay "
+                g_snprintf (g_pipe_desc, 1024, "rtspsrc location=%s udp-buff-size=800000 ! rtph264depay "
                                       " ! h264parse ! mfxh264dec  "
                                       " ! cvdlfilter algopipeline=\"%s\"  ! resconvert name=res "
                                       " res.src_pic ! mfxjpegenc ! wssink name=wssink0 wsclientid=%d  res.src_txt ! wssink0.", 
                                      stream_source, algo_pipeline_desc, pipe_id);
            else if(codec_type == eCodecTypeH265)
-                 g_snprintf (pipe_desc, 1024, "rtspsrc location=%s udp-buff-size=800000 ! rtph265depay "
+                 g_snprintf (g_pipe_desc, 1024, "rtspsrc location=%s udp-buff-size=800000 ! rtph265depay "
                                      " ! h265parse ! mfxh265dec  "
                                      " ! cvdlfilter algopipeline=\"%s\" ! resconvert name=res "
                                      " res.src_pic ! mfxjpegenc ! wssink name=wssink0 wsclientid=%d  res.src_txt ! wssink0.",
@@ -266,27 +270,20 @@ static GstElement* parse_and_create_pipeline(char *desc,  gint pipe_id )
      } else {
           // local files
            if(codec_type == eCodecTypeH264)
-                g_snprintf (pipe_desc, 1024, "filesrc location=%s  ! qtdemux  ! h264parse ! mfxh264dec "
+                g_snprintf (g_pipe_desc, 1024, "filesrc location=%s  ! qtdemux  ! h264parse ! mfxh264dec "
                                     " ! cvdlfilter algopipeline=\"%s\" ! resconvert name=res "
                                     " res.src_pic ! mfxjpegenc ! wssink name=wssink0 wsclientid=%d  res.src_txt ! wssink0.",
                                    stream_source, algo_pipeline_desc,  pipe_id);
            else if(codec_type == eCodecTypeH265)
-                 g_snprintf (pipe_desc, 1024, "filesrc location=%s ! qtdemux  ! h265parse ! mfxh265dec  "
+                 g_snprintf (g_pipe_desc, 1024, "filesrc location=%s ! qtdemux  ! h265parse ! mfxh265dec  "
                                     " ! cvdlfilter algopipeline=\"%s\" ! resconvert name=res "
                                     " res.src_pic ! mfxjpegenc ! wssink name=wssink0 wsclientid=%d  res.src_txt ! wssink0.", 
                                    stream_source, algo_pipeline_desc, pipe_id);
     }
-    g_print("pipeline: %s\n",pipe_desc );
+    g_print("pipeline: %s\n",g_pipe_desc );
     json_destroy(&root);
 
-    //3. create pipeline
-   pipeline = gst_parse_launch (pipe_desc, &error);
-   if (error || !pipeline) {
-       g_print ("failed to build pipeline: error message: %s\n",(error) ? error->message : NULL);
-       return NULL;
-   }
-
-   return pipeline;
+    return g_pipe_desc;
 }
 
 static gboolean bus_callback (GstBus* bus, GstMessage* msg, gpointer data)
@@ -341,7 +338,9 @@ void hddlspipe_prepare(int argc, char **argv)
  HddlsPipe*   hddlspipe_create( )
 {
     HddlsPipe *hp = g_new0(HddlsPipe, 1);
-    MessageItem *item;
+    MessageItem *item = NULL;
+    gchar* pipeline_desc = NULL;
+    GError     *error = NULL;
 
    // 1. create ws client
    if(!strncmp(g_server_uri,"null", 4)) {
@@ -349,19 +348,26 @@ void hddlspipe_prepare(int argc, char **argv)
    } else {
          hp->ws = wsclient_setup(g_server_uri,  g_pipe_id);
     }
-    //TODO: make sure it has connected to ws server.
+    //it has connected to ws server.
 
    // Block wait until get desc data from ws server
     item = (MessageItem *)wsclient_get_data(hp->ws);
     g_print("%s() - receive message: %s\n", __func__, item->data);
     hp->state = ePipeState_Null;
 
-    // parse and create pipeline
-   hp->pipeline = parse_and_create_pipeline(item->data, g_pipe_id);
-   if(!hp->pipeline) {
+    // parse pipeline_create command
+    pipeline_desc = parse_create_command(item->data, g_pipe_id);
+    wsclient_free_item(item);
+    if(!pipeline_desc) {
+        g_print("Failed to get pipeline description!\n");
         return NULL;
     }
-   wsclient_free_item(item);
+    //create pipeline
+    hp->pipeline = gst_parse_launch (pipeline_desc, &error);
+   if (error || ! hp->pipeline) {
+       g_print ("failed to build pipeline: error message: %s\n",(error) ? error->message : NULL);
+       return NULL;
+   }
     HDDLSPIPE_SET_PROPERTY( hp, WSSINK_NAME, "wsclientproxy", hp->ws, NULL);
 
     // set watch bus
@@ -383,7 +389,7 @@ void hddlspipe_prepare(int argc, char **argv)
   **/
  void  hddlspipe_start(HddlsPipe * hp)
 {
-    g_assert (hp);
+     g_assert (hp);
      gst_element_set_state (hp->pipeline, GST_STATE_PLAYING);
      hp->state = ePipeState_Running;
      g_main_loop_run (hp->loop);
@@ -398,7 +404,6 @@ void hddlspipe_prepare(int argc, char **argv)
      gst_element_set_state (hp->pipeline, GST_STATE_NULL);
      hp->state = ePipeState_Ready;
      g_main_loop_quit (hp->loop);
-     hp->state = ePipeState_Null;
 }
 
  /**
@@ -406,7 +411,7 @@ void hddlspipe_prepare(int argc, char **argv)
    **/
  void  hddlspipe_resume (HddlsPipe *hp)
 {
-     g_assert (hp);
+    g_assert (hp);
     gst_element_set_state (hp->pipeline, GST_STATE_PLAYING);
      hp->state = ePipeState_Running;
 }
@@ -417,8 +422,43 @@ void hddlspipe_prepare(int argc, char **argv)
  void hddlspipe_pause(HddlsPipe *hp)
 {
      g_assert (hp);
-     gst_element_set_state (hp->pipeline, GST_STATE_NULL);
+     gst_element_set_state (hp->pipeline, GST_STATE_PAUSED);
+     //gst_element_set_state (hp->pipeline, GST_STATE_READY);
+     //gst_element_set_state (hp->pipeline, GST_STATE_NULL);
      hp->state = ePipeState_Ready;
+}
+
+static void hddlspipes_replay(HddlsPipe *hp)
+{
+      GError     *error = NULL;
+
+      g_source_remove (hp->bus_watch_id);
+      gst_object_unref (hp->pipeline);
+      g_main_loop_unref (hp->loop);
+
+      hp->pipeline = gst_parse_launch (g_pipe_desc, &error);
+      if (error) {
+          g_print ("ERROR: %s\n", error->message);
+          //g_error_free (error);
+      }
+       HDDLSPIPE_SET_PROPERTY( hp, WSSINK_NAME, "wsclientproxy", hp->ws, NULL);
+
+        // set watch bus
+       GstBus *bus = gst_element_get_bus (hp->pipeline);
+       hp->bus_watch_id = gst_bus_add_watch (bus, bus_callback,hp);
+       gst_object_unref (bus);
+
+       hp->loop = g_main_loop_new (NULL, FALSE);
+       hp->state = ePipeState_Ready;
+
+       hddlspipe_start(hp);
+}
+
+void  hddlspipes_replay_if_need(HddlsPipe *hp)
+{
+     while( --g_loop_times > 0) {
+          hddlspipes_replay(hp);
+     }
 }
 
 /**
@@ -426,6 +466,7 @@ void hddlspipe_prepare(int argc, char **argv)
   **/
 void hddlspipe_destroy(HddlsPipe *hp)
 {
+    hp->state = ePipeState_Null;
     if(hp->message_handle_thread)
         g_thread_join(hp->message_handle_thread);
     hp->message_handle_thread = NULL;

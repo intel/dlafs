@@ -287,6 +287,7 @@ gst_ws_sink_set_property (GObject * object, guint prop_id,
         break;
     case PROP_WS_CLIENT_ID:
         sink->wsc_id = g_value_get_int(value);
+        wsclient_set_id(sink->wsclient_handle,  sink->wsc_id);
         break;
      case PROP_WS_CLIENT_PROXY:
         sink->wsclient_handle_proxy=g_value_get_pointer(value);

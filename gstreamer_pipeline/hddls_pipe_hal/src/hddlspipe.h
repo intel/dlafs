@@ -60,5 +60,5 @@ void  hddlspipe_stop(HddlsPipe * hp);
 void hddlspipe_resume(HddlsPipe *pipe);
 void hddlspipe_pause(HddlsPipe *pipe);
 void hddlspipe_destroy(HddlsPipe *pipe);
- 
+ void hddlspipes_replay_if_need(HddlsPipe *pipe);
 #endif

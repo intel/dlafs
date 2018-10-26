@@ -68,7 +68,8 @@ path_wss.on('connection', function(ws) {
 
                pipeid_to_number = parseInt(arr[0]);
                contin_loop_times = parseInt(arr[2]);
-               gst_cmd = 'hddlspipe ' + pipeid_to_number + ' ' + gst_cmd_path + ' ' + contin_loop_times;
+               //gst_cmd = 'hddlspipe ' + pipeid_to_number + ' ' + gst_cmd_path + ' ' + contin_loop_times;
+               gst_cmd = 'hddlspipes -i  ' + pipeid_to_number + ' -l ' + contin_loop_times;
                 let child = spawn(gst_cmd , {
                     shell: true
                 });
@@ -92,7 +93,8 @@ path_wss.on('connection', function(ws) {
 
         if((loop_times>0) && (pipe_num>0)) {
             for(let i=0; i<pipe_num; i++) {
-                gst_cmd = 'hddlspipe ' + client_id + ' ' + gst_cmd_path + ' ' + loop_times;
+                //gst_cmd = 'hddlspipe ' + client_id + ' ' + gst_cmd_path + ' ' + loop_times;
+	        gst_cmd = 'hddlspipes -i  ' + client_id + ' -l ' + loop_times;
 
                 let child = spawn(gst_cmd , {
                     shell: true

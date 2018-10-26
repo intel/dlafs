@@ -35,6 +35,8 @@ int  main(int argc, char **argv)
 
    // blocked until hddpspipe_stop.
    hddlspipe_start(pipe);
+   // replay if need
+   hddlspipes_replay_if_need(pipe);
    hddlspipe_destroy (pipe);
 
    return 0;

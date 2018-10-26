@@ -119,7 +119,6 @@ static void item_free_func(gpointer data)
  void wsclient_send_data(WsClientHandle handle, char *data, int len)
  {
      WsClient *wsclient = (WsClient *)handle;
-     //uWS::WebSocket<uWS::CLIENT> *client;
  
      if(!handle) {
          g_print("Invalid WsClientHandle!!!\n");
@@ -137,6 +136,17 @@ static void item_free_func(gpointer data)
      wsclient->client->send(wsclient->data, len+4, uWS::OpCode::BINARY);
  }
 
+void wsclient_set_id(WsClientHandle handle,  int id)
+{
+    WsClient *wsclient = (WsClient *)handle;
+
+    if(!handle) {
+        g_print("%s(): Invalid WsClientHandle!!!\n",__func__);
+        return;
+    }
+    wsclient->id = id;
+    return;
+}
 
 /**
   * Pops data from the queue.
@@ -145,6 +155,10 @@ static void item_free_func(gpointer data)
 MessageItem *wsclient_get_data(WsClientHandle handle)
 {
     WsClient *wsclient = (WsClient *)handle;
+    if(!handle) {
+        g_print("%s(): Invalid WsClientHandle!!!\n",__func__);
+        return NULL;
+    }
     MessageItem *item =(MessageItem *)g_async_queue_pop(wsclient->message_queue);
 
     return item;
@@ -159,6 +173,10 @@ MessageItem *wsclient_get_data(WsClientHandle handle)
      WsClient *wsclient = (WsClient *)handle;
      MessageItem *item = NULL;
      gint64 timeout_microsec = 400000; //400ms
+     if(!handle) {
+        g_print("%s(): Invalid WsClientHandle!!!\n",__func__);
+        return NULL;
+    }
      item = (MessageItem *)g_async_queue_timeout_pop(wsclient->message_queue, timeout_microsec);
      return item;
  }
