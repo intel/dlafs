@@ -196,7 +196,7 @@ static void process_sink_buffers(gpointer userData)
                 txt_mem->pts/1000000000.0, infer_data->probility, infer_data->label,
                 infer_data->rect.x, infer_data->rect.y,
                 infer_data->rect.width, infer_data->rect.height);
-            //g_print("ws send txt_data: size=%ld, %s",data_len, txt_cache);
+            g_print("pipe %d send txt_data: size=%ld, %s",basesink->wsc_id, data_len, txt_cache);
             wsclient_send_data(basesink->wsclient_handle, (char *)txt_cache, data_len);
             size += data_len;
         }

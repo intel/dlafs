@@ -50,7 +50,8 @@ typedef struct _HddlsPipe {
     guint               bus_watch_id;
     struct json_object  *config;
     WsClientHandle ws;
-    GThread              *message_handle_thread;   
+    GThread              *message_handle_thread;
+    gint pipe_id;
 }HddlsPipe;
 
 void hddlspipe_prepare(int argc, char **argv);

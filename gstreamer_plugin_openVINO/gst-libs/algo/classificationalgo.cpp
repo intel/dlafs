@@ -388,7 +388,7 @@ GstBuffer* ClassificationAlgo::dequeue_buffer()
             cvdl_meta_add (meta_data, &rect, algoData.mObjectVec[i].label.c_str(),
                             algoData.mObjectVec[i].prob, color, points, count);
         //debug
-        g_print("%d - classification_output-%ld-%d: prob = %f, label = %s, rect=(%d,%d)-(%dx%d)\n", 
+        GST_LOG("%d - classification_output-%ld-%d: prob = %f, label = %s, rect=(%d,%d)-(%dx%d)\n", 
                 mFrameDoneNum, algoData.mFrameId,i,algoData.mObjectVec[i].prob,
                 algoData.mObjectVec[i].label.c_str(),
                 rect.x, rect.y, rect.width, rect.height);
