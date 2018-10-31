@@ -108,7 +108,7 @@ static void set_property(struct json_object *parent, HddlsPipe *hp, const char *
         int property_int = 0;
         double property_double = 0.0;
         
-        if( !json_get_object_d2(parent, "set_property", filter_name, &element) ) {
+        if( !json_get_object_d2(parent, "command_set_property", filter_name, &element) ) {
                g_print("It didn't find new property for %s\n", filter_name);
                return;
          }
@@ -151,6 +151,7 @@ static void process_commands(HddlsPipe *hp, char *desc)
             return;
      }
 
+     g_print("pipe %d has got message: %s\n", wsclient_get_id(hp->ws),  desc);
      command_type = json_get_command_type(root);
      switch(command_type){
         case eCommand_PipeCreate:

@@ -702,7 +702,7 @@ void TrackAlgo::push_track_object(CvdlAlgoData* &algoData)
 
     //debug
     for(size_t i=0; i< objectVec.size(); i++) {
-        g_print("%d - track_output-%ld-%ld: prob = %f, label = %s, rect=(%d,%d)-(%dx%d), score = %f\n",
+        GST_LOG("%d - track_output-%ld-%ld: prob = %f, label = %s, rect=(%d,%d)-(%dx%d), score = %f\n",
             mFrameDoneNum, algoData->mFrameId, i, objectVec[i].prob, objectVec[i].label.c_str(),
             objectVec[i].rect.x, objectVec[i].rect.y,
             objectVec[i].rect.width, objectVec[i].rect.height, objectVec[i].score);

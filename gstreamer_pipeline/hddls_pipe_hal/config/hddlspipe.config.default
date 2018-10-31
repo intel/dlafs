@@ -8,7 +8,7 @@
          "codec_type": "<string>",     //H.264 or H.265
          "cvdlfilter0":
         {
-             "algo_pipeline: "<string>"
+             "algopipeline: "<string>"
         }
     },
 
@@ -22,7 +22,7 @@
         "pipe_id":<int>,
         "cvdlfilter0":     // filter name
         {
-            "algo_pipeline": "<string>",
+            "algopipeline": "<string>",
         }
    }
  }

@@ -74,7 +74,7 @@ static void try_process_algo_data(CvdlAlgoData *algoData)
                    algoData->mGstBuffer, GST_MINI_OBJECT_REFCOUNT(algoData->mGstBuffer));
             classificationAlgo->mOutQueue.put(*algoData);
         } else {
-            g_print("Classification algo - unref GstBuffer = %p(%d)\n",
+            GST_LOG("Classification algo - unref GstBuffer = %p(%d)\n",
                 algoData->mGstBuffer, GST_MINI_OBJECT_REFCOUNT(algoData->mGstBuffer));
             gst_buffer_unref(algoData->mGstBuffer);
             delete algoData;

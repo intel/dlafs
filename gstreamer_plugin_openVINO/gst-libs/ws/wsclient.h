@@ -40,6 +40,7 @@
  MessageItem *wsclient_get_data_timed(WsClientHandle handle);
  void wsclient_free_item(MessageItem *item);
  void wsclient_set_id(WsClientHandle handle,  int id);
+ int wsclient_get_id(WsClientHandle handle);
 #ifdef __cplusplus
  };
 #endif

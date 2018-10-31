@@ -79,6 +79,7 @@ static void item_free_func(gpointer data)
 
         // If receive message, put it to queue
         hub.onMessage([wsclient ](uWS::WebSocket<uWS::CLIENT> *ws, char *message, size_t length, uWS::OpCode opCode){
+            g_print("Receive receive message = %s!\n", message);
             if(opCode ==  uWS::OpCode::TEXT) {
                 MessageItem *item = g_new0(MessageItem, 1);
                 item->data = g_new0(char, length);
@@ -146,6 +147,17 @@ void wsclient_set_id(WsClientHandle handle,  int id)
     }
     wsclient->id = id;
     return;
+}
+
+int wsclient_get_id(WsClientHandle handle)
+{
+    WsClient *wsclient = (WsClient *)handle;
+
+    if(!handle) {
+        g_print("%s(): Invalid WsClientHandle!!!\n",__func__);
+        return -1;
+    }
+    return wsclient->id;
 }
 
 /**
