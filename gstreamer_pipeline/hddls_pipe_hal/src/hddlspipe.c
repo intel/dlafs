@@ -159,6 +159,7 @@ static void process_commands(HddlsPipe *hp, char *desc)
         case eCommand_PipeDestroy:
                 g_print("Receive command: destroy pipeline....\n");
                 hddlspipe_stop (hp);
+                 hp->state = ePipeState_Null;
                 break;
         case eCommand_SetProperty:
                 g_print("Receive command: set pipeline....\n");
@@ -457,7 +458,8 @@ static void hddlspipes_replay(HddlsPipe *hp)
 void  hddlspipes_replay_if_need(HddlsPipe *hp)
 {
      while( --g_loop_times > 0) {
-          hddlspipes_replay(hp);
+          if( hp->state != ePipeState_Null)
+                hddlspipes_replay(hp);
      }
 }
 
