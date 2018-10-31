@@ -1,13 +1,11 @@
 #!/usr/bin/env node
 const WebSocket = require('ws');
-const ab2str = require('arraybuffer-to-string');
 const fs = require('fs');
 const path = require('path');
-const rimraf = require('rimraf');
 const readline = require('readline');
+const colors = require("colors");
 
 let con='';
-let count=0;
 let pipe_id = 0;
 let psw = "";
 
@@ -34,8 +32,8 @@ let url = 0;
 function read_server_ip(){
 fs.readFile(filename, 'utf8', function(err, data) {
   if (err) throw err;
-  console.log('found: ' + filename);
-  console.log('server ip is:'+ data);
+  console.log('found: ' + filename .green);
+  console.log('server ip is:'+ data .green);
   url = data;
   url= url.replace(/[\r\n]/g,"");
   set_websocket();
@@ -44,7 +42,7 @@ fs.readFile(filename, 'utf8', function(err, data) {
 
 function input_password() {
 
-  rl.question('Please input password to connect server(default:b): ', (answer) => {
+  rl.question('Please input password to connect server(default: b): ' .grey, (answer) => {
      if(answer !==""){
         psw = answer;
         read_server_ip();
@@ -61,11 +59,11 @@ function set_websocket(){
 
 
 ws.on('open', function () {
-    console.log(`[RECEIVE_DATA_CLIENT] open()`);
+    console.log(`[receiver] open` .yellow);
 });
 
 ws.on('message', function (data) {
-    console.log("[RECEIVE_DATA_CLIENT] Received:",data);
+    console.log("[receiver] Received:",data);
     count = 0;
     if(typeof data ==='string'){
       if(data.indexOf('=')>0)
@@ -76,21 +74,21 @@ ws.on('message', function (data) {
     pipe_id=data[0];
     con='pipe_'+pipe_id.toString();
     let path = './'+con;
-    console.log("output dir: ", path);
+    console.log(("output dir: ", path).bgMagenta);
 
     try{
        fs.accessSync(path,fs.constants.F_OK);
     }catch(ex){
-        console.log("access error for ", con);
+        console.log(("access error for ", con).red);
         if(ex){
-           console.log("please build a new directory for ",con);
+           console.log(("please build a new directory for ",con).red);
            fs.mkdir(con, function (err) {
               if(err) {
-                  console.log("Failed to create dir, err =  ", err);
+                  console.log(("Failed to create dir, err =  ", err).red);
               }
           });
         } else {
-            console.log("output data will be put into ", path);
+            console.log(("output data will be put into ", path).green);
             return;
         }
     };
@@ -115,16 +113,21 @@ ws.on('message', function (data) {
                  console.log("append failed: ", err);
              } else {
                  // done
-                 console.log("done");
+                 console.log("done" .green);
              }
          })
     }
 });
 
 ws.on('error', function () {
-    console.log(`connect wrong!`);
+    console.log(`connect wrong!` .red);
     
 }); 
+
+ws.on("close",function() {
+    console.log(`[receiver] close` .yellow);
+});
+
 }
 
 input_password();
