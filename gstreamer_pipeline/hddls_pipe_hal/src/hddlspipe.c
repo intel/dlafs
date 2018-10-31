@@ -108,7 +108,7 @@ static void set_property(struct json_object *parent, HddlsPipe *hp, const char *
         int property_int = 0;
         double property_double = 0.0;
         
-        if( !json_get_object_d2(parent, "set_property", filter_name, &element) ) {
+        if( !json_get_object_d2(parent, "command_set_property", filter_name, &element) ) {
                g_print("It didn't find new property for %s\n", filter_name);
                return;
          }
@@ -151,6 +151,7 @@ static void process_commands(HddlsPipe *hp, char *desc)
             return;
      }
 
+     g_print("pipe %d(%d) has got message: %s\n", hp->pipe_id, wsclient_get_id(hp->ws),  desc);
      command_type = json_get_command_type(root);
      switch(command_type){
         case eCommand_PipeCreate:
@@ -349,15 +350,16 @@ void hddlspipe_prepare(int argc, char **argv)
    } else {
          hp->ws = wsclient_setup(g_server_uri,  g_pipe_id);
     }
+   hp->pipe_id = g_pipe_id;
     //it has connected to ws server.
 
    // Block wait until get desc data from ws server
     item = (MessageItem *)wsclient_get_data(hp->ws);
-    g_print("%s() - receive message: %s\n", __func__, item->data);
+    g_print("%s() -pipe %d  received message: %s\n", __func__, hp->pipe_id, item->data);
     hp->state = ePipeState_Null;
 
     // parse pipeline_create command
-    pipeline_desc = parse_create_command(item->data, g_pipe_id);
+    pipeline_desc = parse_create_command(item->data, hp->pipe_id);
     wsclient_free_item(item);
     if(!pipeline_desc) {
         g_print("Failed to get pipeline description!\n");

@@ -176,6 +176,7 @@ static void process_sink_buffers(gpointer userData)
                basesink->wsclient_handle = basesink->wsclient_handle_proxy;
         else
                 basesink->wsclient_handle = wsclient_setup(basesink->wss_uri, basesink->wsc_id);
+        wsclient_set_id(basesink->wsclient_handle,  basesink->wsc_id);
     }
 
     // txt data
@@ -195,7 +196,7 @@ static void process_sink_buffers(gpointer userData)
                 txt_mem->pts/1000000000.0, infer_data->probility, infer_data->label,
                 infer_data->rect.x, infer_data->rect.y,
                 infer_data->rect.width, infer_data->rect.height);
-            g_print("ws send txt_data: size=%ld, %s",data_len, txt_cache);
+            g_print("pipe %d send txt_data: size=%ld, %s",basesink->wsc_id, data_len, txt_cache);
             wsclient_send_data(basesink->wsclient_handle, (char *)txt_cache, data_len);
             size += data_len;
         }
@@ -218,8 +219,8 @@ static void process_sink_buffers(gpointer userData)
                 wsclient_send_data(basesink->wsclient_handle, (char *)data_base, data_len);
             }
             size += data_len;
-            g_print("ws send bit_data: size=%ld, ts=%.3fs, data=%p\n\n", data_len,
-                GST_BUFFER_PTS(bit_buf)/1000000000.0, data_base);
+            //g_print("ws send bit_data: size=%ld, ts=%.3fs, data=%p\n\n", data_len,
+            //    GST_BUFFER_PTS(bit_buf)/1000000000.0, data_base);
         }
 
         for (i = 0; i < n; ++i)
@@ -287,7 +288,6 @@ gst_ws_sink_set_property (GObject * object, guint prop_id,
         break;
     case PROP_WS_CLIENT_ID:
         sink->wsc_id = g_value_get_int(value);
-        wsclient_set_id(sink->wsclient_handle,  sink->wsc_id);
         break;
      case PROP_WS_CLIENT_PROXY:
         sink->wsclient_handle_proxy=g_value_get_pointer(value);
