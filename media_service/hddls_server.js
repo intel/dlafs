@@ -39,7 +39,7 @@ const path_server = https.createServer({
 const path_wss = new WebSocketServer({server: path_server, path: '/controller',verifyClient: ClientVerify});
 path_wss.on('connection', function(ws) {
 
-    console.log('controller connected' .bgYellow);
+    console.log('controller connected !' .bgYellow);
     client_id++;
     ws.send('client id is '+ client_id);   
     client_pipe = "";
@@ -71,6 +71,9 @@ path_wss.on('connection', function(ws) {
                 });
 
                 client_pipe = client_pipe + pipe_count.toString() + ",";
+                pipe_id = pipe_count;
+                console.log(pipe_id);
+                console.log(pipe_count);
                 pipe_count++;
 
           }
@@ -88,9 +91,9 @@ path_wss.on('connection', function(ws) {
           destory_json = JSON.parse(path.substring(1));
           ws_index = pipe_map.get(destory_json.command_destroy.pipe_id);
           console.log(ws_index);
-          ws_index.close();
+          //ws_index.close();
           console.log(path.substring(1));
-          //ws_index.send(path.substring(1));
+          ws_index.send(path.substring(1));
           console.log('we killed pipe '+ destory_json.command_destroy.pipe_id);
           pipe_map.set(destory_json.command_destroy.pipe_id,-1);
           console.log(pipe_map);
@@ -118,6 +121,7 @@ let params = 0;
 let userArray = [];
 let receive_client = 0;
 let gst_cmd = 0;
+let pipe_client = 0;
 
 const data_server = https.createServer({
   cert: fs.readFileSync('./cert_server_8123/server-cert.pem'),
@@ -143,8 +147,8 @@ data_wss.on('connection', function connection(ws) {
      console.log("Receiver connected!" .bgMagenta);
 
   } else if (params["id"] == "3"){
-     console.log(pipe_id);
-     pipe_map.set(pipe_id,ws);
+     
+     
 
      fs.readFile("../gstreamer_pipeline/hddls_pipe_hal/config/create_hddlspipe.config", 'utf8', function(err, data) {
         if (err) throw err;
@@ -153,10 +157,10 @@ data_wss.on('connection', function connection(ws) {
       });
 
     userArray.push(ws);
-    console.log(ws);
-    console.log("new pipeline joined!",pipe_id);
+    //console.log(ws);
+    //console.log("new pipeline joined!",pipe_id);
     console.log("this is "+ userArray.indexOf(ws)+"th loop time");
-    pipe_id++;
+    //pipe_id++;
   }
   
 
@@ -167,11 +171,22 @@ data_wss.on('connection', function connection(ws) {
       if (client !== ws && client.readyState === WebSocket.OPEN) {
         client.send(data);
       }*/
-      if (receive_client.readyState === WebSocket.OPEN){
+      if (typeof data ==="string"){
+        console.log(data);
+        pipe_client = data.split("=");
+        console.log(pipe_client);
+        pipe_id = parseInt(pipe_client[1]);
+        console.log(pipe_id);
+        pipe_map.set(pipe_id,ws);
+
+      }
+      else {
+        if (receive_client.readyState === WebSocket.OPEN){
 //        var head = client_id+','+userArray.indexOf(ws);
 //        receive_client.send(head);
         receive_client.send(data);
       }
+    }
   });
 
   ws.on('error', function(e) {
