@@ -35,8 +35,11 @@ const path_server = https.createServer({
 const path_wss = new WebSocketServer({server: path_server, path: '/sendPath',verifyClient: ClientVerify});
 path_wss.on('connection', function(ws) {
 
-    console.log('/sendPath connected');
-    pipe_all = "";
+    console.log('controller connected !' .bgYellow);
+    client_id++;
+    ws.send('client id is '+ client_id);   
+    client_pipe = "";
+
     ws.on('message', function(path) {
 
         console.log("receive message:" + path);
@@ -91,42 +94,41 @@ path_wss.on('connection', function(ws) {
           
         } 
 
-        if((loop_times>0) && (pipe_num>0)) {
-            for(let i=0; i<pipe_num; i++) {
-                //gst_cmd = 'hddlspipe ' + client_id + ' ' + gst_cmd_path + ' ' + loop_times;
-	        gst_cmd = 'hddlspipes -i  ' + client_id + ' -l ' + loop_times;
+                client_pipe = client_pipe + pipe_count.toString() + ",";
+                pipe_id = pipe_count;
+                console.log(pipe_id);
+                console.log(pipe_count);
+                pipe_count++;
 
                 let child = spawn(gst_cmd , {
                     shell: true
                 });
 
-                pipe_map.set(client_id,child.pid);
-                
+          client_map.set(client_id,client_pipe);
+          console.log(client_map);
 
-                child.stderr.on('data', function (data) {
-                    console.error("STDERR:", data.toString());
-                });
+        } else if(path[0]==='p'){
+          property_json = JSON.parse(path.substring(1));
+          ws_index = pipe_map.get(property_json.command_set_property.pipe_id);
+          ws_index.send(path.substring(1));
+            
+        } else if(path[0]==='d') {
+          console.log(pipe_map);
+          destory_json = JSON.parse(path.substring(1));
+          ws_index = pipe_map.get(destory_json.command_destroy.pipe_id);
+          console.log(ws_index);
+          //ws_index.close();
+          console.log(path.substring(1));
+          ws_index.send(path.substring(1));
+          console.log('we killed pipe '+ destory_json.command_destroy.pipe_id);
+          pipe_map.set(destory_json.command_destroy.pipe_id,-1);
+          console.log(pipe_map);
+          per_client_pipe = client_map.get(destory_json.client_id);
+          per_client_pipe = per_client_pipe.replace(destory_json.command_destroy.pipe_id.toString()+",","");
+          client_map.set(destory_json.client_id,per_client_pipe);
+          console.log(client_map);
+        }
 
-                child.stdout.on('data', function (data) {
-                    console.log("STDOUT:", data.toString());
-                });
-
-                child.on('exit', function (exitCode) {
-                    console.log("Child exited with code: " + exitCode);
-                });
-                client_id++;
-            }
-            for(let i=0;pipe_map.get(i)!=0;i++){
-              pipe_all = pipe_all+i+',';
-            }
-            //ws.send('setup pipe done!');
-            //ws.send(pipe_map);
-            ws.send(pipe_all);
-
-            loop_times = 0;
-            pipe_num = 0;
-
-       }
     });
 
     ws.on('close', function() {
@@ -145,7 +147,7 @@ let userArray = [];
 let receive_client = 0;
 let pipe = 0;
 let gst_cmd = 0;
-let gst_cmd_path = 0;
+let pipe_client = 0;
 
 const data_server = https.createServer({
   cert: fs.readFileSync('./cert_server_8123/server-cert.pem'),
@@ -168,21 +170,17 @@ data_wss.on('connection', function connection(ws) {
   if (params["id"] == "1") {
 
      receive_client = ws;
-     console.log("client connected!");
+     console.log("Receiver connected!" .bgMagenta);
 
+  } else if (params["id"] == "3"){
+     
   } else {
 
     userArray.push(ws);
-    console.log("new pipeline joined!",client_id);
+    //console.log(ws);
+    //console.log("new pipeline joined!",pipe_id);
     console.log("this is "+ userArray.indexOf(ws)+"th loop time");
-  }
-
-    if (params["id"] == "3") {
-           fs.readFile("create_hddlspipe.config", 'utf8', function(err, data) {
-  		if (err) throw err;
-		console.log("read create_hddlspipe.config: ", data);
-		ws.send(data);
-           });
+    //pipe_id++;
   }
   
 
@@ -193,11 +191,22 @@ data_wss.on('connection', function connection(ws) {
       if (client !== ws && client.readyState === WebSocket.OPEN) {
         client.send(data);
       }*/
-      if (receive_client.readyState === WebSocket.OPEN){
+      if (typeof data ==="string"){
+        console.log(data);
+        pipe_client = data.split("=");
+        console.log(pipe_client);
+        pipe_id = parseInt(pipe_client[1]);
+        console.log(pipe_id);
+        pipe_map.set(pipe_id,ws);
+
+      }
+      else {
+        if (receive_client.readyState === WebSocket.OPEN){
 //        var head = client_id+','+userArray.indexOf(ws);
 //        receive_client.send(head);
         receive_client.send(data);
       }
+    }
   });
 
   ws.on('close', function (close) {
