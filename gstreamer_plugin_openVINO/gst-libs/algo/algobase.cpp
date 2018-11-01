@@ -57,10 +57,14 @@ CvdlAlgoBase::CvdlAlgoBase(GstTaskFunction func, gpointer user_data, GDestroyNot
     mInferCost = 1;
 
     /* Create task for this algo */
-    mTask = gst_task_new (func, user_data, notify);
-    gst_task_set_lock (mTask, &mMutex);
-    gst_task_set_enter_callback (mTask, algo_enter_thread, NULL, NULL);
-    gst_task_set_leave_callback (mTask, algo_leave_thread, NULL, NULL);
+    if(func) {
+        mTask = gst_task_new (func, user_data, notify);
+        gst_task_set_lock (mTask, &mMutex);
+        gst_task_set_enter_callback (mTask, algo_enter_thread, NULL, NULL);
+        gst_task_set_leave_callback (mTask, algo_leave_thread, NULL, NULL);
+    } else {
+        mTask = NULL;
+   }
 
     /* create queue, data is pointer*/
     //mInQueue = gst_atomic_queue_new(QUEUE_ELEMENT_MAX_NUM*sizeof(void *));
@@ -70,17 +74,17 @@ CvdlAlgoBase::CvdlAlgoBase(GstTaskFunction func, gpointer user_data, GDestroyNot
 CvdlAlgoBase::~CvdlAlgoBase()
 {
     wait_work_done();
-    if((gst_task_get_state(mTask) == GST_TASK_STARTED) ||
-       (gst_task_get_state(mTask) == GST_TASK_PAUSED)) {
-         gst_task_set_state(mTask, GST_TASK_STOPPED);
-         mInQueue.flush();
-         gst_task_join(mTask);
-    } else {
-        mInQueue.close();
+    if(mTask) {
+        if((gst_task_get_state(mTask) == GST_TASK_STARTED) ||
+          (gst_task_get_state(mTask) == GST_TASK_PAUSED)) {
+                gst_task_set_state(mTask, GST_TASK_STOPPED);
+                mInQueue.flush();
+                gst_task_join(mTask);
+        }
+        gst_object_unref(mTask);
+        mTask = NULL;
     }
-    gst_object_unref(mTask);
-    mTask = NULL;
-
+    mInQueue.close();
     mNext = mPrev = NULL;
     //gst_object_unref(mPool);
 }
@@ -93,15 +97,18 @@ void CvdlAlgoBase::algo_connect(CvdlAlgoBase *algoTo)
 
 void CvdlAlgoBase::start_algo_thread()
 {
-    gst_task_start(mTask);
+    if(mTask)
+        gst_task_start(mTask);
 }
 
 void CvdlAlgoBase::stop_algo_thread()
 {
-    gst_task_set_state(mTask, GST_TASK_STOPPED);
+    if(mTask)
+        gst_task_set_state(mTask, GST_TASK_STOPPED);
     mInQueue.flush();
     wait_work_done();
-    gst_task_join(mTask);
+    if(mTask)
+        gst_task_join(mTask);
 }
 
 void CvdlAlgoBase::queue_buffer(GstBuffer *buffer)
@@ -120,8 +127,8 @@ void CvdlAlgoBase::queue_out_buffer(GstBuffer *buffer)
     algoData.mFrameId = mFrameIndex++;
     if(buffer)
         algoData.mPts = GST_BUFFER_TIMESTAMP (buffer);
-    mOutQueue.put(algoData);
-    GST_LOG("OutQueue size = %d\n", mOutQueue.size());
+    mInQueue.put(algoData);
+    GST_LOG("InQueue size = %d\n", mInQueue.size());
 }
 int CvdlAlgoBase::get_in_queue_size()
 {
@@ -130,7 +137,8 @@ int CvdlAlgoBase::get_in_queue_size()
 
 int CvdlAlgoBase::get_out_queue_size()
 {
-    return mOutQueue.size();
+    //we did't have mOutQueue currently.
+    return 0;
 }
 void CvdlAlgoBase::save_buffer(unsigned char *buf, int w, int h, int p, int id, char *info)
 {

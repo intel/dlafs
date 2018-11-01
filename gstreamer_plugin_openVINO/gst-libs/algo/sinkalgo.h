@@ -20,38 +20,30 @@
  * SOFTWARE.
  */
 
-#ifndef __CLASSIFICATION_ALGO_H__
-#define __CLASSIFICATION_ALGO_H__
+#ifndef __SINK_ALGO_H__
+#define __SINK_ALGO_H__
 
+#include <vector>
 #include "algobase.h"
-#include "ieloader.h"
-#include "imageproc.h"
+#include <gst/gstbuffer.h>
+#include "algopipeline.h"
 
-class ClassificationAlgo : public CvdlAlgoBase 
+class SinkAlgo : public CvdlAlgoBase 
 {
 public:
-    ClassificationAlgo();
-    virtual ~ClassificationAlgo();
+    SinkAlgo();
+    virtual ~SinkAlgo();
+    virtual GstBuffer* dequeue_buffer();
 
-    virtual void set_data_caps(GstCaps *incaps);
-    //virtual GstBuffer* dequeue_buffer();
-    virtual GstFlowReturn parse_inference_result(InferenceEngine::Blob::Ptr &resultBlobPtr,
-                                                      int precision, CvdlAlgoData *outData, int objId);
-    virtual GstFlowReturn algo_dl_init(const char* modeFileName);
-
-    IELoader mIeLoader;
-    gboolean mIeInited;
-    ImageProcessor mImageProcessor;
-    GstCaps *mInCaps;  /* Caps for orignal input video*/
-    GstCaps *mOclCaps; /* Caps for output surface of OCL, which has been CRCed, and as the input of this algo */
-
-    int mImageProcessorInVideoWidth;
-    int mImageProcessorInVideoHeight;
-
-    guint64 mCurPts;
-
-    // The last algo should have an out queue
-    //thread_queue<CvdlAlgoData> mOutQueue;
+   void set_linked_item(CvdlAlgoBase *item, int index)
+   {
+        if(index>=0 && index<MAX_PRE_SINK_ALGO_NUM)
+            pLinkedItem[index] = item;
+        else
+            g_print("Failed to set linked item to sinkAlgo!\n");
+   }
+private:
+    CvdlAlgoBase *pLinkedItem[MAX_PRE_SINK_ALGO_NUM];
 };
 
 #endif

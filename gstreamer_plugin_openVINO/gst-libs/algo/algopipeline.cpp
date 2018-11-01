@@ -28,6 +28,7 @@
 #include "detectionalgo.h"
 #include "trackalgo.h"
 #include "classificationalgo.h"
+#include "sinkalgo.h"
 #include "algopipeline.h"
 
 #ifdef __cplusplus
@@ -46,12 +47,19 @@ static CvdlAlgoBase* algo_create(int type)
     switch(type) {
         case ALGO_DETECTION:
             algo = new DetectionAlgo;
+            algo->mAlgoType = ALGO_DETECTION;
             break;
         case ALGO_TRACKING:
             algo = new TrackAlgo;
+            algo->mAlgoType = ALGO_TRACKING;
             break;
         case ALGO_CLASSIFICATION:
             algo = new ClassificationAlgo;
+            algo->mAlgoType = ALGO_CLASSIFICATION;
+            break;
+         case ALGO_SINK:
+            algo = new SinkAlgo;
+            algo->mAlgoType = ALGO_SINK;
             break;
         default:
             algo = NULL;
@@ -72,6 +80,29 @@ static void algo_item_link(AlgoItem* from, AlgoItem* to)
     algoFrom = static_cast<CvdlAlgoBase *>(from->algo);
     algoTo   = static_cast<CvdlAlgoBase *>(to->algo);
     algoFrom->algo_connect(algoTo);
+}
+
+static void algo_item_link_sink(AlgoItem *preItem[], int num, AlgoItem *sinkItem)
+{
+    CvdlAlgoBase *algoPre, *algoSink;
+    SinkAlgo *sink;
+    int i = 0;
+    if(!preItem || !sinkItem || num==0) {
+        GST_ERROR("algo link sink failed!\n");
+        return;
+    }
+    algoSink = static_cast<CvdlAlgoBase*>(sinkItem->algo);
+    sink = static_cast<SinkAlgo*>(sinkItem->algo);
+
+    for(i=0;i<num;i++) {
+          if(preItem[i]==NULL)
+            continue;
+          algoPre = static_cast<CvdlAlgoBase *>(preItem[i]->algo);
+          // sinkalgo did't know how many preItem linked to it
+          algoPre->algo_connect(algoSink);
+          sink->set_linked_item(algoPre, i);
+     }
+    return;
 }
 
 static int get_str_count(gchar *str, gchar *token, int len)
@@ -211,9 +242,10 @@ AlgoPipelineHandle algo_pipeline_create(AlgoPipelineConfig* config, int num)
     AlgoPipeline *pipeline = (AlgoPipeline *)g_new0(AlgoPipeline,1);
     AlgoItem *item = NULL;
     int preId, nextId = 0;
+    AlgoItem *preSinkItem[MAX_PIPELINE_OUT_NUM] = {NULL};
 
-    pipeline->algo_chain = (AlgoItem *)g_new0(AlgoItem, num);
-    pipeline->algo_num   = num;
+    pipeline->algo_chain = (AlgoItem *)g_new0(AlgoItem, num+1);  //add sinkalgo
+    pipeline->algo_num   = num+1;
     pipeline->first = NULL;
 
     int i, j;
@@ -256,10 +288,21 @@ AlgoPipelineHandle algo_pipeline_create(AlgoPipelineConfig* config, int num)
                 //algo_item_link(item, item->nextItem[j]);
             }else {
                 nextId = (-1 * nextId) - 1;
-                pipeline->last[nextId] = item->algo;
+                if(nextId < MAX_PIPELINE_OUT_NUM)
+                     preSinkItem[nextId] = item;
+                else
+                    g_print("Error when algo pipe create: output algo nextId = %d\n", nextId);
             }
         }
     }
+
+     //create sinkalgo
+     item = pipeline->algo_chain + num;
+     item->id = num;
+     item->type = ALGO_SINK;
+     item->algo = static_cast<void *>(algo_create(ALGO_SINK));
+     algo_item_link_sink(preSinkItem, MAX_PIPELINE_OUT_NUM, item);
+     pipeline->last = item->algo;
 
     handle = (AlgoPipelineHandle)pipeline;
     return handle;
@@ -405,10 +448,8 @@ int algo_pipeline_get_all_queue_size(AlgoPipelineHandle handle)
         size += algo->mInferCnt;
         algo=algo->mNext;
     }
-
     return size;
 }
-
 
 void algo_pipeline_get_buffer(AlgoPipelineHandle handle, GstBuffer **buf)
 {
@@ -417,7 +458,7 @@ void algo_pipeline_get_buffer(AlgoPipelineHandle handle, GstBuffer **buf)
 
     //TODO: need support multiple output buffer
     if(pipeline) {
-        algo = static_cast<CvdlAlgoBase *>(pipeline->last[0]);
+        algo = static_cast<CvdlAlgoBase *>(pipeline->last);
         if(algo)
             *buf = algo->dequeue_buffer();
         else
@@ -432,7 +473,7 @@ void algo_pipeline_flush_buffer(AlgoPipelineHandle handle)
 
     //TODO: need support multiple output buffer
     if(pipeline) {
-        algo = static_cast<CvdlAlgoBase *>(pipeline->last[0]);
+        algo = static_cast<CvdlAlgoBase *>(pipeline->last);
         g_print("%s() - put EOS buffer!\n",__func__);
         // send a empty buffer to make this get_buffer_task exit 
         algo->queue_out_buffer(NULL);

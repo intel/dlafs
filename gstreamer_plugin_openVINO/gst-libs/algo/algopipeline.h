@@ -37,6 +37,7 @@ enum {
     ALGO_DETECTION = 0,
     ALGO_TRACKING  = 1,
     ALGO_CLASSIFICATION = 2,
+    ALGO_SINK = 3,   /*last algo in algopipe*/
     ALGO_MAX_NUM,
 };
 
@@ -44,8 +45,7 @@ enum {
 #define ALGO_DETECTION_NAME "detection"
 #define ALGO_TRACKING_NAME "track"
 #define ALGO_CLASSIFICATION_NAME "classification"
-
-
+#define ALGO_SINK_NAME "sink"
 
 // Each algo in the algo chain can link to multiple downstream algo
 // Here we set 1 by default
@@ -55,6 +55,8 @@ enum {
 // Here we set 1
 #define MAX_PIPELINE_OUT_NUM 1
 
+// SinkAlgo item can accept multiple preItem, one is a algo branch
+#define MAX_PRE_SINK_ALGO_NUM 2
 
 typedef struct _AlgoPipelineConfig{
     int curId; 
@@ -87,15 +89,14 @@ struct _AlgoItem{
     void *algo;
     AlgoItem *nextItem[MAX_DOWN_STREAM_ALGO_NUM];
     AlgoItem *preItem;
+    AlgoItem *preItemSink[MAX_PRE_SINK_ALGO_NUM]; //only for sinkalgo
 };
 
 typedef struct _AlgoPipeline{
     AlgoItem *algo_chain;
     int algo_num;
-    //CvdlAlgoBase *first;
-    //CvdlAlgoBase *last[MAX_PIPELINE_OUT_NUM];
     void *first;
-    void *last[MAX_PIPELINE_OUT_NUM];
+    void *last;//[MAX_PIPELINE_OUT_NUM];
 }AlgoPipeline;
 
 typedef void* AlgoPipelineHandle;
