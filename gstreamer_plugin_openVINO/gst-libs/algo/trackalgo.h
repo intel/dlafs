@@ -63,8 +63,8 @@ public:
     int mCurObjId = 0;		// Be used to assign new object id.
 
     // member
-	std::vector<cv::Point2f> mPreFeaturePt;
-	std::vector<cv::Point2f> mCurFeaturePt;
+    std::vector<cv::Point2f> mPreFeaturePt;
+    std::vector<cv::Point2f> mCurFeaturePt;
 
     // It is for Optical Flow algorithm
     GstBuffer *mPreFrame;
@@ -91,47 +91,46 @@ private:
 class TrackObjAttribute
 {
 public:
-	int objId;			// Object index
-	uint64_t startFrameId;
-	uint64_t curFrameId;
+    int objId;      // Object index
+    uint64_t startFrameId;
+    uint64_t curFrameId;
     float score;
     bool fliped; // whether it is fliped into next component.
     int detectedNum;//
 
-	int notDetectNum;	/* The object is not detected in the continuous notDetectNum, stop tracking and report. */
-	std::vector<cv::Rect> vecPos;	/* Every frame vehicle position based on tracking size */
-	bool bBottom;	// Had arrived at image bottom; default = false;
+    int notDetectNum;   /* The object is not detected in the continuous notDetectNum, stop tracking and report. */
+    std::vector<cv::Rect> vecPos;/* Every frame vehicle position based on tracking size */
+    bool bBottom;// Had arrived at image bottom; default = false;
 
-	/**
-	 * @brief Get current last vehicle for NVR show.
-	 */
-	cv::Rect getLastPos()
-	{
-		if (vecPos.size() > 0){
-			return vecPos[vecPos.size() - 1];
-		}
-		return cv::Rect(0, 0, 0, 0);
-	}
+    /**
+    * @brief Get current last vehicle for NVR show.
+    */
+    cv::Rect getLastPos()
+    {
+        if (vecPos.size() > 0){
+            return vecPos[vecPos.size() - 1];
+        }
+        return cv::Rect(0, 0, 0, 0);
+    }
 
-	/**
-	 * @brief Calculate a mean shift position, if we track fail.
-	 */
-	void getLastShiftValue(float& shiftX, float& shiftY)
-	{
-		if (vecPos.size() >= 2) {
-			int lastId = vecPos.size() - 2;
-			shiftX = (vecPos[lastId + 1].x + vecPos[lastId + 1].width / 2)
-					- (vecPos[lastId].x + vecPos[lastId].width / 2);
-			shiftY = (vecPos[lastId + 1].y + vecPos[lastId + 1].height / 2)
-					- (vecPos[lastId].y + vecPos[lastId].height / 2);
-			shiftY = MAX(1, shiftY);
+    /**
+    * @brief Calculate a mean shift position, if we track fail.
+    */
+    void getLastShiftValue(float& shiftX, float& shiftY)
+    {
+        if (vecPos.size() >= 2) {
+            int lastId = vecPos.size() - 2;
+            shiftX = (vecPos[lastId + 1].x + vecPos[lastId + 1].width / 2)
+                            - (vecPos[lastId].x + vecPos[lastId].width / 2);
+            shiftY = (vecPos[lastId + 1].y + vecPos[lastId + 1].height / 2)
+                            - (vecPos[lastId].y + vecPos[lastId].height / 2);
+            shiftY = MAX(1, shiftY);
             SET_SATURATE(shiftX, -5, 5);
-		}
-		else{
-			shiftX = 0;
-			shiftY = 2;
-		}
-	}
+        } else {
+            shiftX = 0;
+            shiftY = 2;
+        }
+    }
 };
 
 #endif

@@ -1,0 +1,887 @@
+<?xml version="1.0" ?>
+<net batch="1" name="LPRNet" version="2">
+	<layers>
+		<layer id="0" name="data" precision="FP16" type="Input">
+			<output>
+				<port id="0">
+					<dim>1</dim>
+					<dim>3</dim>
+					<dim>24</dim>
+					<dim>94</dim>
+				</port>
+			</output>
+		</layer>
+		<layer id="1" name="conv1" precision="FP16" type="Convolution">
+			<data dilation-x="1" dilation-y="1" group="1" kernel-x="3" kernel-y="3" output="64" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<input>
+				<port id="0">
+					<dim>1</dim>
+					<dim>3</dim>
+					<dim>24</dim>
+					<dim>94</dim>
+				</port>
+			</input>
+			<output>
+				<port id="3">
+					<dim>1</dim>
+					<dim>64</dim>
+					<dim>24</dim>
+					<dim>94</dim>
+				</port>
+			</output>
+			<blobs>
+				<weights offset="0" size="3456"/>
+				<biases offset="3456" size="128"/>
+			</blobs>
+		</layer>
+		<layer id="2" name="relu_conv1" precision="FP16" type="ReLU">
+			<data negative_slope="0.0"/>
+			<input>
+				<port id="0">
+					<dim>1</dim>
+					<dim>64</dim>
+					<dim>24</dim>
+					<dim>94</dim>
+				</port>
+			</input>
+			<output>
+				<port id="1">
+					<dim>1</dim>
+					<dim>64</dim>
+					<dim>24</dim>
+					<dim>94</dim>
+				</port>
+			</output>
+		</layer>
+		<layer id="3" name="pool1" precision="FP16" type="Pooling">
+			<data exclude-pad="false" kernel-x="3" kernel-y="3" pad-x="0" pad-y="0" pool-method="max" rounding_type="ceil" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<input>
+				<port id="0">
+					<dim>1</dim>
+					<dim>64</dim>
+					<dim>24</dim>
+					<dim>94</dim>
+				</port>
+			</input>
+			<output>
+				<port id="1">
+					<dim>1</dim>
+					<dim>64</dim>
+					<dim>22</dim>
+					<dim>92</dim>
+				</port>
+			</output>
+		</layer>
+		<layer id="4" name="fire1_small/conv_reduce" precision="FP16" type="Convolution">
+			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="32" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<input>
+				<port id="0">
+					<dim>1</dim>
+					<dim>64</dim>
+					<dim>22</dim>
+					<dim>92</dim>
+				</port>
+			</input>
+			<output>
+				<port id="3">
+					<dim>1</dim>
+					<dim>32</dim>
+					<dim>22</dim>
+					<dim>92</dim>
+				</port>
+			</output>
+			<blobs>
+				<weights offset="3584" size="4096"/>
+				<biases offset="7680" size="64"/>
+			</blobs>
+		</layer>
+		<layer id="5" name="fire1_small/relu_conv_reduce" precision="FP16" type="ReLU">
+			<data negative_slope="0.0"/>
+			<input>
+				<port id="0">
+					<dim>1</dim>
+					<dim>32</dim>
+					<dim>22</dim>
+					<dim>92</dim>
+				</port>
+			</input>
+			<output>
+				<port id="1">
+					<dim>1</dim>
+					<dim>32</dim>
+					<dim>22</dim>
+					<dim>92</dim>
+				</port>
+			</output>
+		</layer>
+		<layer id="6" name="fire1_small/conv_3x1" precision="FP16" type="Convolution">
+			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="3" output="32" pad-x="0" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<input>
+				<port id="0">
+					<dim>1</dim>
+					<dim>32</dim>
+					<dim>22</dim>
+					<dim>92</dim>
+				</port>
+			</input>
+			<output>
+				<port id="3">
+					<dim>1</dim>
+					<dim>32</dim>
+					<dim>22</dim>
+					<dim>92</dim>
+				</port>
+			</output>
+			<blobs>
+				<weights offset="7744" size="6144"/>
+				<biases offset="13888" size="64"/>
+			</blobs>
+		</layer>
+		<layer id="7" name="fire1_small/relu_conv_3x1" precision="FP16" type="ReLU">
+			<data negative_slope="0.0"/>
+			<input>
+				<port id="0">
+					<dim>1</dim>
+					<dim>32</dim>
+					<dim>22</dim>
+					<dim>92</dim>
+				</port>
+			</input>
+			<output>
+				<port id="1">
+					<dim>1</dim>
+					<dim>32</dim>
+					<dim>22</dim>
+					<dim>92</dim>
+				</port>
+			</output>
+		</layer>
+		<layer id="8" name="fire1_small/conv_1x3" precision="FP16" type="Convolution">
+			<data dilation-x="1" dilation-y="1" group="1" kernel-x="3" kernel-y="1" output="32" pad-x="1" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<input>
+				<port id="0">
+					<dim>1</dim>
+					<dim>32</dim>
+					<dim>22</dim>
+					<dim>92</dim>
+				</port>
+			</input>
+			<output>
+				<port id="3">
+					<dim>1</dim>
+					<dim>32</dim>
+					<dim>22</dim>
+					<dim>92</dim>
+				</port>
+			</output>
+			<blobs>
+				<weights offset="13952" size="6144"/>
+				<biases offset="20096" size="64"/>
+			</blobs>
+		</layer>
+		<layer id="9" name="fire1_small/relu_conv_1x3" precision="FP16" type="ReLU">
+			<data negative_slope="0.0"/>
+			<input>
+				<port id="0">
+					<dim>1</dim>
+					<dim>32</dim>
+					<dim>22</dim>
+					<dim>92</dim>
+				</port>
+			</input>
+			<output>
+				<port id="1">
+					<dim>1</dim>
+					<dim>32</dim>
+					<dim>22</dim>
+					<dim>92</dim>
+				</port>
+			</output>
+		</layer>
+		<layer id="10" name="fire1_small/conv_expand" precision="FP16" type="Convolution">
+			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="128" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<input>
+				<port id="0">
+					<dim>1</dim>
+					<dim>32</dim>
+					<dim>22</dim>
+					<dim>92</dim>
+				</port>
+			</input>
+			<output>
+				<port id="3">
+					<dim>1</dim>
+					<dim>128</dim>
+					<dim>22</dim>
+					<dim>92</dim>
+				</port>
+			</output>
+			<blobs>
+				<weights offset="20160" size="8192"/>
+				<biases offset="28352" size="256"/>
+			</blobs>
+		</layer>
+		<layer id="11" name="fire1_small/relu_conv_expand" precision="FP16" type="ReLU">
+			<data negative_slope="0.0"/>
+			<input>
+				<port id="0">
+					<dim>1</dim>
+					<dim>128</dim>
+					<dim>22</dim>
+					<dim>92</dim>
+				</port>
+			</input>
+			<output>
+				<port id="1">
+					<dim>1</dim>
+					<dim>128</dim>
+					<dim>22</dim>
+					<dim>92</dim>
+				</port>
+			</output>
+		</layer>
+		<layer id="12" name="pool2" precision="FP16" type="Pooling">
+			<data exclude-pad="false" kernel-x="3" kernel-y="3" pad-x="0" pad-y="0" pool-method="max" rounding_type="ceil" stride="1,1,2,1" stride-x="1" stride-y="2"/>
+			<input>
+				<port id="0">
+					<dim>1</dim>
+					<dim>128</dim>
+					<dim>22</dim>
+					<dim>92</dim>
+				</port>
+			</input>
+			<output>
+				<port id="1">
+					<dim>1</dim>
+					<dim>128</dim>
+					<dim>11</dim>
+					<dim>90</dim>
+				</port>
+			</output>
+		</layer>
+		<layer id="13" name="fire2_small/conv_reduce" precision="FP16" type="Convolution">
+			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="64" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<input>
+				<port id="0">
+					<dim>1</dim>
+					<dim>128</dim>
+					<dim>11</dim>
+					<dim>90</dim>
+				</port>
+			</input>
+			<output>
+				<port id="3">
+					<dim>1</dim>
+					<dim>64</dim>
+					<dim>11</dim>
+					<dim>90</dim>
+				</port>
+			</output>
+			<blobs>
+				<weights offset="28608" size="16384"/>
+				<biases offset="44992" size="128"/>
+			</blobs>
+		</layer>
+		<layer id="14" name="fire2_small/relu_conv_reduce" precision="FP16" type="ReLU">
+			<data negative_slope="0.0"/>
+			<input>
+				<port id="0">
+					<dim>1</dim>
+					<dim>64</dim>
+					<dim>11</dim>
+					<dim>90</dim>
+				</port>
+			</input>
+			<output>
+				<port id="1">
+					<dim>1</dim>
+					<dim>64</dim>
+					<dim>11</dim>
+					<dim>90</dim>
+				</port>
+			</output>
+		</layer>
+		<layer id="15" name="fire2_small/conv_3x1" precision="FP16" type="Convolution">
+			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="3" output="64" pad-x="0" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<input>
+				<port id="0">
+					<dim>1</dim>
+					<dim>64</dim>
+					<dim>11</dim>
+					<dim>90</dim>
+				</port>
+			</input>
+			<output>
+				<port id="3">
+					<dim>1</dim>
+					<dim>64</dim>
+					<dim>11</dim>
+					<dim>90</dim>
+				</port>
+			</output>
+			<blobs>
+				<weights offset="45120" size="24576"/>
+				<biases offset="69696" size="128"/>
+			</blobs>
+		</layer>
+		<layer id="16" name="fire2_small/relu_conv_3x1" precision="FP16" type="ReLU">
+			<data negative_slope="0.0"/>
+			<input>
+				<port id="0">
+					<dim>1</dim>
+					<dim>64</dim>
+					<dim>11</dim>
+					<dim>90</dim>
+				</port>
+			</input>
+			<output>
+				<port id="1">
+					<dim>1</dim>
+					<dim>64</dim>
+					<dim>11</dim>
+					<dim>90</dim>
+				</port>
+			</output>
+		</layer>
+		<layer id="17" name="fire2_small/conv_1x3" precision="FP16" type="Convolution">
+			<data dilation-x="1" dilation-y="1" group="1" kernel-x="3" kernel-y="1" output="64" pad-x="1" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<input>
+				<port id="0">
+					<dim>1</dim>
+					<dim>64</dim>
+					<dim>11</dim>
+					<dim>90</dim>
+				</port>
+			</input>
+			<output>
+				<port id="3">
+					<dim>1</dim>
+					<dim>64</dim>
+					<dim>11</dim>
+					<dim>90</dim>
+				</port>
+			</output>
+			<blobs>
+				<weights offset="69824" size="24576"/>
+				<biases offset="94400" size="128"/>
+			</blobs>
+		</layer>
+		<layer id="18" name="fire2_small/relu_conv_1x3" precision="FP16" type="ReLU">
+			<data negative_slope="0.0"/>
+			<input>
+				<port id="0">
+					<dim>1</dim>
+					<dim>64</dim>
+					<dim>11</dim>
+					<dim>90</dim>
+				</port>
+			</input>
+			<output>
+				<port id="1">
+					<dim>1</dim>
+					<dim>64</dim>
+					<dim>11</dim>
+					<dim>90</dim>
+				</port>
+			</output>
+		</layer>
+		<layer id="19" name="fire2_small/conv_expand" precision="FP16" type="Convolution">
+			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="256" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<input>
+				<port id="0">
+					<dim>1</dim>
+					<dim>64</dim>
+					<dim>11</dim>
+					<dim>90</dim>
+				</port>
+			</input>
+			<output>
+				<port id="3">
+					<dim>1</dim>
+					<dim>256</dim>
+					<dim>11</dim>
+					<dim>90</dim>
+				</port>
+			</output>
+			<blobs>
+				<weights offset="94528" size="32768"/>
+				<biases offset="127296" size="512"/>
+			</blobs>
+		</layer>
+		<layer id="20" name="fire2_small/relu_conv_expand" precision="FP16" type="ReLU">
+			<data negative_slope="0.0"/>
+			<input>
+				<port id="0">
+					<dim>1</dim>
+					<dim>256</dim>
+					<dim>11</dim>
+					<dim>90</dim>
+				</port>
+			</input>
+			<output>
+				<port id="1">
+					<dim>1</dim>
+					<dim>256</dim>
+					<dim>11</dim>
+					<dim>90</dim>
+				</port>
+			</output>
+		</layer>
+		<layer id="21" name="fire3_small/conv_reduce" precision="FP16" type="Convolution">
+			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="64" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<input>
+				<port id="0">
+					<dim>1</dim>
+					<dim>256</dim>
+					<dim>11</dim>
+					<dim>90</dim>
+				</port>
+			</input>
+			<output>
+				<port id="3">
+					<dim>1</dim>
+					<dim>64</dim>
+					<dim>11</dim>
+					<dim>90</dim>
+				</port>
+			</output>
+			<blobs>
+				<weights offset="127808" size="32768"/>
+				<biases offset="160576" size="128"/>
+			</blobs>
+		</layer>
+		<layer id="22" name="fire3_small/relu_conv_reduce" precision="FP16" type="ReLU">
+			<data negative_slope="0.0"/>
+			<input>
+				<port id="0">
+					<dim>1</dim>
+					<dim>64</dim>
+					<dim>11</dim>
+					<dim>90</dim>
+				</port>
+			</input>
+			<output>
+				<port id="1">
+					<dim>1</dim>
+					<dim>64</dim>
+					<dim>11</dim>
+					<dim>90</dim>
+				</port>
+			</output>
+		</layer>
+		<layer id="23" name="fire3_small/conv_3x1" precision="FP16" type="Convolution">
+			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="3" output="64" pad-x="0" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<input>
+				<port id="0">
+					<dim>1</dim>
+					<dim>64</dim>
+					<dim>11</dim>
+					<dim>90</dim>
+				</port>
+			</input>
+			<output>
+				<port id="3">
+					<dim>1</dim>
+					<dim>64</dim>
+					<dim>11</dim>
+					<dim>90</dim>
+				</port>
+			</output>
+			<blobs>
+				<weights offset="160704" size="24576"/>
+				<biases offset="185280" size="128"/>
+			</blobs>
+		</layer>
+		<layer id="24" name="fire3_small/relu_conv_3x1" precision="FP16" type="ReLU">
+			<data negative_slope="0.0"/>
+			<input>
+				<port id="0">
+					<dim>1</dim>
+					<dim>64</dim>
+					<dim>11</dim>
+					<dim>90</dim>
+				</port>
+			</input>
+			<output>
+				<port id="1">
+					<dim>1</dim>
+					<dim>64</dim>
+					<dim>11</dim>
+					<dim>90</dim>
+				</port>
+			</output>
+		</layer>
+		<layer id="25" name="fire3_small/conv_1x3" precision="FP16" type="Convolution">
+			<data dilation-x="1" dilation-y="1" group="1" kernel-x="3" kernel-y="1" output="64" pad-x="1" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<input>
+				<port id="0">
+					<dim>1</dim>
+					<dim>64</dim>
+					<dim>11</dim>
+					<dim>90</dim>
+				</port>
+			</input>
+			<output>
+				<port id="3">
+					<dim>1</dim>
+					<dim>64</dim>
+					<dim>11</dim>
+					<dim>90</dim>
+				</port>
+			</output>
+			<blobs>
+				<weights offset="185408" size="24576"/>
+				<biases offset="209984" size="128"/>
+			</blobs>
+		</layer>
+		<layer id="26" name="fire3_small/relu_conv_1x3" precision="FP16" type="ReLU">
+			<data negative_slope="0.0"/>
+			<input>
+				<port id="0">
+					<dim>1</dim>
+					<dim>64</dim>
+					<dim>11</dim>
+					<dim>90</dim>
+				</port>
+			</input>
+			<output>
+				<port id="1">
+					<dim>1</dim>
+					<dim>64</dim>
+					<dim>11</dim>
+					<dim>90</dim>
+				</port>
+			</output>
+		</layer>
+		<layer id="27" name="fire3_small/conv_expand" precision="FP16" type="Convolution">
+			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="256" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<input>
+				<port id="0">
+					<dim>1</dim>
+					<dim>64</dim>
+					<dim>11</dim>
+					<dim>90</dim>
+				</port>
+			</input>
+			<output>
+				<port id="3">
+					<dim>1</dim>
+					<dim>256</dim>
+					<dim>11</dim>
+					<dim>90</dim>
+				</port>
+			</output>
+			<blobs>
+				<weights offset="210112" size="32768"/>
+				<biases offset="242880" size="512"/>
+			</blobs>
+		</layer>
+		<layer id="28" name="fire3_small/relu_conv_expand" precision="FP16" type="ReLU">
+			<data negative_slope="0.0"/>
+			<input>
+				<port id="0">
+					<dim>1</dim>
+					<dim>256</dim>
+					<dim>11</dim>
+					<dim>90</dim>
+				</port>
+			</input>
+			<output>
+				<port id="1">
+					<dim>1</dim>
+					<dim>256</dim>
+					<dim>11</dim>
+					<dim>90</dim>
+				</port>
+			</output>
+		</layer>
+		<layer id="29" name="pool3" precision="FP16" type="Pooling">
+			<data exclude-pad="false" kernel-x="3" kernel-y="3" pad-x="0" pad-y="0" pool-method="max" rounding_type="ceil" stride="1,1,2,1" stride-x="1" stride-y="2"/>
+			<input>
+				<port id="0">
+					<dim>1</dim>
+					<dim>256</dim>
+					<dim>11</dim>
+					<dim>90</dim>
+				</port>
+			</input>
+			<output>
+				<port id="1">
+					<dim>1</dim>
+					<dim>256</dim>
+					<dim>5</dim>
+					<dim>88</dim>
+				</port>
+			</output>
+		</layer>
+		<layer id="30" name="conv2" precision="FP16" type="Convolution">
+			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="5" output="128" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<input>
+				<port id="0">
+					<dim>1</dim>
+					<dim>256</dim>
+					<dim>5</dim>
+					<dim>88</dim>
+				</port>
+			</input>
+			<output>
+				<port id="3">
+					<dim>1</dim>
+					<dim>128</dim>
+					<dim>1</dim>
+					<dim>88</dim>
+				</port>
+			</output>
+			<blobs>
+				<weights offset="243392" size="327680"/>
+				<biases offset="571072" size="256"/>
+			</blobs>
+		</layer>
+		<layer id="31" name="relu_conv2" precision="FP16" type="ReLU">
+			<data negative_slope="0.0"/>
+			<input>
+				<port id="0">
+					<dim>1</dim>
+					<dim>128</dim>
+					<dim>1</dim>
+					<dim>88</dim>
+				</port>
+			</input>
+			<output>
+				<port id="1">
+					<dim>1</dim>
+					<dim>128</dim>
+					<dim>1</dim>
+					<dim>88</dim>
+				</port>
+			</output>
+		</layer>
+		<layer id="32" name="conv3_w" precision="FP16" type="Convolution">
+			<data dilation-x="1" dilation-y="1" group="1" kernel-x="13" kernel-y="1" output="71" pad-x="6" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<input>
+				<port id="0">
+					<dim>1</dim>
+					<dim>128</dim>
+					<dim>1</dim>
+					<dim>88</dim>
+				</port>
+			</input>
+			<output>
+				<port id="3">
+					<dim>1</dim>
+					<dim>71</dim>
+					<dim>1</dim>
+					<dim>88</dim>
+				</port>
+			</output>
+			<blobs>
+				<weights offset="571328" size="236288"/>
+				<biases offset="807616" size="142"/>
+			</blobs>
+		</layer>
+		<layer id="33" name="relu_conv3_w" precision="FP16" type="ReLU">
+			<data negative_slope="0.0"/>
+			<input>
+				<port id="0">
+					<dim>1</dim>
+					<dim>71</dim>
+					<dim>1</dim>
+					<dim>88</dim>
+				</port>
+			</input>
+			<output>
+				<port id="1">
+					<dim>1</dim>
+					<dim>71</dim>
+					<dim>1</dim>
+					<dim>88</dim>
+				</port>
+			</output>
+		</layer>
+		<layer id="34" name="pattern" precision="FP16" type="FullyConnected">
+			<data out-size="128"/>
+			<input>
+				<port id="0">
+					<dim>1</dim>
+					<dim>71</dim>
+					<dim>1</dim>
+					<dim>88</dim>
+				</port>
+			</input>
+			<output>
+				<port id="3">
+					<dim>1</dim>
+					<dim>128</dim>
+				</port>
+			</output>
+			<blobs>
+				<weights offset="807758" size="1599488"/>
+				<biases offset="2407246" size="256"/>
+			</blobs>
+		</layer>
+		<layer id="35" name="reshape" precision="FP16" type="Reshape">
+			<data axis="0" dim="-1,128,1,1" num_axes="-1"/>
+			<input>
+				<port id="0">
+					<dim>1</dim>
+					<dim>128</dim>
+				</port>
+			</input>
+			<output>
+				<port id="1">
+					<dim>1</dim>
+					<dim>128</dim>
+					<dim>1</dim>
+					<dim>1</dim>
+				</port>
+			</output>
+		</layer>
+		<layer id="36" name="tile" precision="FP16" type="Tile">
+			<data axis="3" tiles="88"/>
+			<input>
+				<port id="0">
+					<dim>1</dim>
+					<dim>128</dim>
+					<dim>1</dim>
+					<dim>1</dim>
+				</port>
+			</input>
+			<output>
+				<port id="1">
+					<dim>1</dim>
+					<dim>128</dim>
+					<dim>1</dim>
+					<dim>88</dim>
+				</port>
+			</output>
+		</layer>
+		<layer id="37" name="concat" precision="FP16" type="Concat">
+			<data axis="1"/>
+			<input>
+				<port id="0">
+					<dim>1</dim>
+					<dim>71</dim>
+					<dim>1</dim>
+					<dim>88</dim>
+				</port>
+				<port id="1">
+					<dim>1</dim>
+					<dim>128</dim>
+					<dim>1</dim>
+					<dim>88</dim>
+				</port>
+			</input>
+			<output>
+				<port id="2">
+					<dim>1</dim>
+					<dim>199</dim>
+					<dim>1</dim>
+					<dim>88</dim>
+				</port>
+			</output>
+		</layer>
+		<layer id="38" name="result" precision="FP16" type="Convolution">
+			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="71" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<input>
+				<port id="0">
+					<dim>1</dim>
+					<dim>199</dim>
+					<dim>1</dim>
+					<dim>88</dim>
+				</port>
+			</input>
+			<output>
+				<port id="3">
+					<dim>1</dim>
+					<dim>71</dim>
+					<dim>1</dim>
+					<dim>88</dim>
+				</port>
+			</output>
+			<blobs>
+				<weights offset="2407502" size="28258"/>
+				<biases offset="2435760" size="142"/>
+			</blobs>
+		</layer>
+		<layer id="39" name="p_result" precision="FP16" type="Permute">
+			<data order="3,0,1,2"/>
+			<input>
+				<port id="0">
+					<dim>1</dim>
+					<dim>71</dim>
+					<dim>1</dim>
+					<dim>88</dim>
+				</port>
+			</input>
+			<output>
+				<port id="1">
+					<dim>88</dim>
+					<dim>1</dim>
+					<dim>71</dim>
+					<dim>1</dim>
+				</port>
+			</output>
+		</layer>
+		<layer id="40" name="reshape2" precision="FP16" type="Reshape">
+			<data axis="0" dim="88,-1,71" num_axes="-1"/>
+			<input>
+				<port id="0">
+					<dim>88</dim>
+					<dim>1</dim>
+					<dim>71</dim>
+					<dim>1</dim>
+				</port>
+			</input>
+			<output>
+				<port id="1">
+					<dim>88</dim>
+					<dim>1</dim>
+					<dim>71</dim>
+				</port>
+			</output>
+		</layer>
+	</layers>
+	<edges>
+		<edge from-layer="0" from-port="0" to-layer="1" to-port="0"/>
+		<edge from-layer="1" from-port="3" to-layer="2" to-port="0"/>
+		<edge from-layer="2" from-port="1" to-layer="3" to-port="0"/>
+		<edge from-layer="3" from-port="1" to-layer="4" to-port="0"/>
+		<edge from-layer="4" from-port="3" to-layer="5" to-port="0"/>
+		<edge from-layer="5" from-port="1" to-layer="6" to-port="0"/>
+		<edge from-layer="6" from-port="3" to-layer="7" to-port="0"/>
+		<edge from-layer="7" from-port="1" to-layer="8" to-port="0"/>
+		<edge from-layer="8" from-port="3" to-layer="9" to-port="0"/>
+		<edge from-layer="9" from-port="1" to-layer="10" to-port="0"/>
+		<edge from-layer="10" from-port="3" to-layer="11" to-port="0"/>
+		<edge from-layer="11" from-port="1" to-layer="12" to-port="0"/>
+		<edge from-layer="12" from-port="1" to-layer="13" to-port="0"/>
+		<edge from-layer="13" from-port="3" to-layer="14" to-port="0"/>
+		<edge from-layer="14" from-port="1" to-layer="15" to-port="0"/>
+		<edge from-layer="15" from-port="3" to-layer="16" to-port="0"/>
+		<edge from-layer="16" from-port="1" to-layer="17" to-port="0"/>
+		<edge from-layer="17" from-port="3" to-layer="18" to-port="0"/>
+		<edge from-layer="18" from-port="1" to-layer="19" to-port="0"/>
+		<edge from-layer="19" from-port="3" to-layer="20" to-port="0"/>
+		<edge from-layer="20" from-port="1" to-layer="21" to-port="0"/>
+		<edge from-layer="21" from-port="3" to-layer="22" to-port="0"/>
+		<edge from-layer="22" from-port="1" to-layer="23" to-port="0"/>
+		<edge from-layer="23" from-port="3" to-layer="24" to-port="0"/>
+		<edge from-layer="24" from-port="1" to-layer="25" to-port="0"/>
+		<edge from-layer="25" from-port="3" to-layer="26" to-port="0"/>
+		<edge from-layer="26" from-port="1" to-layer="27" to-port="0"/>
+		<edge from-layer="27" from-port="3" to-layer="28" to-port="0"/>
+		<edge from-layer="28" from-port="1" to-layer="29" to-port="0"/>
+		<edge from-layer="29" from-port="1" to-layer="30" to-port="0"/>
+		<edge from-layer="30" from-port="3" to-layer="31" to-port="0"/>
+		<edge from-layer="31" from-port="1" to-layer="32" to-port="0"/>
+		<edge from-layer="32" from-port="3" to-layer="33" to-port="0"/>
+		<edge from-layer="33" from-port="1" to-layer="34" to-port="0"/>
+		<edge from-layer="34" from-port="3" to-layer="35" to-port="0"/>
+		<edge from-layer="35" from-port="1" to-layer="36" to-port="0"/>
+		<edge from-layer="33" from-port="1" to-layer="37" to-port="0"/>
+		<edge from-layer="36" from-port="1" to-layer="37" to-port="1"/>
+		<edge from-layer="37" from-port="2" to-layer="38" to-port="0"/>
+		<edge from-layer="38" from-port="3" to-layer="39" to-port="0"/>
+		<edge from-layer="39" from-port="1" to-layer="40" to-port="0"/>
+	</edges>
+</net>

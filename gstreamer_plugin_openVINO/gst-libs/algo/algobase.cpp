@@ -140,12 +140,12 @@ int CvdlAlgoBase::get_out_queue_size()
     //we did't have mOutQueue currently.
     return 0;
 }
-void CvdlAlgoBase::save_buffer(unsigned char *buf, int w, int h, int p, int id, char *info)
+void CvdlAlgoBase::save_buffer(unsigned char *buf, int w, int h, int p, int id, int bPlannar, char *info)
 {
     char filename[128];
     sprintf(filename, "/home/lijunjie/temp/temp/%s-%dx%dx%d-%d.rgb",info,w,h,p,id);
 
-#if 1
+if(bPlannar) {
     int size = w*h;
     char *rgb = (char *)g_new0(char, w*h*p);
     for(int i=0;i<size;i++) {
@@ -158,11 +158,11 @@ void CvdlAlgoBase::save_buffer(unsigned char *buf, int w, int h, int p, int id, 
          fclose (fp);
     }
     g_free(rgb);
-#else
+} else {
     FILE *fp = fopen (filename, "wb");
     if (fp) {
          fwrite (buf, 1, w*h*p, fp);
          fclose (fp);
     }
-#endif
+}
 }

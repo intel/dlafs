@@ -90,6 +90,7 @@ GstFlowReturn IELoader::read_model(std::string strModelXml,
         std::string strModelBin, int modelType)
 {
     std::unique_lock<std::mutex> _lock(requestCreateMutex);
+    std::string config_xml;
 
     InferenceEngine::ResponseDesc resp;
     InferenceEngine::StatusCode ret = InferenceEngine::StatusCode::OK;
@@ -116,7 +117,7 @@ GstFlowReturn IELoader::read_model(std::string strModelXml,
     g_return_val_if_fail(networkInputs.empty()==FALSE, GST_FLOW_ERROR);
     auto firstInputInfo = networkInputs.begin();
     g_return_val_if_fail(firstInputInfo != networkInputs.end(), GST_FLOW_ERROR);
-    firstInputInfo->second->setInputPrecision(InferenceEngine::Precision::U8);
+    firstInputInfo->second->setInputPrecision(mInputPrecision);
     mFirstInputName = firstInputInfo->first;
     firstInputInfo->second->setLayout(Layout::NCHW);//HW: NCHW, SW: NHWC
 
@@ -128,11 +129,20 @@ GstFlowReturn IELoader::read_model(std::string strModelXml,
     firstOutputInfo->second->precision = mOutputPrecision;
     mFirstOutputName = firstOutputInfo->first;
 
+    InferenceEngine::OutputsDataMap outputInfo(cnnNetwork.getOutputsInfo());
+    auto outputInfoIter = outputInfo.begin();
+    if(outputInfoIter  != outputInfo.end()){
+        InferenceEngine::SizeVector outputDims = outputInfoIter->second->dims;
+         mOutputDim[1] = (int)outputDims[1]; 
+         mOutputDim[0] = (int)outputDims[0];
+    }
+
     std::map<std::string, std::string> networkConfig;
     networkConfig[InferenceEngine::PluginConfigParams::KEY_LOG_LEVEL]
         = InferenceEngine::PluginConfigParams::LOG_INFO;
     //networkConfig[VPU_CONFIG_KEY(HW_STAGES_OPTIMIZATION)] = CONFIG_VALUE(YES);
 
+    mModelType = modelType;
     switch(modelType) {
         case IE_MODEL_DETECTION:
 #ifdef WIN32
@@ -142,6 +152,15 @@ GstFlowReturn IELoader::read_model(std::string strModelXml,
             networkConfig[VPU_CONFIG_KEY(NETWORK_CONFIG)] = "data=data,scale=64";
 #endif
             break;
+       case IE_MODEL_SSD:
+               // Get moblienet_ssd_config_xml file name based on strModelXml
+              config_xml = strModelXml.substr(0, strModelXml.rfind(".")) + std::string(".conf.xml");
+              networkConfig[VPU_CONFIG_KEY(NETWORK_CONFIG)] = "file=" + config_xml;
+              //networkConfig[VPU_CONFIG_KEY(HW_STAGES_OPTIMIZATION)] = CONFIG_VALUE(YES);
+              break;
+        case IE_MODEL_LP_RECOGNIZE:
+              //networkConfig[VPU_CONFIG_KEY(HW_STAGES_OPTIMIZATION)] = CONFIG_VALUE(YES);
+              break;
         default:
             break;
    }
@@ -153,7 +172,7 @@ GstFlowReturn IELoader::read_model(std::string strModelXml,
         return GST_FLOW_ERROR;
     }
 
-    // First create 4 request for current thread.
+    // First create 16 request for current thread.
     for (int r = 0; r < REQUEST_NUM; r++) {
         ret = mExeNetwork->CreateInferRequest(mInferRequest[r], &resp);
         mRequestEnable[r] = true;
@@ -169,7 +188,7 @@ GstFlowReturn IELoader::convert_input_to_blob(const cv::UMat& img,
     InferenceEngine::Blob::Ptr& inputBlobPtr)
 {
     if (inputBlobPtr->precision() != mInputPrecision) {
-        GST_ERROR("loadImage error: blob must have only U8 precision");
+        GST_ERROR("loadImage error: blob must have only same precision");
         return GST_FLOW_ERROR;
     }
 
@@ -202,9 +221,20 @@ GstFlowReturn IELoader::convert_input_to_blob(const cv::UMat& img,
             for (int i = 0; i < nPixels; i++)
                 inputDataPtr[i] = src.data[i];
         }
-    }else{
-        GST_ERROR("InferenceEngine::Precision not support: %d", (int)mInputPrecision);
-        return GST_FLOW_ERROR;
+    }else if(InferenceEngine::Precision::FP32 == mInputPrecision){
+        InferenceEngine::TBlob<float>::Ptr inputBlobDataPtr = 
+            std::dynamic_pointer_cast<InferenceEngine::TBlob<float> >(inputBlobPtr);
+        if (inputBlobDataPtr != nullptr) {
+            float *inputDataPtr = inputBlobDataPtr->data();
+
+            // Src data has been converted to be BGR planar format
+            int nPixels = w * h * numBlobChannels;
+            for (int i = 0; i < nPixels; i++)
+                inputDataPtr[i] = ((float)src.data[i] - mInputMean) * mInputScale;
+        }
+    }else {
+            GST_ERROR("InferenceEngine::Precision not support: %d", (int)mInputPrecision);
+            return GST_FLOW_ERROR;
     }
 
     return GST_FLOW_OK;
@@ -254,6 +284,14 @@ GstFlowReturn IELoader::get_input_size(int *w, int *h, int *c)
     return ret;
 }
 
+GstFlowReturn IELoader::get_out_size(int *outDim0, int *outDim1)
+{
+    *outDim1 = (int)mOutputDim[1]; //ssdMaxProposalCount
+    *outDim0 = (int)mOutputDim[0]; //ssdObjectSize
+    return GST_FLOW_ERROR;
+}
+
+
 GstFlowReturn IELoader::do_inference_async(CvdlAlgoData *algoData, uint64_t frmId, int objId,
                                                   cv::UMat &src, AsyncCallback cb)
 {
@@ -271,7 +309,6 @@ GstFlowReturn IELoader::do_inference_async(CvdlAlgoData *algoData, uint64_t frmI
             GST_ERROR("input image empty!!!");
             return GST_FLOW_ERROR;
         }
-
         convert_input_to_blob(src, inputBlobPtr);
 
         // send a request

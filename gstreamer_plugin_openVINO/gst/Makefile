@@ -16,10 +16,10 @@ OPENCV_LIBS := $(shell pkg-config --libs opencv)
 IE_LIBS := -L${INTEL_CVSDK_DIR}/inference_engine/lib/ubuntu_16.04/intel64 -linference_engine
 
 LIB_PATH := -L$(SYS_LIB_DIR) -L$(INTELOPENCLSDK) $(OPENCV_LIBS) $(IE_LIBS) -L$(SYS_LIB_DIR)
-LDFLAGS := --sysroot=$(PREFIX) -shared -fPIC -Wl,-as-needed
+LDFLAGS := --sysroot=$(PREFIX) -shared -fPIC -Wl,-no-as-needed -lOpenCL -lglib-2.0 -lgstallocators-1.0 -lgstvideo-1.0 $(LIB_PATH)
 
 CFLAGS  := -g -Wall -fpic -pthread $(GLIB_CFLAGS) $(GST_CFLAGS) $(DRM_CFLAGS) $(OPENCL_CFLAGS) $(IE_CFLAGS) $(OPENCV_CFLAGS) $(VA_CFLAGS)
-LIBS    := $(OPENCV_LIBS) $(IE_LIBS) -luWS -lcrypto -lssl -lOpenCL -lglib-2.0 -lgstallocators-1.0 -lgstvideo-1.0 $(LIB_PATH)
+LIBS    := $(OPENCV_LIBS) $(IE_LIBS) -luWS -lcrypto -lssl -ldlib
 
 DIR_INC := .
 DIR_SRC := .

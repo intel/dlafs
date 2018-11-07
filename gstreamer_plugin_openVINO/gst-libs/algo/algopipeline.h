@@ -34,10 +34,13 @@ typedef void* AlgoHandle;
 
 enum {
     ALGO_NONE      = -1,
-    ALGO_DETECTION = 0,
-    ALGO_TRACKING  = 1,
-    ALGO_CLASSIFICATION = 2,
-    ALGO_SINK = 3,   /*last algo in algopipe*/
+    ALGO_DETECTION                = 0,
+    ALGO_TRACKING                  = 1,
+    ALGO_CLASSIFICATION     = 2,
+    ALGO_SSD                                = 3,
+    ALGO_TRACK_LP                  =4,
+    ALGO_REGCONIZE_LP         = 5,
+    ALGO_SINK,   /*last algo in algopipe*/
     ALGO_MAX_NUM,
 };
 
@@ -45,6 +48,9 @@ enum {
 #define ALGO_DETECTION_NAME "detection"
 #define ALGO_TRACKING_NAME "track"
 #define ALGO_CLASSIFICATION_NAME "classification"
+#define ALGO_SSD_NAME "ssd"
+#define ALGO_TRACK_LP_NAME "tracklp"
+#define ALGO_RECOGNIZE_LP_NAME "lprecognize"
 #define ALGO_SINK_NAME "sink"
 
 // Each algo in the algo chain can link to multiple downstream algo

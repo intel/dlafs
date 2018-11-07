@@ -146,7 +146,7 @@ static void detection_algo_func(gpointer userData)
 
     //test
     //detectionAlgo->save_buffer(ocl_mem->frame.getMat(0).ptr(), detectionAlgo->mInputWidth,
-    //                   detectionAlgo->mInputHeight, 3,algoData->mFrameId, "detection");
+    //                   detectionAlgo->mInputHeight, 3,algoData->mFrameId, 0, "detection");
 
     // Detect callback function
     auto onDetectResult = [](CvdlAlgoData* algoData)
@@ -276,6 +276,7 @@ GstFlowReturn DetectionAlgo::algo_dl_init(const char* modeFileName)
         GST_ERROR("IE failed to set device be eHDDL!");
         return GST_FLOW_ERROR;
     }
+     mIeLoader.set_precision(InferenceEngine::Precision::U8, InferenceEngine::Precision::FP32);
 
     // Load different Model based on different device.
     std::string strModelXml(modeFileName);

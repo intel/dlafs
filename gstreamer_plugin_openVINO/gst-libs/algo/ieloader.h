@@ -48,6 +48,8 @@
 enum{
     IE_MODEL_DETECTION = 0,
     IE_MODEL_CLASSFICATION = 1,
+    IE_MODEL_SSD =2,
+    IE_MODEL_LP_RECOGNIZE = 3,
 };
 
 
@@ -68,10 +70,31 @@ public:
                                             cv::UMat &src, AsyncCallback cb);
     int get_enable_request();
     GstFlowReturn get_input_size(int *w, int *h, int *c);
+    GstFlowReturn get_out_size(int *outDim0, int *outDim1);
+    // must be called before read_model()
+    void set_precision(InferenceEngine::Precision in, InferenceEngine::Precision out)
+    {
+        mInputPrecision = in;
+        mOutputPrecision = out;
+    }
+    //
+    int mModelType;
+
+    int mOutputDim[2];
 
     InferenceEngine::TargetDevice mTargetDev;
-	InferenceEngine::Precision mInputPrecision = InferenceEngine::Precision::U8;
-	InferenceEngine::Precision mOutputPrecision = InferenceEngine::Precision::FP32;
+    InferenceEngine::Precision mInputPrecision = InferenceEngine::Precision::U8;
+    InferenceEngine::Precision mOutputPrecision = InferenceEngine::Precision::FP32;
+
+    // mean/scale for input, which is used convert u8 image data to float data
+    // make sure mInputPrecision=InferenceEngine::Precision::FP32
+    float mInputMean;
+    float mInputScale;
+    void set_mean_and_scale(float mean, float scale)
+    {
+          mInputMean = mean;
+          mInputScale = scale;
+    }
 
     std::string mModelXml;
     std::string mModelBin;

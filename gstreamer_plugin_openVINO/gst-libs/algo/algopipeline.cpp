@@ -28,12 +28,25 @@
 #include "detectionalgo.h"
 #include "trackalgo.h"
 #include "classificationalgo.h"
+#include "ssdalgo.h"
+#include "tracklpalgo.h"
+#include "lprecognize.h"
 #include "sinkalgo.h"
 #include "algopipeline.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+const static char *g_algo_name_str[ALGO_MAX_NUM] = {
+                ALGO_DETECTION_NAME,
+                ALGO_TRACKING_NAME,
+                ALGO_CLASSIFICATION_NAME,
+                ALGO_SSD_NAME,
+                ALGO_TRACK_LP_NAME,
+                ALGO_RECOGNIZE_LP_NAME,
+                ALGO_SINK_NAME
+};
 
 static AlgoPipelineConfig algoTopologyDefault[] = {
     {0, ALGO_DETECTION,      -1,  1, {1}},
@@ -47,24 +60,32 @@ static CvdlAlgoBase* algo_create(int type)
     switch(type) {
         case ALGO_DETECTION:
             algo = new DetectionAlgo;
-            algo->mAlgoType = ALGO_DETECTION;
             break;
         case ALGO_TRACKING:
             algo = new TrackAlgo;
-            algo->mAlgoType = ALGO_TRACKING;
             break;
         case ALGO_CLASSIFICATION:
             algo = new ClassificationAlgo;
-            algo->mAlgoType = ALGO_CLASSIFICATION;
+            break;
+         case ALGO_SSD:
+            algo = new SSDAlgo;
+            break;
+         case ALGO_TRACK_LP:
+            algo = new TrackLpAlgo;
+            break;
+         case ALGO_REGCONIZE_LP:
+            algo = new LpRecognizeAlgo;
             break;
          case ALGO_SINK:
             algo = new SinkAlgo;
-            algo->mAlgoType = ALGO_SINK;
             break;
         default:
             algo = NULL;
             break;
    };
+
+    if(algo)
+        algo->mAlgoType = type;
 
    return algo;
 }
@@ -227,6 +248,12 @@ AlgoPipelineConfig *algo_pipeline_config_create(gchar *desc, int *num)
             config[i].curType = ALGO_TRACKING;
         } else if(!strncmp(p, ALGO_CLASSIFICATION_NAME, sizeof(ALGO_CLASSIFICATION_NAME))) {
             config[i].curType = ALGO_CLASSIFICATION;
+        }else if(!strncmp(p, ALGO_SSD_NAME, sizeof(ALGO_SSD_NAME))) {
+            config[i].curType = ALGO_SSD;
+        }else if(!strncmp(p, ALGO_TRACK_LP_NAME, sizeof(ALGO_TRACK_LP_NAME))) {
+            config[i].curType = ALGO_TRACK_LP;
+        }else if(!strncmp(p, ALGO_RECOGNIZE_LP_NAME, sizeof(ALGO_CLASSIFICATION_NAME))) {
+            config[i].curType = ALGO_REGCONIZE_LP;
         }
     }
     *num = count;
@@ -235,6 +262,19 @@ AlgoPipelineConfig *algo_pipeline_config_create(gchar *desc, int *num)
     return config;
 }
 
+static void algo_pipeline_print(AlgoPipelineHandle handle)
+{
+     AlgoPipeline *pipeline = (AlgoPipeline *) handle;
+      CvdlAlgoBase* algo = (CvdlAlgoBase *)pipeline->first;
+      CvdlAlgoBase* last = (CvdlAlgoBase *)pipeline->last;
+
+      g_print("algopipeline chain: ");
+      while(algo && algo!=last && last) {
+                g_print("%s ->  ", g_algo_name_str[algo->mAlgoType]);
+                algo = algo->mNext;
+      }
+      g_print("%s\n", g_algo_name_str[algo->mAlgoType]);
+}
 
 AlgoPipelineHandle algo_pipeline_create(AlgoPipelineConfig* config, int num)
 {
@@ -305,6 +345,7 @@ AlgoPipelineHandle algo_pipeline_create(AlgoPipelineConfig* config, int num)
      pipeline->last = item->algo;
 
     handle = (AlgoPipelineHandle)pipeline;
+    algo_pipeline_print(handle);
     return handle;
 }
 

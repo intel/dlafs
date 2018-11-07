@@ -128,7 +128,7 @@ static void process_one_object(CvdlAlgoData *algoData, ObjectData &objectData, i
     }
     //test
     //classificationAlgo->save_buffer(ocl_mem->frame.getMat(0).ptr(), classificationAlgo->mInputWidth,
-    //    classificationAlgo->mInputHeight,3,algoData->mFrameId*1000 + objId, "classification");
+    //    classificationAlgo->mInputHeight,3,algoData->mFrameId*1000 + objId, 1, "classification");
 
     // Classification callback function
     auto onClassificationResult = [&objectData](CvdlAlgoData* algoData)
@@ -279,6 +279,7 @@ GstFlowReturn ClassificationAlgo::algo_dl_init(const char* modeFileName)
         GST_ERROR("IE failed to set device be eHDDL!");
         return GST_FLOW_ERROR;
     }
+    mIeLoader.set_precision(InferenceEngine::Precision::U8, InferenceEngine::Precision::FP32);
 
     // Load different Model based on different device.
     std::string strModelXml(modeFileName);

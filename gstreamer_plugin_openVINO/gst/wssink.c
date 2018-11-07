@@ -200,6 +200,7 @@ static void process_sink_buffers(gpointer userData)
             g_print("pipe %d:  send %2d xml_data: size=%ld, %s",basesink->wsc_id, basesink->data_index, data_len, txt_cache);
             wsclient_send_data(basesink->wsclient_handle, (char *)txt_cache, data_len);
             size += data_len;
+            infer_data++;
         }
     }
 

@@ -183,14 +183,24 @@ static GstBuffer *generate_osd(BlendHandle handle, GstBuffer *input_buf)
         x = rect->x;
         y = rect->y + 30;
 
-        // Write label and probility
-        strTxt = std::string(inference_result->label);
-        cv::putText(mdraw, strTxt, cv::Point(x, y), 1, 1.25, cv::Scalar(255, 0, 255, 255), 2);//RGBA
-        strTxt = std::string("prob = ") + stream_prob.str();
-        cv::putText(mdraw, strTxt, cv::Point(x, y+30), 1, 1.25, cv::Scalar(255, 0, 255, 255), 2);//RGBA
-        strTxt = std::string("time = ") + stream_ts.str();
-        cv::putText(mdraw, strTxt, cv::Point(x, y+60), 1, 1.25, cv::Scalar(255, 0, 255, 255), 2);//RGBA
-
+        // check if a small object
+        if( ((int)rect->width < osd_mem->width/10) ||
+             ((int)rect->height < osd_mem->height/10)  ||
+             (rect->width/(1.0+rect->height) > 3.0)  ||
+             (rect->height/(1.0+rect->width) > 3.0)) {
+             // Write label and probility
+            strTxt = std::string(inference_result->label);// + std::string(":") + stream_prob.str();
+             cv::putText(mdraw, strTxt, cv::Point( rect->x,  rect->y - 15), 1, 1.8, cv::Scalar(255 , 10, 255,255), 2);//RGBA
+      } else {
+             // Write label and probility
+            strTxt = std::string(inference_result->label);
+            cv::putText(mdraw, strTxt, cv::Point(x, y), 1, 1.8, cv::Scalar(255, 0, 255, 255), 2);//RGBA
+            strTxt = std::string("prob=") + stream_prob.str();
+            cv::putText(mdraw, strTxt, cv::Point(x, y+30), 1, 1.8, cv::Scalar(255, 0, 255, 255), 2);//RGBA
+            strTxt = /*std::string("time=") + */stream_ts.str();
+            cv::putText(mdraw, strTxt, cv::Point(x, y+60), 1, 1.8, cv::Scalar(255, 0, 255, 255), 2);//RGBA
+        }
+ 
         // Draw rectangle on target object
         cv::Rect target_rect(rect->x, rect->y, rect->width, rect->height);
         cv::rectangle(mdraw, target_rect, cv::Scalar(0, 255, 0, 255), 2);
