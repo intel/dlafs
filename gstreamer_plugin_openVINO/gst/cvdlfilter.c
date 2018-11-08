@@ -39,7 +39,8 @@ G_DEFINE_TYPE (CvdlFilter, cvdl_filter, GST_TYPE_BASE_TRANSFORM);
 // #define SYNC_WITH_DECODER
 
 char default_algo_pipeline_desc[] = "detection ! track ! classification";
-char default_algo_pipeline_desc2[] = "detection ! track name=tk ! tk.vehicle_classification  ! tk.person_face_detection ! face_recognication";
+char default_algo_pipeline_desc2[] = "ssd ! tracklp ! lprecognize";
+char default_algo_pipeline_descX[] = "detection ! track name=tk ! tk.vehicle_classification  ! tk.person_face_detection ! face_recognication";
 
 /* GstVideoFlip properties */
 enum

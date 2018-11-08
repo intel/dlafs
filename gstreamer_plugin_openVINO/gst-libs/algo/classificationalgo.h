@@ -34,7 +34,7 @@ public:
     virtual ~ClassificationAlgo();
 
     virtual void set_data_caps(GstCaps *incaps);
-    virtual GstBuffer* dequeue_buffer();
+    //virtual GstBuffer* dequeue_buffer();
     virtual GstFlowReturn parse_inference_result(InferenceEngine::Blob::Ptr &resultBlobPtr,
                                                       int precision, CvdlAlgoData *outData, int objId);
     virtual GstFlowReturn algo_dl_init(const char* modeFileName);

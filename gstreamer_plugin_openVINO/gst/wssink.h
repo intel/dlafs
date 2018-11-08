@@ -109,6 +109,7 @@ struct _GstWsSink {
 
   /*< private >*/
   GstWsSinkPrivate *priv;
+  gint data_index;
 
   gpointer _gst_reserved[GST_PADDING_LARGE];
 };

@@ -196,9 +196,11 @@ static void process_sink_buffers(gpointer userData)
                 txt_mem->pts/1000000000.0, infer_data->probility, infer_data->label,
                 infer_data->rect.x, infer_data->rect.y,
                 infer_data->rect.width, infer_data->rect.height);
-            g_print("pipe %d send txt_data: size=%ld, %s",basesink->wsc_id, data_len, txt_cache);
+            basesink->data_index++;
+            g_print("pipe %d:  send %2d xml_data: size=%ld, %s",basesink->wsc_id, basesink->data_index, data_len, txt_cache);
             wsclient_send_data(basesink->wsclient_handle, (char *)txt_cache, data_len);
             size += data_len;
+            infer_data++;
         }
     }
 
@@ -672,6 +674,7 @@ gst_ws_sink_init (GstWsSink * basesink, gpointer g_class)
     basesink->wsclient_handle_proxy = INVALID_WSC_PROXY;
     basesink->wss_uri = NULL;
     basesink->wsc_id = 0;
+    basesink->data_index = 0;
 
     basesink->priv = priv = GST_WS_SINK_GET_PRIVATE (basesink);
 

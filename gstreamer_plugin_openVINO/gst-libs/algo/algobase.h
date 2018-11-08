@@ -132,7 +132,7 @@ public:
     }
     int get_in_queue_size();
     int get_out_queue_size();
-    void save_buffer(unsigned char *buf, int w, int h, int p, int id, char *info);
+    void save_buffer(unsigned char *buf, int w, int h, int p, int id, int bPlannar,char *info);
 
     virtual void set_data_caps(GstCaps *incaps)
     {
@@ -152,7 +152,7 @@ public:
     }
 
     guint  mAlgoType;
-    guint  mCvdlType;
+    //guint  mCvdlType;
 
     /* Main task/thread to do the algo processing */
     GstTask *mTask;
@@ -170,13 +170,13 @@ public:
     thread_queue<CvdlAlgoData> mInQueue;
 
     // only used by last algo in pipeline
-    thread_queue<CvdlAlgoData> mOutQueue;
+    //thread_queue<CvdlAlgoData> mOutQueue;
 
     /* pool for allocate buffer for inference result, CPU buffer */
     GstBufferPool *mResultPool;
 
     std::atomic<int> mInferCnt;
-	std::atomic<guint64> mInferCntTotal;
+    std::atomic<guint64> mInferCntTotal;
 
     int mFrameIndex;
     int mFrameDoneNum;

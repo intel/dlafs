@@ -28,11 +28,25 @@
 #include "detectionalgo.h"
 #include "trackalgo.h"
 #include "classificationalgo.h"
+#include "ssdalgo.h"
+#include "tracklpalgo.h"
+#include "lprecognize.h"
+#include "sinkalgo.h"
 #include "algopipeline.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+const static char *g_algo_name_str[ALGO_MAX_NUM] = {
+                ALGO_DETECTION_NAME,
+                ALGO_TRACKING_NAME,
+                ALGO_CLASSIFICATION_NAME,
+                ALGO_SSD_NAME,
+                ALGO_TRACK_LP_NAME,
+                ALGO_RECOGNIZE_LP_NAME,
+                ALGO_SINK_NAME
+};
 
 static AlgoPipelineConfig algoTopologyDefault[] = {
     {0, ALGO_DETECTION,      -1,  1, {1}},
@@ -53,10 +67,25 @@ static CvdlAlgoBase* algo_create(int type)
         case ALGO_CLASSIFICATION:
             algo = new ClassificationAlgo;
             break;
+         case ALGO_SSD:
+            algo = new SSDAlgo;
+            break;
+         case ALGO_TRACK_LP:
+            algo = new TrackLpAlgo;
+            break;
+         case ALGO_REGCONIZE_LP:
+            algo = new LpRecognizeAlgo;
+            break;
+         case ALGO_SINK:
+            algo = new SinkAlgo;
+            break;
         default:
             algo = NULL;
             break;
    };
+
+    if(algo)
+        algo->mAlgoType = type;
 
    return algo;
 }
@@ -72,6 +101,29 @@ static void algo_item_link(AlgoItem* from, AlgoItem* to)
     algoFrom = static_cast<CvdlAlgoBase *>(from->algo);
     algoTo   = static_cast<CvdlAlgoBase *>(to->algo);
     algoFrom->algo_connect(algoTo);
+}
+
+static void algo_item_link_sink(AlgoItem *preItem[], int num, AlgoItem *sinkItem)
+{
+    CvdlAlgoBase *algoPre, *algoSink;
+    SinkAlgo *sink;
+    int i = 0;
+    if(!preItem || !sinkItem || num==0) {
+        GST_ERROR("algo link sink failed!\n");
+        return;
+    }
+    algoSink = static_cast<CvdlAlgoBase*>(sinkItem->algo);
+    sink = static_cast<SinkAlgo*>(sinkItem->algo);
+
+    for(i=0;i<num;i++) {
+          if(preItem[i]==NULL)
+            continue;
+          algoPre = static_cast<CvdlAlgoBase *>(preItem[i]->algo);
+          // sinkalgo did't know how many preItem linked to it
+          algoPre->algo_connect(algoSink);
+          sink->set_linked_item(algoPre, i);
+     }
+    return;
 }
 
 static int get_str_count(gchar *str, gchar *token, int len)
@@ -196,6 +248,12 @@ AlgoPipelineConfig *algo_pipeline_config_create(gchar *desc, int *num)
             config[i].curType = ALGO_TRACKING;
         } else if(!strncmp(p, ALGO_CLASSIFICATION_NAME, sizeof(ALGO_CLASSIFICATION_NAME))) {
             config[i].curType = ALGO_CLASSIFICATION;
+        }else if(!strncmp(p, ALGO_SSD_NAME, sizeof(ALGO_SSD_NAME))) {
+            config[i].curType = ALGO_SSD;
+        }else if(!strncmp(p, ALGO_TRACK_LP_NAME, sizeof(ALGO_TRACK_LP_NAME))) {
+            config[i].curType = ALGO_TRACK_LP;
+        }else if(!strncmp(p, ALGO_RECOGNIZE_LP_NAME, sizeof(ALGO_CLASSIFICATION_NAME))) {
+            config[i].curType = ALGO_REGCONIZE_LP;
         }
     }
     *num = count;
@@ -204,6 +262,19 @@ AlgoPipelineConfig *algo_pipeline_config_create(gchar *desc, int *num)
     return config;
 }
 
+static void algo_pipeline_print(AlgoPipelineHandle handle)
+{
+     AlgoPipeline *pipeline = (AlgoPipeline *) handle;
+      CvdlAlgoBase* algo = (CvdlAlgoBase *)pipeline->first;
+      CvdlAlgoBase* last = (CvdlAlgoBase *)pipeline->last;
+
+      g_print("algopipeline chain: ");
+      while(algo && algo!=last && last) {
+                g_print("%s ->  ", g_algo_name_str[algo->mAlgoType]);
+                algo = algo->mNext;
+      }
+      g_print("%s\n", g_algo_name_str[algo->mAlgoType]);
+}
 
 AlgoPipelineHandle algo_pipeline_create(AlgoPipelineConfig* config, int num)
 {
@@ -211,9 +282,10 @@ AlgoPipelineHandle algo_pipeline_create(AlgoPipelineConfig* config, int num)
     AlgoPipeline *pipeline = (AlgoPipeline *)g_new0(AlgoPipeline,1);
     AlgoItem *item = NULL;
     int preId, nextId = 0;
+    AlgoItem *preSinkItem[MAX_PIPELINE_OUT_NUM] = {NULL};
 
-    pipeline->algo_chain = (AlgoItem *)g_new0(AlgoItem, num);
-    pipeline->algo_num   = num;
+    pipeline->algo_chain = (AlgoItem *)g_new0(AlgoItem, num+1);  //add sinkalgo
+    pipeline->algo_num   = num+1;
     pipeline->first = NULL;
 
     int i, j;
@@ -256,12 +328,24 @@ AlgoPipelineHandle algo_pipeline_create(AlgoPipelineConfig* config, int num)
                 //algo_item_link(item, item->nextItem[j]);
             }else {
                 nextId = (-1 * nextId) - 1;
-                pipeline->last[nextId] = item->algo;
+                if(nextId < MAX_PIPELINE_OUT_NUM)
+                     preSinkItem[nextId] = item;
+                else
+                    g_print("Error when algo pipe create: output algo nextId = %d\n", nextId);
             }
         }
     }
 
+     //create sinkalgo
+     item = pipeline->algo_chain + num;
+     item->id = num;
+     item->type = ALGO_SINK;
+     item->algo = static_cast<void *>(algo_create(ALGO_SINK));
+     algo_item_link_sink(preSinkItem, MAX_PIPELINE_OUT_NUM, item);
+     pipeline->last = item->algo;
+
     handle = (AlgoPipelineHandle)pipeline;
+    algo_pipeline_print(handle);
     return handle;
 }
 
@@ -405,10 +489,8 @@ int algo_pipeline_get_all_queue_size(AlgoPipelineHandle handle)
         size += algo->mInferCnt;
         algo=algo->mNext;
     }
-
     return size;
 }
-
 
 void algo_pipeline_get_buffer(AlgoPipelineHandle handle, GstBuffer **buf)
 {
@@ -417,7 +499,7 @@ void algo_pipeline_get_buffer(AlgoPipelineHandle handle, GstBuffer **buf)
 
     //TODO: need support multiple output buffer
     if(pipeline) {
-        algo = static_cast<CvdlAlgoBase *>(pipeline->last[0]);
+        algo = static_cast<CvdlAlgoBase *>(pipeline->last);
         if(algo)
             *buf = algo->dequeue_buffer();
         else
@@ -432,7 +514,7 @@ void algo_pipeline_flush_buffer(AlgoPipelineHandle handle)
 
     //TODO: need support multiple output buffer
     if(pipeline) {
-        algo = static_cast<CvdlAlgoBase *>(pipeline->last[0]);
+        algo = static_cast<CvdlAlgoBase *>(pipeline->last);
         g_print("%s() - put EOS buffer!\n",__func__);
         // send a empty buffer to make this get_buffer_task exit 
         algo->queue_out_buffer(NULL);

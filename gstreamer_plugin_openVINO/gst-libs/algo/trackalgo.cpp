@@ -107,7 +107,7 @@ static void track_algo_func(gpointer userData)
 
     //test
     //trackAlgo->save_buffer(ocl_mem->frame.getMat(0).ptr(), trackAlgo->mInputWidth,
-    //                   trackAlgo->mInputHeight,1,algoData->mFrameId, "track");
+    //                   trackAlgo->mInputHeight,1,algoData->mFrameId, 1, "track");
 
     trackAlgo->verify_detection_result(algoData->mObjectVec);
 

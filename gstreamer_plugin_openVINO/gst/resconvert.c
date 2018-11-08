@@ -277,9 +277,9 @@ res_convert_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         gst_event_parse_caps (event, &caps);
 
         //test
-        GstCaps *current_caps = gst_pad_get_current_caps (pad);
-        g_print("current_caps =\n %s\n", gst_caps_to_string(current_caps));
-        if(current_caps) gst_caps_unref(current_caps);
+        //GstCaps *current_caps = gst_pad_get_current_caps (pad);
+        //g_print("current_caps =\n %s\n", gst_caps_to_string(current_caps));
+        //if(current_caps) gst_caps_unref(current_caps);
         g_print("event_caps =\n %s\n", gst_caps_to_string(caps));
 
         // get info of caps

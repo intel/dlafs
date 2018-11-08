@@ -227,8 +227,8 @@ static gchar* parse_create_command(char *desc,  gint pipe_id )
                     g_print("stream codec type = %s\n",stream_codec_type);
             }
             // 1.3 parse property
-            if(json_get_string_d2(object, CVDLFILTER_NAME, "algo_pipeline", &algo_pipeline_desc)) {
-                     g_print("property - algo_pipeline = %s\n",algo_pipeline_desc);
+            if(json_get_string_d2(object, CVDLFILTER_NAME, "algopipeline", &algo_pipeline_desc)) {
+                     g_print("property - algopipeline = %s\n",algo_pipeline_desc);
              } else { //default
                     algo_pipeline_desc = "detection ! track ! classification";
              }
