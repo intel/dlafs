@@ -30,22 +30,25 @@ function mkdirs(dirpath) {
 const filename = 'path.txt';
 let url = 0;
 function read_server_ip(){
-fs.readFile(filename, 'utf8', function(err, data) {
-  if (err) throw err;
-  console.log('found: ' + filename .green);
-  console.log('server ip is:'+ data .green);
-  url = data;
-  url= url.replace(/[\r\n]/g,"");
-  set_websocket();
-});
-}
+    let array = fs.readFileSync(filename).toString().split("\n");
+    array = array.filter(function(e){return e});
+    console.log("HERE ARE SERVER IP LISTS:" .yellow);
+  for(i in array) {
+      console.log((i+" , "+array[i]).blue);
+  }
+  rl.question('Please chose server by id: '.magenta, (answer) => {
+    url = array[answer];
+    input_password();  
+  });
+  }
 
 function input_password() {
 
   rl.question('Please input password to connect server(default: b): ' .grey, (answer) => {
      if(answer !==""){
         psw = answer;
-        read_server_ip();
+        set_websocket();
+        
      }
 });
 
@@ -130,6 +133,6 @@ ws.on("close",function() {
 
 }
 
-input_password();
+read_server_ip();
 
 

@@ -21,8 +21,8 @@ const help = [ ('-help                          ' + 'commanders that you can use
            ].join('\n');
 
 function completer(line) {
-  var completions = '-help|-c ./json_file/create.json|-p ./json_file/property.json|-d ./json_file/destory.json|-q'.split('|')
-  var hits = completions.filter(function(c) {
+  let completions = '-help|-c ./json_file/create.json|-p ./json_file/property.json|-d ./json_file/destory.json|-q'.split('|')
+  let hits = completions.filter(function(c) {
     if (c.indexOf(line) == 0) {
       return c;
     }
@@ -31,7 +31,7 @@ function completer(line) {
 } 
 
 function prompt() {
-  var arrow    = '> '
+  let arrow    = '> '
     , length = arrow.length
     ;
 
@@ -41,14 +41,24 @@ function prompt() {
 
 
 function read_server_ip(){
-fs.readFile(filename, 'utf8', function(err, data) {
+  let array = fs.readFileSync(filename).toString().split("\n");
+  array = array.filter(function(e){return e});
+  console.log("HERE ARE SERVER HOSTNAME LISTS:" .yellow);
+for(i in array) {
+    console.log((i+" , "+array[i]).blue);
+}
+rl.question('Please chose server by id: '.magenta, (answer) => {
+  url = array[answer];
+  input_password();  
+});
+/*fs.readFile(filename, 'utf8', function(err, data) {
   if (err) throw err;
   console.log('found: ' + filename .green);
   console.log('host name is:'+ data .green);
   url = data;
   url= url.replace(/[\r\n]/g,"");
   set_websocket();
-});
+});*/
 }
 
 function input_password() {
@@ -56,7 +66,8 @@ function input_password() {
   rl.question('Please input password to connect server(default: c): '.grey, (answer) => {
     if(answer !==""){
        psw = answer;
-       read_server_ip();
+       
+       set_websocket();
     }
   });
 }
@@ -131,5 +142,5 @@ ws.on('close', function () {
 });
 }
 
-input_password();
+read_server_ip();
 
