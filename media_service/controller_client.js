@@ -17,24 +17,28 @@ let rec_pipe_arr = "";
 let is_input_valid = false;
 let psw = "";
 
-program.parse(process.argv)
-if(program.stream) {
-    stream_path = program.stream;
-    console.log('stream_path = ' + stream_path);
-}
-if(program.loop) {
-    loop_times = program.loop;
-    console.log('loop_times = ' + loop_times);
-}
-if(program.num) {
-    pipe_num = program.num;
-    console.log('pipe_num = ' + pipe_num);
-}
+const rl = readline.createInterface(process.stdin, process.stdout, completer);
+const help = [ ('-help                          ' + 'commanders that you can use.').magenta
+           , ('-c ./json_file/create.json       ' + 'create pipeslines').magenta
+           ,('-p ./json_file/property.json      ' + 'set pipeslines property').magenta
+           ,('-d ./json_file/destory.json       ' + 'destory pipeslines').magenta
+           , ('-q                               ' + 'exit client.').magenta
+           ].join('\n');
 
-/*const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout
-});*/
+function completer(line) {
+  let completions = '-help|-c ./json_file/create.json|-p ./json_file/property.json|-d ./json_file/destory.json|-q'.split('|')
+  let hits = completions.filter(function(c) {
+    if (c.indexOf(line) == 0) {
+      return c;
+    }
+  });
+  return [hits && hits.length ? hits : completions, line];
+} 
+
+function prompt() {
+  let arrow    = '> '
+    , length = arrow.length
+    ;
 
 const rl = readline.createInterface({
  input: process.stdin, 
@@ -46,14 +50,24 @@ const fs = require('fs')
 let url = 0;
 
 function read_server_ip(){
-fs.readFile(filename, 'utf8', function(err, data) {
+  let array = fs.readFileSync(filename).toString().split("\n");
+  array = array.filter(function(e){return e});
+  console.log("HERE ARE SERVER HOSTNAME LISTS:" .yellow);
+for(i in array) {
+    console.log((i+" , "+array[i]).blue);
+}
+rl.question('Please chose server by id: '.magenta, (answer) => {
+  url = array[answer];
+  input_password();  
+});
+/*fs.readFile(filename, 'utf8', function(err, data) {
   if (err) throw err;
   console.log('found: ' + filename);
   console.log('host name is:'+ data);
   url = data;
   url= url.replace(/[\r\n]/g,"");
   set_websocket();
-});
+});*/
 }
 
 function input_password() {
@@ -61,7 +75,8 @@ function input_password() {
   rl.question('Please input password to connect server(default: c): ', (answer) => {
     if(answer !==""){
        psw = answer;
-       read_server_ip();
+       
+       set_websocket();
     }
   });
 }
@@ -216,6 +231,6 @@ ws.on('close', function () {
 });
 }
 
-input_password();
+read_server_ip();
 
 
