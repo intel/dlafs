@@ -100,9 +100,12 @@ static void ssd_algo_func(gpointer userData)
         return;
     }
 
-    //test
+    #if 0
     //ssdAlgo->save_buffer(ocl_mem->frame.getMat(0).ptr(), ssdAlgo->mInputWidth,
     //                   ssdAlgo->mInputHeight, 3,algoData->mFrameId, 1, "ssd");
+    ssdAlgo->save_image(ocl_mem->frame.getMat(0).ptr(), ssdAlgo->mInputWidth,
+                                            ssdAlgo->mInputHeight, 3, 1, "ssd");
+    #endif
 
     // Detect callback function
     auto onDetectResult = [](CvdlAlgoData* algoData)

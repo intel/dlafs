@@ -49,8 +49,13 @@ OclVppCrc::crc_helper()
 
 
     size_t globalWorkSize[2], localWorkSize[2];
-    localWorkSize[0] = 8;
-    localWorkSize[1] = 8;
+    if((m_dst_w<256) ||(m_dst_h<256)) {
+        localWorkSize[0] = 4;
+        localWorkSize[1] = 4;
+    }else {
+        localWorkSize[0] = 8;
+        localWorkSize[1] = 8;
+     }
     globalWorkSize[0] = ALIGN_POW2 (m_dst_w, 2 * localWorkSize[0]) / 2;
     globalWorkSize[1] = ALIGN_POW2 (m_dst_h, 2 * localWorkSize[1]) / 2;
     ret = m_kernel.run(2, globalWorkSize, localWorkSize, true);

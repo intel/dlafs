@@ -189,7 +189,7 @@ static GstBuffer *generate_osd(BlendHandle handle, GstBuffer *input_buf)
              (rect->width/(1.0+rect->height) > 3.0)  ||
              (rect->height/(1.0+rect->width) > 3.0)) {
              // Write label and probility
-            strTxt = std::string(inference_result->label);// + std::string(":") + stream_prob.str();
+            strTxt = std::string(inference_result->label) + std::string("[") + stream_prob.str() + std::string("]") ;
              cv::putText(mdraw, strTxt, cv::Point( rect->x,  rect->y - 15), 1, 1.8, cv::Scalar(255 , 10, 255,255), 2);//RGBA
       } else {
              // Write label and probility

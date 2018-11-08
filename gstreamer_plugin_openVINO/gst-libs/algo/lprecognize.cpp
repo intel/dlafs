@@ -130,8 +130,10 @@ static void try_process_algo_data(CvdlAlgoData *algoData)
         std::vector<ObjectData>::iterator obj;
         for (obj = objectVec.begin(); obj != objectVec.end();) {
             LicencePlateData lpData((*obj).label, (*obj).prob, (*obj).rectROI);
-           if(!(lprecognizeAlgo->lpPool.check(lpData)))
+            #if 0
+            if(!(lprecognizeAlgo->lpPool.check(lpData)))
                  (*obj).flags &=  ~LP_RECOGNIZE_FLAG_VALID;
+            #endif
             if(!((*obj).flags & LP_RECOGNIZE_FLAG_VALID)) {
                 // remove  it
                 obj = objectVec.erase(obj);
@@ -217,10 +219,12 @@ static void process_one_object(CvdlAlgoData *algoData, ObjectData &objectData, i
         return;
     }
 
-    #if 1
+    #if 0
     //test
     lprecognizeAlgo->save_buffer(ocl_mem->frame.getMat(0).ptr(), lprecognizeAlgo->mInputWidth,
-        lprecognizeAlgo->mInputHeight,3,algoData->mFrameId*10 + objId, 1, "lprecognizeAlgo");
+        lprecognizeAlgo->mInputHeight,3,algoData->mFrameId*10000 +lprecognizeAlgo->mFrameDoneNum, 1, "lprecognizeAlgo");
+    lprecognizeAlgo->save_image(ocl_mem->frame.getMat(0).ptr(), lprecognizeAlgo->mInputWidth,
+        lprecognizeAlgo->mInputHeight,3, 1, "lprecognizeAlgo");
     #endif
 
     // lp recognize callback function
@@ -497,7 +501,7 @@ GstFlowReturn LpRecognizeAlgo::parse_inference_result(InferenceEngine::Blob::Ptr
     }
 
    g_print("lp_recognize: prob = %f, label = %s\n", prob_sum, result.c_str());
-   #if 0
+   #if 1
    std::size_t pos = result.find("<");      // position of "<" in str
    if(pos>0 && pos<16) {
          std::string substr1 = result.substr (pos);
@@ -507,7 +511,7 @@ GstFlowReturn LpRecognizeAlgo::parse_inference_result(InferenceEngine::Blob::Ptr
     }
    #endif
    ObjectData &objData = outData->mObjectVec[objId];
-   if(prob_sum >= 40) {
+   if(prob_sum >= 90) {
             objData.prob = prob_sum/100.0;
             objData.label = result;
             objData.objectClass =  class_idx;

@@ -45,8 +45,8 @@ using namespace cv;
 /**
  * If not detect number >= TRACK_MAX_NUM, tracking will stop.
  */
-#define TRACK_LP_MAX_NUM 12
-#define TRACK_LP_FRAME_NUM 3
+#define TRACK_LP_MAX_NUM 8
+#define TRACK_LP_FRAME_NUM 2
 
 #define FLAGS_TRACKED_LP_DATA_IS_SET   0x1
 #define FLAGS_TRACKED_LP_DATA_IS_PASS  0x2
@@ -100,6 +100,12 @@ static void track_lp_algo_func(gpointer userData)
    // verify the input object data
    trackLpAlgo->verify_detection_result(algoData->mObjectVec);
 
+   // If not receive for 3 frame, clear all tracked objects
+   if(trackLpAlgo->mFrameIndex - trackLpAlgo->mFrameIndexLast > 3) {
+            trackLpAlgo->mTrackObjVec.clear();
+   }
+   trackLpAlgo->mFrameIndexLast = trackLpAlgo->mFrameIndex;
+
     // get object box 
     auto vecDetectRt = algoData->mObjectVec;
     BBoxArray boxes;
@@ -119,6 +125,12 @@ static void track_lp_algo_func(gpointer userData)
    // trackResult is the track result, but not used for LP detection
    const std::map<long, long> & boxIDToObjectID = trackLpAlgo->lpTracker->getBoxToObjectMapping();
    parseTrackResult(bboxArrayWithId, trackResult);
+   for(guint i=0; i<trackResult.size();i++) {
+           trackResult[i].rect = utils.convert_rect(trackResult[i].rect,
+                                 trackLpAlgo->mInputWidth, trackLpAlgo->mInputHeight,
+                                 trackLpAlgo->mImageProcessorInVideoWidth,
+                                 trackLpAlgo->mImageProcessorInVideoHeight);
+    }
 
    // loop each object and detect LP
    int lpIdx=0;
@@ -138,6 +150,14 @@ static void track_lp_algo_func(gpointer userData)
                 continue;
           }
           //int objectId = (int)(iter->second);
+
+          // choose a better object
+          #if 0
+          float score = objectData.figure_score(trackLpAlgo->mImageProcessorInVideoWidth,
+                    trackLpAlgo->mImageProcessorInVideoHeight);
+          if(score < 1.0)
+                continue;
+          #endif
 
            // get input data and process it here
            // NV12-->BGR
@@ -194,7 +214,7 @@ static void track_lp_algo_func(gpointer userData)
              lpDetResult.width = adjustW;
              #endif
 
-             
+             #if 1
              // expand LP scope 10%
               int adjustW =  lpDetResult.width * 1.16;
               int adjustH =  lpDetResult.height * 1.1;
@@ -214,6 +234,7 @@ static void track_lp_algo_func(gpointer userData)
               lpDetResult.width = adjustW;
               lpDetResult.y = adjustY;
               lpDetResult.height = adjustH;
+            #endif
  
             // figure out licensePlateBox
             licensePlateBox = lpDetResult;
@@ -222,6 +243,12 @@ static void track_lp_algo_func(gpointer userData)
             licensePlateBox.width  = lpDetResult.width  * vehicleBox.width / trackLpAlgo->mInputWidth;
             licensePlateBox.height = lpDetResult.height  * vehicleBox.height / trackLpAlgo->mInputHeight;
 
+            // 4 pixels aligned for LP
+            licensePlateBox.x &= ~0x7;
+            licensePlateBox.y &= ~0x3;
+            licensePlateBox.width = (licensePlateBox.width+7) & (~7);
+            licensePlateBox.height = (licensePlateBox.height+3)&(~3);
+
             CHECK_ROI(licensePlateBox,  trackLpAlgo->mImageProcessorInVideoWidth, trackLpAlgo->mImageProcessorInVideoHeight);
             objectData.rectROI = licensePlateBox;
             lpIdx ++;
@@ -229,11 +256,12 @@ static void track_lp_algo_func(gpointer userData)
 
              trackLpAlgo->try_add_new_one_object(objectData, algoData->mFrameId);
     }
-    trackLpAlgo->remove_no_lp(algoData->mObjectVec);
+   //trackLpAlgo->print_objects(algoData->mObjectVec);
+   trackLpAlgo->remove_no_lp(algoData->mObjectVec);
 
    // detectLicencePlates() has filtered candidate frame to choose the best one
    // so we need do it again
-#if 0
+#if  1
      // update mTrackObjVec
     trackLpAlgo->verify_tracked_object();
     trackLpAlgo->update_track_object(algoData->mObjectVec);
@@ -324,6 +352,7 @@ void TrackLpAlgo::verify_detection_result(std::vector<ObjectData> &objectVec)
             continue;
         }
 
+        vecObjectCp[i].flags  &= ~(FLAGS_TRACKED_LP_DATA_IS_PASS & FLAGS_TRACKED_LP_DATA_IS_SET);
         objectVec.push_back(vecObjectCp[i]);
     }
 
@@ -364,7 +393,7 @@ void TrackLpAlgo::try_add_new_one_object(ObjectData &objectData, guint64 frameId
        cv::Rect &rect = (*it).rect;
        float ov12, ov21;
        utils.get_overlap_ratio(rect, objRect, ov12, ov21);
-        if (ov12 > 0.60f || ov21 > 0.4f) {
+        if ((ov12 > 0.60f || ov21 > 0.4f)  &&  objectData.rect.y > rect.y * 9/10) {
                     bNewOne = FALSE;
                     objectData.flags |= FLAGS_TRACKED_LP_DATA_IS_SET;
                     objectData.id = (*it).objId;
@@ -431,7 +460,7 @@ void TrackLpAlgo::verify_tracked_object()
     for (it = mTrackObjVec.begin(); it != mTrackObjVec.end();) {
         if((*it).bHit  == FALSE) {
                  (*it).notDetectNum++;
-                 (*it).detectedNum=0;
+                 //(*it).detectedNum=0;
          }
          (*it).bHit = FALSE;
          it++;
@@ -453,6 +482,10 @@ void TrackLpAlgo::update_track_object(std::vector<ObjectData> &objectVec)
 {
     std::vector<TrackLpObjAttribute>::iterator it;
     float score = 0.0;
+    static int id = -1;
+    id++;
+
+    //print_objects(objectVec);
 
     for (it = mTrackObjVec.begin(); it != mTrackObjVec.end();) {
         // find the connected objectData
@@ -461,15 +494,19 @@ void TrackLpAlgo::update_track_object(std::vector<ObjectData> &objectVec)
             if(objectData.id == (*it).objId) {
                 score = objectData.figure_score(mImageProcessorInVideoWidth,
                     mImageProcessorInVideoHeight);
-                if(score>1.0) {
-                    (*it).detectedNum ++;
-                }
-                if((score == 0.0) && ((*it).score > 1.0) &&
-                    (*it).fliped==false && ((*it).detectedNum >= TRACK_LP_FRAME_NUM)) {
-                    objectData.flags |= FLAGS_TRACKED_LP_DATA_IS_PASS;
-                    (*it).fliped = true;
-                    (*it).detectedNum = 0;
-                    objectData.score = (*it).score;
+                //if(score>1.0) {
+                   (*it).detectedNum ++;
+                //}
+                //g_print("idx = %d, score=%f, it.score = %f, detectedNum =%d, fliped = %d,"
+                //     "notDetectNum = %d\n",  id,  score, (*it).score,  (*it).detectedNum,  (*it).fliped, (*it).notDetectNum);
+                if((*it).fliped==false) {
+                    if( ((score > 2.5) && ( (*it).detectedNum >= 1))
+                          || ( (*it).detectedNum >= TRACK_LP_FRAME_NUM)) {
+                        objectData.flags |= FLAGS_TRACKED_LP_DATA_IS_PASS;
+                        (*it).fliped = true;
+                        (*it).detectedNum = 0;
+                        objectData.score = (*it).score;
+                    }
                 }
                 (*it).score = score;
                 break;
@@ -535,12 +572,12 @@ void TrackLpAlgo::push_track_object(CvdlAlgoData* &algoData)
 
     //debug
     for(size_t i=0; i< objectVec.size(); i++) {
-        g_print("%d - track_lp_output-%ld-%ld: prob = %f, label = %s, rect=(%d,%d)-(%dx%d), ROI=(%d,%d)-(%dx%d), score = %f\n",
+        g_print("%d - track_lp_output-%ld-%ld: prob = %f, label = %s, rect=(%d,%d)-(%dx%d), ROI=(%d,%d)-(%dx%d)\n",
             mFrameDoneNum, algoData->mFrameId, i, objectVec[i].prob, objectVec[i].label.c_str(),
             objectVec[i].rect.x, objectVec[i].rect.y,
             objectVec[i].rect.width, objectVec[i].rect.height,
             objectVec[i].rectROI.x, objectVec[i].rectROI.y,
-            objectVec[i].rectROI.width, objectVec[i].rectROI.height, objectVec[i].score);
+            objectVec[i].rectROI.width, objectVec[i].rectROI.height);
     }
     mNext->mInQueue.put(*algoData);
 }
