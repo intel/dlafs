@@ -1,23 +1,26 @@
-1. download and build uWebSocket
+# 1. download and build uWebSocket
 
-uwebsockets: https://github.com/uNetworking/uWebSockets
+uwebsockets: [uwebsockets](https://github.com/uNetworking/uWebSockets)
+
 download and make install
 
 
-2. setup nodejs enviroment:
+# 2. setup nodejs enviroment
 
-apt-get install nodejs-legacy npm (please install nodejs version after 8.0)
-npm config set proxy <proxy>
-npm install ws
-npm install -g n
-npm install child_process
-npm install arraybuffer-to-string
-npm install rimraf tree-kill
+ apt-get install nodejs-legacy npm (please install nodejs version after 8.0)
 
-3. setup certificate
-    please generate all these certificates in one pc!!!
+ npm config set proxy <proxy>
 
-(1) Prepare certificates
+ npm install ws
+
+ npm install -g n
+
+ npm install colors path fs childprocess readline
+
+# 3. setup certificate
+   *please generate all these certificates in one pc!!!*
+
+## Prepare certificates
 
     -Generate a Certificate Authority:
 
@@ -26,7 +29,7 @@ npm install rimraf tree-kill
     -Insert a CA Password and remember it
     -Specify a CA Common Name, like 'root.localhost' or 'ca.localhost'. This MUST be different from both server and client CN.
 
-(2) Server certificate
+## Server certificate
 
     -Generate Server Key:
 
@@ -36,20 +39,20 @@ npm install rimraf tree-kill
 
        openssl req -new -key server-key.pem -out server-csr.pem
 
-    -Specify server Common Name, run    cat /etc/hosts    to check valid DNS name, please don't name as'localhost'.
+    -Specify server Common Name, run    cat /etc/hosts    to check valid DNS name, please DO NOT name as'localhost'.
     -For this example, do not insert the challenge password.
 
-(3) Sign certificate using the CA:
+## Sign certificate using the CA:
 
        openssl x509 -req -days 9999 -in server-csr.pem -CA ca-crt.pem -CAkey ca-key.pem -CAcreateserial -out server-crt.pem
 
     -insert CA Password
 
-(4) Verify server certificate:
+## Verify server certificate:
 
        openssl verify -CAfile ca-crt.pem server-crt.pem
 
-(5) Client certificate
+## Client certificate
 
     -Generate Client Key:
 
@@ -62,23 +65,24 @@ npm install rimraf tree-kill
     -Specify client Common Name, like 'client.localhost'. Server should not verify this, since it should not do reverse-dns lookup.
     -For this example, do not insert the challenge password.
 
-(6) Sign certificate using the CA:
+## Sign certificate using the CA:
 
        openssl x509 -req -days 9999 -in client1-csr.pem -CA ca-crt.pem -CAkey ca-key.pem -CAcreateserial -out client1-crt.pem
 
     -insert CA Password
 
-(7) Verify client certificate:
+## Verify client certificate:
 
       openssl verify -CAfile ca-crt.pem client1-crt.pem
 
-(8) After generated, please copy all file start with 'ca' and 'client' into 'cert_client_8216', and copy all file start with 'ca' and 'server' into 'cert_server_8216'.
+### After generated, please copy all file start with 'ca' and 'client' into 'cert_client_8216', and copy all file start with 'ca' and 'server' into 'cert_server_8216'.
 
 
-4. run websocket server and client:
+# 4. run websocket server and client:
 
-write ip address into path.txt
-chmod a+x hddls_server.js receiver_client.js controller_client.js
-./hddls_server.js
-./controller_client.js
-./receiver_client.js
+### write ip address into path.txt, hostname into hostname.txt
+- when there are serveral servers, please write ip addresses /hostnames by line.
+### chmod a+x hddls_server.js receiver_client.js controller_client.js
+### ./hddls_server.js
+### ./controller_client.js
+### ./receiver_client.js
