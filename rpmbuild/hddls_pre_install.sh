@@ -66,6 +66,7 @@ COMMENT
 
 sudo apt-get install libusb-1.0-0-dev libudev-dev libssl-dev rpm cmake libboost-program-options1.58-dev libboost-thread1.58 libboost-filesystem1.58 git libelf-dev dkms libssl-dev
 sudo apt-get install gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-ugly gstreamer1.0-plugins-bad libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
+sudo apt-get install libeigen3-dev  libopenblas-dev liblapack-dev libdlib-dev
 sudo apt-get install  libdrm-dev libudev-dev libgstreamer-plugins-bad1.0-dev libx11-xcb-dev libgles2-mesa-dev libgl1-mesa-dev libgtk2.0-dev pkg-config libgtkglext1-dev
 sudo ln -sf /opt/intel/mediasdk/lib64/libva.so.2 /usr/lib/libva.so
 sudo ln -sf /opt/intel/mediasdk/lib64/libva-drm.so.2 /usr/lib/libva-drm.so
