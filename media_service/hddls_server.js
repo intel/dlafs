@@ -52,7 +52,7 @@ path_wss.on('connection', function(ws) {
            create_json = JSON.parse(path.substring(1));
 
            for (let i = 0; i<create_json.command_create.pipe_num; i++){
-            gst_cmd = 'hddlspipes -i  ' + pipe_count + ' -l ' + create_json.command_create.loop_times;
+            	gst_cmd = 'hddlspipes -i  ' + pipe_count + ' -l ' + create_json.command_create.loop_times;
 
                 let child = spawn(gst_cmd , {
                     shell: true
@@ -72,6 +72,15 @@ path_wss.on('connection', function(ws) {
 
                 client_pipe = client_pipe + pipe_count.toString() + ",";
                 pipe_id = pipe_count;
+
+                //TODO: use a better name to distinguish different create_json files
+                let temp_json_path='./temp_create.json';
+                fs.writeFile(temp_json_path, JSON.stringify(create_json), {flag: 'w'}, function (err) { if(err) {
+                    console.error("write file failed: ", err);
+                    } else {
+                       console.log('temp json: done');
+                    }
+                });
                 console.log(pipe_id);
                 console.log(pipe_count);
                 pipe_count++;
@@ -79,7 +88,7 @@ path_wss.on('connection', function(ws) {
           }
 
           client_map.set(client_id,client_pipe);
-          console.log(client_map);
+          //console.log(client_map);
 
         } else if(path[0]==='p'){
           property_json = JSON.parse(path.substring(1));
@@ -87,20 +96,20 @@ path_wss.on('connection', function(ws) {
           ws_index.send(path.substring(1));
             
         } else if(path[0]==='d') {
-          console.log(pipe_map);
+          //console.log(pipe_map);
           destory_json = JSON.parse(path.substring(1));
           ws_index = pipe_map.get(destory_json.command_destroy.pipe_id);
-          console.log(ws_index);
+          //console.log(ws_index);
           //ws_index.close();
           console.log(path.substring(1));
           ws_index.send(path.substring(1));
           console.log('we killed pipe '+ destory_json.command_destroy.pipe_id);
           pipe_map.set(destory_json.command_destroy.pipe_id,-1);
-          console.log(pipe_map);
+          //console.log(pipe_map);
           per_client_pipe = client_map.get(destory_json.client_id);
           per_client_pipe = per_client_pipe.replace(destory_json.command_destroy.pipe_id.toString()+",","");
           client_map.set(destory_json.client_id,per_client_pipe);
-          console.log(client_map);
+          //console.log(client_map);
         }
 
         
@@ -148,11 +157,10 @@ data_wss.on('connection', function connection(ws) {
 
   } else if (params["id"] == "3"){
      
-     
-
-     fs.readFile("../gstreamer_pipeline/hddls_pipe_hal/config/create_hddlspipe.config", 'utf8', function(err, data) {
+     let temp_json_file='./temp_create.json';
+     fs.readFile(temp_json_file, 'utf8', function(err, data) {
         if (err) throw err;
-        console.log("read create_hddlspipe.config: ", data);
+        console.log("read create.config: ", data);
         ws.send(data);
       });
 
@@ -179,6 +187,7 @@ data_wss.on('connection', function connection(ws) {
         console.log(pipe_id);
         pipe_map.set(pipe_id,ws);
 
+        let temp_json_path='./temp_create_' + client_pipe + '.json';
       }
       else {
         if (receive_client.readyState === WebSocket.OPEN){
