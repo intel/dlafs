@@ -2,25 +2,29 @@
 "use strict"; 
 const WebSocketServer = require('ws').Server;
 const WebSocket = require('ws');
-const http = require('http');
 const fs = require('fs');
 const https = require('https');
 const spawn = require('child_process').spawn;
-const kill = require('tree-kill');
-
+const colors = require('colors');
 
 let client_id = 0;
-let loop_times = 10000;
-let pipe_num = 0;
-let child_pid = 0;
-let pipeid_to_number = 0;
-let pipe_all = "";
-let contin_loop_times = 0;
-
+let pipe_id = 0;
+let create_json = "";
+let destory_json = "";
+let property_json = "";
+let pipe_count = 0;
+let client_pipe = "";
+let per_client_pipe = "";
+let ws_index = 0;
 
 let pipe_map = new Map();
 for(let i=0;i<100;i++){
   pipe_map.set(i,0);
+}
+
+let client_map = new Map();
+for(let i=0;i<100;i++){
+  client_map.set(i,"");
 }
 
 
@@ -32,7 +36,7 @@ const path_server = https.createServer({
     rejectUnauthorized: true
 });
 
-const path_wss = new WebSocketServer({server: path_server, path: '/sendPath',verifyClient: ClientVerify});
+const path_wss = new WebSocketServer({server: path_server, path: '/controller',verifyClient: ClientVerify});
 path_wss.on('connection', function(ws) {
 
     console.log('controller connected !' .bgYellow);
@@ -44,39 +48,15 @@ path_wss.on('connection', function(ws) {
 
         console.log("receive message:" + path);
         console.log(typeof path);
-        if(path.indexOf('stream=')==0){
-            gst_cmd_path=path.substring(7);
-            console.log('path: ' + gst_cmd_path);
-            //gst_cmd = 'hddlspipe ' + client_id + ' ' + gst_cmd_path + ' ' + loop_times;
-            ws.send('stream source is done: ' + gst_cmd_path);
-        } else if(path.indexOf('loop=')==0){
-            loop_times = parseInt(path.substring(5));
-            console.log('loop_times = ' + loop_times);
-            ws.send('set loop times done!');
-        } else if(path.indexOf('pipenum=')==0) {
-            pipe_num = parseInt(path.substring(8))
-            console.log('pipe_num = ' + pipe_num);
-        } else if (path.indexOf(',')>-1){
+        if (path[0]==='c') {
+           create_json = JSON.parse(path.substring(1));
 
-          console.log(path);
-          let arr = path.split(',');
-          if(arr[1]==='p'){
-            pipeid_to_number = parseInt(arr[0]);
-            child_pid = pipe_map.get(pipeid_to_number);
-            kill(child_pid);
-            console.log('we killed pipe'+ pipeid_to_number);
+           for (let i = 0; i<create_json.command_create.pipe_num; i++){
+            gst_cmd = 'hddlspipes -i  ' + pipe_count + ' -l ' + create_json.command_create.loop_times;
 
-          }else if (arr[1]==='c'){
-               console.log(pipe_num);
-
-               pipeid_to_number = parseInt(arr[0]);
-               contin_loop_times = parseInt(arr[2]);
-               //gst_cmd = 'hddlspipe ' + pipeid_to_number + ' ' + gst_cmd_path + ' ' + contin_loop_times;
-               gst_cmd = 'hddlspipes -i  ' + pipeid_to_number + ' -l ' + contin_loop_times;
                 let child = spawn(gst_cmd , {
                     shell: true
-                });
-                pipe_map.set(pipeid_to_number,child.pid);
+                });             
 
                 child.stderr.on('data', function (data) {
                     console.error("STDERR:", data.toString());
@@ -89,10 +69,6 @@ path_wss.on('connection', function(ws) {
                 child.on('exit', function (exitCode) {
                     console.log("Child exited with code: " + exitCode);
                 });
-               console.log('process continue');
-          }
-          
-        } 
 
                 client_pipe = client_pipe + pipe_count.toString() + ",";
                 pipe_id = pipe_count;
@@ -100,9 +76,7 @@ path_wss.on('connection', function(ws) {
                 console.log(pipe_count);
                 pipe_count++;
 
-                let child = spawn(gst_cmd , {
-                    shell: true
-                });
+          }
 
           client_map.set(client_id,client_pipe);
           console.log(client_map);
@@ -129,23 +103,23 @@ path_wss.on('connection', function(ws) {
           console.log(client_map);
         }
 
+        
     });
 
     ws.on('close', function() {
-        pipe_all = "";
-        console.log('/sendPath Connection closed!');
+        console.log('controller closed!' .bgYellow);
     });
     ws.on('error', function(e) {
-        console.log('/sendPath Connection error!');
+        console.log('controller connection error!' .bgRed);
+        console.log(e);
     });
 });
 
-const util = require('util');
+//const util = require('util');
 const url = require('url');
 let params = 0;
 let userArray = [];
 let receive_client = 0;
-let pipe = 0;
 let gst_cmd = 0;
 let pipe_client = 0;
 
@@ -174,7 +148,13 @@ data_wss.on('connection', function connection(ws) {
 
   } else if (params["id"] == "3"){
      
-  } else {
+     
+
+     fs.readFile("../gstreamer_pipeline/hddls_pipe_hal/config/create_hddlspipe.config", 'utf8', function(err, data) {
+        if (err) throw err;
+        console.log("read create_hddlspipe.config: ", data);
+        ws.send(data);
+      });
 
     userArray.push(ws);
     //console.log(ws);
@@ -209,12 +189,22 @@ data_wss.on('connection', function connection(ws) {
     }
   });
 
-  ws.on('close', function (close) {
-      console.log("client closed");
+  ws.on('error', function(e) {
+    console.log('receiver connection error!' .bgRed);
+    console.log(e);
+});
+
+  ws.on('close', function (ws) {
+    if (params["id"] == "1") {
+      console.log("Receiver closed!" .bgMagenta);
+    } else {
+      console.log("pipeline closed!" .bgMagenta);
+    }
       
   });
 
-});
+
+  });
 
 
 function ClientVerify(info) {
@@ -243,22 +233,22 @@ function ClientVerify(info) {
 
 path_server.listen(8126);
 data_server.listen(8123);
-console.log('Listening on port 8126 and 8123...');
+console.log('Listening on port 8126 and 8123...' .rainbow);
 
 const exec = require('child_process').exec;
 exec('hostname -I', function(error, stdout, stderr) {
-    console.log('Please make sure to copy the ip address into path.txt: ' + stdout);
+    console.log(('Please make sure to copy the ip address into path.txt: ' + stdout).green);
     //console.log('stderr: ' + stderr);
     if (error !== null) {
-        console.log('exec error: ' + error);
+        console.log(('exec error: ' + error).red);
     }
 });
 
 exec('hostname', function(error, stdout, stderr) {
-    console.log('Please make sure to copy the DNS name into hostname.txt: ' + stdout);
+    console.log(('Please make sure to copy the DNS name into hostname.txt: ' + stdout).green);
     //console.log('stderr: ' + stderr);
     if (error !== null) {
-        console.log('exec error: ' + error);
+        console.log(('exec error: ' + error).red);
     }
 });
 
