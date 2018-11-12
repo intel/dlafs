@@ -19,23 +19,16 @@ echo <server_ip>  > path.txt
 
 3. Run controller client
 ------------------------
-./controller_client.js -s <stream source> -l <loop_times> -n <pipe_num>
+./controller_client.js
 
-    Note: 
-      1. stream source can be local file such as: /home/<user>/<file_name.mp4>
-         Or rtsp source:  rtsp://<rtsp_addr>%<media_type>
-                          For example:  rtsp://10.239.85.88:8554/video0%H.264
-                          media_type: H.264 or H.265
-      2. command to stop and resume pipe task:
-           stop: <pipe_id>,p
-           resume: <pipe_id>,c,<loop_times>
-      3. about pipe_num
-           set 1 if rtsp source don't support multiple client access.
+Note:
+1. command format:
+    -help  commanders that you can use.
+    -c <create.json>                  create pipeslines
+    -p <property.json> <pipe_id>      set pipeslines property
+    -d <destroy.json>  <pipe_id>      destroy pipeslines
+    -q                                exit client.
 
-Local file:
-        ./controller_client.js -s <media_file> -l <loop_time> -n <media_pipe_num>
-
-Rtsp:
-        ./controller_client.js -s <rtsp_addr>%<media_type> -l 1 -n <media_pipe_num>
+2. Json file refer to: media_service/json_file
 
 

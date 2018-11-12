@@ -14,14 +14,14 @@ let url = 0;
 
 const rl = readline.createInterface(process.stdin, process.stdout, completer);
 const help = [ ('-help                          ' + 'commanders that you can use.').magenta
-           , ('-c ./json_file/create.json       ' + 'create pipeslines').magenta
-           ,('-p ./json_file/property.json      ' + 'set pipeslines property').magenta
-           ,('-d ./json_file/destory.json       ' + 'destory pipeslines').magenta
+           ,('-c <create.json>                  ' + 'create pipeslines').magenta
+           ,('-p <property.json> <pipe_id>      ' + 'set pipeslines property').magenta
+           ,('-d <destroy.json>  <pipe_id>      ' + 'destroy pipeslines').magenta
            , ('-q                               ' + 'exit client.').magenta
            ].join('\n');
 
 function completer(line) {
-  let completions = '-help|-c ./json_file/create.json|-p ./json_file/property.json|-d ./json_file/destory.json|-q'.split('|')
+  let completions = '-help|-c <create.json> |-p <property.json> <pipe_id> |-d <destory.json> <pipe_id> |-q'.split('|')
   let hits = completions.filter(function(c) {
     if (c.indexOf(line) == 0) {
       return c;
@@ -82,23 +82,39 @@ const ws = new WebSocket("wss://"+url+":8126/controller?id=2"+"&key="+psw, {
   });
 
 function exec(command) {
-   if (command[0] === '-') {
-  
-    switch (command.slice(1)) {
+   var cmd = command.split(' ');
+   if (cmd[0][0] === '-') {
+    //TODO: need error process but not crash
+    switch (cmd[0].slice(1)) {
       case 'help':
         console.log(help.yellow);
         break;
-      case 'c ./json_file/create.json':
-        create_json = JSON.parse(fs.readFileSync('./json_file/create.json', 'utf8'));
-        ws.send('c' + JSON.stringify(create_json));
+      case 'c':
+        create_json = JSON.parse(fs.readFileSync(cmd[1], 'utf8'));
+        console.log("Send json create command!!!");
+        if(create_json.command_type==0)
+            ws.send('c' + JSON.stringify(create_json));
+        else
+            console.log("Incorrect json create command!!!");
         break;
-      case 'p ./json_file/property.json':
-        property_json = JSON.parse(fs.readFileSync('./json_file/property.json', 'utf8'));
-        ws.send('p' + JSON.stringify(property_json));
+      case 'p':
+        property_json = JSON.parse(fs.readFileSync(cmd[1], 'utf8'));
+        property_json.command_set_property.pipe_id = parseInt(cmd[2]);
+        console.log("Send json set_property command!!!");
+        if(property_json.command_type==2)
+            ws.send('p' + JSON.stringify(property_json));
+        else
+            console.log("Incorrect json set_property command!!!");
         break;
-      case 'd ./json_file/destory.json':
-        destory_json = JSON.parse(fs.readFileSync('./json_file/destory.json', 'utf8'));
-        ws.send('d' + JSON.stringify(destory_json));
+      case 'd':
+        destroy_json = JSON.parse(fs.readFileSync(cmd[1], 'utf8'));
+        destroy_json.command_destroy.pipe_id = parseInt(cmd[2]);
+        console.log('cmd[2] =', destroy_json.command_destroy.pipe_id);
+        console.log("Send json destroy command!!!");
+        if(destroy_json.command_type==1)
+            ws.send('d' + JSON.stringify(destroy_json));
+        else
+            console.log("Incorrect json destroy command!!!");
         break;
       case 'q':
         process.exit(0);

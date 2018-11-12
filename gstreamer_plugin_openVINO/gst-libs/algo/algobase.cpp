@@ -29,6 +29,7 @@ using namespace cv;
 
 #define QUEUE_ELEMENT_MAX_NUM 100
 
+#define LOG_DIR "/home/lijunjie/temp/temp/"
 
 static void
 algo_enter_thread (GstTask * task, GThread * thread, gpointer user_data)
@@ -52,9 +53,11 @@ CvdlAlgoBase::CvdlAlgoBase(GstTaskFunction func, gpointer user_data, GDestroyNot
     mInferCnt = 0;
     mInferCntTotal = 0;
     mFrameIndex = 0;
+    mFrameIndexLast = 0;
     mFrameDoneNum = 0;
     mImageProcCost = 1;
     mInferCost = 1;
+    fpOclResult = NULL;
 
     /* Create task for this algo */
     if(func) {
@@ -86,6 +89,9 @@ CvdlAlgoBase::~CvdlAlgoBase()
     }
     mInQueue.close();
     mNext = mPrev = NULL;
+
+    if(fpOclResult)
+        fclose(fpOclResult);
     //gst_object_unref(mPool);
 }
 
@@ -143,26 +149,61 @@ int CvdlAlgoBase::get_out_queue_size()
 void CvdlAlgoBase::save_buffer(unsigned char *buf, int w, int h, int p, int id, int bPlannar, char *info)
 {
     char filename[128];
-    sprintf(filename, "/home/lijunjie/temp/temp/%s-%dx%dx%d-%d.rgb",info,w,h,p,id);
+    sprintf(filename, "%s/%s-%dx%dx%d-%d.rgb",LOG_DIR, info,w,h,p,id);
 
-if(bPlannar) {
-    int size = w*h;
-    char *rgb = (char *)g_new0(char, w*h*p);
-    for(int i=0;i<size;i++) {
-        for(int j=0; j<p; j++)
-            rgb[3*i + j] = buf[size * j + i];
-    }
-    FILE *fp = fopen (filename, "wb");
-    if (fp) {
-         fwrite (rgb, 1, w*h*p, fp);
-         fclose (fp);
-    }
-    g_free(rgb);
-} else {
-    FILE *fp = fopen (filename, "wb");
-    if (fp) {
-         fwrite (buf, 1, w*h*p, fp);
-         fclose (fp);
+    if(bPlannar) {
+        int size = w*h;
+        char *rgb = (char *)g_new0(char, w*h*p);
+        for(int i=0;i<size;i++) {
+            for(int j=0; j<p; j++)
+                rgb[3*i + j] = buf[size * j + i];
+        }
+        FILE *fp = fopen (filename, "wb");
+        if (fp) {
+            fwrite (rgb, 1, w*h*p, fp);
+            fclose (fp);
+        }
+        g_free(rgb);
+    } else {
+        FILE *fp = fopen (filename, "wb");
+        if (fp) {
+            fwrite (buf, 1, w*h*p, fp);
+            fclose (fp);
+        }
     }
 }
+void CvdlAlgoBase::save_image(unsigned char *buf, int w, int h, int p, int bPlannar, char *info)
+{
+    char filename[128];
+    if(fpOclResult==NULL){
+        sprintf(filename, "%s/%s-%dx%dx%d.rgb",LOG_DIR, info,w,h,p);
+        fpOclResult = fopen (filename, "wb");
+    }
+     if(fpOclResult==NULL)
+        return;
+
+    if(bPlannar) {
+        int size = w*h;
+        char *rgb = (char *)g_new0(char, w*h*p);
+        for(int i=0;i<size;i++) {
+            for(int j=0; j<p; j++)
+                rgb[3*i + j] = buf[size * j + i];
+        }
+         fwrite (rgb, 1, w*h*p, fpOclResult);
+         g_free(rgb);
+    } else {
+         fwrite (buf, 1, w*h*p, fpOclResult);
+    }
+}
+
+
+void CvdlAlgoBase::print_objects(std::vector<ObjectData> &objectVec) {
+    for(size_t i=0; i< objectVec.size(); i++) {
+        g_print("objId = %d: prob = %f, label = %s, rect=(%d,%d)-(%dx%d), ROI=(%d,%d)-(%dx%d)\n",
+            objectVec[i].id, objectVec[i].prob, objectVec[i].label.c_str(),
+            objectVec[i].rect.x, objectVec[i].rect.y,
+            objectVec[i].rect.width, objectVec[i].rect.height,
+            objectVec[i].rectROI.x, objectVec[i].rectROI.y,
+            objectVec[i].rectROI.width, objectVec[i].rectROI.height);
+    }
 }

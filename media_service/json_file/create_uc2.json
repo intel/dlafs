@@ -8,9 +8,8 @@
          "codec_type": "H.264",    
          "cvdlfilter0":
         {
-             "algopipeline": "detection ! track ! classification"
+             "algopipeline": "ssd ! tracklp ! lprecognize"
         },
         "loop_times":100
-
     }
  }

@@ -133,7 +133,8 @@ public:
     int get_in_queue_size();
     int get_out_queue_size();
     void save_buffer(unsigned char *buf, int w, int h, int p, int id, int bPlannar,char *info);
-
+    void save_image(unsigned char *buf, int w, int h, int p, int bPlannar, char *info);
+    void print_objects(std::vector<ObjectData> &objectVec);
     virtual void set_data_caps(GstCaps *incaps)
     {
 
@@ -182,5 +183,10 @@ public:
     int mFrameDoneNum;
     gint64 mImageProcCost; /* in microseconds */
     gint64 mInferCost; /* in microseconds */
+
+    int mFrameIndexLast;
+
+    // debug
+    FILE *fpOclResult;
 };
 #endif
