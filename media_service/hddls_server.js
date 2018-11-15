@@ -16,6 +16,7 @@ let pipe_count = 0;
 let client_pipe = "";
 let per_client_pipe = "";
 let ws_index = 0;
+let temp_json_path = "";
 
 let pipe_map = new Map();
 for(let i=0;i<100;i++){
@@ -74,7 +75,7 @@ path_wss.on('connection', function(ws) {
                 pipe_id = pipe_count;
 
                 //TODO: use a better name to distinguish different create_json files
-                let temp_json_path='./temp_create.json';
+                temp_json_path='./client_'+ client_id+'_temp_create.json';
                 fs.writeFile(temp_json_path, JSON.stringify(create_json), {flag: 'w'}, function (err) { if(err) {
                     console.error("write file failed: ", err);
                     } else {
@@ -137,6 +138,7 @@ let receive_client = 0;
 let gst_cmd = 0;
 let pipe_client = 0;
 
+
 const data_server = https.createServer({
   cert: fs.readFileSync('./cert_server_8123/server-cert.pem'),
   key: fs.readFileSync('./cert_server_8123/server-key.pem'),
@@ -162,8 +164,8 @@ data_wss.on('connection', function connection(ws) {
 
   } else if (params["id"] == "3"){
      
-     let temp_json_file='./temp_create.json';
-     fs.readFile(temp_json_file, 'utf8', function(err, data) {
+     //temp_json_file='./temp_create.json';
+     fs.readFile(temp_json_path, 'utf8', function(err, data) {
         if (err) throw err;
         console.log("read create.config: ", data);
         ws.send(data);
@@ -192,7 +194,7 @@ data_wss.on('connection', function connection(ws) {
         console.log(pipe_id);
         pipe_map.set(pipe_id,ws);
 
-        let temp_json_path='./temp_create_' + client_pipe + '.json';
+        //temp_json_path='./client_'+ client_id+'_temp_create.json';
       }
       else {
         if (receive_client.readyState === WebSocket.OPEN){
