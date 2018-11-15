@@ -41,7 +41,7 @@ path_wss.on('connection', function(ws) {
 
     console.log('controller connected !' .bgYellow);
     client_id++;
-    ws.send('client id is '+ client_id);   
+    ws.send(client_id);   
     client_pipe = "";
 
     ws.on('message', function(path) {
@@ -89,6 +89,7 @@ path_wss.on('connection', function(ws) {
 
           client_map.set(client_id,client_pipe);
           //console.log(client_map);
+          ws.send(client_map.get(client_id));
 
         } else if(path[0]==='p'){
           property_json = JSON.parse(path.substring(1));
@@ -102,14 +103,18 @@ path_wss.on('connection', function(ws) {
           //console.log(ws_index);
           //ws_index.close();
           console.log(path.substring(1));
-          ws_index.send(path.substring(1));
-          console.log('we killed pipe '+ destory_json.command_destroy.pipe_id);
-          pipe_map.set(destory_json.command_destroy.pipe_id,-1);
+          ws_index.send(path.substring(1));         
           //console.log(pipe_map);
           per_client_pipe = client_map.get(destory_json.client_id);
           per_client_pipe = per_client_pipe.replace(destory_json.command_destroy.pipe_id.toString()+",","");
           client_map.set(destory_json.client_id,per_client_pipe);
-          //console.log(client_map);
+          console.log(client_map);
+          console.log('we killed pipe '+ destory_json.command_destroy.pipe_id);
+          pipe_map.set(destory_json.command_destroy.pipe_id,-1);
+          ws.send("we have killed pipe "+ destory_json.command_destroy.pipe_id);
+          console.log("we have send to client" .bgRed);
+          ws.send(client_map.get(client_id));
+          
         }
 
         
