@@ -143,7 +143,15 @@ function exec(command) {
       break;
 
       case 'p':
-      read_file_sync(cmd[1],property_json,2,0,cmd[2]);       
+      if (pipe_constuctor_to_number.includes(cmd[2]))
+      {
+        read_file_sync(cmd[1],property_json,2,0,cmd[2]);
+          
+      }else{
+        console.log("Wrong command!!! please check client id and pipe id" .red);
+        prompt();
+      }     
+             
       break;
 
       case 'd':
