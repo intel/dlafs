@@ -57,7 +57,14 @@ SinkAlgo::SinkAlgo():CvdlAlgoBase(NULL, this, NULL)
 
 SinkAlgo::~SinkAlgo()
 {
-
+    CvdlAlgoData algoData;
+    while(mInQueue.size()>0)  {
+            mInQueue.get(algoData);
+            if(algoData.mGstBuffer) {
+                gst_buffer_unref(algoData.mGstBuffer);
+            }
+            algoData.mObjectVec.clear();
+    }
 }
 
 // dequeue a buffer with cvdlMeta data

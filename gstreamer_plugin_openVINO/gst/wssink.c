@@ -559,17 +559,17 @@ gst_ws_sink_change_state (GstElement * element, GstStateChange transition)
   //bclass = GST_WS_SINK_GET_CLASS (basesink);
 
   switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      GST_DEBUG_OBJECT (basesink, "NULL to READY");
-      break;
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-      GST_DEBUG_OBJECT (basesink, "READY to PAUSED");
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-      GST_DEBUG_OBJECT (basesink, "PAUSED to PLAYING, don't need preroll");
-      break;
-    default:
-      break;
+        case GST_STATE_CHANGE_NULL_TO_READY:
+            GST_DEBUG_OBJECT (basesink, "NULL to READY");
+            break;
+        case GST_STATE_CHANGE_READY_TO_PAUSED:
+            GST_DEBUG_OBJECT (basesink, "READY to PAUSED");
+            break;
+         case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+            GST_DEBUG_OBJECT (basesink, "PAUSED to PLAYING, don't need preroll");
+            break;
+        default:
+            break;
   }
 
   GstStateChangeReturn bret;
@@ -581,19 +581,17 @@ gst_ws_sink_change_state (GstElement * element, GstStateChange transition)
   }
 
   switch (transition) {
-    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-      break;
-    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      GST_DEBUG_OBJECT (basesink, "PLAYING to PAUSED");
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      GST_DEBUG_OBJECT (basesink, "PAUSED to READY");
-      break;
-    case GST_STATE_CHANGE_READY_TO_NULL:
-      GST_DEBUG_OBJECT (basesink, "READY to NULL");
-      break;
-    default:
-      break;
+        case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+            GST_DEBUG_OBJECT (basesink, "PLAYING to PAUSED");
+            break;
+        case GST_STATE_CHANGE_PAUSED_TO_READY:
+            GST_DEBUG_OBJECT (basesink, "PAUSED to READY");
+            break;
+        case GST_STATE_CHANGE_READY_TO_NULL:
+            GST_DEBUG_OBJECT (basesink, "READY to NULL");
+            break;
+        default:
+            break;
   }
 
   return ret;

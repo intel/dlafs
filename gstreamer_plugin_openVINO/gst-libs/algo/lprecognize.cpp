@@ -316,7 +316,7 @@ LpRecognizeAlgo::LpRecognizeAlgo() : CvdlAlgoBase(lp_recognize_algo_func, this, 
 
 LpRecognizeAlgo::~LpRecognizeAlgo()
 {
-    wait_work_done();
+    //wait_work_done();
     if(mInCaps)
         gst_caps_unref(mInCaps);
     g_print("LpRecognizeAlgo: image process %d frames, image preprocess fps = %.2f, infer fps = %.2f\n",

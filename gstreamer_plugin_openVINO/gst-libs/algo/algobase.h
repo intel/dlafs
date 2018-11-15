@@ -78,7 +78,7 @@ using AsyncCallback = std::function<void(CvdlAlgoData* algoData)>;
 
 class CvdlAlgoData{
 public:
-    CvdlAlgoData(){};
+    CvdlAlgoData():mGstBuffer(NULL){};
     CvdlAlgoData(GstBuffer *buf) {
         if(buf){
             mGstBuffer = buf;//gst_buffer_ref(buf);
