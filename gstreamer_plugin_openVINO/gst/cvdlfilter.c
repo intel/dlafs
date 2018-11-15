@@ -54,6 +54,7 @@ struct _CvdlFilterPrivate
 {
     gboolean negotiated;
     gboolean same_caps_flag;
+    GstCaps *inCaps;
 };
 
 const char cvdl_filter_caps_str[] = \
@@ -126,6 +127,12 @@ cvdl_filter_transform_chain (GstPad * pad, GstObject * parent, GstBuffer * buffe
 
     GST_LOG_OBJECT (cvdlfilter, "input buffer caps: %" GST_PTR_FORMAT, buffer);
 
+    if(gst_task_get_state(cvdlfilter->mPushTask) != GST_TASK_STARTED) {
+          gst_buffer_unref(buffer);
+          //g_print("Skip this buffer due to algo was not ready now!!!\n");
+          return GST_FLOW_OK;
+    }
+
     /* vpp will not called in main pipeline thread, but it should be called in algo thread*/
     // step 1: put input buffer into queue, which will do cvdl processing in another thread
     //         thread 1:  detection thread
@@ -138,8 +145,8 @@ cvdl_filter_transform_chain (GstPad * pad, GstObject * parent, GstBuffer * buffe
     cvdl_handle_buffer(cvdlfilter, buffer);
 
     // It will be done in a task with  push_buffer_func()
-    if(gst_task_get_state(cvdlfilter->mPushTask) != GST_TASK_STARTED)
-        gst_task_start(cvdlfilter->mPushTask);
+    //if(gst_task_get_state(cvdlfilter->mPushTask) != GST_TASK_STARTED)
+    //    gst_task_start(cvdlfilter->mPushTask);
 
     if(cvdlfilter->frame_num==0)
         cvdlfilter->startTimePos = g_get_monotonic_time();
@@ -198,6 +205,11 @@ static void
 cvdl_filter_finalize (GObject * object)
 {
     CvdlFilter *cvdlfilter = CVDL_FILTER (object);
+    CvdlFilterPrivate *priv = cvdlfilter->priv;
+
+    if(priv->inCaps)
+        gst_caps_unref(priv->inCaps);
+    priv->inCaps=NULL;
 
     gst_video_info_init (&cvdlfilter->sink_info);
     gst_video_info_init (&cvdlfilter->src_info);
@@ -208,8 +220,10 @@ cvdl_filter_finalize (GObject * object)
     gst_task_join(cvdlfilter->mPushTask);
 
     // destroy algo pipeline
-    if(cvdlfilter->algoHandle)
+    if(cvdlfilter->algoHandle) {
+        algo_pipeline_stop(cvdlfilter->algoHandle);
         algo_pipeline_destroy(cvdlfilter->algoHandle);
+    }
     cvdlfilter->algoHandle = 0;
 
     if(cvdlfilter->algo_pipeline_desc)
@@ -222,6 +236,7 @@ static GstStateChangeReturn
 cvdl_filter_change_state (GstElement * element, GstStateChange transition)
 {
   CvdlFilter *cvdlfilter = CVDL_FILTER (element);
+  CvdlFilterPrivate *priv = cvdlfilter->priv;
   AlgoPipelineConfig *config = NULL;
   int count = 0;
   gint32 duration = 0;
@@ -229,41 +244,64 @@ cvdl_filter_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      // create the process task(thread) and start it
-      if(cvdlfilter->algo_pipeline_desc==NULL)
-          config = algo_pipeline_config_create(default_algo_pipeline_desc, &count);
-      else
-          config = algo_pipeline_config_create(cvdlfilter->algo_pipeline_desc, &count);
-      cvdlfilter->algoHandle = algo_pipeline_create(config, count);
-      algo_pipeline_start(cvdlfilter->algoHandle);
-      if(config)
-          algo_pipeline_config_destroy(config);
-      break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      break;
+            break;
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+           /* create the process task(thread) and start it */
+          if(cvdlfilter->algo_pipeline_desc==NULL)
+              config = algo_pipeline_config_create(default_algo_pipeline_desc, &count);
+          else
+              config = algo_pipeline_config_create(cvdlfilter->algo_pipeline_desc, &count);
+          cvdlfilter->algoHandle = algo_pipeline_create(config, count);
+          algo_pipeline_start(cvdlfilter->algoHandle);
+          if(config)
+              algo_pipeline_config_destroy(config);
+
+          if(priv->inCaps)
+              algo_pipeline_set_caps_all(cvdlfilter->algoHandle, priv->inCaps);
+
+          /* start push buffer thread to push data to next element
+        * It will be done in a task with  push_buffer_func() */
+          if(gst_task_get_state(cvdlfilter->mPushTask) != GST_TASK_STARTED)
+               gst_task_start(cvdlfilter->mPushTask);
+           break;
     default:
-      break;
+            break;
   }
 
   result = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
   switch (transition) {
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      break;
-    case GST_STATE_CHANGE_READY_TO_NULL:
-        // stop the data push task
-        gst_task_set_state(cvdlfilter->mPushTask, GST_TASK_STOPPED);
-        algo_pipeline_flush_buffer(cvdlfilter->algoHandle);
-        gst_task_join(cvdlfilter->mPushTask);
-        if(cvdlfilter->algoHandle)
+      case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+         /*  When change state Playing-->Paused, stop algopipeline, 
+          *  so that we can Set property for algopipeline.
+          *  The algo pipeline will have cached buffer to be processed.
+          *
+          *  If we put it to ready or null state, we will encounter below error:
+          *  ERROR: GStreamer encountered a general stream error.
+          *  [Debug details: qtdemux.c(5520): gst_qtdemux_loop ():
+          *   /GstPipeline:pipeline2/GstQTDemux:qtdemux2:
+          *  streaming stopped, reason not-linked]
+          */
+         /* stop the data push task */
+         gst_task_set_state(cvdlfilter->mPushTask, GST_TASK_STOPPED);
+         algo_pipeline_flush_buffer(cvdlfilter->algoHandle);
+         gst_task_join(cvdlfilter->mPushTask);
+         if(cvdlfilter->algoHandle) {
+            algo_pipeline_stop(cvdlfilter->algoHandle);
             algo_pipeline_destroy(cvdlfilter->algoHandle);
-        cvdlfilter->algoHandle = 0;
-        cvdlfilter->stopTimePos = g_get_monotonic_time();
-        duration = (cvdlfilter->stopTimePos - cvdlfilter->startTimePos)/1000; //ms
-        g_print("cvdlfilter processed %d frames in %d seconds, fps = %.2f\n", cvdlfilter->frame_num,
-            duration/1000, 1000.0*cvdlfilter->frame_num/duration);
-      break;
+         }
+         cvdlfilter->algoHandle = 0;
+         break;
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+         break;
+    case GST_STATE_CHANGE_READY_TO_NULL:
+         cvdlfilter->stopTimePos = g_get_monotonic_time();
+         duration = (cvdlfilter->stopTimePos - cvdlfilter->startTimePos)/1000; //ms
+         g_print("cvdlfilter processed %d frames in %d seconds, fps = %.2f\n", cvdlfilter->frame_num,
+         duration/1000, 1000.0*cvdlfilter->frame_num/duration);
+         break;
     default:
-      break;
+         break;
   }
 
   return result;
@@ -448,6 +486,11 @@ cvdl_filter_set_caps (GstBaseTransform* trans, GstCaps* incaps, GstCaps* outcaps
     priv->same_caps_flag = gst_compare_caps (incaps, outcaps);
     gst_base_transform_set_passthrough (trans, priv->same_caps_flag);
 
+   // wait cvdlfilter->algoHandle is ready
+    while(cvdlfilter->algoHandle==NULL)
+         g_usleep(1000);
+
+    priv->inCaps = gst_caps_ref(incaps);
     algo_pipeline_set_caps_all(cvdlfilter->algoHandle, incaps);
 
     return TRUE;
@@ -543,6 +586,7 @@ cvdl_filter_init (CvdlFilter* cvdl_filter)
 
     priv->negotiated = FALSE;
     priv->same_caps_flag = FALSE;
+    priv->inCaps = NULL;
 
     gst_video_info_init (&cvdl_filter->sink_info);
     gst_video_info_init (&cvdl_filter->src_info);

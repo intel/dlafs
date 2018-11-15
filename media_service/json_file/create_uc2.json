@@ -3,13 +3,13 @@
     "command_type": 0 ,
     "command_create":    
     {
-         "pipe_num": 2,          
+         "pipe_num": 2, 
          "stream_source": "/home/lijunjie/1600x1200.mp4",
          "codec_type": "H.264",    
          "cvdlfilter0":
         {
              "algopipeline": "ssd ! tracklp ! lprecognize"
         },
-        "loop_times":100
+        "loop_times":4
     }
  }

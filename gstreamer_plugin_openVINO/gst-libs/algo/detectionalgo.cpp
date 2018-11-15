@@ -109,6 +109,11 @@ static void detection_algo_func(gpointer userData)
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         return;
     }
+    if(algoData->mGstBuffer==NULL) {
+        GST_WARNING("Invalid buffer!!!");
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        return;
+    }
 
     // bind algoTask into algoData, so that can be used when sync callback
     algoData->algoBase = static_cast<CvdlAlgoBase *>(detectionAlgo);
@@ -202,7 +207,7 @@ DetectionAlgo::DetectionAlgo() : CvdlAlgoBase(detection_algo_func, this, NULL)
 
 DetectionAlgo::~DetectionAlgo()
 {
-    wait_work_done();
+    //wait_work_done();
     if(mInCaps)
         gst_caps_unref(mInCaps);
     g_print("DetectionAlgo: image process %d frames, image preprocess fps = %.2f, infer fps = %.2f\n",

@@ -441,12 +441,14 @@ void algo_pipeline_put_buffer(AlgoPipelineHandle handle, GstBuffer *buf)
     CvdlAlgoBase* algo = NULL;
 
     if(pipeline==NULL) {
-        GST_ERROR("algo pipeline handle is NULL!\n");
+        gst_buffer_unref(buf);
+        g_print("algo pipeline handle is NULL!\n");
         return;
     }
     algo = static_cast<CvdlAlgoBase *>(pipeline->first);
     if(!algo){
-        GST_ERROR("failed to put_buffer: algo is NULL");
+        gst_buffer_unref(buf);
+        g_print("failed to put_buffer: algo is NULL");
         return;
     }
     //g_print("%s() - GstBuffer = %p\n",__func__,  buf);
@@ -497,13 +499,12 @@ void algo_pipeline_get_buffer(AlgoPipelineHandle handle, GstBuffer **buf)
     AlgoPipeline *pipeline = (AlgoPipeline *) handle;
     CvdlAlgoBase* algo = NULL;
 
+    *buf = NULL;
     //TODO: need support multiple output buffer
     if(pipeline) {
         algo = static_cast<CvdlAlgoBase *>(pipeline->last);
         if(algo)
             *buf = algo->dequeue_buffer();
-        else
-            *buf = NULL;
     }
 }
 

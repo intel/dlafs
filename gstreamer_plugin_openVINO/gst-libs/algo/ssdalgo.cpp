@@ -66,6 +66,12 @@ static void ssd_algo_func(gpointer userData)
         return;
     }
 
+    if(algoData->mGstBuffer==NULL) {
+        GST_WARNING("Invalid buffer!!!");
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        return;
+    }
+
     // bind algoTask into algoData, so that can be used when sync callback
     algoData->algoBase = static_cast<CvdlAlgoBase *>(ssdAlgo);
     GST_LOG("%s() - ssdAlgo = %p, algoData->mFrameId = %ld\n",
@@ -161,7 +167,7 @@ SSDAlgo::SSDAlgo() : CvdlAlgoBase(ssd_algo_func, this, NULL)
 
 SSDAlgo::~SSDAlgo()
 {
-    wait_work_done();
+    //wait_work_done();
     if(mInCaps)
         gst_caps_unref(mInCaps);
     g_print("SSDAlgo: image process %d frames, image preprocess fps = %.2f, infer fps = %.2f\n",

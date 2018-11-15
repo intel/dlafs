@@ -111,6 +111,15 @@ void CvdlAlgoBase::stop_algo_thread()
 {
     if(mTask)
         gst_task_set_state(mTask, GST_TASK_STOPPED);
+    // remove all intem in the Queue
+    while(mInQueue.size()>0) {
+            CvdlAlgoData algoData;
+            algoData.mGstBuffer=NULL;
+            if(mInQueue.get(algoData)) {
+                   if(algoData.mGstBuffer)
+                        gst_buffer_unref(algoData.mGstBuffer);
+            }
+    }
     mInQueue.flush();
     wait_work_done();
     if(mTask)

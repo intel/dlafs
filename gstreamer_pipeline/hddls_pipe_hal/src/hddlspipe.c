@@ -41,6 +41,7 @@ static gchar g_default_server_uri[]= "wss://localhost:8123/binaryEchoWithSize?id
         GstElement *element = gst_bin_get_by_name (GST_BIN((hp)->pipeline), (element_name)); \
         if (NULL != element) { \
             g_object_set (element, __VA_ARGS__); \
+            g_print ("Success to set property - element=%s\n", element_name); \
             gst_object_unref (element); \
         } else { \
             g_print ("### Can not find element '%s' ###\n", element_name); \
@@ -201,6 +202,7 @@ static gchar* parse_create_command(char *desc,  gint pipe_id )
       const char *stream_source = NULL;
       const char *stream_codec_type = NULL;
       const char *algo_pipeline_desc = NULL;
+      char helper_desc[256];
       E_CODEC_TYPE codec_type = eCodecTypeNone;
 
      root = json_create(desc);
@@ -254,33 +256,27 @@ static gchar* parse_create_command(char *desc,  gint pipe_id )
             return NULL;
      }
 
+    g_snprintf(helper_desc, 256, 
+         " ! cvdlfilter name=cvdlfilter0 algopipeline=\"%s\"  ! resconvert name=resconvert0 "
+         " resconvert0.src_pic ! mfxjpegenc ! wssink name=wssink0 wsclientid=%d  "
+         " resconvert0.src_txt ! wssink0.",  algo_pipeline_desc,  pipe_id);
      // 2.2 get source type: rtsp or local file
      if( g_strrstr_len(stream_source, 256, "rtsp")  || g_strrstr_len(stream_source, 256, "RTSP")) {
            // rtsp
            if(codec_type == eCodecTypeH264)
                 g_snprintf (g_pipe_desc, 1024, "rtspsrc location=%s udp-buff-size=800000 ! rtph264depay "
-                                      " ! h264parse ! mfxh264dec  "
-                                      " ! cvdlfilter algopipeline=\"%s\"  ! resconvert name=res "
-                                      " res.src_pic ! mfxjpegenc ! wssink name=wssink0 wsclientid=%d  res.src_txt ! wssink0.", 
-                                     stream_source, algo_pipeline_desc, pipe_id);
+                                      " ! h264parse ! mfxh264dec %s ",  stream_source,  helper_desc );
            else if(codec_type == eCodecTypeH265)
                  g_snprintf (g_pipe_desc, 1024, "rtspsrc location=%s udp-buff-size=800000 ! rtph265depay "
-                                     " ! h265parse ! mfxh265dec  "
-                                     " ! cvdlfilter algopipeline=\"%s\" ! resconvert name=res "
-                                     " res.src_pic ! mfxjpegenc ! wssink name=wssink0 wsclientid=%d  res.src_txt ! wssink0.",
-                                     stream_source, algo_pipeline_desc, pipe_id);
+                                     " ! h265parse ! mfxh265dec  %s ", stream_source,  helper_desc );
      } else {
           // local files
            if(codec_type == eCodecTypeH264)
-                g_snprintf (g_pipe_desc, 1024, "filesrc location=%s  ! qtdemux  ! h264parse ! mfxh264dec "
-                                    " ! cvdlfilter algopipeline=\"%s\" ! resconvert name=res "
-                                    " res.src_pic ! mfxjpegenc ! wssink name=wssink0 wsclientid=%d  res.src_txt ! wssink0.",
-                                   stream_source, algo_pipeline_desc,  pipe_id);
+                g_snprintf (g_pipe_desc, 1024,
+                     "filesrc location=%s  ! qtdemux  ! h264parse ! mfxh264dec %s",  stream_source,  helper_desc );
            else if(codec_type == eCodecTypeH265)
-                 g_snprintf (g_pipe_desc, 1024, "filesrc location=%s ! qtdemux  ! h265parse ! mfxh265dec  "
-                                    " ! cvdlfilter algopipeline=\"%s\" ! resconvert name=res "
-                                    " res.src_pic ! mfxjpegenc ! wssink name=wssink0 wsclientid=%d  res.src_txt ! wssink0.", 
-                                   stream_source, algo_pipeline_desc, pipe_id);
+                 g_snprintf (g_pipe_desc, 1024,
+                     "filesrc location=%s ! qtdemux  ! h265parse ! mfxh265dec  %s",  stream_source,  helper_desc );
     }
     g_print("pipeline: %s\n",g_pipe_desc );
     json_destroy(&root);
@@ -426,7 +422,7 @@ void hddlspipe_prepare(int argc, char **argv)
 {
      g_assert (hp);
      gst_element_set_state (hp->pipeline, GST_STATE_PAUSED);
-     //gst_element_set_state (hp->pipeline, GST_STATE_READY);
+    // gst_element_set_state (hp->pipeline, GST_STATE_READY);
      //gst_element_set_state (hp->pipeline, GST_STATE_NULL);
      hp->state = ePipeState_Ready;
 }

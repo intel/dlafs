@@ -85,6 +85,11 @@ static void track_lp_algo_func(gpointer userData)
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         return;
     }
+  if(algoData->mGstBuffer==NULL) {
+        GST_WARNING("Invalid buffer!!!");
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        return;
+    }
     start = g_get_monotonic_time();
 
     // bind algoTask into algoData, so that can be used when sync callback

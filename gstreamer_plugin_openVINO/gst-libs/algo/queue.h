@@ -44,52 +44,52 @@ public:
 
     //with Filter on element(get specific element)
     template<class FilterFunc>
-	bool get(T &ret, FilterFunc filter)
-	{
-		std::unique_lock<std::mutex> lk(_m);
+    bool get(T &ret, FilterFunc filter)
+    {
+        std::unique_lock<std::mutex> lk(_m);
 
-		typename std::deque<T>::iterator it;
-		_cv.wait(lk, [this, filter, &it]
-		{
-			//mutex auto relocked
-			//check from the First Input to meet FIFO requirement
-				for(it = _q.begin(); it != _q.end(); ++it)
-				if(filter(*it)) return true;
+        typename std::deque<T>::iterator it;
+        _cv.wait(lk, [this, filter, &it]
+        {
+            //mutex auto relocked
+            //check from the First Input to meet FIFO requirement
+            for(it = _q.begin(); it != _q.end(); ++it)
+                if(filter(*it)) return true;
 
-			//if closed & not-found, then we will never found it in the future
-				if(_closed) return true;
-                if(_flush) {
+            //if closed & not-found, then we will never found it in the future
+            if(_closed) return true;
+            if(_flush) {
                     _flush = false;
                     return true;
-                }
+            }
 
-				return false;
-			});
+            return false;
+        });
 
-		if ((int)_q.size() > _max_size) {
-			_max_size = _q.size();
-		}
+        if ((int)_q.size() > _max_size) {
+            _max_size = _q.size();
+        }
 
-		//nothing will found in the future
-//		if (it == _q.end() && _closed) {
-		if (it == _q.end() || _closed) {
-			return false;
-		}
+        //nothing will found in the future
+        //  if (it == _q.end() && _closed) {
+        if (it == _q.end() || _closed) {
+            return false;
+        }
 
-		ret = *it; 		//copy construct the return value
-		_q.erase(it);	//remove from deque
+        ret = *it; 		//copy construct the return value
+        _q.erase(it);	//remove from deque
 
-		if (_q.size() < _size_limit) {
-			_cv_notfull.notify_all();
-		}
+        if (_q.size() < _size_limit) {
+            _cv_notfull.notify_all();
+        }
 
-		return true;
-	}
+        return true;
+    }
 
-	bool get(T &ret)
-	{
-		return get(ret, [](const T &) {return true;});
-	}
+    bool get(T &ret)
+    {
+        return get(ret, [](const T &) {return true;});
+    }
 
 
     void put(const T & obj)

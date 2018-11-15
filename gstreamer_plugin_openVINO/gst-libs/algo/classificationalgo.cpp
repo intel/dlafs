@@ -181,6 +181,12 @@ static void classification_algo_func(gpointer userData)
         return;
     }
 
+    if(algoData->mGstBuffer==NULL) {
+        GST_WARNING("Invalid buffer!!!");
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        return;
+    }
+
     // bind algoTask into algoData, so that can be used when sync callback
     algoData->algoBase = static_cast<CvdlAlgoBase *>(classificationAlgo);
 
@@ -220,12 +226,12 @@ ClassificationAlgo::ClassificationAlgo() : CvdlAlgoBase(classification_algo_func
 
 ClassificationAlgo::~ClassificationAlgo()
 {
-    wait_work_done();
+    //wait_work_done();
     if(mInCaps)
         gst_caps_unref(mInCaps);
-    g_print("ClassificationAlgo: image process %d frames, image preprocess fps = %.2f, infer fps = %.2f\n",
-        mFrameDoneNum, 1000000.0*mFrameDoneNum/mImageProcCost, 
-        1000000.0*mFrameDoneNum/mInferCost);
+        g_print("ClassificationAlgo: image process %d frames, image preprocess fps = %.2f, infer fps = %.2f\n",
+            mFrameDoneNum, 1000000.0*mFrameDoneNum/mImageProcCost, 
+           1000000.0*mFrameDoneNum/mInferCost);
 }
 
 void ClassificationAlgo::set_data_caps(GstCaps *incaps)

@@ -81,8 +81,10 @@ const ws = new WebSocket("wss://"+url+":8126/controller?id=2"+"&key="+psw, {
     requestCert:true
   });
 
+
 function exec(command) {
    var cmd = command.split(' ');
+   var num = cmd.length;
    if (cmd[0][0] === '-') {
     //TODO: need error process but not crash
     switch (cmd[0].slice(1)) {
@@ -90,31 +92,41 @@ function exec(command) {
         console.log(help.yellow);
         break;
       case 'c':
-        create_json = JSON.parse(fs.readFileSync(cmd[1], 'utf8'));
-        console.log("Send json create command!!!");
-        if(create_json.command_type==0)
-            ws.send('c' + JSON.stringify(create_json));
-        else
-            console.log("Incorrect json create command!!!");
+        if(fs.existsSync(cmd[1])) {
+            create_json = JSON.parse(fs.readFileSync(cmd[1], 'utf8'));
+            console.log("Send json create command!!!");
+            if(create_json.command_type==0)
+                ws.send('c' + JSON.stringify(create_json));
+            else
+                console.log("Incorrect json create command!!!");
+        } else {
+            console.log(cmd[1] + " doesn't exist!!!");
+        }
         break;
       case 'p':
-        property_json = JSON.parse(fs.readFileSync(cmd[1], 'utf8'));
-        property_json.command_set_property.pipe_id = parseInt(cmd[2]);
-        console.log("Send json set_property command!!!");
-        if(property_json.command_type==2)
-            ws.send('p' + JSON.stringify(property_json));
-        else
-            console.log("Incorrect json set_property command!!!");
+        if(fs.existsSync(cmd[1])) {
+            property_json = JSON.parse(fs.readFileSync(cmd[1], 'utf8'));
+            if(num==3)
+                property_json.command_set_property.pipe_id = parseInt(cmd[2]);
+            console.log("Send json set_property command!!!");
+            if(property_json.command_type==2)
+                ws.send('p' + JSON.stringify(property_json));
+            else
+                console.log("Incorrect json set_property command!!!");
+        }
         break;
       case 'd':
-        destroy_json = JSON.parse(fs.readFileSync(cmd[1], 'utf8'));
-        destroy_json.command_destroy.pipe_id = parseInt(cmd[2]);
-        console.log('cmd[2] =', destroy_json.command_destroy.pipe_id);
-        console.log("Send json destroy command!!!");
-        if(destroy_json.command_type==1)
-            ws.send('d' + JSON.stringify(destroy_json));
-        else
-            console.log("Incorrect json destroy command!!!");
+        if(fs.existsSync(cmd[1])) {
+            destroy_json = JSON.parse(fs.readFileSync(cmd[1], 'utf8'));
+            if(num==3)
+                destroy_json.command_destroy.pipe_id = parseInt(cmd[2]);
+            console.log('cmd[2] =', destroy_json.command_destroy.pipe_id);
+            console.log("Send json destroy command!!!");
+            if(destroy_json.command_type==1)
+                ws.send('d' + JSON.stringify(destroy_json));
+            else
+                console.log("Incorrect json destroy command!!!");
+        }
         break;
       case 'q':
         process.exit(0);
