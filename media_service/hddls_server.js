@@ -74,7 +74,7 @@ path_wss.on('connection', function(ws) {
                 client_pipe = client_pipe + pipe_count.toString() + ",";
                 pipe_id = pipe_count;
 
-                //TODO: use a better name to distinguish different create_json files
+                
                 temp_json_path='./client_'+ client_id+'_temp_create.json';
                 fs.writeFile(temp_json_path, JSON.stringify(create_json), {flag: 'w'}, function (err) { if(err) {
                     console.error("write file failed: ", err);

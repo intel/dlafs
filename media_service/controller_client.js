@@ -11,6 +11,7 @@ let count = 0;
 let pipe_constuctor = "";
 let pipe_constuctor_to_number = "";
 let client_id = 0;
+let read_file_retur = "";
 
 const fs = require('fs')
   , filename = 'hostname.txt';
@@ -27,7 +28,7 @@ const help = [ ('-help                          ' + 'commanders that you can use
            ].join('\n');
 
 function completer(line) {
-  let completions = '-help|-c <create.json> |-p <property.json> <pipe_id> |-d <destory.json> <pipe_id> |-q'.split('|')
+  let completions = '-help|-c <create.json> |-p <property.json> <pipe_id> |-d <destory.json> <client_id> <pipe_id> |-q'.split('|')
   let hits = completions.filter(function(c) {
     if (c.indexOf(line) == 0) {
       return c;
@@ -87,6 +88,45 @@ const ws = new WebSocket("wss://"+url+":8126/controller?id=2"+"&key="+psw, {
     requestCert:true
   });
 
+  function read_file_sync(path,jfile,type,clientid,pipeid){
+    fs.exists(path, function(exists) {
+      if (exists) {
+        jfile = JSON.parse(fs.readFileSync(path, 'utf8'));
+        //console.log(create_json);       
+        if(jfile.command_type === type){
+          switch (type) {
+            case 0:
+            ws.send('c' + JSON.stringify(jfile));
+            console.log("Send json create command!!!" .green);
+            break;
+  
+            case 1:
+            jfile.client_id = parseInt(clientid);
+            jfile.command_destroy.pipe_id = parseInt(pipeid);     
+            ws.send('d' + JSON.stringify(jfile));
+            console.log("Send json destory command!!!" .green);
+            break;
+  
+            case 2:
+            jfile.command_set_property.pipe_id = parseInt(pipeid);
+            ws.send('p' + JSON.stringify(jfile));
+            console.log("Send json set_property command!!!" .green);
+            break;
+  
+          }
+          
+        }else{
+          console.log("Incorrect json command!!!" .red);
+          prompt();
+        }
+          
+      }else{
+          console.log("File NOT exist, please check again" .red);
+          prompt();
+      }
+    });        
+}  
+
 function exec(command) {
    var cmd = command.split(' ');
    if (cmd[0][0] === '-') {
@@ -99,45 +139,24 @@ function exec(command) {
       break;
 
       case 'c':
-        create_json = JSON.parse(fs.readFileSync(cmd[1], 'utf8'));
-        console.log("Send json create command!!!" .green);
-        if(create_json.command_type==0)
-            ws.send('c' + JSON.stringify(create_json));
-        else
-            console.log("Incorrect json create command!!!");
+      read_file_sync(cmd[1],create_json,0,0,0);     
       break;
 
       case 'p':
-        property_json = JSON.parse(fs.readFileSync(cmd[1], 'utf8'));
-        property_json.command_set_property.pipe_id = parseInt(cmd[2]);
-        console.log("Send json set_property command!!!" .green);
-        if(property_json.command_type==2){
-          ws.send('p' + JSON.stringify(property_json));
-        }else{
-          console.log("Incorrect json set_property command!!!" .red);
-          prompt();
-        }          
+      read_file_sync(cmd[1],property_json,2,0,cmd[2]);       
       break;
 
       case 'd':
-        destroy_json = JSON.parse(fs.readFileSync(cmd[1], 'utf8'));
-        destroy_json.client_id = parseInt(cmd[2]);
-        //console.log(destroy_json.client_id);
-        destroy_json.command_destroy.pipe_id = parseInt(cmd[3]);
-        //console.log(destroy_json.command_destroy.pipe_id);
-        pipe_constuctor_to_number = pipe_constuctor.split(",");
-        pipe_constuctor_to_number = pipe_constuctor_to_number.filter(function(e){return e});
-        //console.log(pipe_constuctor_to_number.length);
-        //console.log(pipe_constuctor_to_number);        
-        if (client_id === destroy_json.client_id && pipe_constuctor_to_number.includes(cmd[3]) && destroy_json.command_type==1)
-        {
-          ws.send('d' + JSON.stringify(destroy_json));
-          //console.log('cmd[3] =', destroy_json.command_destroy.pipe_id);
-          console.log("Send json destroy command!!!" .green);
-        }else{
-          console.log("Incorrect json destroy command!!! please check command type or pipe id" .red);
-          prompt();
-        }           
+      pipe_constuctor_to_number = pipe_constuctor.split(",");
+      pipe_constuctor_to_number = pipe_constuctor_to_number.filter(function(e){return e});
+      if (client_id === parseInt(cmd[2]) && pipe_constuctor_to_number.includes(cmd[3]))
+      {
+        read_file_sync(cmd[1],destory_json,1,cmd[2],cmd[3]);
+          
+      }else{
+        console.log("Wrong command!!! please check client id and pipe id" .red);
+        prompt();
+      }     
       break;
 
       case 'pipe':
@@ -178,6 +197,7 @@ ws.on('message',function(data){
       console.log(`${data} ` .blue);
     }else{
       pipe_constuctor = data;
+      //console.log(pipe_constuctor);
     }     
     prompt();
   }else{
