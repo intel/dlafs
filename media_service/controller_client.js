@@ -21,14 +21,14 @@ const rl = readline.createInterface(process.stdin, process.stdout, completer);
 const help = [ ('-help                          ' + 'commanders that you can use.').magenta
            ,('-c <create.json>                  ' + 'create pipeslines').magenta
            ,('-p <property.json> <pipe_id>      ' + 'set pipeslines property').magenta
-           ,('-d <destroy.json> <client_id> <pipe_id>      ' + 'destroy pipeslines').magenta
+           ,('-d <destroy.json>  <pipe_id>      ' + 'destroy pipeslines').magenta
            ,('-pipe                             ' + 'display pipes belonging to the very client').magenta
            ,('-client                             ' + 'display client ID').magenta
            , ('-q                               ' + 'exit client.').magenta
            ].join('\n');
 
 function completer(line) {
-  let completions = '-help|-c <create.json> |-p <property.json> <pipe_id> |-d <destory.json> <client_id> <pipe_id> |-q'.split('|')
+  let completions = '-help|-c <create.json> |-p <property.json> <pipe_id> |-d <destory.json> <pipe_id> |-pipe |-client |-q'.split('|')
   let hits = completions.filter(function(c) {
     if (c.indexOf(line) == 0) {
       return c;
@@ -96,6 +96,7 @@ const ws = new WebSocket("wss://"+url+":8126/controller?id=2"+"&key="+psw, {
         if(jfile.command_type === type){
           switch (type) {
             case 0:
+            jfile.client_id = parseInt(clientid);
             ws.send('c' + JSON.stringify(jfile));
             console.log("Send json create command!!!" .green);
             break;
@@ -108,6 +109,7 @@ const ws = new WebSocket("wss://"+url+":8126/controller?id=2"+"&key="+psw, {
             break;
   
             case 2:
+            jfile.client_id = parseInt(clientid);
             jfile.command_set_property.pipe_id = parseInt(pipeid);
             ws.send('p' + JSON.stringify(jfile));
             console.log("Send json set_property command!!!" .green);
@@ -139,7 +141,7 @@ function exec(command) {
       break;
 
       case 'c':
-      read_file_sync(cmd[1],create_json,0,0,0);     
+      read_file_sync(cmd[1],create_json,0,client_id,0);     
       break;
 
       case 'p':
@@ -148,7 +150,7 @@ function exec(command) {
         read_file_sync(cmd[1],property_json,2,0,cmd[2]);
           
       }else{
-        console.log("Wrong command!!! please check client id and pipe id" .red);
+        console.log("Wrong command!!! please check pipe id" .red);
         prompt();
       }     
              
@@ -157,12 +159,12 @@ function exec(command) {
       case 'd':
       pipe_constuctor_to_number = pipe_constuctor.split(",");
       pipe_constuctor_to_number = pipe_constuctor_to_number.filter(function(e){return e});
-      if (client_id === parseInt(cmd[2]) && pipe_constuctor_to_number.includes(cmd[3]))
+      if (pipe_constuctor_to_number.includes(cmd[2]))
       {
-        read_file_sync(cmd[1],destory_json,1,cmd[2],cmd[3]);
+        read_file_sync(cmd[1],destory_json,1,client_id,cmd[2]);
           
       }else{
-        console.log("Wrong command!!! please check client id and pipe id" .red);
+        console.log("Wrong command!!! please check pipe id" .red);
         prompt();
       }     
       break;

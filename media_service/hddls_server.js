@@ -43,14 +43,21 @@ path_wss.on('connection', function(ws) {
     console.log('controller connected !' .bgYellow);
     client_id++;
     ws.send(client_id);   
-    client_pipe = "";
+    //client_pipe = "";
 
     ws.on('message', function(path) {
 
         console.log("receive message:" + path);
         console.log(typeof path);
-        if (path[0]==='c') {
+        if (path[0]==='c') {  
+                   
            create_json = JSON.parse(path.substring(1));
+           if(client_map.get(create_json.client_id)===""){
+            client_pipe = "";
+             
+           }else{
+             client_pipe = client_map.get(create_json.client_id);
+           }
 
            for (let i = 0; i<create_json.command_create.pipe_num; i++){
             	gst_cmd = 'hddlspipes -i  ' + pipe_count + ' -l ' + create_json.command_create.loop_times;
@@ -75,7 +82,7 @@ path_wss.on('connection', function(ws) {
                 pipe_id = pipe_count;
 
                 
-                temp_json_path='./client_'+ client_id+'_temp_create.json';
+                temp_json_path='./client_'+ create_json.client_id+'_temp_create.json';
                 fs.writeFile(temp_json_path, JSON.stringify(create_json), {flag: 'w'}, function (err) { if(err) {
                     console.error("write file failed: ", err);
                     } else {
@@ -88,9 +95,9 @@ path_wss.on('connection', function(ws) {
 
           }
 
-          client_map.set(client_id,client_pipe);
+          client_map.set(create_json.client_id,client_pipe);
           //console.log(client_map);
-          ws.send(client_map.get(client_id));
+          ws.send(client_map.get(create_json.client_id));
 
         } else if(path[0]==='p'){
           property_json = JSON.parse(path.substring(1));
@@ -114,7 +121,7 @@ path_wss.on('connection', function(ws) {
           pipe_map.set(destory_json.command_destroy.pipe_id,-1);
           ws.send("we have killed pipe "+ destory_json.command_destroy.pipe_id);
           console.log("we have send to client" .bgRed);
-          ws.send(client_map.get(client_id));
+          ws.send(client_map.get(destory_json.client_id));
           
         }
 
