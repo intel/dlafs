@@ -24,8 +24,6 @@
 #define __LP_RECOGNIZE_ALGO_H__
 
 #include "algobase.h"
-#include "ieloader.h"
-#include "imageproc.h"
 
 class LicencePlateData
 {
@@ -101,17 +99,12 @@ public:
                                                       int precision, CvdlAlgoData *outData, int objId);
     virtual GstFlowReturn algo_dl_init(const char* modeFileName);
 
-    IELoader mIeLoader;
-    gboolean mIeInited;
-    ImageProcessor mImageProcessor;
-    GstCaps *mInCaps;  /* Caps for orignal input video*/
-    GstCaps *mOclCaps; /* Caps for output surface of OCL, which has been CRCed, and as the input of this algo */
-
-    int mImageProcessorInVideoWidth;
-    int mImageProcessorInVideoHeight;
-
     guint64 mCurPts;
     LicencePlatePool lpPool;
+
+private:
+    void ctc_ref_fp16(float* probabilities, float* output_sequences, float * output_prob,
+                      int T_, int N_, int C_, int in_stride, bool original_layout);
 
     // The last algo should have an out queue
     //thread_queue<CvdlAlgoData> mOutQueue;

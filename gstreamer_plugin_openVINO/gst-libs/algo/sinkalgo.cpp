@@ -32,25 +32,7 @@
 
 using namespace HDDLStreamFilter;
 
-#if 0
-// main function for sink algorithm
-//      do nothing
-static void sink_algo_func(gpointer userData)
-{
-    SinkAlgo *sinkAlgo = static_cast<SinkAlgo*> (userData);
-
-    if(!sinkAlgo) {
-        GST_WARNING("SinkAlgo is NULL, return!");
-        return;
-    }
-    g_print("sink_algo_func: queue size = %d\n", sinkAlgo->mInQueue.size());
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-   
-    return;
-}
-#endif
-//SinkAlgo::SinkAlgo():CvdlAlgoBase(sink_algo_func, this, NULL)
-SinkAlgo::SinkAlgo():CvdlAlgoBase(NULL, this, NULL)
+SinkAlgo::SinkAlgo():CvdlAlgoBase(NULL, CVDL_TYPE_NONE)
 {
 
 }

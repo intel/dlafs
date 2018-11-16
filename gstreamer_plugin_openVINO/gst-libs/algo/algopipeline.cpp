@@ -385,7 +385,9 @@ void algo_pipeline_set_caps(AlgoPipelineHandle handle, int algo_id, GstCaps* cap
      }
 
     algo = static_cast<CvdlAlgoBase *>(pipeline->algo_chain[algo_id].algo);
-    algo->set_data_caps(caps);
+    if(!algo->mCapsInited)
+        algo->set_data_caps(caps);
+    algo->mCapsInited = true;
 }
 
 void algo_pipeline_set_caps_all(AlgoPipelineHandle handle, GstCaps* caps)
@@ -399,7 +401,9 @@ void algo_pipeline_set_caps_all(AlgoPipelineHandle handle, GstCaps* caps)
     }
     for(i=0; i< pipeline->algo_num; i++){
         algo = static_cast<CvdlAlgoBase *>(pipeline->algo_chain[i].algo);
-        algo->set_data_caps(caps);
+        if(!algo->mCapsInited)
+            algo->set_data_caps(caps);
+        algo->mCapsInited = true;
     } 
 }
 
@@ -435,7 +439,7 @@ void algo_pipeline_stop(AlgoPipelineHandle handle)
         algo->stop_algo_thread();
     }
 }
-void algo_pipeline_put_buffer(AlgoPipelineHandle handle, GstBuffer *buf)
+void algo_pipeline_put_buffer(AlgoPipelineHandle handle, GstBuffer *buf,  guint w, guint h)
 {
     AlgoPipeline *pipeline = (AlgoPipeline *) handle;
     CvdlAlgoBase* algo = NULL;
@@ -452,7 +456,7 @@ void algo_pipeline_put_buffer(AlgoPipelineHandle handle, GstBuffer *buf)
         return;
     }
     //g_print("%s() - GstBuffer = %p\n",__func__,  buf);
-    algo->queue_buffer(buf);
+    algo->queue_buffer(buf, w, h);
 }
 
 
@@ -521,6 +525,16 @@ void algo_pipeline_flush_buffer(AlgoPipelineHandle handle)
         algo->queue_out_buffer(NULL);
     }
 }
+
+const char* algo_pipeline_get_name(guint  id)
+{
+    const static char * invalid_name = "invalid";
+    if(id>=ALGO_MAX_NUM)
+        return invalid_name;
+    else
+        return g_algo_name_str[id];
+}
+
 #ifdef __cplusplus
 };
 #endif

@@ -19,31 +19,30 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#ifndef __SSD_ALGO_H__
-#define __SSD_ALGO_H__
+#ifndef __SAMPLE_ALGO_H__
+#define __SAMPLE_ALGO_H__
 
 #include "algobase.h"
+#include "ieloader.h"
+#include "imageproc.h"
 #include <gst/gstbuffer.h>
 #include "mathutils.h"
 
-class SSDAlgo : public CvdlAlgoBase 
+class SampleAlgo : public CvdlAlgoBase 
 {
 public:
-    SSDAlgo();
-    virtual ~SSDAlgo();
+    SampleAlgo();
+    virtual ~SampleAlgo();
     virtual void set_data_caps(GstCaps *incaps);
     virtual GstFlowReturn algo_dl_init(const char* modeFileName);
     virtual GstFlowReturn parse_inference_result(InferenceEngine::Blob::Ptr &resultBlobPtr,
                                                  int precision, CvdlAlgoData *outData, int objId);
-private:
     void set_default_label_name();
     void set_label_names(const char** label_names);
-    bool get_result(float * box,CvdlAlgoData* &outData);
-
-    int mSSDMaxProposalCount;
-    int mSSDObjectSize;
 
     guint64 mCurPts;
+
     const char** mLabelNames;
 };
 #endif
+

@@ -47,20 +47,13 @@ public:
     void verify_detection_result(std::vector<ObjectData> &objectVec);
     void track_objects(CvdlAlgoData* &algoData);
     void track_objects_fast(CvdlAlgoData* &algoData);
-    void push_track_object(CvdlAlgoData* &algoData);
+    //void push_track_object(CvdlAlgoData* &algoData);
     void update_track_object(std::vector<ObjectData> &objectVec);
-
-    ImageProcessor mImageProcessor;
-    GstCaps *mInCaps;  /* Caps for orignal input video*/
-    GstCaps *mOclCaps; /* Caps for output surface of OCL, which has been CRCed, and as the input of detection algo */
-
-    int mImageProcessorInVideoWidth;
-    int mImageProcessorInVideoHeight;
 
     guint64 mCurPts;
     std::vector<TrackObjAttribute> mTrackObjVec; /* keep for tracking */
     std::vector<ObjectData> mObjectDataVec;  /* be used for output*/
-    int mCurObjId = 0;		// Be used to assign new object id.
+    int mCurObjId = 0; // Be used to assign new object id.
 
     // member
     std::vector<cv::Point2f> mPreFeaturePt;

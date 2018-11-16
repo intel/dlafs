@@ -187,14 +187,7 @@ public:
     bool is_at_buttom(TrackLpObjAttribute& curObj);
     void remove_no_lp(std::vector<ObjectData> &objectVec);
     void update_track_object(std::vector<ObjectData> &objectVec);
-    void push_track_object(CvdlAlgoData* &algoData);
-
-    ImageProcessor mImageProcessor;
-    GstCaps *mInCaps;  /* Caps for orignal input video*/
-    GstCaps *mOclCaps; /*Caps for output surface of OCL, which has been CRCed, and as the input of detection algo */
-
-    int mImageProcessorInVideoWidth;
-    int mImageProcessorInVideoHeight;
+    //void push_track_object(CvdlAlgoData* &algoData);
 
     guint64 mCurPts;
     std::vector<TrackLpObjAttribute> mTrackObjVec; /* keep for tracking */

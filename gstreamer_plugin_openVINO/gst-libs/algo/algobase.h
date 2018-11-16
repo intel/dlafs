@@ -31,10 +31,15 @@
 #include <atomic>
 #include <vector>
 #include <interface/videodefs.h>
-enum {
-    CVDL_TYPE_DL = 0,
-    CVDL_TYPE_CV = 1,
-};
+#include "imageproc.h"
+#include <ocl/oclmemory.h>
+#include "ieloader.h"
+
+const static guint CVDL_OBJECT_FLAG_DONE =0x1;
+
+const static guint  CVDL_TYPE_DL = 0;
+const static guint  CVDL_TYPE_CV = 1;
+const static guint  CVDL_TYPE_NONE = 2;
 
 class ObjectData{
 public:
@@ -48,15 +53,19 @@ public:
     cv::Rect rect;  // rect of detection
     cv::Rect rectROI; // rect to be classified
 
+    // flags the status of this object
+    int flags;
+
     /*score to decide whether is should be do classification */
     float score;
 
     std::vector<VideoPoint> trajectoryPoints; /* the trajectory Points of this object*/
-    //std::atomic<int> flags;
-    int flags;
+
+    // Buffer for ROI
     // Object buffer in OCL, format = BGR_Plannar
     // It will be used for IE inputdata
     GstBuffer *oclBuf;
+
     float figure_score(int w, int h) {
         float score = 0.0;
         int dx, dy;
@@ -74,7 +83,7 @@ public:
 
 class CvdlAlgoBase;
 class CvdlAlgoData;
-using AsyncCallback = std::function<void(CvdlAlgoData* algoData)>;
+using PostCallback = std::function<void(CvdlAlgoData* algoData)>;
 
 class CvdlAlgoData{
 public:
@@ -99,15 +108,13 @@ public:
     guint64 mFrameId;
     guint64 mPts;
 
-    // inference data is valid
-    gboolean mResultValid;
-
     // It was the resize of the whole image
     GstBuffer *mGstBufferOcl;
 
     // It was the object image, part of the whole image
     // IE result has been parsed into it
     std::vector<ObjectData> mObjectVec;
+    std::vector<ObjectData> mObjectVecIn;
 
     CvdlAlgoBase* algoBase;
 };
@@ -116,11 +123,11 @@ public:
 class CvdlAlgoBase
 {
 public:
-    CvdlAlgoBase(GstTaskFunction func, gpointer user_data, GDestroyNotify notify);
+    CvdlAlgoBase(PostCallback func, guint cvdl_type=CVDL_TYPE_DL);
     virtual ~CvdlAlgoBase();
 
     void algo_connect(CvdlAlgoBase *algoTo);
-    void queue_buffer(GstBuffer *buffer);
+    void queue_buffer(GstBuffer *buffer, guint w, guint h);
     void queue_out_buffer(GstBuffer *buffer);
     void start_algo_thread();
     void stop_algo_thread();
@@ -132,9 +139,9 @@ public:
     }
     int get_in_queue_size();
     int get_out_queue_size();
-    void save_buffer(unsigned char *buf, int w, int h, int p, int id, int bPlannar,char *info);
-    void save_image(unsigned char *buf, int w, int h, int p, int bPlannar, char *info);
-    void print_objects(std::vector<ObjectData> &objectVec);
+
+    GstFlowReturn init_ieloader(const char* modeFileName, guint ieType);
+    void  init_dl_caps(GstCaps* incaps);
     virtual void set_data_caps(GstCaps *incaps)
     {
 
@@ -151,17 +158,40 @@ public:
     {
         return NULL;
     }
+    void save_buffer(unsigned char *buf, int w, int h, int p, int id, int bPlannar,char *info);
+    void save_image(unsigned char *buf, int w, int h, int p, int bPlannar, char *info);
+    void print_objects(std::vector<ObjectData> &objectVec);
+    
+    gboolean mCapsInited;
 
+    // which algo it belongs
     guint  mAlgoType;
-    //guint  mCvdlType;
+
+   // There are 2 tasks,  DL task and CV task
+   //  DL task - run with IE inference engine
+   //  CV task - run without IE inference enngine
+    guint mCvdlType;// DL or CV task
 
     /* Main task/thread to do the algo processing */
     GstTask *mTask;
     GRecMutex mMutex;
 
+    IELoader mIeLoader;
+    gboolean mIeInited;
+    ImageProcessor mImageProcessor;
+
     /* The image size into the actual algo processing */
     int mInputWidth;
     int mInputHeight;
+
+   // Orignal frame size
+    int mImageProcessorInVideoWidth;
+    int mImageProcessorInVideoHeight;
+
+     /* Caps for orignal input video*/
+    GstCaps *mInCaps;
+     /* Caps for output surface of OCL, which has been CRCed, and as the input of detection algo */
+    GstCaps *mOclCaps; 
 
     /* link algo to form a algo chain/pipeline */
     CvdlAlgoBase *mNext;
@@ -170,11 +200,12 @@ public:
     // queue input buffer
     thread_queue<CvdlAlgoData> mInQueue;
 
-    // only used by last algo in pipeline
-    //thread_queue<CvdlAlgoData> mOutQueue;
-
     /* pool for allocate buffer for inference result, CPU buffer */
     GstBufferPool *mResultPool;
+
+   // DL task - algoData has been figured out, post process objects in algoData if need
+   // CV task - use preprocessed picture to do specified CV algo processing.
+    PostCallback postCb;
 
     std::atomic<int> mInferCnt;
     std::atomic<guint64> mInferCntTotal;

@@ -33,210 +33,30 @@ static std::string g_vehicleLabel[] =
 #include "label-en.txt"
 };
 
-
-#define CLASSIFICATION_OBJECT_FLAG_DONE 0x10
-#define CLASSIFICATION_OBJECT_FLAG_VALID 0x100
-
 #define THRESHOLD_PROB 0.2
-
 #define CLASSIFICATION_INPUT_W 224
 #define CLASSIFICATION_INPUT_H 224
 
-
-static void try_process_algo_data(CvdlAlgoData *algoData)
+static void post_callback(CvdlAlgoData *algoData)
 {
-    bool allObjDone = true;
-    ClassificationAlgo *classificationAlgo = static_cast<ClassificationAlgo*>(algoData->algoBase);
-
-    // check if this frame has been done, which contains multiple objects
-    for(unsigned int i=0; i<algoData->mObjectVec.size();i++)
-        if(!(algoData->mObjectVec[i].flags & CLASSIFICATION_OBJECT_FLAG_DONE))
-            allObjDone = false;
-
-    // if all objects are done, then push it into output queue
-    if(allObjDone) {
-        // delete invalid objects
-        // remove the objectData which has not been set VALID flag
-        std::vector<ObjectData> &objectVec = algoData->mObjectVec;
-        std::vector<ObjectData>::iterator obj;
-        for (obj = objectVec.begin(); obj != objectVec.end();) {
-            if(!((*obj).flags & CLASSIFICATION_OBJECT_FLAG_VALID)) {
-                // remove  it
-                obj = objectVec.erase(obj);
-                continue;
-            } else {
-                ++obj;
-            }
-        }
-        if(objectVec.size()>0) {
-            //put valid algoData;
-            GST_LOG("Classification algo - output GstBuffer = %p(%d)\n",
-                   algoData->mGstBuffer, GST_MINI_OBJECT_REFCOUNT(algoData->mGstBuffer));
-            classificationAlgo->mNext->mInQueue.put(*algoData);
-        } else {
-            GST_LOG("Classification algo - unref GstBuffer = %p(%d)\n",
-                algoData->mGstBuffer, GST_MINI_OBJECT_REFCOUNT(algoData->mGstBuffer));
-            gst_buffer_unref(algoData->mGstBuffer);
-            delete algoData;
-        }
-    }
+        // post process algoData
 }
 
-static void process_one_object(CvdlAlgoData *algoData, ObjectData &objectData, int objId)
-{
-    GstFlowReturn ret = GST_FLOW_OK;
-    GstBuffer *ocl_buf = NULL;
-    ClassificationAlgo *classificationAlgo = static_cast<ClassificationAlgo*>(algoData->algoBase);
-    gint64 start, stop;
-
-    // The classification model will use the car face to do inference, that means we should
-    //  crop the front part of car's object to be ROI, which is done in TrackAlgo::get_roi_rect
-    VideoRect crop = { (uint32_t)objectData.rect.x, 
-                       (uint32_t)objectData.rect.y + objectData.rect.height/2,
-                       (uint32_t)objectData.rect.width,
-                       (uint32_t)objectData.rect.height/2};
-
-    if(crop.width<=0 || crop.height<=0 || crop.x<0 || crop.y<0) {
-        GST_ERROR("classfication: crop = (%d,%d) %dx%d", crop.x, crop.y, crop.width, crop.height);
-        objectData.flags |= CLASSIFICATION_OBJECT_FLAG_DONE;
-        try_process_algo_data(algoData);
-        return;
-    }
-    start = g_get_monotonic_time();
-    classificationAlgo->mImageProcessor.process_image(algoData->mGstBuffer,NULL,&ocl_buf,&crop);
-    stop = g_get_monotonic_time();
-    classificationAlgo->mImageProcCost += stop - start;
-    if(ocl_buf==NULL) {
-        GST_WARNING("Failed to do image process!");
-        objectData.flags |= CLASSIFICATION_OBJECT_FLAG_DONE;
-        try_process_algo_data(algoData);
-        return;
-    }
-    //algoData->mGstBufferOcl = ocl_buf;
-    objectData.oclBuf = ocl_buf;
-
-    OclMemory *ocl_mem = NULL;
-    ocl_mem = ocl_memory_acquire (ocl_buf);
-    if(ocl_mem==NULL){
-        GST_WARNING("Failed get ocl_mem after image process!");
-        if(ocl_buf)
-            gst_buffer_unref(ocl_buf);
-        objectData.flags |= CLASSIFICATION_OBJECT_FLAG_DONE;
-        //objectData.flags.fetch_or(CLASSIFICATION_OBJECT_FLAG_DONE);
-        try_process_algo_data(algoData);
-        return;
-    }
-    //test
-    //classificationAlgo->save_buffer(ocl_mem->frame.getMat(0).ptr(), classificationAlgo->mInputWidth,
-    //    classificationAlgo->mInputHeight,3,algoData->mFrameId*1000 + objId, 1, "classification");
-
-    // Classification callback function
-    auto onClassificationResult = [&objectData](CvdlAlgoData* algoData)
-    {
-        ClassificationAlgo *classificationAlgo = static_cast<ClassificationAlgo *>(algoData->algoBase);
-        // this ocl will not use, free it here
-        gst_buffer_unref(objectData.oclBuf);
-
-        classificationAlgo->mInferCnt--;
-        objectData.flags |= CLASSIFICATION_OBJECT_FLAG_DONE;
-
-        // check and process algoData
-        try_process_algo_data(algoData);
-    };
-
-    // ASync detect, directly return after pushing request.
-    start = g_get_monotonic_time();
-    ret = classificationAlgo->mIeLoader.do_inference_async(algoData, algoData->mFrameId,objId,
-                                                        ocl_mem->frame, onClassificationResult);
-    stop = g_get_monotonic_time();
-    classificationAlgo->mInferCost += (stop - start);
-    classificationAlgo->mInferCnt++;
-    classificationAlgo->mInferCntTotal++;
-
-    if (ret!=GST_FLOW_OK) {
-        GST_ERROR("IE: detect FAIL");
-    }
-    return;
-}
-
-/*
- * This is the main function of cvdl task:
- *     1. NV12 --> BGR_Planar
- *     2. async inference
- *     3. parse inference result and put it into in_queue of next algo
- */
-static void classification_algo_func(gpointer userData)
-{
-    ClassificationAlgo *classificationAlgo = static_cast<ClassificationAlgo*> (userData);
-    CvdlAlgoData *algoData = new CvdlAlgoData;
-    GST_LOG("\nclassification_algo_func - new an algoData = %p\n", algoData);
-
-    if(!classificationAlgo->mNext) {
-        GST_LOG("The classification algo's next algo is NULL");
-    }
-
-    if(!classificationAlgo->mInQueue.get(*algoData)) {
-        GST_WARNING("InQueue is empty!");
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        return;
-    }
-
-    if(algoData->mGstBuffer==NULL) {
-        GST_WARNING("Invalid buffer!!!");
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        return;
-    }
-
-    // bind algoTask into algoData, so that can be used when sync callback
-    algoData->algoBase = static_cast<CvdlAlgoBase *>(classificationAlgo);
-
-    if(algoData->mGstBuffer==NULL) {
-        GST_ERROR("%s() - get null buffer\n", __func__);
-        return;
-    }
-    GST_LOG("%s() - classification = %p, algoData->mFrameId = %ld\n", __func__,
-            classificationAlgo, algoData->mFrameId);
-    GST_LOG("%s() - get one buffer, GstBuffer = %p, refcout = %d, queueSize = %d,"\
-            "algoData = %p, algoBase = %p\n",
-        __func__, algoData->mGstBuffer, GST_MINI_OBJECT_REFCOUNT (algoData->mGstBuffer),
-        classificationAlgo->mInQueue.size(), algoData, algoData->algoBase);
-
-
-    for(unsigned int i=0; i< algoData->mObjectVec.size(); i++) {
-        algoData->mObjectVec[i].flags &=
-              ~(CLASSIFICATION_OBJECT_FLAG_DONE|CLASSIFICATION_OBJECT_FLAG_VALID);
-    }
-
-    // get input data and process it here, put the result into algoData
-    // NV12-->BGR_Plannar
-    for(unsigned int i=0; i< algoData->mObjectVec.size(); i++)
-        process_one_object(algoData, algoData->mObjectVec[i], i);
-    classificationAlgo->mFrameDoneNum++;
-
-}
-
-ClassificationAlgo::ClassificationAlgo() : CvdlAlgoBase(classification_algo_func, this, NULL)
+ClassificationAlgo::ClassificationAlgo() : CvdlAlgoBase(post_callback, CVDL_TYPE_DL)
 {
     mInputWidth = CLASSIFICATION_INPUT_W;
     mInputHeight = CLASSIFICATION_INPUT_H;
-    mIeInited = false;
-    mInCaps = NULL;
 }
-
 
 ClassificationAlgo::~ClassificationAlgo()
 {
-    //wait_work_done();
-    if(mInCaps)
-        gst_caps_unref(mInCaps);
-        g_print("ClassificationAlgo: image process %d frames, image preprocess fps = %.2f, infer fps = %.2f\n",
+      g_print("ClassificationAlgo: image process %d frames, image preprocess fps = %.2f, infer fps = %.2f\n",
             mFrameDoneNum, 1000000.0*mFrameDoneNum/mImageProcCost, 
            1000000.0*mFrameDoneNum/mInferCost);
 }
 
 void ClassificationAlgo::set_data_caps(GstCaps *incaps)
 {
-    // load IE and cnn model
     std::string filenameXML;
     const gchar *env = g_getenv("CVDL_CLASSIFICATION_MODEL_FULL_PATH");
     if(env) {
@@ -245,63 +65,17 @@ void ClassificationAlgo::set_data_caps(GstCaps *incaps)
         filenameXML = std::string(CVDL_MODEL_DIR_DEFAULT"/vehicle_classify/carmodel_fine_tune_1062_bn_iter_370000.xml");
     }
     algo_dl_init(filenameXML.c_str());
-
-    //get data size of ie input
-    GstFlowReturn ret = GST_FLOW_OK;
-    int w, h, c;
-    ret = mIeLoader.get_input_size(&w, &h, &c);
-
-    if(ret==GST_FLOW_OK) {
-        g_print("ClassificationAlgo: parse out the input size whc= %dx%dx%d\n", w, h, c);
-        mInputWidth = w;
-        mInputHeight = h;
-    }
-
-    if(mInCaps)
-        gst_caps_unref(mInCaps);
-    mInCaps = gst_caps_copy(incaps);
-
-    //int oclSize = mInputWidth * mInputHeight * 3;
-    mOclCaps = gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING, "BGR", NULL);
-    gst_caps_set_simple (mOclCaps, "width", G_TYPE_INT, mInputWidth, "height",
-      G_TYPE_INT, mInputHeight, NULL);
-
-    mImageProcessor.ocl_init(incaps, mOclCaps, IMG_PROC_TYPE_OCL_CRC, CRC_FORMAT_BGR_PLANNAR);
-    mImageProcessor.get_input_video_size(&mImageProcessorInVideoWidth,
-                                         &mImageProcessorInVideoHeight);
-    gst_caps_unref (mOclCaps);
-
+    init_dl_caps(incaps);
 }
 
 GstFlowReturn ClassificationAlgo::algo_dl_init(const char* modeFileName)
 {
     GstFlowReturn ret = GST_FLOW_OK;
-    if(mIeInited)
-        return ret;
-    mIeInited = true;
 
-    ret = mIeLoader.set_device(InferenceEngine::TargetDevice::eMYRIAD);
-    if(ret != GST_FLOW_OK){
-        GST_ERROR("IE failed to set device be eHDDL!");
-        return GST_FLOW_ERROR;
-    }
     mIeLoader.set_precision(InferenceEngine::Precision::U8, InferenceEngine::Precision::FP32);
-
-    // Load different Model based on different device.
-    std::string strModelXml(modeFileName);
-    std::string tmpFn = strModelXml.substr(0, strModelXml.rfind("."));
-    std::string strModelBin = tmpFn + ".bin";
-    GST_LOG("ClassificationModel bin = %s", strModelBin.c_str());
-    GST_LOG("ClassificationModel xml = %s", strModelXml.c_str());
-    ret = mIeLoader.read_model(strModelXml, strModelBin, IE_MODEL_CLASSFICATION);
-    
-    if(ret != GST_FLOW_OK){
-        GST_ERROR("IELoder failed to read model!");
-        return GST_FLOW_ERROR;
-    }
+    ret = init_ieloader(modeFileName, IE_MODEL_CLASSFICATION);
     return ret;
 }
-
 
 GstFlowReturn ClassificationAlgo::parse_inference_result(InferenceEngine::Blob::Ptr &resultBlobPtr,
                                                   int precision, CvdlAlgoData *outData, int objId)
@@ -320,7 +94,7 @@ GstFlowReturn ClassificationAlgo::parse_inference_result(InferenceEngine::Blob::
     // Get top N results
     std::vector<unsigned> topIndexes;
     int topnum = 1;
-    ObjectData &objData = outData->mObjectVec[objId];
+    ObjectData objData = outData->mObjectVecIn[objId];
     InferenceEngine::TopResults(topnum, *resultBlobFp32, topIndexes);
     float *probBase = resultBlobFp32->data();
     if (topIndexes.size()>0) {
@@ -332,20 +106,11 @@ GstFlowReturn ClassificationAlgo::parse_inference_result(InferenceEngine::Blob::
             objData.prob = prob;
             objData.label = strLabel;
             objData.objectClass =  topIndexes[i];
-            objData.flags |= CLASSIFICATION_OBJECT_FLAG_VALID;
-            //g_print("classification-%ld-%d-%ld: prob = %f-%f, label = %s\n", 
-            //    outData->mFrameId,objId,i,prob, probBase[topIndexes[1]], objData.label.c_str());
+            outData->mObjectVec.push_back(objData);
+            GST_LOG("classification-%ld-%d-%ld: prob = %f, label = %s\n", 
+                outData->mFrameId,objId,i,prob,  objData.label.c_str());
             break;
         }
     }
-
     return GST_FLOW_OK;
 }
-
-// dequeue a buffer with cvdlMeta data
-//GstBuffer* ClassificationAlgo::dequeue_buffer()
-//{
-//    g_print("ERROR: cannot dequeue buffer from ClassificationAlgo!!!\n"):
-//    return NULL;
-//}
-

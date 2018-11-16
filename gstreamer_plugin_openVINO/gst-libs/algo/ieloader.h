@@ -30,11 +30,9 @@
 #include <tuple>
 #include <mutex>
 #include <condition_variable>
-
 #include <opencv2/opencv.hpp>
 #include <inference_engine.hpp>
-
-#include "algobase.h"
+//#include "algobase.h"
 
 #ifndef CVDL_MODEL_DIR_DEFAULT
 // model directory, alt it can be passed from app
@@ -50,8 +48,10 @@ enum{
     IE_MODEL_CLASSFICATION = 1,
     IE_MODEL_SSD =2,
     IE_MODEL_LP_RECOGNIZE = 3,
+    IE_MODEL_LP_NONE
 };
 
+using AsyncCallback = std::function<void(void* algoData)>;
 
 class IELoader {
 public:
@@ -66,7 +66,7 @@ public:
     // parse inference result for a frame, which may contain mutiple objects
     //virtual GstFlowReturn parse_inference_result(InferenceEngine::Blob::Ptr &resultBlobPtr, int precision,
     //                                                    CvdlAlgoData *outData, int objId);
-    GstFlowReturn do_inference_async(CvdlAlgoData *algoData, uint64_t frmId, int objId,
+    GstFlowReturn do_inference_async(void *algoData, uint64_t frmId, int objId,
                                             cv::UMat &src, AsyncCallback cb);
     int get_enable_request();
     GstFlowReturn get_input_size(int *w, int *h, int *c);

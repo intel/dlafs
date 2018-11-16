@@ -30,6 +30,7 @@
 #include "dlib/optimization.h"
 
 using namespace cv;
+using namespace HDDLStreamFilter;
 
 #define CHECK_ROI(rt, W, H) \
         if(rt.x < 0 || rt.y < 0 || rt.x + rt.width > W || rt.y + rt.height > H ||   \
@@ -51,246 +52,194 @@ using namespace cv;
 #define FLAGS_TRACKED_LP_DATA_IS_SET   0x1
 #define FLAGS_TRACKED_LP_DATA_IS_PASS  0x2
 
-using namespace HDDLStreamFilter;
-
 const int MaxOcvPredict = 6;
 const int KFMaxAge = 12;
 
 static void parseTrackResult(const BBoxArrayWithId & bboxArrayWithId, std::vector<ObjectData> & trackResult);
-
-
-// main function for track algorithm
-//   If there are valide detection objects, track each one, if not, return
-//   1. CSC from NV12 to BGR, resize for 1920x1080 to 512x512
-//   2. track each one object
-//   3. put the result into next InQueue
-static void track_lp_algo_func(gpointer userData)
+static void post_tracklp_process(CvdlAlgoData *algoData)
 {
-    TrackLpAlgo *trackLpAlgo = static_cast<TrackLpAlgo*> (userData);
-    CvdlAlgoData *algoData = new CvdlAlgoData;
-    gint64 start, stop;
-    std::set<int> licencePlateInfoExtracted;
-    BBoxArrayWithId bboxArrayWithId;
-    MathUtils utils;
+     TrackLpAlgo *trackLpAlgo = static_cast<TrackLpAlgo*> (algoData->algoBase);
+     std::set<int> licencePlateInfoExtracted;
+     BBoxArrayWithId bboxArrayWithId;
+     MathUtils utils;
 
-    GST_LOG("\ntrack_algo_func - new an algoData = %p\n", algoData);
-
-    if(!trackLpAlgo->mNext) {
-        GST_WARNING("TrackLpAlgo: the next algo is NULL, return!");
-        return;
-    }
-
-    if(!trackLpAlgo->mInQueue.get(*algoData)) {
-        GST_WARNING("TrackLpAlgo:InQueue is empty!");
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        return;
-    }
-  if(algoData->mGstBuffer==NULL) {
-        GST_WARNING("Invalid buffer!!!");
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        return;
-    }
-    start = g_get_monotonic_time();
-
-    // bind algoTask into algoData, so that can be used when sync callback
-    algoData->algoBase = static_cast<CvdlAlgoBase *>(trackLpAlgo);
-    trackLpAlgo->mInferCnt=1;
-
-    GST_LOG("%s() - trackLpAlgo = %p, algoData->mFrameId = %ld\n",
-            __func__, trackLpAlgo, algoData->mFrameId);
-    GST_LOG("%s() - get one buffer, GstBuffer = %p, refcout = %d, queueSize = %d, algoData = %p, algoBase = %p\n",
-        __func__, algoData->mGstBuffer, GST_MINI_OBJECT_REFCOUNT (algoData->mGstBuffer),
-        trackLpAlgo->mInQueue.size(), algoData, algoData->algoBase);
-
-   // verify the input object data
-   trackLpAlgo->verify_detection_result(algoData->mObjectVec);
-
-   // If not receive for 3 frame, clear all tracked objects
-   if(trackLpAlgo->mFrameIndex - trackLpAlgo->mFrameIndexLast > 3) {
-            trackLpAlgo->mTrackObjVec.clear();
-   }
-   trackLpAlgo->mFrameIndexLast = trackLpAlgo->mFrameIndex;
-
-    // get object box 
-    auto vecDetectRt = algoData->mObjectVec;
-    BBoxArray boxes;
-    for(auto & objectData : vecDetectRt){
-            // convert it from orignal size base to tracking image base
-            cv::Rect2d cvbox = utils.convert_rect(objectData.rect, 
-                                 trackLpAlgo->mImageProcessorInVideoWidth,
-                                 trackLpAlgo->mImageProcessorInVideoHeight,
-                                 trackLpAlgo->mInputWidth, trackLpAlgo->mInputHeight);
-            boxes.push_back(convertOcvBBoxToBBox(cvbox));
-    }
-
-  // track
-  std::vector<ObjectData> trackResult;
-   bboxArrayWithId = trackLpAlgo->lpTracker->update(boxes, trackLpAlgo->mImageProcessorInVideoWidth, 
-        trackLpAlgo->mImageProcessorInVideoHeight);
-   // trackResult is the track result, but not used for LP detection
-   const std::map<long, long> & boxIDToObjectID = trackLpAlgo->lpTracker->getBoxToObjectMapping();
-   parseTrackResult(bboxArrayWithId, trackResult);
-   for(guint i=0; i<trackResult.size();i++) {
-           trackResult[i].rect = utils.convert_rect(trackResult[i].rect,
-                                 trackLpAlgo->mInputWidth, trackLpAlgo->mInputHeight,
-                                 trackLpAlgo->mImageProcessorInVideoWidth,
-                                 trackLpAlgo->mImageProcessorInVideoHeight);
-    }
-
-   // loop each object and detect LP
-   int lpIdx=0;
-   for(guint i=0; i<algoData->mObjectVec.size();i++) {
-         ObjectData &objectData = algoData->mObjectVec[i];
-         objectData.flags = 0;
-         if(strncmp(objectData.label.c_str(), "car", 3) &&
-             strncmp(objectData.label.c_str(), "bus", 3) ) {
-                continue;
-         }
-
-         cv::Rect vehicleBox = objectData.rect;
-         cv::Rect licensePlateBox = objectData.rectROI;
-
-         auto iter = boxIDToObjectID.find(i);
-         if(iter == boxIDToObjectID.end()){
-                continue;
-          }
-          //int objectId = (int)(iter->second);
-
-          // choose a better object
+       // verify the input object data
+       trackLpAlgo->verify_detection_result(algoData->mObjectVec);
+    
+       // If not receive for 3 frame, clear all tracked objects
+       if(trackLpAlgo->mFrameIndex - trackLpAlgo->mFrameIndexLast > 3) {
+                trackLpAlgo->mTrackObjVec.clear();
+       }
+       trackLpAlgo->mFrameIndexLast = trackLpAlgo->mFrameIndex;
+    
+        // get object box 
+        auto vecDetectRt = algoData->mObjectVec;
+        BBoxArray boxes;
+        for(auto & objectData : vecDetectRt){
+                // convert it from orignal size base to tracking image base
+                cv::Rect2d cvbox = utils.convert_rect(objectData.rect, 
+                                     trackLpAlgo->mImageProcessorInVideoWidth,
+                                     trackLpAlgo->mImageProcessorInVideoHeight,
+                                     trackLpAlgo->mInputWidth, trackLpAlgo->mInputHeight);
+                boxes.push_back(convertOcvBBoxToBBox(cvbox));
+        }
+    
+      // track
+      std::vector<ObjectData> trackResult;
+       bboxArrayWithId = trackLpAlgo->lpTracker->update(boxes, trackLpAlgo->mImageProcessorInVideoWidth, 
+            trackLpAlgo->mImageProcessorInVideoHeight);
+       // trackResult is the track result, but not used for LP detection
+       const std::map<long, long> & boxIDToObjectID = trackLpAlgo->lpTracker->getBoxToObjectMapping();
+       parseTrackResult(bboxArrayWithId, trackResult);
+       for(guint i=0; i<trackResult.size();i++) {
+               trackResult[i].rect = utils.convert_rect(trackResult[i].rect,
+                                     trackLpAlgo->mInputWidth, trackLpAlgo->mInputHeight,
+                                     trackLpAlgo->mImageProcessorInVideoWidth,
+                                     trackLpAlgo->mImageProcessorInVideoHeight);
+        }
+    
+       // loop each object and detect LP
+       int lpIdx=0;
+       for(guint i=0; i<algoData->mObjectVec.size();i++) {
+             ObjectData &objectData = algoData->mObjectVec[i];
+             objectData.flags = 0;
+             if(strncmp(objectData.label.c_str(), "car", 3) &&
+                 strncmp(objectData.label.c_str(), "bus", 3) ) {
+                    continue;
+             }
+    
+             cv::Rect vehicleBox = objectData.rect;
+             cv::Rect licensePlateBox = objectData.rectROI;
+    
+             auto iter = boxIDToObjectID.find(i);
+             if(iter == boxIDToObjectID.end()){
+                    continue;
+              }
+              //int objectId = (int)(iter->second);
+    
+              // choose a better object
           #if 0
-          float score = objectData.figure_score(trackLpAlgo->mImageProcessorInVideoWidth,
-                    trackLpAlgo->mImageProcessorInVideoHeight);
-          if(score < 1.0)
-                continue;
+              float score = objectData.figure_score(trackLpAlgo->mImageProcessorInVideoWidth,
+                        trackLpAlgo->mImageProcessorInVideoHeight);
+              if(score < 1.0)
+                    continue;
           #endif
-
-           // get input data and process it here
-           // NV12-->BGR
-            GstBuffer *ocl_buf = NULL;
-            VideoRect crop = {(uint32_t)vehicleBox.x,(uint32_t)vehicleBox.y, (uint32_t)vehicleBox.width, (uint32_t)vehicleBox.height};
-            trackLpAlgo->mImageProcessor.process_image(algoData->mGstBuffer,NULL, &ocl_buf, &crop);
-            if(ocl_buf==NULL) {
-                    g_print("Failed to do image process!\n");
-                    trackLpAlgo->mInferCnt=0;
-                    return;
-            }
-            OclMemory *ocl_mem = NULL;
-            ocl_mem = ocl_memory_acquire (ocl_buf);
-            if(ocl_mem==NULL){
-                    g_print("Failed get ocl_mem after image process!\n");
-                    trackLpAlgo->mInferCnt=0;
-                    return;
-            }
-
-           // detect LP based on mObjectVec
-           cv::Mat roiImage = ocl_mem->frame.getMat(0);
-           cv::Rect lpDetResult = trackLpAlgo->lpDetect->detectLicencePlates(roiImage);
-           gst_buffer_unref(ocl_buf);
-           if(lpDetResult.x < 0){
-                continue;
-           }
-
-            //test
-            /*
-            int test_idx = algoData->mFrameId+i;
-            trackLpAlgo->save_buffer(ocl_mem->frame.getMat(0).ptr(), trackLpAlgo->mInputWidth,
-                trackLpAlgo->mInputHeight,3,test_idx,0, "track_lp"); 
-            g_print("idx=%d, LP=(%d,%d)@%dx%d\n",test_idx, lpDetResult.x, lpDetResult.y, lpDetResult.width, lpDetResult.height);
-       */
-
+    
+               // get input data and process it here
+               // NV12-->BGR
+                GstBuffer *ocl_buf = NULL;
+                VideoRect crop = {(uint32_t)vehicleBox.x,(uint32_t)vehicleBox.y, (uint32_t)vehicleBox.width, (uint32_t)vehicleBox.height};
+                trackLpAlgo->mImageProcessor.process_image(algoData->mGstBuffer,NULL, &ocl_buf, &crop);
+                if(ocl_buf==NULL) {
+                        g_print("Failed to do image process!\n");
+                        trackLpAlgo->mInferCnt=0;
+                        return;
+                }
+                OclMemory *ocl_mem = NULL;
+                ocl_mem = ocl_memory_acquire (ocl_buf);
+                if(ocl_mem==NULL){
+                        g_print("Failed get ocl_mem after image process!\n");
+                        trackLpAlgo->mInferCnt=0;
+                        return;
+                }
+    
+               // detect LP based on mObjectVec
+               cv::Mat roiImage = ocl_mem->frame.getMat(0);
+               cv::Rect lpDetResult = trackLpAlgo->lpDetect->detectLicencePlates(roiImage);
+               gst_buffer_unref(ocl_buf);
+               if(lpDetResult.x < 0){
+                    continue;
+               }
+    
+                //test
+                /*
+                int test_idx = algoData->mFrameId+i;
+                trackLpAlgo->save_buffer(ocl_mem->frame.getMat(0).ptr(), trackLpAlgo->mInputWidth,
+                    trackLpAlgo->mInputHeight,3,test_idx,0, "track_lp"); 
+                g_print("idx=%d, LP=(%d,%d)@%dx%d\n",test_idx, lpDetResult.x, lpDetResult.y, lpDetResult.width, lpDetResult.height);
+           */
+    
             #if 0
-            int adjustX  =  (lpDetResult.x>2) ? lpDetResult.x -2 : lpDetResult.x;
-            lpDetResult.width = lpDetResult.width + (lpDetResult.x - adjustX);
-            lpDetResult.x = adjustX;
+                int adjustX  =  (lpDetResult.x>2) ? lpDetResult.x -2 : lpDetResult.x;
+                lpDetResult.width = lpDetResult.width + (lpDetResult.x - adjustX);
+                lpDetResult.x = adjustX;
             #endif
-
+    
             #if 0
-            // expand LP scope by the trick - LP w/h=4;
-             int adjustW =  lpDetResult.height * 4;// trick- LP w/h=4
-             int adjustX = lpDetResult.x + lpDetResult.width/2 - adjustW/2;
-             if(adjustX<0) {
-                  adjustW = adjustW + adjustX;
-                  adjustX=0;
-             }
-             if(adjustX+adjustW>trackLpAlgo->mInputWidth) {
-                   adjustW = trackLpAlgo->mInputWidth - adjustX - 1;
-             }
-             lpDetResult.x = adjustX;
-             lpDetResult.width = adjustW;
+                // expand LP scope by the trick - LP w/h=4;
+                 int adjustW =  lpDetResult.height * 4;// trick- LP w/h=4
+                 int adjustX = lpDetResult.x + lpDetResult.width/2 - adjustW/2;
+                 if(adjustX<0) {
+                      adjustW = adjustW + adjustX;
+                      adjustX=0;
+                 }
+                 if(adjustX+adjustW>trackLpAlgo->mInputWidth) {
+                       adjustW = trackLpAlgo->mInputWidth - adjustX - 1;
+                 }
+                 lpDetResult.x = adjustX;
+                 lpDetResult.width = adjustW;
              #endif
-
+    
              #if 1
-             // expand LP scope 10%
-              int adjustW =  lpDetResult.width * 1.16;
-              int adjustH =  lpDetResult.height * 1.1;
-              int adjustX = lpDetResult.x +( lpDetResult.width - adjustW)*3/5;
-              int adjustY = lpDetResult.y + lpDetResult.height - adjustH;
-              if(adjustX<0) {
-                   adjustW = adjustW + adjustX;
-                   adjustX=0;
-              }
-              if(adjustX+adjustW>trackLpAlgo->mInputWidth) {
-                    adjustW = trackLpAlgo->mInputWidth - adjustX - 1;
-              }
-              if(adjustY+adjustH>trackLpAlgo->mInputHeight) {
-                    adjustH = trackLpAlgo->mInputHeight - adjustY - 1;
-              }
-              lpDetResult.x = adjustX;
-              lpDetResult.width = adjustW;
-              lpDetResult.y = adjustY;
-              lpDetResult.height = adjustH;
+                 // expand LP scope 10%
+                  int adjustW =  lpDetResult.width * 1.16;
+                  int adjustH =  lpDetResult.height * 1.1;
+                  int adjustX = lpDetResult.x +( lpDetResult.width - adjustW)*3/5;
+                  int adjustY = lpDetResult.y + lpDetResult.height - adjustH;
+                  if(adjustX<0) {
+                       adjustW = adjustW + adjustX;
+                       adjustX=0;
+                  }
+                  if(adjustX+adjustW>trackLpAlgo->mInputWidth) {
+                        adjustW = trackLpAlgo->mInputWidth - adjustX - 1;
+                  }
+                  if(adjustY+adjustH>trackLpAlgo->mInputHeight) {
+                        adjustH = trackLpAlgo->mInputHeight - adjustY - 1;
+                  }
+                  lpDetResult.x = adjustX;
+                  lpDetResult.width = adjustW;
+                  lpDetResult.y = adjustY;
+                  lpDetResult.height = adjustH;
             #endif
- 
-            // figure out licensePlateBox
-            licensePlateBox = lpDetResult;
-            licensePlateBox.x = vehicleBox.x  + lpDetResult.x * vehicleBox.width / trackLpAlgo->mInputWidth;
-            licensePlateBox.y = vehicleBox.y + lpDetResult.y * vehicleBox.height / trackLpAlgo->mInputHeight;
-            licensePlateBox.width  = lpDetResult.width  * vehicleBox.width / trackLpAlgo->mInputWidth;
-            licensePlateBox.height = lpDetResult.height  * vehicleBox.height / trackLpAlgo->mInputHeight;
-
-            // 4 pixels aligned for LP
-            licensePlateBox.x &= ~0x7;
-            licensePlateBox.y &= ~0x3;
-            licensePlateBox.width = (licensePlateBox.width+7) & (~7);
-            licensePlateBox.height = (licensePlateBox.height+3)&(~3);
-
-            CHECK_ROI(licensePlateBox,  trackLpAlgo->mImageProcessorInVideoWidth, trackLpAlgo->mImageProcessorInVideoHeight);
-            objectData.rectROI = licensePlateBox;
-            lpIdx ++;
-            objectData.flags = 1;
-
-             trackLpAlgo->try_add_new_one_object(objectData, algoData->mFrameId);
-    }
-   //trackLpAlgo->print_objects(algoData->mObjectVec);
-   trackLpAlgo->remove_no_lp(algoData->mObjectVec);
-
-   // detectLicencePlates() has filtered candidate frame to choose the best one
-   // so we need do it again
+     
+                // figure out licensePlateBox
+                licensePlateBox = lpDetResult;
+                licensePlateBox.x = vehicleBox.x  + lpDetResult.x * vehicleBox.width / trackLpAlgo->mInputWidth;
+                licensePlateBox.y = vehicleBox.y + lpDetResult.y * vehicleBox.height / trackLpAlgo->mInputHeight;
+                licensePlateBox.width  = lpDetResult.width  * vehicleBox.width / trackLpAlgo->mInputWidth;
+                licensePlateBox.height = lpDetResult.height  * vehicleBox.height / trackLpAlgo->mInputHeight;
+    
+                // 4 pixels aligned for LP
+                licensePlateBox.x &= ~0x7;
+                licensePlateBox.y &= ~0x3;
+                licensePlateBox.width = (licensePlateBox.width+7) & (~7);
+                licensePlateBox.height = (licensePlateBox.height+3)&(~3);
+    
+                CHECK_ROI(licensePlateBox,  trackLpAlgo->mImageProcessorInVideoWidth, trackLpAlgo->mImageProcessorInVideoHeight);
+                objectData.rectROI = licensePlateBox;
+                lpIdx ++;
+                objectData.flags = 1;
+    
+                 trackLpAlgo->try_add_new_one_object(objectData, algoData->mFrameId);
+        }
+       //trackLpAlgo->print_objects(algoData->mObjectVec);
+       trackLpAlgo->remove_no_lp(algoData->mObjectVec);
+    
+       // detectLicencePlates() has filtered candidate frame to choose the best one
+       // so we need do it again
 #if  1
-     // update mTrackObjVec
-    trackLpAlgo->verify_tracked_object();
-    trackLpAlgo->update_track_object(algoData->mObjectVec);
-    trackLpAlgo->mLastObjectTrackRes = trackResult;
+         // update mTrackObjVec
+        trackLpAlgo->verify_tracked_object();
+        trackLpAlgo->update_track_object(algoData->mObjectVec);
+        trackLpAlgo->mLastObjectTrackRes = trackResult;
  #endif
- 
-    stop = g_get_monotonic_time();
-    trackLpAlgo->mImageProcCost += (stop - start);
 
-    // push data if possible
-    trackLpAlgo->push_track_object(algoData);
-    trackLpAlgo->mInferCnt=0;
-    trackLpAlgo->mInferCntTotal++;
-    trackLpAlgo->mFrameDoneNum++;
 }
 
-
-TrackLpAlgo::TrackLpAlgo():CvdlAlgoBase(track_lp_algo_func, this, NULL)
+TrackLpAlgo::TrackLpAlgo():CvdlAlgoBase(post_tracklp_process, CVDL_TYPE_CV)
 {
     mInputWidth = TRACKING_LP_INPUT_W;
     mInputHeight = TRACKING_LP_INPUT_H;
-
-    mOclCaps = NULL;
-    mInCaps = NULL;
 
     mSvmModelStr = std::string(CVDL_MODEL_DIR_DEFAULT"/svm_model.xml");
 
@@ -302,8 +251,6 @@ TrackLpAlgo::~TrackLpAlgo()
 {
     delete lpTracker;
     delete lpDetect;
-    if(mInCaps)
-        gst_caps_unref(mInCaps);
     g_print("TrackLpAlgo: image process %d frames, image preprocess fps = %.2f\n",
         mFrameDoneNum, 1000000.0*mFrameDoneNum/mImageProcCost);
 }
@@ -557,34 +504,6 @@ void TrackLpAlgo::remove_no_lp(std::vector<ObjectData> &objectVec)
            vecObjectCp[i].score = 0.0;
           objectVec.push_back(vecObjectCp[i]);
       }
-}
-
-void TrackLpAlgo::push_track_object(CvdlAlgoData* &algoData)
-{
-    std::vector<ObjectData> &objectVec = algoData->mObjectVec;
-
-    // Not tracking data need to pass to next algo component
-    if(objectVec.size()==0) {
-        GST_LOG("track_lp_algo_func - unref GstBuffer = %p(%d)\n",
-            algoData->mGstBuffer, GST_MINI_OBJECT_REFCOUNT(algoData->mGstBuffer));
-        gst_buffer_unref(algoData->mGstBuffer);
-        delete algoData;
-        return;
-    }
-
-    GST_LOG("track_lp_algo_func - pass down GstBuffer = %p(%d)\n",
-         algoData->mGstBuffer, GST_MINI_OBJECT_REFCOUNT(algoData->mGstBuffer));
-
-    //debug
-    for(size_t i=0; i< objectVec.size(); i++) {
-        g_print("%d - track_lp_output-%ld-%ld: prob = %f, label = %s, rect=(%d,%d)-(%dx%d), ROI=(%d,%d)-(%dx%d)\n",
-            mFrameDoneNum, algoData->mFrameId, i, objectVec[i].prob, objectVec[i].label.c_str(),
-            objectVec[i].rect.x, objectVec[i].rect.y,
-            objectVec[i].rect.width, objectVec[i].rect.height,
-            objectVec[i].rectROI.x, objectVec[i].rectROI.y,
-            objectVec[i].rectROI.width, objectVec[i].rectROI.height);
-    }
-    mNext->mInQueue.put(*algoData);
 }
 
 //-------------------------------------------------------------------------

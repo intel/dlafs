@@ -44,7 +44,6 @@ enum {
     ALGO_MAX_NUM,
 };
 
-
 #define ALGO_DETECTION_NAME "detection"
 #define ALGO_TRACKING_NAME "track"
 #define ALGO_CLASSIFICATION_NAME "classification"
@@ -52,6 +51,7 @@ enum {
 #define ALGO_TRACK_LP_NAME "tracklp"
 #define ALGO_RECOGNIZE_LP_NAME "lprecognize"
 #define ALGO_SINK_NAME "sink"
+
 
 // Each algo in the algo chain can link to multiple downstream algo
 // Here we set 1 by default
@@ -118,8 +118,10 @@ void algo_pipeline_set_caps(AlgoPipelineHandle handle, int algo_id, GstCaps* cap
 void algo_pipeline_set_caps_all(AlgoPipelineHandle handle, GstCaps* caps);
 void algo_pipeline_start(AlgoPipelineHandle handle);
 void algo_pipeline_stop(AlgoPipelineHandle handle);
-void algo_pipeline_put_buffer(AlgoPipelineHandle handle, GstBuffer *buf);
+void algo_pipeline_put_buffer(AlgoPipelineHandle handle, GstBuffer *buf, guint w, guint h);
 void algo_pipeline_get_buffer(AlgoPipelineHandle handle, GstBuffer **buf);
+
+const char* algo_pipeline_get_name(guint  mAlgoType);
 
 void algo_pipeline_flush_buffer(AlgoPipelineHandle handle);
 int algo_pipeline_get_input_queue_size(AlgoPipelineHandle handle);

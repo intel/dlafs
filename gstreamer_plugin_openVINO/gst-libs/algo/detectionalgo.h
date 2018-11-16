@@ -23,8 +23,6 @@
 #define __DETECTION_ALGO_H__
 
 #include "algobase.h"
-#include "ieloader.h"
-#include "imageproc.h"
 #include <gst/gstbuffer.h>
 #include "mathutils.h"
 
@@ -38,11 +36,10 @@
 #define DETECTION_INPUT_W 448    // detect size
 #define DETECTION_INPUT_H 448    // detect size
 
-
 typedef struct {
-	int32_t nIdx;
-	int32_t nCls;
-	float **fProbs;
+    int32_t nIdx;
+    int32_t nCls;
+    float **fProbs;
 } RectSortable;
 
 typedef struct _DetectionResultData DetectionResultData;
@@ -63,6 +60,17 @@ public:
     virtual GstFlowReturn algo_dl_init(const char* modeFileName);
     virtual GstFlowReturn parse_inference_result(InferenceEngine::Blob::Ptr &resultBlobPtr,
                                                  int precision, CvdlAlgoData *outData, int objId);
+private:
+    const int cGrideSize = DETECTION_GRIDE_SIZE;/* 7 */
+    const int cClassNum  = DETECTION_CLASS_NUM;/* 9 */
+    const int cBoxNumEachBlock = DETECTION_BOX_NUM_FOR_EACH_BLOCK; /* 2 */
+    const float cProbThreshold = DETECTION_PROB_THRESHOLD; /* 0.5 */
+    const float cNMSThreshold = DETECTION_NMS_THRESHOLD; /* 0.4 */
+
+    guint64 mCurPts;
+    DetectionResultData mResultData;
+    const char** mLabelNames;
+
     void set_default_label_name();
     void set_label_names(const char** label_names);
 
@@ -72,26 +80,6 @@ public:
             float *ieResult, DetectionInternalData *internalData,
             int32_t w, int32_t h, int32_t onlyObjectness);
     void get_result(DetectionInternalData *internalData, CvdlAlgoData *outData);
-
-    IELoader mIeLoader;
-    gboolean mIeInited;
-    ImageProcessor mImageProcessor;
-    GstCaps *mInCaps;  /* Caps for orignal input video*/
-    GstCaps *mOclCaps; /* Caps for output surface of OCL, which has been CRCed, and as the input of detection algo */
-
-    int mImageProcessorInVideoWidth;
-    int mImageProcessorInVideoHeight;
-
-    const int cGrideSize = DETECTION_GRIDE_SIZE;/* 7 */
-    const int cClassNum  = DETECTION_CLASS_NUM;/* 9 */
-    const int cBoxNumEachBlock = DETECTION_BOX_NUM_FOR_EACH_BLOCK; /* 2 */
-    const float cProbThreshold = DETECTION_PROB_THRESHOLD; /* 0.5 */
-    const float cNMSThreshold = DETECTION_NMS_THRESHOLD; /* 0.4 */
-
-    guint64 mCurPts;
-    DetectionResultData mResultData;
-
-    const char** mLabelNames;
 };
 
 

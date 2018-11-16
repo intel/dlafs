@@ -85,154 +85,28 @@ DetectionInternalData::~DetectionInternalData()
     mRectSorted = NULL;
 }
 
-/*
- * This is the main function of cvdl task:
- *     1. NV12 --> BGR_Planar
- *     2. async inference
- *     3. parse inference result and put it into in_queue of next algo
- */
-static void detection_algo_func(gpointer userData)
+static void post_callback(CvdlAlgoData *algoData)
 {
-    DetectionAlgo *detectionAlgo = static_cast<DetectionAlgo*> (userData);
-    CvdlAlgoData *algoData = new CvdlAlgoData;
-    GstFlowReturn ret;
-    gint64 start, stop;
-
-    GST_LOG("\ndetection_algo_func - new an algoData = %p\n", algoData);
-    if(!detectionAlgo->mNext) {
-        GST_WARNING("The next algo is NULL, return");
-        return;
-    }
-
-    if(!detectionAlgo->mInQueue.get(*algoData)) {
-        GST_WARNING("InQueue is empty!");
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        return;
-    }
-    if(algoData->mGstBuffer==NULL) {
-        GST_WARNING("Invalid buffer!!!");
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        return;
-    }
-
-    // bind algoTask into algoData, so that can be used when sync callback
-    algoData->algoBase = static_cast<CvdlAlgoBase *>(detectionAlgo);
-    GST_LOG("%s() - detectionAlgo = %p, algoData->mFrameId = %ld\n",
-            __func__, detectionAlgo, algoData->mFrameId);
-    GST_LOG("%s() - get one buffer, GstBuffer = %p, refcout = %d, "\
-        "queueSize = %d, algoData = %p, algoBase = %p\n",
-        __func__, algoData->mGstBuffer, GST_MINI_OBJECT_REFCOUNT (algoData->mGstBuffer),
-        detectionAlgo->mInQueue.size(), algoData, algoData->algoBase);
-
-    // get input data and process it here, put the result into algoData
-    // NV12-->BGR_Plannar
-    GstBuffer *ocl_buf = NULL;
-    VideoRect crop = {0,0, (unsigned int)detectionAlgo->mImageProcessorInVideoWidth,
-                           (unsigned int)detectionAlgo->mImageProcessorInVideoHeight};
-    start = g_get_monotonic_time();
-    detectionAlgo->mImageProcessor.process_image(algoData->mGstBuffer,NULL, &ocl_buf, &crop);
-    stop = g_get_monotonic_time();
-    detectionAlgo->mImageProcCost += (stop - start);
-
-    if(ocl_buf==NULL) {
-        GST_WARNING("Failed to do image process!");
-        g_print("detection_algo_func - Failed to do image process!\n");
-        return;
-    }
-    // No crop, the whole frame was be resized to it
-    algoData->mGstBufferOcl = ocl_buf;
-
-    OclMemory *ocl_mem = NULL;
-    ocl_mem = ocl_memory_acquire (ocl_buf);
-    if(ocl_mem==NULL){
-        GST_WARNING("Failed get ocl_mem after image process!");
-        return;
-    }
-
-    //test
-    //detectionAlgo->save_buffer(ocl_mem->frame.getMat(0).ptr(), detectionAlgo->mInputWidth,
-    //                   detectionAlgo->mInputHeight, 3,algoData->mFrameId, 0, "detection");
-
-    // Detect callback function
-    auto onDetectResult = [](CvdlAlgoData* algoData)
-    {
-        //DetectionAlgo *detectionAlgo = static_cast<DetectionAlgo *>(algoData->algoBase);
-        CvdlAlgoBase *algo = algoData->algoBase;
-        GST_LOG("onDetectResult - detect algo = %p, OclBuffer = %p(%d)\n", algo, algoData->mGstBufferOcl,
-            GST_MINI_OBJECT_REFCOUNT(algoData->mGstBufferOcl));
-        gst_buffer_unref(algoData->mGstBufferOcl);
-
-        if(algoData->mResultValid){
-            GST_LOG("detection_algo_func - pass down GstBuffer = %p(%d)\n",
-                algoData->mGstBuffer, GST_MINI_OBJECT_REFCOUNT(algoData->mGstBuffer));
-            algo->mNext->mInQueue.put(*algoData);
-        }else{
-            //g_print("delete algoData = %p\n", algoData);
-            GST_LOG("detection_algo_func - unref GstBuffer = %p(%d)\n", 
-                algoData->mGstBuffer, GST_MINI_OBJECT_REFCOUNT(algoData->mGstBuffer));
-            gst_buffer_unref(algoData->mGstBuffer);
-            delete algoData;
-        }
-        algo->mInferCnt--;
-    };
-
-    start = g_get_monotonic_time();
-    // ASync detect, directly return after pushing request.
-    ret = detectionAlgo->mIeLoader.do_inference_async(
-            algoData, algoData->mFrameId, -1, ocl_mem->frame, onDetectResult);
-    stop = g_get_monotonic_time();
-    detectionAlgo->mInferCost += (stop - start);
-
-    detectionAlgo->mInferCnt++;
-    detectionAlgo->mInferCntTotal++;
-    detectionAlgo->mFrameDoneNum++;
-
-    if (ret!=GST_FLOW_OK) {
-        GST_ERROR("IE: detect FAIL");
-    }
+        // post process algoData
 }
 
-
-DetectionAlgo::DetectionAlgo() : CvdlAlgoBase(detection_algo_func, this, NULL)
+DetectionAlgo::DetectionAlgo() : CvdlAlgoBase(post_callback, CVDL_TYPE_DL)
 {
     set_default_label_name();
 
-    //mImageProcessor.set_ocl_kernel_name(CRC_FORMAT_BGR_PLANNAR);
     mInputWidth = DETECTION_INPUT_W;
     mInputHeight = DETECTION_INPUT_H;
-    mIeInited = false;
-
-    mInCaps = NULL;
 }
 
 DetectionAlgo::~DetectionAlgo()
 {
-    //wait_work_done();
-    if(mInCaps)
-        gst_caps_unref(mInCaps);
     g_print("DetectionAlgo: image process %d frames, image preprocess fps = %.2f, infer fps = %.2f\n",
         mFrameDoneNum, 1000000.0*mFrameDoneNum/mImageProcCost, 
         1000000.0*mFrameDoneNum/mInferCost);
 }
 
-void DetectionAlgo::set_default_label_name()
-{
-    if (cClassNum == 9) {
-        set_label_names(barrier_names);
-    } else {
-        set_label_names(voc_names);
-    }
-}
-
-void DetectionAlgo::set_label_names(const char** label_names)
-{
-    mLabelNames = label_names;
-}
-
-
 void DetectionAlgo::set_data_caps(GstCaps *incaps)
 {
-    // load IE and cnn model
     std::string filenameXML;
     const gchar *env = g_getenv("CVDL_DETECTION_MODEL_FULL_PATH");
     if(env){
@@ -241,62 +115,67 @@ void DetectionAlgo::set_data_caps(GstCaps *incaps)
         filenameXML = std::string(CVDL_MODEL_DIR_DEFAULT"/vehicle_detect/yolov1-tiny.xml");
     }
     algo_dl_init(filenameXML.c_str());
-
-    //get data size of ie input
-    GstFlowReturn ret = GST_FLOW_OK;
-    int w, h, c;
-    ret = mIeLoader.get_input_size(&w, &h, &c);
-
-    if(mInCaps)
-        gst_caps_unref(mInCaps);
-    mInCaps = gst_caps_copy(incaps);
-
-    if(ret==GST_FLOW_OK) {
-        g_print("DetectionAlgo: parse out the input size whc= %dx%dx%d\n", w, h, c);
-        mInputWidth = w;
-        mInputHeight = h;
-    }
-
-    //int oclSize = mInputWidth * mInputHeight * 3;
-    mOclCaps = gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING, "BGR", NULL);
-    gst_caps_set_simple (mOclCaps, "width", G_TYPE_INT, mInputWidth, "height",
-                         G_TYPE_INT, mInputHeight, NULL);
-
-    mImageProcessor.ocl_init(incaps, mOclCaps, IMG_PROC_TYPE_OCL_CRC, CRC_FORMAT_BGR_PLANNAR);
-    mImageProcessor.get_input_video_size(&mImageProcessorInVideoWidth,
-                                         &mImageProcessorInVideoHeight);
-    gst_caps_unref (mOclCaps);
-
+    init_dl_caps(incaps);
 }
 
 GstFlowReturn DetectionAlgo::algo_dl_init(const char* modeFileName)
 {
     GstFlowReturn ret = GST_FLOW_OK;
-    if(mIeInited)
-        return ret;
-    mIeInited = true;
 
-    ret = mIeLoader.set_device(InferenceEngine::TargetDevice::eMYRIAD);
-    if(ret != GST_FLOW_OK){
-        GST_ERROR("IE failed to set device be eHDDL!");
-        return GST_FLOW_ERROR;
-    }
      mIeLoader.set_precision(InferenceEngine::Precision::U8, InferenceEngine::Precision::FP32);
-
-    // Load different Model based on different device.
-    std::string strModelXml(modeFileName);
-    std::string tmpFn = strModelXml.substr(0, strModelXml.rfind("."));
-    std::string strModelBin = tmpFn + ".bin";
-    GST_DEBUG("DetectModel bin = %s", strModelBin.c_str());
-    GST_DEBUG("DetectModel xml = %s", strModelXml.c_str());
-    ret = mIeLoader.read_model(strModelXml, strModelBin, IE_MODEL_DETECTION);
-    
-    if(ret != GST_FLOW_OK){
-        GST_ERROR("IELoder failed to read model!");
-        return GST_FLOW_ERROR;
-    }
+     ret = init_ieloader(modeFileName, IE_MODEL_DETECTION);
     return ret;
 }
+
+GstFlowReturn DetectionAlgo::parse_inference_result(InferenceEngine::Blob::Ptr &resultBlobPtr,
+                                                            int precision, CvdlAlgoData *outData, int objId)
+{
+    GST_LOG("DetectionAlgo::parse_inference_result begin: outData = %p\n", outData);
+
+    auto resultBlobFp32 = std::dynamic_pointer_cast<InferenceEngine::TBlob<float> >(resultBlobPtr);
+
+    float *input = static_cast<float*>(resultBlobFp32->data());
+    if (precision == sizeof(short)) {
+        GST_ERROR("Don't support FP16!");
+        return GST_FLOW_ERROR;
+    }
+
+    DetectionInternalData *internalData = new DetectionInternalData;
+    if(!internalData) {
+        GST_ERROR("DetectionInternalData is NULL!");
+        return GST_FLOW_ERROR;
+    }
+
+    get_detection_boxes(input, internalData, 1, 1, 0);
+
+    //Different label, do not merge.
+    nms_sort(internalData);
+
+    get_result(internalData, outData);
+
+    delete internalData;
+
+    return GST_FLOW_OK;
+}
+
+/**************************************************************************
+  *
+  *    private method
+  *
+  **************************************************************************/
+    void DetectionAlgo::set_default_label_name()
+    {
+        if (cClassNum == 9) {
+            set_label_names(barrier_names);
+        } else {
+            set_label_names(voc_names);
+        }
+    }
+    
+    void DetectionAlgo::set_label_names(const char** label_names)
+    {
+        mLabelNames = label_names;
+    }
 
 
 /*
@@ -462,49 +341,14 @@ void DetectionAlgo::get_result(DetectionInternalData *internalData, CvdlAlgoData
                 continue;
             }
             object.rect = cv::Rect(left, top, right - left + 1, bot - top + 1);
+            // The classification model will use the car face to do inference, that means we should
+            //  crop the front part of car's object to be ROI, which is done in TrackAlgo::get_roi_rect
+           object.rectROI =cv::Rect( object.rect.x ,   object.rect.y + object.rect.height/2,
+                                                         object.rect.width,   object.rect.height/2);
             objectNum++;
             outData->mObjectVec.push_back(object);
             GST_LOG("%ld-%d: prob = %f, label = %s, rect=(%d,%d)-(%dx%d)\n",outData->mFrameId, idx,
                 object.prob, object.label.c_str(), left, top, right - left + 1, bot - top + 1);
         }
     }
-
-    if(objectNum>=1){
-        // put objectVec into output_queue
-        outData->mResultValid = true;
-    } else {
-        outData->mResultValid = false;
-    }
 }
-
-GstFlowReturn DetectionAlgo::parse_inference_result(InferenceEngine::Blob::Ptr &resultBlobPtr,
-                                                            int precision, CvdlAlgoData *outData, int objId)
-{
-    GST_LOG("DetectionAlgo::parse_inference_result begin: outData = %p\n", outData);
-
-    auto resultBlobFp32 = std::dynamic_pointer_cast<InferenceEngine::TBlob<float> >(resultBlobPtr);
-
-    float *input = static_cast<float*>(resultBlobFp32->data());
-    if (precision == sizeof(short)) {
-        GST_ERROR("Don't support FP16!");
-        return GST_FLOW_ERROR;
-    }
-
-    DetectionInternalData *internalData = new DetectionInternalData;
-    if(!internalData) {
-        GST_ERROR("DetectionInternalData is NULL!");
-        return GST_FLOW_ERROR;
-    }
-
-    get_detection_boxes(input, internalData, 1, 1, 0);
-
-    //Different label, do not merge.
-    nms_sort(internalData);
-
-    get_result(internalData, outData);
-
-    delete internalData;
-
-    return GST_FLOW_OK;
-}
-    

@@ -55,6 +55,8 @@ struct _CvdlFilterPrivate
     gboolean negotiated;
     gboolean same_caps_flag;
     GstCaps *inCaps;
+    guint width;
+    guint height;
 };
 
 const char cvdl_filter_caps_str[] = \
@@ -78,7 +80,7 @@ static GstStaticPadTemplate cvdl_src_factory =
 
 
 static GstFlowReturn
-cvdl_handle_buffer(CvdlFilter *cvdlfilter, GstBuffer* buffer)
+cvdl_handle_buffer(CvdlFilter *cvdlfilter, GstBuffer* buffer, guint w, guint h)
 {
     GstFlowReturn ret = GST_FLOW_OK;
 
@@ -94,7 +96,7 @@ cvdl_handle_buffer(CvdlFilter *cvdlfilter, GstBuffer* buffer)
     }
 #endif
     // put buffer into a queue
-    algo_pipeline_put_buffer(cvdlfilter->algoHandle, buffer);
+    algo_pipeline_put_buffer(cvdlfilter->algoHandle, buffer, w, h);
 
     cvdlfilter->frame_num_in++;
     void *data;
@@ -142,7 +144,7 @@ cvdl_filter_transform_chain (GstPad * pad, GstObject * parent, GstBuffer * buffe
     // step 2: check output queue if there is a output
     //         if there is output, attache it to outbuf
     //         if not, unref outbuf, and set it to be NULL
-    cvdl_handle_buffer(cvdlfilter, buffer);
+    cvdl_handle_buffer(cvdlfilter, buffer, priv->width, priv->height);
 
     // It will be done in a task with  push_buffer_func()
     //if(gst_task_get_state(cvdlfilter->mPushTask) != GST_TASK_STARTED)
@@ -469,6 +471,7 @@ cvdl_filter_set_caps (GstBaseTransform* trans, GstCaps* incaps, GstCaps* outcaps
 {
     CvdlFilter *cvdlfilter = CVDL_FILTER (trans);
     CvdlFilterPrivate *priv = cvdlfilter->priv;
+    GstVideoInfo info;
 
     if (!gst_video_info_from_caps (&cvdlfilter->sink_info, incaps) ||
         !gst_video_info_from_caps (&cvdlfilter->src_info, outcaps)) {
@@ -489,6 +492,10 @@ cvdl_filter_set_caps (GstBaseTransform* trans, GstCaps* incaps, GstCaps* outcaps
    // wait cvdlfilter->algoHandle is ready
     while(cvdlfilter->algoHandle==NULL)
          g_usleep(1000);
+
+    gst_video_info_from_caps (&info, incaps);
+    priv->width = info.width;
+    priv->height = info.height;
 
     priv->inCaps = gst_caps_ref(incaps);
     algo_pipeline_set_caps_all(cvdlfilter->algoHandle, incaps);

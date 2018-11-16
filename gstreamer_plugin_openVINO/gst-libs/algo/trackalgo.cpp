@@ -24,6 +24,7 @@
 #include "trackalgo.h"
 #include <interface/videodefs.h>
 
+using namespace HDDLStreamFilter;
 using namespace cv;
 
 #define CHECK_ROI(rt, W, H) \
@@ -43,76 +44,17 @@ using namespace cv;
 #define TRACK_MAX_NUM 12
 #define TRACK_FRAME_NUM 3
 
-#define FLAGS_TRACKED_DATA_IS_SET   0x1
-#define FLAGS_TRACKED_DATA_IS_PASS  0x2
 
-using namespace HDDLStreamFilter;
+
+#define FLAGS_TRACKED_DATA_IS_SET   0x1000
+#define FLAGS_TRACKED_DATA_IS_PASS  0x2000
+
 
 // main function for track algorithm
-//   If there are valide detection objects, track each one, if not, return
-//   1. CSC from NV12 to BGR, resize for 1920x1080 to 512x512
-//   2. track each one object
-//   3. put the result into next InQueue
-static void track_algo_func(gpointer userData)
+//   1. track each one object
+static void post_track_process(CvdlAlgoData *algoData)
 {
-    TrackAlgo *trackAlgo = static_cast<TrackAlgo*> (userData);
-    CvdlAlgoData *algoData = new CvdlAlgoData;
-    gint64 start, stop;
-
-    GST_LOG("\ntrack_algo_func - new an algoData = %p\n", algoData);
-
-    if(!trackAlgo->mNext) {
-        GST_WARNING("TrackAlgo: the next algo is NULL, return!");
-        return;
-    }
-
-    if(!trackAlgo->mInQueue.get(*algoData)) {
-        GST_WARNING("TrackAlgo:InQueue is empty!");
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        return;
-    }
-    if(algoData->mGstBuffer==NULL) {
-        GST_WARNING("Invalid buffer!!!");
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        return;
-    }
-    start = g_get_monotonic_time();
-
-    // bind algoTask into algoData, so that can be used when sync callback
-    algoData->algoBase = static_cast<CvdlAlgoBase *>(trackAlgo);
-    trackAlgo->mInferCnt=1;
-
-    GST_LOG("%s() - trackAlgo = %p, algoData->mFrameId = %ld\n",
-            __func__, trackAlgo, algoData->mFrameId);
-    GST_LOG("%s() - get one buffer, GstBuffer = %p, refcout = %d, queueSize = %d, algoData = %p, algoBase = %p\n",
-        __func__, algoData->mGstBuffer, GST_MINI_OBJECT_REFCOUNT (algoData->mGstBuffer),
-        trackAlgo->mInQueue.size(), algoData, algoData->algoBase);
-
-
-    // get input data and process it here, put the result into algoData
-    // NV12-->BGR
-    GstBuffer *ocl_buf = NULL;
-    VideoRect crop = {0,0, (unsigned int)trackAlgo->mImageProcessorInVideoWidth,
-                           (unsigned int)trackAlgo->mImageProcessorInVideoHeight};
-    trackAlgo->mImageProcessor.process_image(algoData->mGstBuffer,NULL, &ocl_buf, &crop);
-    if(ocl_buf==NULL) {
-        GST_WARNING("Failed to do image process!");
-        trackAlgo->mInferCnt=0;
-        return;
-    }
-    algoData->mGstBufferOcl = ocl_buf;
-
-    OclMemory *ocl_mem = NULL;
-    ocl_mem = ocl_memory_acquire (ocl_buf);
-    if(ocl_mem==NULL){
-        GST_WARNING("Failed get ocl_mem after image process!");
-        trackAlgo->mInferCnt=0;
-        return;
-    }
-
-    //test
-    //trackAlgo->save_buffer(ocl_mem->frame.getMat(0).ptr(), trackAlgo->mInputWidth,
-    //                   trackAlgo->mInputHeight,1,algoData->mFrameId, 1, "track");
+    TrackAlgo *trackAlgo = static_cast<TrackAlgo*> (algoData->algoBase);
 
     trackAlgo->verify_detection_result(algoData->mObjectVec);
 
@@ -125,63 +67,19 @@ static void track_algo_func(gpointer userData)
     trackAlgo->track_objects_fast(algoData);
     #endif
     trackAlgo->update_track_object(algoData->mObjectVec);
-
-    stop = g_get_monotonic_time();
-    trackAlgo->mImageProcCost += (stop - start);
-
-    // push data if possible
-    trackAlgo->push_track_object(algoData);
-    trackAlgo->mInferCnt=0;
-    trackAlgo->mInferCntTotal++;
-    trackAlgo->mFrameDoneNum++;
 }
 
-
-TrackAlgo::TrackAlgo():CvdlAlgoBase(track_algo_func, this, NULL)
+TrackAlgo::TrackAlgo():CvdlAlgoBase(post_track_process, CVDL_TYPE_CV)
 {
     mInputWidth = TRACKING_INPUT_W;
     mInputHeight = TRACKING_INPUT_H;
-
     mPreFrame = NULL;
-    mOclCaps = NULL;
-    mInCaps = NULL;
 }
 
 TrackAlgo::~TrackAlgo()
 {
-    if(mInCaps)
-        gst_caps_unref(mInCaps);
     g_print("TrackAlgo: image process %d frames, image preprocess fps = %.2f\n",
         mFrameDoneNum, 1000000.0*mFrameDoneNum/mImageProcCost);
-}
-
-cv::UMat& TrackAlgo::get_umat(GstBuffer *buffer)
-{
-    OclMemory *ocl_mem = NULL;
-    static cv::UMat empty_umat = cv::UMat();
-    // On Intel GPU, UMat::getMat will map device memory into host space
-    // for CPU drawing function to work, before display or further access
-    // this UMat using OpenCL, we need ensure its unmapped by make sure
-    // the Mat is destructed.
-    ocl_mem = ocl_memory_acquire (buffer);
-    if(ocl_mem==NULL){
-        GST_WARNING("Failed get ocl_mem after image process!");
-        return empty_umat;
-    }
-    return ocl_mem->frame;
-}
-
-cv::Mat TrackAlgo::get_mat(GstBuffer *buffer)
-{
-    OclMemory *ocl_mem = NULL;
-    static cv::Mat empty_mat = cv::Mat();
-    ocl_mem = ocl_memory_acquire (buffer);
-    if(ocl_mem==NULL){
-        GST_WARNING("Failed get ocl_mem after image process!");
-        return empty_mat;
-    }
-    cv::Mat mat = ocl_mem->frame.getMat(0);
-    return mat;
 }
 
 // set data caps
@@ -205,6 +103,40 @@ void TrackAlgo::set_data_caps(GstCaps *incaps)
                                          &mImageProcessorInVideoHeight);
     gst_caps_unref (mOclCaps);
 }
+
+/**************************************************************************
+  *
+  *    private method
+  *
+  **************************************************************************/
+    cv::UMat& TrackAlgo::get_umat(GstBuffer *buffer)
+    {
+        OclMemory *ocl_mem = NULL;
+        static cv::UMat empty_umat = cv::UMat();
+        // On Intel GPU, UMat::getMat will map device memory into host space
+        // for CPU drawing function to work, before display or further access
+        // this UMat using OpenCL, we need ensure its unmapped by make sure
+        // the Mat is destructed.
+        ocl_mem = ocl_memory_acquire (buffer);
+        if(ocl_mem==NULL){
+            GST_WARNING("Failed get ocl_mem after image process!");
+            return empty_umat;
+        }
+        return ocl_mem->frame;
+    }
+    
+    cv::Mat TrackAlgo::get_mat(GstBuffer *buffer)
+    {
+        OclMemory *ocl_mem = NULL;
+        static cv::Mat empty_mat = cv::Mat();
+        ocl_mem = ocl_memory_acquire (buffer);
+        if(ocl_mem==NULL){
+            GST_WARNING("Failed get ocl_mem after image process!");
+            return empty_mat;
+        }
+        cv::Mat mat = ocl_mem->frame.getMat(0);
+        return mat;
+    }
 
 /**
  * @Brief HDDL detect results could have some errors.
@@ -684,34 +616,5 @@ void TrackAlgo::update_track_object(std::vector<ObjectData> &objectVec)
             ++obj;
         }
     }
-}
-
-void TrackAlgo::push_track_object(CvdlAlgoData* &algoData)
-{
-    std::vector<ObjectData> &objectVec = algoData->mObjectVec;
-
-    // Must release intermedia buffer
-    gst_buffer_unref(algoData->mGstBufferOcl);
-
-    // Not tracking data need to pass to next algo component
-    if(objectVec.size()==0) {
-        GST_LOG("track_algo_func - unref GstBuffer = %p(%d)\n",
-            algoData->mGstBuffer, GST_MINI_OBJECT_REFCOUNT(algoData->mGstBuffer));
-        gst_buffer_unref(algoData->mGstBuffer);
-        delete algoData;
-        return;
-    }
-
-    GST_LOG("track_algo_func - pass down GstBuffer = %p(%d)\n",
-         algoData->mGstBuffer, GST_MINI_OBJECT_REFCOUNT(algoData->mGstBuffer));
-
-    //debug
-    for(size_t i=0; i< objectVec.size(); i++) {
-        GST_LOG("%d - track_output-%ld-%ld: prob = %f, label = %s, rect=(%d,%d)-(%dx%d), score = %f\n",
-            mFrameDoneNum, algoData->mFrameId, i, objectVec[i].prob, objectVec[i].label.c_str(),
-            objectVec[i].rect.x, objectVec[i].rect.y,
-            objectVec[i].rect.width, objectVec[i].rect.height, objectVec[i].score);
-    }
-    mNext->mInQueue.put(*algoData);
 }
 

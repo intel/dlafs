@@ -264,7 +264,7 @@ GstBuffer* blender_process_cvdl_buffer(BlendHandle handle, GstBuffer* buffer)
     GST_BUFFER_TIMESTAMP(out_buf) = GST_BUFFER_TIMESTAMP (buffer);
     GST_BUFFER_DURATION (out_buf) = GST_BUFFER_DURATION (buffer);
  
-    // TODO: Where to release Nv12 buffer and dst buffer?
+    // TODO: Where to release NV12 buffer and dst buffer?
 
     return dst_buf;
 }

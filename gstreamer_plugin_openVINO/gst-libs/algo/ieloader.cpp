@@ -29,8 +29,9 @@
 #include <gst/gstbuffer.h>
 #include <gst/gstpad.h>
 #include <gst/gstinfo.h>
-
 #include "ieloader.h"
+#include "algobase.h"
+
 
 #ifdef WIN32
 #define HDDL_PLUGIN "HDDLPlugin.dll"
@@ -292,10 +293,11 @@ GstFlowReturn IELoader::get_out_size(int *outDim0, int *outDim1)
 }
 
 
-GstFlowReturn IELoader::do_inference_async(CvdlAlgoData *algoData, uint64_t frmId, int objId,
+GstFlowReturn IELoader::do_inference_async(void *data, uint64_t frmId, int objId,
                                                   cv::UMat &src, AsyncCallback cb)
 {
     InferenceEngine::ResponseDesc resp;
+    CvdlAlgoData *algoData = static_cast<CvdlAlgoData*> (data);
 
     int reqestId = get_enable_request();
     if(reqestId >= 0)
@@ -326,11 +328,11 @@ GstFlowReturn IELoader::do_inference_async(CvdlAlgoData *algoData, uint64_t frmI
             if (this->mOutputPrecision == InferenceEngine::Precision::FP32)
             {
                 CvdlAlgoBase *algo = algoData->algoBase;
-                GST_LOG("==========WaitAsync - do_inference_async begin: algo = %p(%p), algoData = %p\n",
+                GST_LOG("WaitAsync - do_inference_async begin: algo = %p(%p), algoData = %p\n",
                     algo, algoData->algoBase, algoData);
                 g_usleep(10);
                 algo->parse_inference_result(resultBlobPtr, sizeof(float), algoData, objId);
-                GST_LOG("==========WaitAsync - do_inference_async finish: algo = %p(%p), algoData = %p\n",
+                GST_LOG("WaitAsync - do_inference_async finish: algo = %p(%p), algoData = %p\n",
                     algo,algoData->algoBase, algoData);
             } else {
                 GST_ERROR("Don't support other output precision except FP32!");
