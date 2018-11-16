@@ -16,6 +16,7 @@ let pipe_count = 0;
 let client_pipe = "";
 let per_client_pipe = "";
 let ws_index = 0;
+let temp_json_path = "";
 
 let pipe_map = new Map();
 for(let i=0;i<100;i++){
@@ -41,15 +42,22 @@ path_wss.on('connection', function(ws) {
 
     console.log('controller connected !' .bgYellow);
     client_id++;
-    ws.send('client id is '+ client_id);   
-    client_pipe = "";
+    ws.send(client_id);   
+    //client_pipe = "";
 
     ws.on('message', function(path) {
 
         console.log("receive message:" + path);
         console.log(typeof path);
-        if (path[0]==='c') {
+        if (path[0]==='c') {  
+                   
            create_json = JSON.parse(path.substring(1));
+           if(client_map.get(create_json.client_id)===""){
+            client_pipe = "";
+             
+           }else{
+             client_pipe = client_map.get(create_json.client_id);
+           }
 
            for (let i = 0; i<create_json.command_create.pipe_num; i++){
             	gst_cmd = 'hddlspipes -i  ' + pipe_count + ' -l ' + create_json.command_create.loop_times;
@@ -73,8 +81,8 @@ path_wss.on('connection', function(ws) {
                 client_pipe = client_pipe + pipe_count.toString() + ",";
                 pipe_id = pipe_count;
 
-                //TODO: use a better name to distinguish different create_json files
-                let temp_json_path='./temp_create.json';
+                
+                temp_json_path='./client_'+ create_json.client_id+'_temp_create.json';
                 fs.writeFile(temp_json_path, JSON.stringify(create_json), {flag: 'w'}, function (err) { if(err) {
                     console.error("write file failed: ", err);
                     } else {
@@ -87,8 +95,9 @@ path_wss.on('connection', function(ws) {
 
           }
 
-          client_map.set(client_id,client_pipe);
+          client_map.set(create_json.client_id,client_pipe);
           //console.log(client_map);
+          ws.send(client_map.get(create_json.client_id));
 
         } else if(path[0]==='p'){
           property_json = JSON.parse(path.substring(1));
@@ -102,14 +111,18 @@ path_wss.on('connection', function(ws) {
           //console.log(ws_index);
           //ws_index.close();
           console.log(path.substring(1));
-          ws_index.send(path.substring(1));
-          console.log('we killed pipe '+ destory_json.command_destroy.pipe_id);
-          pipe_map.set(destory_json.command_destroy.pipe_id,-1);
+          ws_index.send(path.substring(1));         
           //console.log(pipe_map);
           per_client_pipe = client_map.get(destory_json.client_id);
           per_client_pipe = per_client_pipe.replace(destory_json.command_destroy.pipe_id.toString()+",","");
           client_map.set(destory_json.client_id,per_client_pipe);
-          //console.log(client_map);
+          console.log(client_map);
+          console.log('we killed pipe '+ destory_json.command_destroy.pipe_id);
+          pipe_map.set(destory_json.command_destroy.pipe_id,-1);
+          ws.send("we have killed pipe "+ destory_json.command_destroy.pipe_id);
+          console.log("we have send to client" .bgRed);
+          ws.send(client_map.get(destory_json.client_id));
+          
         }
 
         
@@ -131,6 +144,7 @@ let userArray = [];
 let receive_client = 0;
 let gst_cmd = 0;
 let pipe_client = 0;
+
 
 const data_server = https.createServer({
   cert: fs.readFileSync('./cert_server_8123/server-cert.pem'),
@@ -157,8 +171,8 @@ data_wss.on('connection', function connection(ws) {
 
   } else if (params["id"] == "3"){
      
-     let temp_json_file='./temp_create.json';
-     fs.readFile(temp_json_file, 'utf8', function(err, data) {
+     //temp_json_file='./temp_create.json';
+     fs.readFile(temp_json_path, 'utf8', function(err, data) {
         if (err) throw err;
         console.log("read create.config: ", data);
         ws.send(data);
@@ -187,7 +201,7 @@ data_wss.on('connection', function connection(ws) {
         console.log(pipe_id);
         pipe_map.set(pipe_id,ws);
 
-        let temp_json_path='./temp_create_' + client_pipe + '.json';
+        //temp_json_path='./client_'+ client_id+'_temp_create.json';
       }
       else {
         if (receive_client.readyState === WebSocket.OPEN){
