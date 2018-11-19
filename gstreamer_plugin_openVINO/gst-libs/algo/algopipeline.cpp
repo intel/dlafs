@@ -31,6 +31,7 @@
 #include "ssdalgo.h"
 #include "tracklpalgo.h"
 #include "lprecognize.h"
+#include "yolotinyv2.h"
 #include "sinkalgo.h"
 #include "algopipeline.h"
 
@@ -45,6 +46,7 @@ const static char *g_algo_name_str[ALGO_MAX_NUM] = {
                 ALGO_SSD_NAME,
                 ALGO_TRACK_LP_NAME,
                 ALGO_RECOGNIZE_LP_NAME,
+                ALGO_YOLO_TINY_V2_NAME,
                 ALGO_SINK_NAME
 };
 
@@ -75,6 +77,9 @@ static CvdlAlgoBase* algo_create(int type)
             break;
          case ALGO_REGCONIZE_LP:
             algo = new LpRecognizeAlgo;
+            break;
+         case ALGO_YOLO_TINY_V2:
+            algo = new YoloTinyv2Algo;
             break;
          case ALGO_SINK:
             algo = new SinkAlgo;
@@ -159,7 +164,7 @@ AlgoPipelineConfig *algo_pipeline_config_create(gchar *desc, int *num)
     AlgoPipelineConfig *config = NULL;
     gchar *p = desc, *pDot, *pName, *pParentName, *descStrip;
     gchar **items = NULL;// **names;
-    int count = 0, i, j, index, len, out_index = 1;// nameNum = 0, nameIndex = 0;
+    int count = 0, i, j,n, index, len, out_index = 1;// nameNum = 0, nameIndex = 0;
     //gboolean newSubBranch = FALSE;
     if(!desc)
         return NULL;
@@ -242,6 +247,7 @@ AlgoPipelineConfig *algo_pipeline_config_create(gchar *desc, int *num)
         }
 
         // get algo type
+ #if 0
         if(!strncmp(p, ALGO_DETECTION_NAME, sizeof(ALGO_DETECTION_NAME))) {
             config[i].curType = ALGO_DETECTION;
         } else if(!strncmp(p, ALGO_TRACKING_NAME, sizeof(ALGO_TRACKING_NAME))) {
@@ -254,7 +260,19 @@ AlgoPipelineConfig *algo_pipeline_config_create(gchar *desc, int *num)
             config[i].curType = ALGO_TRACK_LP;
         }else if(!strncmp(p, ALGO_RECOGNIZE_LP_NAME, sizeof(ALGO_CLASSIFICATION_NAME))) {
             config[i].curType = ALGO_REGCONIZE_LP;
+        }else if(!strncmp(p, ALGO_YOLO_TINY_V2_NAME, sizeof(ALGO_YOLO_TINY_V2_NAME))) {
+            config[i].curType = ALGO_YOLO_TINY_V2;
         }
+#else
+        for(n=0;n<ALGO_MAX_NUM-1;n++) {
+            if(strlen(p) != strlen(g_algo_name_str[n]))
+                continue;
+            if(!strncmp(p, g_algo_name_str[n], strlen(g_algo_name_str[n]))) {
+                config[i].curType = n;
+                break;
+            }
+         }
+#endif
     }
     *num = count;
 

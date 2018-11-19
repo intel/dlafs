@@ -38,8 +38,6 @@ static void post_callback(CvdlAlgoData *algoData)
 SampleAlgo::SampleAlgo() : CvdlAlgoBase(post_callback, CVDL_TYPE_DL)
 {
     set_default_label_name();
-
-    mInCaps = NULL;
 }
 
 SampleAlgo::~SampleAlgo()
@@ -51,12 +49,7 @@ SampleAlgo::~SampleAlgo()
 
 void SampleAlgo::set_default_label_name()
 {
-
-}
-
-void SampleAlgo::set_label_names(const char** label_names)
-{
-    mLabelNames = label_names;
+     //set default label name
 }
 
 void SampleAlgo::set_data_caps(GstCaps *incaps)
@@ -84,8 +77,6 @@ GstFlowReturn SampleAlgo::algo_dl_init(const char* modeFileName)
 
     return ret;
 }
-
-
 
 GstFlowReturn SampleAlgo::parse_inference_result(InferenceEngine::Blob::Ptr &resultBlobPtr,
                                                             int precision, CvdlAlgoData *outData, int objId)

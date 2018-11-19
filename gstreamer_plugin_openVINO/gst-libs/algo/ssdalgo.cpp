@@ -29,15 +29,13 @@
 using namespace HDDLStreamFilter;
 using namespace std;
 
-
-const char* VOC_LABEL_MAPPING[] = {
-    "background",    "aeroplane",    "bicycle",    "bird",    "boat",    "bottle",
-    "bus",    "car",    "cat",    "chair",    "cow",    "diningtable",    "dog",    "horse",
-    "motorbike",    "person",    "pottedplant",    "sheep",    "sofa",    "train",
-    "tvmonitor"
-};
-
-const std::vector<std::string> TRACKING_CLASSES = {
+static const char* VOC_LABEL_MAPPING[] = {
+        "background",    "aeroplane",    "bicycle",    "bird",    "boat",    "bottle",
+        "bus",    "car",    "cat",    "chair",    "cow",    "diningtable",    "dog",    "horse",
+        "motorbike",    "person",    "pottedplant",    "sheep",    "sofa",    "train",
+        "tvmonitor"
+    };
+static const std::vector<std::string> TRACKING_CLASSES = {
     "person",    "bus",    "car"
 };
 
@@ -170,7 +168,7 @@ bool SSDAlgo::get_result(float * box,CvdlAlgoData* &outData)
 
 void SSDAlgo::set_default_label_name()
 {
-        set_label_names(VOC_LABEL_MAPPING);
+    set_label_names(VOC_LABEL_MAPPING);
 }
 
 void SSDAlgo::set_label_names(const char** label_names)

@@ -38,7 +38,7 @@ public:
     virtual GstFlowReturn parse_inference_result(InferenceEngine::Blob::Ptr &resultBlobPtr,
                                                  int precision, CvdlAlgoData *outData, int objId);
     void set_default_label_name();
-    void set_label_names(const char** label_names);
+    void set_label_names(const char** label_names){mLabelNames = label_names;}
 
     guint64 mCurPts;
 

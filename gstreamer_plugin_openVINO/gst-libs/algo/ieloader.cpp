@@ -162,6 +162,9 @@ GstFlowReturn IELoader::read_model(std::string strModelXml,
         case IE_MODEL_LP_RECOGNIZE:
               //networkConfig[VPU_CONFIG_KEY(HW_STAGES_OPTIMIZATION)] = CONFIG_VALUE(YES);
               break;
+        case IE_MODEL_YOLOTINYV2:
+             networkConfig[VPU_CONFIG_KEY(NETWORK_CONFIG)] = "data=input,scale=128";
+             break;
         default:
             break;
    }
