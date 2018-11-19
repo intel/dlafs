@@ -23,8 +23,8 @@ const help = [ ('-help                          ' + 'commanders that you can use
            ,('-p <property.json> <pipe_id>      ' + 'set pipeslines property').magenta
            ,('-d <destroy.json>  <pipe_id>      ' + 'destroy pipeslines').magenta
            ,('-pipe                             ' + 'display pipes belonging to the very client').magenta
-           ,('-client                             ' + 'display client ID').magenta
-           , ('-q                               ' + 'exit client.').magenta
+           ,('-client                           ' + 'display client ID').magenta
+           ,('-q                                ' + 'exit client.').magenta
            ].join('\n');
 
 function completer(line) {
@@ -145,6 +145,8 @@ function exec(command) {
       break;
 
       case 'p':
+      pipe_constuctor_to_number = pipe_constuctor.split(",");
+      pipe_constuctor_to_number = pipe_constuctor_to_number.filter(function(e){return e});
       if (pipe_constuctor_to_number.includes(cmd[2]))
       {
         read_file_sync(cmd[1],property_json,2,0,cmd[2]);
