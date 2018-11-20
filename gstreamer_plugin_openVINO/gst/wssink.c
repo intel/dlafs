@@ -172,7 +172,7 @@ static void process_sink_buffers(gpointer userData)
 
     //setup wsclient
     if(!basesink->wsclient_handle) {
-        if(basesink->wsclient_handle_proxy)
+        if(basesink->wsclient_handle_proxy != INVALID_WSC_PROXY)
                basesink->wsclient_handle = basesink->wsclient_handle_proxy;
         else
                 basesink->wsclient_handle = wsclient_setup(basesink->wss_uri, basesink->wsc_id);

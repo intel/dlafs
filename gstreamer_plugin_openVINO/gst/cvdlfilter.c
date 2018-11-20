@@ -131,6 +131,7 @@ cvdl_filter_transform_chain (GstPad * pad, GstObject * parent, GstBuffer * buffe
 
     if(gst_task_get_state(cvdlfilter->mPushTask) != GST_TASK_STARTED) {
           gst_buffer_unref(buffer);
+          g_usleep(1000);//1ms
           //g_print("Skip this buffer due to algo was not ready now!!!\n");
           return GST_FLOW_OK;
     }
@@ -246,9 +247,8 @@ cvdl_filter_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
+          break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-            break;
-    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
            /* create the process task(thread) and start it */
           if(cvdlfilter->algo_pipeline_desc==NULL)
               config = algo_pipeline_config_create(default_algo_pipeline_desc, &count);
@@ -266,6 +266,8 @@ cvdl_filter_change_state (GstElement * element, GstStateChange transition)
         * It will be done in a task with  push_buffer_func() */
           if(gst_task_get_state(cvdlfilter->mPushTask) != GST_TASK_STARTED)
                gst_task_start(cvdlfilter->mPushTask);
+          break;
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
            break;
     default:
             break;
@@ -274,9 +276,11 @@ cvdl_filter_change_state (GstElement * element, GstStateChange transition)
   result = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
   switch (transition) {
       case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-         /*  When change state Playing-->Paused, stop algopipeline, 
+              /*  When change state Playing-->Paused, stop algopipeline,
           *  so that we can Set property for algopipeline.
           *  The algo pipeline will have cached buffer to be processed.
+          *  But it will cause gst-launch failed to change stat to be PLAYING
+          *   due not buffer was sent to next filter
           *
           *  If we put it to ready or null state, we will encounter below error:
           *  ERROR: GStreamer encountered a general stream error.
@@ -284,6 +288,8 @@ cvdl_filter_change_state (GstElement * element, GstStateChange transition)
           *   /GstPipeline:pipeline2/GstQTDemux:qtdemux2:
           *  streaming stopped, reason not-linked]
           */
+                   break;
+     case GST_STATE_CHANGE_PAUSED_TO_READY:
          /* stop the data push task */
          gst_task_set_state(cvdlfilter->mPushTask, GST_TASK_STOPPED);
          algo_pipeline_flush_buffer(cvdlfilter->algoHandle);
@@ -293,8 +299,6 @@ cvdl_filter_change_state (GstElement * element, GstStateChange transition)
             algo_pipeline_destroy(cvdlfilter->algoHandle);
          }
          cvdlfilter->algoHandle = 0;
-         break;
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
          break;
     case GST_STATE_CHANGE_READY_TO_NULL:
          cvdlfilter->stopTimePos = g_get_monotonic_time();
@@ -490,8 +494,8 @@ cvdl_filter_set_caps (GstBaseTransform* trans, GstCaps* incaps, GstCaps* outcaps
     gst_base_transform_set_passthrough (trans, priv->same_caps_flag);
 
    // wait cvdlfilter->algoHandle is ready
-    while(cvdlfilter->algoHandle==NULL)
-         g_usleep(1000);
+    //while(cvdlfilter->algoHandle==NULL)
+     //    g_usleep(1000);
 
     gst_video_info_from_caps (&info, incaps);
     priv->width = info.width;
