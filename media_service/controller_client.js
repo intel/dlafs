@@ -11,6 +11,17 @@ let count = 0;
 let pipe_constuctor = "";
 let pipe_constuctor_to_number = "";
 let client_id = 0;
+let add_buffer ="";
+
+let model_file_map = new Map();
+for(let i=0;i<100;i++){
+  model_file_map.set(i,"");
+}
+
+let model_buffer_map = new Map();
+for(let i=0;i<100;i++){
+  model_buffer_map.set(i,"");
+}
 
 const fs = require('fs')
   , filename = 'hostname.txt';
@@ -119,7 +130,6 @@ const ws = new WebSocket("wss://"+url+":8126/controller", {
 function exec(command) {
    var cmd = command.split(' ');
    if (cmd[0][0] === '-') {
-    //TODO: need error process but not crash
     switch (cmd[0].slice(1)) {
 
       case 'help':
@@ -182,6 +192,103 @@ function exec(command) {
   //prompt();
 }
 
+function read_model_file(){
+
+  rl.question('Please type model dictionary: '.green, (answer) => {
+    if(answer !==""){
+      fs.exists(answer, function(exists) {
+        if (exists) {
+           let i =0;
+           
+           fs.readdirSync(answer).forEach(file =>{
+             model_file_map.set(i,file);
+             console.log(file .blue);
+             i++;
+             
+          })
+          if(i===0){
+            console.log("No files included in this dictionary, please check again" .red);
+            read_model_file();
+
+          }else{
+            
+            rl.question('All these files will be used as model files, please confirm (y/n): '.green, (choise) => {
+              switch (choise){
+                case 'y':
+                console.log("confimed recived!" .yellow);
+                
+                for(let i=0;model_file_map.get(i)!=="";i++){
+                  //console.log("reading");
+                  let data = fs.readFileSync(answer+'/'+model_file_map.get(i));
+                  //console.log(data);
+                  let temp = model_file_map.get(i);
+                  console.log(temp);
+                  add_buffer = Buffer.alloc(1);
+                  if(temp.indexOf("xml")>-1){
+                    if (temp.indexOf("conf")>-1){
+                      add_buffer.writeUInt8(0x3,0);
+                      console.log("send conf.xml file!! " .blue);
+                    }else{
+                      add_buffer.writeUInt8(0x1,0);  
+                      console.log("send xml file!! " .blue);
+                    }
+
+                  }else if(temp.indexOf("bin")>-1){
+                    add_buffer.writeUInt8(0x2,0);
+                    console.log("send bin file!! " .blue);
+
+                  } else{
+                    console.log("Controller only send files end with xml,bin!! " .red);
+                  }
+                  if (add_buffer[0]!==0){
+                    let bu = '0x'+ client_id.toString();
+                    let add_clientID = Buffer.alloc(1);
+                    add_clientID.writeUInt8(bu, 0);
+                    let arr = [add_clientID,add_buffer, data];
+                    let buf = Buffer.concat(arr);
+                    //console.log(buf);
+                    //console.log(buf.slice(2));
+                    //console.log(buf[0]);
+                    //console.log(buf[1]);
+                    ws.send(buf);
+                    model_buffer_map.set(i,buf);
+
+                  }
+                  
+                }
+                prompt();
+                rl.on('line', function(cmd) {
+                    exec(cmd.trim());
+                })
+                //set_websocket();
+                break;
+
+                case 'n':
+                console.log("please chose another dictionary" .magenta);
+                read_model_file();
+                break;
+
+                default:
+                console.log("wrong");
+                break;
+
+              }
+            });
+            
+          }
+
+          
+        } else{
+          console.log("dictionary NOT exist, please check again" .red);
+          read_model_file();
+        }
+    });
+  }
+
+  
+  });
+}
+
 
 ws.on('open', function () {
     console.log(`[controller] open` .yellow);
@@ -203,13 +310,14 @@ ws.on('message',function(data){
     count++;
     client_id = parseInt(data);
     console.log(('client id is '+ `${data} ` ).blue); 
-    prompt();
+    read_model_file();
+    /*prompt();
     rl.on('line', function(cmd) {
     exec(cmd.trim());
   }).on('close', function() {
     console.log('goodbye!'.green);
     process.exit(0);
-  }); 
+  });*/ 
 } 
 });
 
