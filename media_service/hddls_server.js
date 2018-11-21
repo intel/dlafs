@@ -29,16 +29,16 @@ for(let i=0;i<100;i++){
 }
 
 
-const path_server = https.createServer({
-    key: fs.readFileSync('./cert_server_8126/server-key.pem'),
-    cert: fs.readFileSync('./cert_server_8126/server-crt.pem'),
-    ca: fs.readFileSync('./cert_server_8126/ca-crt.pem'),
+const controller_server = https.createServer({
+    key: fs.readFileSync('./cert_server_8126_8124/server-key.pem'),
+    cert: fs.readFileSync('./cert_server_8126_8124/server-crt.pem'),
+    ca: fs.readFileSync('./cert_server_8126_8124/ca-crt.pem'),
     requestCert: true,
     rejectUnauthorized: true
 });
 
-const path_wss = new WebSocketServer({server: path_server, path: '/controller',verifyClient: ClientVerify});
-path_wss.on('connection', function(ws) {
+const controller_wss = new WebSocketServer({server: controller_server, path: '/controller'});
+controller_wss.on('connection', function(ws) {
 
     console.log('controller connected !' .bgYellow);
     client_id++;
@@ -146,13 +146,14 @@ let gst_cmd = 0;
 let pipe_client = 0;
 
 
-const data_server = https.createServer({
+
+const hddlpipe_server = https.createServer({
   cert: fs.readFileSync('./cert_server_8123/server-cert.pem'),
   key: fs.readFileSync('./cert_server_8123/server-key.pem'),
   strictSSL: false
 });
 
-const data_wss = new WebSocketServer({server: data_server, path: '/binaryEchoWithSize',verifyClient: ClientVerify});
+const hddlpipe_wss = new WebSocketServer({server: hddlpipe_server, path: '/binaryEchoWithSize'});
 // Broadcast to all.
 /*data_wss.broadcast = function broadcast(data) {
   data_wss.clients.forEach(function each(client) {
@@ -162,16 +163,8 @@ const data_wss = new WebSocketServer({server: data_server, path: '/binaryEchoWit
   });
 };*/
 
-data_wss.on('connection', function connection(ws) {
-
-  if (params["id"] == "1") {
-
-     receive_client = ws;
-     console.log("Receiver connected!" .bgMagenta);
-
-  } else if (params["id"] == "3"){
+hddlpipe_wss.on('connection', function connection(ws) {
      
-     //temp_json_file='./temp_create.json';
      fs.readFile(temp_json_path, 'utf8', function(err, data) {
         if (err) throw err;
         console.log("read create.config: ", data);
@@ -179,20 +172,10 @@ data_wss.on('connection', function connection(ws) {
       });
 
     userArray.push(ws);
-    //console.log(ws);
-    //console.log("new pipeline joined!",pipe_id);
     console.log("this is "+ userArray.indexOf(ws)+"th loop time");
-    //pipe_id++;
-  }
   
 
   ws.on('message', function incoming(data) {
-    // Broadcast to everyone else.
-     //console.log(data);
-    /*wssBinaryEchoWithSize.clients.forEach(function each(client) {
-      if (client !== ws && client.readyState === WebSocket.OPEN) {
-        client.send(data);
-      }*/
       if (typeof data ==="string"){
         console.log(data);
         pipe_client = data.split("=");
@@ -200,14 +183,13 @@ data_wss.on('connection', function connection(ws) {
         pipe_id = parseInt(pipe_client[1]);
         console.log(pipe_id);
         pipe_map.set(pipe_id,ws);
-
-        //temp_json_path='./client_'+ client_id+'_temp_create.json';
       }
       else {
         if (receive_client.readyState === WebSocket.OPEN){
-//        var head = client_id+','+userArray.indexOf(ws);
-//        receive_client.send(head);
+
         receive_client.send(data);
+      }else{
+        console.log("Please open receiver client!" .red);
       }
     }
   });
@@ -218,19 +200,14 @@ data_wss.on('connection', function connection(ws) {
 });
 
   ws.on('close', function (ws) {
-    if (params["id"] == "1") {
-      console.log("Receiver closed!" .bgMagenta);
-    } else {
-      console.log("pipeline closed!" .bgMagenta);
-    }
-      
+      console.log("pipeline closed!" .bgMagenta);      
   });
 
 
   });
 
 
-function ClientVerify(info) {
+/*function ClientVerify(info) {
 
    let ret = false;//refuse
    params = url.parse(info.req.url, true).query;
@@ -252,20 +229,49 @@ function ClientVerify(info) {
    }
 
    return ret;
-}
+}*/
 
-path_server.listen(8126);
-data_server.listen(8123);
-console.log('Listening on port 8126 and 8123...' .rainbow);
+
+const receiver_server = https.createServer({
+  key: fs.readFileSync('./cert_server_8126_8124/server-key.pem'),
+    cert: fs.readFileSync('./cert_server_8126_8124/server-crt.pem'),
+    ca: fs.readFileSync('./cert_server_8126_8124/ca-crt.pem'),
+    requestCert: true,
+    rejectUnauthorized: true
+});
+
+const receiver_wss = new WebSocketServer({server: receiver_server, path: '/routeData'});
+
+receiver_wss.on('connection', function connection(ws) {
+
+     console.log("Receiver connected!" .bgMagenta);
+     receive_client = ws;
+
+  ws.on('error', function(e) {
+    console.log('receiver connection error!' .bgRed);
+    console.log(e);
+});
+
+  ws.on('close', function (ws) {
+      console.log("Receiver closed!" .bgMagenta);          
+  });
+
+
+  });
+
+controller_server.listen(8126);
+hddlpipe_server.listen(8123);
+receiver_server.listen(8124);
+console.log('Listening on port 8126, 8124 and 8213...' .rainbow);
 
 const exec = require('child_process').exec;
-exec('hostname -I', function(error, stdout, stderr) {
+/*exec('hostname -I', function(error, stdout, stderr) {
     console.log(('Please make sure to copy the ip address into path.txt: ' + stdout).green);
     //console.log('stderr: ' + stderr);
     if (error !== null) {
         console.log(('exec error: ' + error).red);
     }
-});
+});*/
 
 exec('hostname', function(error, stdout, stderr) {
     console.log(('Please make sure to copy the DNS name into hostname.txt: ' + stdout).green);

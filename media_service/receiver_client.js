@@ -7,7 +7,6 @@ const colors = require("colors");
 
 let con='';
 let pipe_id = 0;
-let psw = "";
 
 let m = new Map();
 for(let i=0;i<100;i++){
@@ -27,37 +26,35 @@ function mkdirs(dirpath) {
     fs.mkdirSync(dirpath);
 }
 
-const filename = 'path.txt';
+const filename = 'hostname.txt';
 let url = 0;
 function read_server_ip(){
     let array = fs.readFileSync(filename).toString().split("\n");
     array = array.filter(function(e){return e});
-    console.log("HERE ARE SERVER IP LISTS:" .yellow);
+    console.log("HERE ARE SERVER HOSTNAME LISTS:" .yellow);
   for(i in array) {
       console.log((i+" , "+array[i]).blue);
   }
   rl.question('Please chose server by id: '.magenta, (answer) => {
-    url = array[answer];
-    input_password();  
-  });
+    if (array[answer]!== undefined){
+        url = array[answer];
+        set_websocket();
+    
+      }else{
+        console.log("NO such server!!!please chose again" .red);
+        read_server_ip();
+      }
+        
+    });
   }
 
-function input_password() {
-
-  rl.question('Please input password to connect server(default: b): ' .grey, (answer) => {
-     if(answer !==""){
-        psw = answer;
-        set_websocket();
-        
-     }
-});
-
-}
-
-
 function set_websocket(){
-  const ws = new WebSocket("wss://"+url+":8123/binaryEchoWithSize?id=1"+"&key="+psw, {
-    rejectUnauthorized: false
+  const ws = new WebSocket("wss://"+url+":8124/routeData", {
+    ca: fs.readFileSync('./cert_client_8126_8124/ca-crt.pem'),
+    key: fs.readFileSync('./cert_client_8126_8124/client1-key.pem'),
+    cert: fs.readFileSync('./cert_client_8126_8124/client1-crt.pem'),
+    rejectUnauthorized:true,
+    requestCert:true
 });
 
 

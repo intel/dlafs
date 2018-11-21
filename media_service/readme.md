@@ -75,13 +75,13 @@ download and make install
 
       openssl verify -CAfile ca-crt.pem client1-crt.pem
 
-### After generated, please copy all file start with 'ca' and 'client' into 'cert_client_8216', and copy all file start with 'ca' and 'server' into 'cert_server_8216'.
+### After generated, please copy all file start with 'ca' and 'client' into 'cert_client_8216_8124', and copy all file start with 'ca' and 'server' into 'cert_server_8216_8124'.
 
 
 # 4. run websocket server and client:
 
-### write ip address into path.txt, hostname into hostname.txt
-- when there are serveral servers, please write ip addresses /hostnames by line.
+### write hostname into hostname.txt
+- when there are serveral servers, please write hostnames by line.
 ### chmod a+x hddls_server.js receiver_client.js controller_client.js
 ### ./hddls_server.js
 ### ./controller_client.js

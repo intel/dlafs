@@ -3,7 +3,7 @@ const WebSocket = require('ws');
 const readline = require('readline');
 const colors = require('colors');
 
-let psw = "";
+
 let create_json = "";
 let property_json = "";
 let destory_json = "";
@@ -11,7 +11,6 @@ let count = 0;
 let pipe_constuctor = "";
 let pipe_constuctor_to_number = "";
 let client_id = 0;
-let read_file_retur = "";
 
 const fs = require('fs')
   , filename = 'hostname.txt';
@@ -55,35 +54,23 @@ for(i in array) {
     console.log((i+" , "+array[i]).blue);
 }
 rl.question('Please chose server by id: '.magenta, (answer) => {
-  url = array[answer];
-  input_password();  
+  if (array[answer]!== undefined){
+    url = array[answer];
+    set_websocket();
+
+  }else{
+    console.log("NO such server!!!please chose again" .red);
+    read_server_ip();
+  }
+    
 });
-/*fs.readFile(filename, 'utf8', function(err, data) {
-  if (err) throw err;
-  console.log('found: ' + filename .green);
-  console.log('host name is:'+ data .green);
-  url = data;
-  url= url.replace(/[\r\n]/g,"");
-  set_websocket();
-});*/
-}
-
-function input_password() {
-
-  rl.question('Please input password to connect server(default: c): '.grey, (answer) => {
-    if(answer !==""){
-       psw = answer;
-       
-       set_websocket();
-    }
-  });
 }
 
 function set_websocket(){
-const ws = new WebSocket("wss://"+url+":8126/controller?id=2"+"&key="+psw, {
-    ca: fs.readFileSync('./cert_client_8126/ca-crt.pem'),
-    key: fs.readFileSync('./cert_client_8126/client1-key.pem'),
-    cert: fs.readFileSync('./cert_client_8126/client1-crt.pem'),
+const ws = new WebSocket("wss://"+url+":8126/controller", {
+    ca: fs.readFileSync('./cert_client_8126_8124/ca-crt.pem'),
+    key: fs.readFileSync('./cert_client_8126_8124/client1-key.pem'),
+    cert: fs.readFileSync('./cert_client_8126_8124/client1-crt.pem'),
     rejectUnauthorized:true,
     requestCert:true
   });
