@@ -43,8 +43,16 @@ const static guint  CVDL_TYPE_NONE = 2;
 
 class ObjectData{
 public:
-    ObjectData() {flags = 0;};
-    ~ObjectData() { trajectoryPoints.clear(); };
+    ObjectData() : id(-1), objectClass(-1), prob(0.0), 
+                 flags(0), score(0.0), oclBuf(NULL), mAuxData(NULL),
+                 mAuxDataLen(0){};
+    ~ObjectData()
+   {
+        trajectoryPoints.clear();
+        //if(mAuxData)
+        //    g_free(mAuxData);
+        //mAuxData=NULL;
+    };
     int id;
     int objectClass;
     float prob;
@@ -65,6 +73,12 @@ public:
     // Object buffer in OCL, format = BGR_Plannar
     // It will be used for IE inputdata
     GstBuffer *oclBuf;
+
+    // Notice: need deep copy if push algoData to queue or free this buffer
+    // This buffer should only used in the same algo item, not pass to next algo
+    // or Don't malloc buffer for it, but only refer buffer to it
+    void *mAuxData;
+    gint mAuxDataLen;
 
     float figure_score(int w, int h) {
         float score = 0.0;
@@ -87,16 +101,15 @@ using PostCallback = std::function<void(CvdlAlgoData* algoData)>;
 
 class CvdlAlgoData{
 public:
-    CvdlAlgoData():mGstBuffer(NULL){};
-    CvdlAlgoData(GstBuffer *buf) {
+    CvdlAlgoData(): mGstBuffer(NULL) ,mFrameId(0), mPts(0),
+                                                mGstBufferOcl(NULL), algoBase(NULL){};
+    CvdlAlgoData(GstBuffer *buf) : mGstBuffer(buf), mFrameId(0), mPts(0),
+                                                mGstBufferOcl(NULL), algoBase(NULL)
+    {
         if(buf){
-            mGstBuffer = buf;//gst_buffer_ref(buf);
-        }else{
-            mGstBuffer = NULL;
+            //gst_buffer_ref(buf);
         }
-        mFrameId = 0;
-        mPts = 0;
-    }
+     }
     ~CvdlAlgoData() {
         // Dont unref it, which will cause unref when copy this data structure into Queue
         if(mGstBuffer){
@@ -216,6 +229,8 @@ public:
     gint64 mInferCost; /* in microseconds */
 
     int mFrameIndexLast;
+    // It was used to generate object id
+    gint mObjIndex;
 
     // debug
     FILE *fpOclResult;

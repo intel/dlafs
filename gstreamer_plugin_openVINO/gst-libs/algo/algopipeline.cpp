@@ -32,6 +32,7 @@
 #include "tracklpalgo.h"
 #include "lprecognize.h"
 #include "yolotinyv2.h"
+#include "reid.h"
 #include "sinkalgo.h"
 #include "algopipeline.h"
 
@@ -47,6 +48,7 @@ const static char *g_algo_name_str[ALGO_MAX_NUM] = {
                 ALGO_TRACK_LP_NAME,
                 ALGO_RECOGNIZE_LP_NAME,
                 ALGO_YOLO_TINY_V2_NAME,
+                ALGO_REID_NAME,
                 ALGO_SINK_NAME
 };
 
@@ -80,6 +82,9 @@ static CvdlAlgoBase* algo_create(int type)
             break;
          case ALGO_YOLO_TINY_V2:
             algo = new YoloTinyv2Algo;
+            break;
+         case ALGO_REID:
+            algo = new ReidAlgo;
             break;
          case ALGO_SINK:
             algo = new SinkAlgo;

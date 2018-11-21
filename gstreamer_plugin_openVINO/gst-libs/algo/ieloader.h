@@ -49,6 +49,7 @@ enum{
     IE_MODEL_SSD =2,
     IE_MODEL_LP_RECOGNIZE = 3,
     IE_MODEL_YOLOTINYV2 = 4,
+     IE_MODEL_REID = 5,
     IE_MODEL_LP_NONE
 };
 
@@ -69,7 +70,8 @@ public:
     //                                                    CvdlAlgoData *outData, int objId);
     GstFlowReturn do_inference_async(void *algoData, uint64_t frmId, int objId,
                                             cv::UMat &src, AsyncCallback cb);
-    int get_enable_request();
+    GstFlowReturn do_inference_sync(void *data, uint64_t frmId, int objId,
+                                                  cv::UMat &src);
     GstFlowReturn get_input_size(int *w, int *h, int *c);
     GstFlowReturn get_out_size(int *outDim0, int *outDim1);
     // must be called before read_model()
@@ -96,6 +98,9 @@ public:
           mInputMean = mean;
           mInputScale = scale;
     }
+private:
+    int get_enable_request();
+    void release_request(int reqestId);
 
     std::string mModelXml;
     std::string mModelBin;

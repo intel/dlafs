@@ -134,3 +134,32 @@ cv::Rect MathUtils::convert_rect(cv::Rect rect,
     return rt;
 }
 
+double MathUtils::dotProduct(float * vec1, float * vec2, int length)
+{
+    double sum = 0;
+    for(int i = 0; i < length; i ++){
+        sum += (double)vec1[i] * (double)vec2[i];
+    }
+    return sum;
+}
+
+float  MathUtils::norm(float * vec, int length)
+{
+    double squreSum = dotProduct(vec, vec, length);
+    return sqrt(squreSum);
+}
+
+float  MathUtils::cosDistance(float * vec1, float * vec2, int len)
+{
+    double norm1 = norm(vec1, len);
+    double norm2 = norm(vec2, len);
+    double dotProd = dotProduct(vec1, vec2, len);
+
+    if(norm1 <= 0.00001 || norm2 <= 0.00001){
+        return 0;
+    }
+
+    double distance = dotProd / (norm1 * norm2);
+    return (float)distance;
+}
+
