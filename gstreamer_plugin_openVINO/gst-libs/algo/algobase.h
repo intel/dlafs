@@ -101,9 +101,9 @@ using PostCallback = std::function<void(CvdlAlgoData* algoData)>;
 
 class CvdlAlgoData{
 public:
-    CvdlAlgoData(): mGstBuffer(NULL) ,mFrameId(0), mPts(0),
+    CvdlAlgoData(): mGstBuffer(NULL) ,mFrameId(0), mPts(0), mAllObjectDone(true),
                                                 mGstBufferOcl(NULL), algoBase(NULL){};
-    CvdlAlgoData(GstBuffer *buf) : mGstBuffer(buf), mFrameId(0), mPts(0),
+    CvdlAlgoData(GstBuffer *buf) : mGstBuffer(buf), mFrameId(0), mPts(0),mAllObjectDone(true),
                                                 mGstBufferOcl(NULL), algoBase(NULL)
     {
         if(buf){
@@ -116,10 +116,14 @@ public:
             //gst_buffer_unref(mGstBuffer);
         }
         mObjectVec.clear();
+        mObjectVecIn.clear();
     }
     GstBuffer *mGstBuffer;
     guint64 mFrameId;
     guint64 mPts;
+
+    // If all objects are done.
+    gboolean mAllObjectDone;
 
     // It was the resize of the whole image
     GstBuffer *mGstBufferOcl;
@@ -213,6 +217,9 @@ public:
     // queue input buffer
     thread_queue<CvdlAlgoData> mInQueue;
 
+    // Obsoleted unused buffers, which need deleted but delay some times
+    CvdlAlgoData  *mObsoletedAlgoData;;
+
     /* pool for allocate buffer for inference result, CPU buffer */
     GstBufferPool *mResultPool;
 
@@ -222,6 +229,9 @@ public:
 
     std::atomic<int> mInferCnt;
     std::atomic<guint64> mInferCntTotal;
+
+    // mutex for multiple objects sync
+    std::mutex mAlgoDataMutex;
 
     int mFrameIndex;
     int mFrameDoneNum;

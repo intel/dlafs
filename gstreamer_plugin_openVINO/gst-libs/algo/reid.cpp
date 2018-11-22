@@ -26,6 +26,7 @@
 #include <ocl/oclmemory.h>
 #include <ocl/crcmeta.h>
 #include <ocl/metadata.h>
+#include <pthread.h>
 
 using namespace HDDLStreamFilter;
 using namespace std;
@@ -132,7 +133,7 @@ GstFlowReturn ReidAlgo::parse_inference_result(InferenceEngine::Blob::Ptr &resul
     GST_LOG("ReidAlgo::parse_inference_result begin: outData = %p\n", outData);
 
     auto resultBlobFp32 = std::dynamic_pointer_cast<InferenceEngine::TBlob<float> >(resultBlobPtr);
-    size_t descriptorSize = 256;
+    const size_t descriptorSize = 256;
     size_t resultSize = resultBlobPtr->size();
 
     if (descriptorSize != resultSize){
@@ -151,14 +152,17 @@ GstFlowReturn ReidAlgo::parse_inference_result(InferenceEngine::Blob::Ptr &resul
 
     object.mAuxDataLen = descriptorSize;
     float *descriptor  = new float[descriptorSize];
-    object.mAuxData = (float *)descriptor;
+    object.mAuxData = (void *)descriptor;
 
     //parse inference result and put them into algoData
+    #if 0
     for(size_t i = 0; i < descriptorSize; i ++){
         descriptor[i]=input[i];
     }
+    #else
+    memcpy(descriptor, input, descriptorSize*sizeof(float));
+    #endif
     outData->mObjectVec.push_back(object);
-
     return GST_FLOW_OK;
 }
 

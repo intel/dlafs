@@ -45,6 +45,11 @@ static void try_process_algo_data(CvdlAlgoData *algoData)
     bool allObjDone = true;
     CvdlAlgoBase *hddlAlgo = algoData->algoBase;
 
+    hddlAlgo->mAlgoDataMutex.lock();
+    if(algoData->mAllObjectDone ==true) {
+        hddlAlgo->mAlgoDataMutex.unlock();
+        return;
+    }
     // check if this frame has been done, which contains multiple objects
     for(unsigned int i=0; i<algoData->mObjectVecIn.size();i++)
         if(!(algoData->mObjectVecIn[i].flags & CVDL_OBJECT_FLAG_DONE))
@@ -52,6 +57,7 @@ static void try_process_algo_data(CvdlAlgoData *algoData)
 
     // if all objects are done, then push it into output queue
     if(allObjDone) {
+        algoData->mAllObjectDone = true;
         // clear input objectData
         algoData->mObjectVecIn.clear();
         if(hddlAlgo->postCb)
@@ -67,9 +73,14 @@ static void try_process_algo_data(CvdlAlgoData *algoData)
             GST_LOG("algo %d - unref GstBuffer = %p(%d)\n",
                 hddlAlgo->mAlgoType, algoData->mGstBuffer, GST_MINI_OBJECT_REFCOUNT(algoData->mGstBuffer));
             gst_buffer_unref(algoData->mGstBuffer);
-            delete algoData;
+            //delete algoData;
         }
+        // delete the obsoleted algoData delayed some time to avoid race condition.
+       if(hddlAlgo->mObsoletedAlgoData)
+                delete hddlAlgo->mObsoletedAlgoData;
+       hddlAlgo->mObsoletedAlgoData = algoData;
     }
+    hddlAlgo->mAlgoDataMutex.unlock();
 }
 
  void process_one_object(CvdlAlgoData *algoData, ObjectData &objectData, int objId)
@@ -85,7 +96,7 @@ static void try_process_algo_data(CvdlAlgoData *algoData)
                       (uint32_t)objectData.rectROI.height};
 
     if(crop.width<=0 || crop.height<=0 || crop.x<0 || crop.y<0) {
-        GST_ERROR("classfication: crop = (%d,%d) %dx%d", crop.x, crop.y, crop.width, crop.height);
+        GST_ERROR("Invalid  crop = (%d,%d) %dx%d", crop.x, crop.y, crop.width, crop.height);
         objectData.flags |= CVDL_OBJECT_FLAG_DONE;
         try_process_algo_data(algoData);
         return;
@@ -95,7 +106,7 @@ static void try_process_algo_data(CvdlAlgoData *algoData)
     stop = g_get_monotonic_time();
     hddlAlgo->mImageProcCost += stop - start;
     if(ocl_buf==NULL) {
-        g_print("Failed to do image process!");
+        GST_ERROR("Failed to do image process!");
         objectData.flags |= CVDL_OBJECT_FLAG_DONE;
         try_process_algo_data(algoData);
         return;
@@ -106,7 +117,7 @@ static void try_process_algo_data(CvdlAlgoData *algoData)
     OclMemory *ocl_mem = NULL;
     ocl_mem = ocl_memory_acquire (ocl_buf);
     if(ocl_mem==NULL){
-        g_print("Failed get ocl_mem after image process!");
+        GST_ERROR("Failed get ocl_mem after image process!");
         if(ocl_buf)
             gst_buffer_unref(ocl_buf);
         objectData.flags |= CVDL_OBJECT_FLAG_DONE;
@@ -187,7 +198,7 @@ static void base_hddl_algo_func(gpointer userData)
     algoData->algoBase = static_cast<CvdlAlgoBase *>(hddlAlgo);
 
     if(algoData->mGstBuffer==NULL) {
-        GST_ERROR("%s() - get null buffer\n", __func__);
+        g_print("%s() - get null buffer\n", __func__);
         return;
     }
     GST_LOG("%s() - algo = %p, algoData->mFrameId = %ld\n", __func__,
@@ -201,6 +212,7 @@ static void base_hddl_algo_func(gpointer userData)
     // NV12-->BGR_Plannar
     algoData->mObjectVecIn = algoData->mObjectVec;
     algoData->mObjectVec.clear();
+    algoData->mAllObjectDone = false;
     for(unsigned int i=0; i< algoData->mObjectVecIn.size(); i++) {
         algoData->mObjectVecIn[i].flags =0;
         process_one_object(algoData, algoData->mObjectVecIn[i], i);
@@ -238,6 +250,7 @@ void push_algo_data(CvdlAlgoData* &algoData)
             objectVec[i].rect.width, objectVec[i].rect.height, objectVec[i].score);
     }
     cvAlgo->mNext->mInQueue.put(*algoData);
+    delete algoData;
 }
 
 /*
@@ -333,9 +346,10 @@ CvdlAlgoBase::CvdlAlgoBase(PostCallback  cb, guint cvdlType )
     :mCapsInited(false), mCvdlType(cvdlType), mTask(NULL), mIeInited(false),
      mInputWidth(0), mInputHeight(0), mImageProcessorInVideoWidth(0),
      mImageProcessorInVideoHeight(0), mInCaps(NULL), mOclCaps(NULL), 
-     mNext(NULL), mPrev(NULL), postCb(cb), mInferCnt(0), mInferCntTotal(0),
-     mFrameIndex(0), mFrameDoneNum(0), mImageProcCost(1), mInferCost(1),
-     mFrameIndexLast(0), mObjIndex(0),  fpOclResult(NULL)
+     mNext(NULL), mPrev(NULL), mObsoletedAlgoData(NULL), postCb(cb),
+     mInferCnt(0), mInferCntTotal(0), mFrameIndex(0), mFrameDoneNum(0),
+     mImageProcCost(1), mInferCost(1), mFrameIndexLast(0), mObjIndex(0),
+     fpOclResult(NULL)
 {
     g_rec_mutex_init (&mMutex);
 
@@ -373,6 +387,10 @@ CvdlAlgoBase::~CvdlAlgoBase()
     mNext = mPrev = NULL;
     if(mInCaps)
         gst_caps_unref(mInCaps);
+
+    if(mObsoletedAlgoData)
+        delete mObsoletedAlgoData;
+    mObsoletedAlgoData=NULL;
 
     if(fpOclResult)
         fclose(fpOclResult);
