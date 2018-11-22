@@ -40,7 +40,8 @@ enum {
     ALGO_SSD                                = 3,
     ALGO_TRACK_LP                  =4,
     ALGO_REGCONIZE_LP         = 5,
-    ALGO_YOLO_TINY_V2        = 6,
+    ALGO_YOLO_TINY_V2         = 6,
+    ALGO_REID                               = 7,
     ALGO_SINK,   /*last algo in algopipe*/
     ALGO_MAX_NUM,
 };
@@ -52,6 +53,7 @@ enum {
 #define ALGO_TRACK_LP_NAME "tracklp"
 #define ALGO_RECOGNIZE_LP_NAME "lprecognize"
 #define ALGO_YOLO_TINY_V2_NAME "yolotinyv2"
+#define ALGO_REID_NAME "reid"
 #define ALGO_SINK_NAME "sink"
 
 

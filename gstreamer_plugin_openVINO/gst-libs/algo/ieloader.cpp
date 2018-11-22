@@ -263,6 +263,14 @@ int IELoader::get_enable_request()
     return target_id;
 }
 
+void IELoader::release_request(int reqestId)
+{
+    if(reqestId>=0) {
+        std::unique_lock<std::mutex> lk(mRequstMutex);
+        mRequestEnable[reqestId] = true;
+        mCondVar.notify_all();
+    }
+}
 GstFlowReturn IELoader::get_input_size(int *w, int *h, int *c)
 {
     GstFlowReturn ret = GST_FLOW_ERROR;
@@ -278,13 +286,11 @@ GstFlowReturn IELoader::get_input_size(int *w, int *h, int *c)
         *h = (int)inputBlobPtr->dims()[1];
         *c = (int)inputBlobPtr->dims()[2];
         ret = GST_FLOW_OK;
+        release_request(reqestId);
+    } else {
+        g_print("Cannot get valid requestid!!!\n");
     }
 
-    {
-        std::unique_lock<std::mutex> lk(mRequstMutex);
-        mRequestEnable[reqestId] = true;
-        mCondVar.notify_all();
-    }
     return ret;
 }
 
@@ -312,6 +318,7 @@ GstFlowReturn IELoader::do_inference_async(void *data, uint64_t frmId, int objId
         // Load images.
         if (src.empty()) {
             GST_ERROR("input image empty!!!");
+            release_request(reqestId);
             return GST_FLOW_ERROR;
         }
         convert_input_to_blob(src, inputBlobPtr);
@@ -339,18 +346,14 @@ GstFlowReturn IELoader::do_inference_async(void *data, uint64_t frmId, int objId
                     algo,algoData->algoBase, algoData);
             } else {
                 GST_ERROR("Don't support other output precision except FP32!");
+                release_request(reqestId);
                 return;
             }
 
             GST_LOG("Got inference result: frmId = %ld",frmId);
             // put result into out_queue
             cb(algoData);
-
-            {
-                std::unique_lock<std::mutex> lk(mRequstMutex);
-                mRequestEnable[reqestId] = true;
-                mCondVar.notify_all();
-            }
+            release_request(reqestId);
         };
 
         //WaitAsync(inferRequestAsyn, reqestId);
@@ -359,4 +362,39 @@ GstFlowReturn IELoader::do_inference_async(void *data, uint64_t frmId, int objId
     }
 
     return GST_FLOW_OK;
+}
+
+GstFlowReturn IELoader::do_inference_sync(void *data, uint64_t frmId, int objId,
+                                                  cv::UMat &src)
+{
+    InferenceEngine::StatusCode ret;
+    InferenceEngine::ResponseDesc resp;
+    CvdlAlgoData *algoData = static_cast<CvdlAlgoData*> (data);
+
+    int reqestId = get_enable_request();
+    if(reqestId >= 0)
+    {
+        InferenceEngine::IInferRequest::Ptr inferRequestSync = mInferRequest[reqestId];
+        InferenceEngine::Blob::Ptr inputBlobPtr;
+        IECALLNORET(inferRequestSync->GetBlob(mFirstInputName.c_str(), inputBlobPtr, &resp));
+
+        // Load images.
+        if (src.empty()) {
+            release_request(reqestId);
+            GST_ERROR("input image empty!!!");
+            return GST_FLOW_ERROR;
+        }
+        convert_input_to_blob(src, inputBlobPtr);
+         ret = inferRequestSync->Infer(&resp);
+         if (ret == InferenceEngine::StatusCode::OK){
+                InferenceEngine::Blob::Ptr resultBlobPtr;
+                ret = inferRequestSync->GetBlob(mFirstOutputName.c_str(), resultBlobPtr, &resp);
+                if(ret == InferenceEngine::StatusCode::OK && resultBlobPtr){
+                    CvdlAlgoBase *algo = algoData->algoBase;
+                    algo->parse_inference_result(resultBlobPtr, sizeof(float), algoData, objId);
+                }
+            }
+            release_request(reqestId);
+        }
+        return GST_FLOW_OK;
 }

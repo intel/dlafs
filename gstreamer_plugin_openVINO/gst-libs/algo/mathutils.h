@@ -54,6 +54,10 @@ public:
     cv::Rect verify_rect(int W, int H, cv::Rect rt);
     void get_overlap_ratio(cv::Rect rt1, cv::Rect rt2, float& ratio12, float& ratio21);
     cv::Rect convert_rect(cv::Rect rect, int oldBaseW, int oldBaseH, int newBaseW, int newBaseH);
+
+    double dotProduct(float * vec1, float * vec2, int length);
+    float  norm(float * vec, int length);
+    float  cosDistance(float * vec1, float * vec2, int len);
 };
 
 #endif

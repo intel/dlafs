@@ -54,11 +54,11 @@ static void try_process_algo_data(CvdlAlgoData *algoData)
     if(allObjDone) {
         // clear input objectData
         algoData->mObjectVecIn.clear();
+        if(hddlAlgo->postCb)
+               hddlAlgo->postCb(algoData);
 
         std::vector<ObjectData> &objectVec = algoData->mObjectVec;
         if(objectVec.size()>0) {
-            if(hddlAlgo->postCb)
-                hddlAlgo->postCb(algoData);
             //put algoData;
             GST_LOG("algo %d - output GstBuffer = %p(%d)\n",
                    hddlAlgo->mAlgoType, algoData->mGstBuffer, GST_MINI_OBJECT_REFCOUNT(algoData->mGstBuffer));
@@ -335,7 +335,7 @@ CvdlAlgoBase::CvdlAlgoBase(PostCallback  cb, guint cvdlType )
      mImageProcessorInVideoHeight(0), mInCaps(NULL), mOclCaps(NULL), 
      mNext(NULL), mPrev(NULL), postCb(cb), mInferCnt(0), mInferCntTotal(0),
      mFrameIndex(0), mFrameDoneNum(0), mImageProcCost(1), mInferCost(1),
-     mFrameIndexLast(0), fpOclResult(NULL)
+     mFrameIndexLast(0), mObjIndex(0),  fpOclResult(NULL)
 {
     g_rec_mutex_init (&mMutex);
 

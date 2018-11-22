@@ -316,7 +316,7 @@ bool YoloTinyv2Algo::parse (const float * output, CvdlAlgoData* &outData)
         object.id = objectNum;
         object.objectClass = box.classId;
         object.label = std::string(mLabelNames[box.classId]);
-        object.prob = box.prob;;
+        object.prob = box.prob;
         object.rect = rect;
         object.rectROI = rect;
         objectNum++;
