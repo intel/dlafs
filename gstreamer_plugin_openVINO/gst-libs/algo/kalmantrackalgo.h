@@ -20,8 +20,8 @@
  * SOFTWARE.
  */
 
-#ifndef __TRACK_LP_ALGO_H__
-#define __TRACK_LP_ALGO_H__
+#ifndef __MINI_TRACK_ALGO_H__
+#define __MINI_TRACK_ALGO_H__
 
 #include <vector>
 #include "algobase.h"
@@ -31,23 +31,11 @@
 #include <opencv2/opencv.hpp>
 #include "ieloader.h"
 
-#include "eigen3/Eigen/Dense"
 #include "kalman.h"
 
 #define SET_SATURATE(X, L, H) \
         if(X<L) X=L; \
         else if(X>H) X=H;
-
-class LicencePlateDetect
-{
-public:
-    LicencePlateDetect(std::string svmModelPath);
-    cv::Rect detectLicencePlates(const cv::Mat & image);
-
-protected:
-    cv::Mat calcFeatures(const cv::Mat & plateImage);
-    cv::Ptr<cv::ml::SVM> svmClassifier;
-};
 
 // Tracking object attribute.
 class TrackLpObjAttribute
@@ -74,17 +62,17 @@ public:
     }
 };
 
-class TrackLpAlgo : public CvdlAlgoBase 
+class KalmanTrackAlgo : public CvdlAlgoBase 
 {
 public:
-    TrackLpAlgo();
-    virtual ~TrackLpAlgo();
+    KalmanTrackAlgo();
+    virtual ~KalmanTrackAlgo();
     virtual void set_data_caps(GstCaps *incaps);
     void verify_detection_result(std::vector<ObjectData> &objectVec);
     void try_add_new_one_object(ObjectData &objectData, guint64 frameId);
     void verify_tracked_object();
     bool is_at_buttom(TrackLpObjAttribute& curObj);
-    void remove_no_lp(std::vector<ObjectData> &objectVec);
+    void remove_invalid_object(std::vector<ObjectData> &objectVec);
     void update_track_object(std::vector<ObjectData> &objectVec);
     //void push_track_object(CvdlAlgoData* &algoData);
 
@@ -95,8 +83,7 @@ public:
 
     std::vector<ObjectData> mLastObjectTrackRes; // last fame track result
 
-    KalmanTracker *lpTracker;
-    LicencePlateDetect *lpDetect;
+    KalmanTracker *kalmanTracker;
     std::string mSvmModelStr;
 };
 
