@@ -30,12 +30,16 @@
 
 class Person{
 public:
+    Person(): id(-1), hitCount(-1), missCount(-1),
+        successionMissCount(0), hit(false), bShow(false) {}
     int id;
     cv::Rect rect;
     float descriptor[256];
-    gint score;
+    gint hitCount;
     gint missCount;
+    gint successionMissCount;
     gboolean hit;
+    gboolean bShow; // if has been shown
 };
 
 class PersonSet
@@ -46,12 +50,15 @@ public:
    {
         personVec.clear();
    }
-    int getPersonNum() { return (int)personVec.size(); }
+    guint getPersonNum() { return personVec.size(); }
     bool findPersonByID(int queryID);
     int findPersonByDescriptor(float * queryDescriptor , float *distance);
     void addPerson(int id, cv::Rect rect, float * descriptor);
     int getPersonIndex(int id);
     void updatePerson(int id, cv::Rect rect, float * descriptor);
+    Person& getPerson(int id);
+    void setShowStatus(int id);
+    bool getShowStatus(int id);
     void update();
     std::vector<Person> personVec;
 };

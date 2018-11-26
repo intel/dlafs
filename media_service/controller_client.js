@@ -310,14 +310,14 @@ ws.on('message',function(data){
     count++;
     client_id = parseInt(data);
     console.log(('client id is '+ `${data} ` ).blue); 
-    read_model_file();
-    /*prompt();
+    //read_model_file();
+    prompt();
     rl.on('line', function(cmd) {
     exec(cmd.trim());
   }).on('close', function() {
     console.log('goodbye!'.green);
     process.exit(0);
-  });*/ 
+  }); 
 } 
 });
 

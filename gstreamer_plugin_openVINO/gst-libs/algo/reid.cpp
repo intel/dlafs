@@ -41,6 +41,10 @@ static void post_callback(CvdlAlgoData *algoData)
         int matchedID = -1;
         PersonSet &personSet = reidAlgo->mPersonSet;
 
+        bool bNeedFilterOut = true;
+        bool bFilterOut = false;
+        bool bAllPersonShown = true;
+
         reidAlgo->mPersonSetMutex.lock();
         // Search Person by descriptor.
         std::vector<ObjectData> &objectVec = algoData->mObjectVec;
@@ -69,6 +73,21 @@ static void post_callback(CvdlAlgoData *algoData)
                 personSet.updatePerson(objItem.id, objItem.rectROI, descriptor);
             }
 
+            if(bNeedFilterOut) {
+                if(matchedID==-1) {
+                    bFilterOut  |= true;
+                }else{
+                    Person &person = personSet.getPerson(matchedID);
+                    if(person.hitCount<10 || person.missCount>15)
+                        bFilterOut  |= true;
+                    if(person.rect.width < reidAlgo->mImageProcessorInVideoWidth/10
+                        ||person.rect.height < reidAlgo->mImageProcessorInVideoHeight/4 )
+                        bFilterOut  |= true;
+                    if(prop<0.95)
+                        bFilterOut  |= true;
+                }
+             }
+
             std::ostringstream stream_prob;
             stream_prob << "reid = "<< objItem.id;
             objItem.label = stream_prob.str();
@@ -79,6 +98,20 @@ static void post_callback(CvdlAlgoData *algoData)
                 objItem.mAuxDataLen = 0;
             }
             ++it;
+        }
+
+        if(bNeedFilterOut) {
+            if(bFilterOut) {
+                objectVec.clear();
+            } else {
+                for(guint i=0;i<algoData->mObjectVec.size();i++) {
+                    ObjectData &obj = algoData->mObjectVec[i];
+                    bAllPersonShown &= personSet.getShowStatus(obj.id);
+                    personSet.setShowStatus(obj.id);
+                }
+                if(bAllPersonShown)
+                    objectVec.clear();
+            }
         }
         personSet.update();
         reidAlgo->mPersonSetMutex.unlock();
@@ -220,15 +253,44 @@ void PersonSet::addPerson(int id, cv::Rect rect, float * descriptor)
     Person person;
     person.id = id;
     person.rect = rect;
-    person.score = 0;
+    person.hitCount = 1;
     person.hit = true;
     person.missCount=0;
+    person.successionMissCount = 0;
 
     for(int i = 0; i < 256; i ++){
         person.descriptor[i] = descriptor[i];
     }
     personVec.push_back(person);
 }
+
+Person& PersonSet::getPerson(int id)
+{
+    static Person empty_person = Person(); 
+    int index = getPersonIndex(id);
+    if(index==-1)
+        return empty_person;
+    return  personVec[index];
+}
+
+void PersonSet::setShowStatus(int id)
+{
+    int index = getPersonIndex(id);
+    if(index==-1)
+        return ;
+    personVec[index].bShow = true;;
+    return;
+}
+
+bool PersonSet::getShowStatus(int id)
+{
+    int index = getPersonIndex(id);
+    if(index==-1)
+        return false ;
+
+    return personVec[index].bShow;
+}
+
 void PersonSet::updatePerson(int id, cv::Rect rect, float * descriptor)
 {
     int index = getPersonIndex(id);
@@ -240,7 +302,8 @@ void PersonSet::updatePerson(int id, cv::Rect rect, float * descriptor)
     person.rect.y = (person.rect.y *3 + rect.y)/4;
     person.rect.width = (person.rect.width *3 + rect.width)/4;
     person.rect.height = (person.rect.height *3 + rect.height)/4;
-    person.score++;
+    person.hitCount++;
+    person.successionMissCount = 0;
     person.hit = true;
 
     for(int i = 0; i < 256; i ++){
@@ -252,10 +315,12 @@ void PersonSet::update()
 {
     std::vector<Person>::iterator it;
     for (it = personVec.begin(); it != personVec.end();) {
-        if((*it).hit==false)
+        if((*it).hit==false) {
             (*it).missCount++;
+            (*it).successionMissCount++;
+        }
         (*it).hit=false;
-        if((*it).missCount>50)
+        if((*it).missCount>300)
              it = personVec.erase(it);    //remove item.
          else
              ++it;
