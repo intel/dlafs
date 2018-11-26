@@ -4,12 +4,12 @@
     "command_create":    
     {
          "pipe_num": 2, 
-         "stream_source": "/home/lijunjie/1600x1200.mp4",
+         "stream_source": "/home/lijunjie/1600x1200_concat.mp4",
          "codec_type": "H.264",    
          "cvdlfilter0":
         {
              "algopipeline": "ssd ! tracklp ! lprecognize"
         },
-        "loop_times":4
+        "loop_times":1
     }
  }

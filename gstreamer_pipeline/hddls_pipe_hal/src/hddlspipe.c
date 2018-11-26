@@ -30,6 +30,7 @@
 
 static gchar g_pipe_desc[1024] = "null";
 static gchar g_server_uri[128] = "null"; 
+static gchar g_algopipeline[128] = "null";
 static gint g_pipe_id = 0;
 static gint g_loop_times = 1;
 
@@ -99,7 +100,7 @@ static gboolean  parse_cmdline (int argc, char *argv[])
      return TRUE;
 }
     
-static void set_property(struct json_object *parent, HddlsPipe *hp, const char *filter_name)
+static int set_property(struct json_object *parent, HddlsPipe *hp, const char *filter_name)
 {
         struct json_object *element = NULL, *property;
         struct json_object_iterator iter, end;
@@ -108,10 +109,11 @@ static void set_property(struct json_object *parent, HddlsPipe *hp, const char *
        const char *property_string = NULL;
         int property_int = 0;
         double property_double = 0.0;
+        int ret = 0;
         
         if( !json_get_object_d2(parent, "command_set_property", filter_name, &element) ) {
                g_print("It didn't find new property for %s\n", filter_name);
-               return;
+               return -1;
          }
 
          end = json_object_iter_end (element);
@@ -119,6 +121,14 @@ static void set_property(struct json_object *parent, HddlsPipe *hp, const char *
          while (!json_object_iter_equal (&iter, &end)) {
                     property_name = json_object_iter_peek_name (&iter);
                     property = json_object_iter_peek_value (&iter);
+                    if(!strncmp(property_name, "algopipeline", 12)) {
+                        property_string = json_object_get_string (property);
+                        strncpy(g_algopipeline,  property_string, strlen(property_string));
+                        g_print("g_algopipeline = %s\n ",g_algopipeline);
+                        ret = 1;
+                        json_object_iter_next (&iter);
+                        continue;
+                    }
                     property_type = json_object_get_type (property);
                     switch (property_type) {
                         case json_type_string:
@@ -138,13 +148,15 @@ static void set_property(struct json_object *parent, HddlsPipe *hp, const char *
                                 break;
                         }
                     json_object_iter_next (&iter);
-            }
+          }
+         return ret;
 }
 
 static void process_commands(HddlsPipe *hp, char *desc)
 {
      struct json_object *root = NULL;
      enum E_COMMAND_TYPE command_type = eCommand_None;
+     int ret = 0;
 
       root = json_create(desc);
       if(!root) {
@@ -167,7 +179,7 @@ static void process_commands(HddlsPipe *hp, char *desc)
                 g_print("Receive command: set pipeline....\n");
                 hddlspipe_pause( hp);
                 // set property
-                set_property(root, hp, CVDLFILTER_NAME);
+                ret = set_property(root, hp, CVDLFILTER_NAME);
                 set_property(root, hp, RESCONVERT_NAME);
                 set_property(root, hp, WSSINK_NAME);
                 hddlspipe_resume(hp);
@@ -175,6 +187,33 @@ static void process_commands(HddlsPipe *hp, char *desc)
          default:
                g_print("Receive invalid message: %s\n", desc);
                 break;
+      }
+      if(ret==1) {
+         g_loop_times++;
+         //update g_pipe_desc
+         // filesrc location=/home/lijunjie/1600x1200_concat.mp4  ! qtdemux  ! h264parse
+         // ! mfxh264dec  ! cvdlfilter name=cvdlfilter0 algopipeline="detection ! track ! classification"
+         // ! resconvert name=resconvert0  resconvert0.src_pic ! mfxjpegenc
+         // ! wssink name=wssink0 wsclientid=13   resconvert0.src_txt ! wssink0.
+         gchar* begin = g_strstr_len(g_pipe_desc, 1024, "algopipeline=" );
+         gchar*end = NULL;
+         gchar *secA = NULL, *secC=NULL;
+         if(begin) {
+                begin = begin+14;
+                end = g_strstr_len(begin,64, "\"" );
+                if(end) {
+                    secA = g_strndup(g_pipe_desc, begin - g_pipe_desc);
+                    secC = g_strndup(end, strlen(end));
+                    // replace g_pipe_desc
+                    g_print("old g_pipe_desc = %s\n", g_pipe_desc);
+                   g_snprintf(g_pipe_desc, 1024, "%s %s %s", secA, g_algopipeline, secC);
+                   g_print("new g_pipe_desc = %s\n", g_pipe_desc);
+                   if(secA && secC)
+                        hddlspipe_stop (hp);
+                   if(secA) g_free(secA);
+                   if(secC) g_free(secC);
+                }
+        }
       }
 }
 

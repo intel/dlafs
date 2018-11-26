@@ -4,13 +4,12 @@
     "command_create":    
     {
          "pipe_num": 2,
-         "stream_source": "/home/lijunjie/1600x1200_concat.mp4",
-         "codec_type": "H.264",    
+         "stream_source": "/home/lijunjie/indoor.mp4",
+         "codec_type": "H.264",
          "cvdlfilter0":
         {
-             "algopipeline": "detection ! track ! classification"
+             "algopipeline": "yolotinyv2 ! reid"
         },
         "loop_times":1
-
     }
  }
