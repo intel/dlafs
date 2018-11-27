@@ -11,6 +11,9 @@ chmod a+x *.js
 
 echo <server_ip>  > path.txt
 
+write hostname into hostname.txt:
+echo <hostname>  > hostname.txt
+
 2. Run receiver client
 ----------------------
 ./receiver_client.js

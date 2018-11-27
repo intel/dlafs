@@ -1,7 +1,7 @@
 .PHONY: src
 
-SYS_INC_DIR := /usr/include/
-SYS_LIB_DIR := /usr/lib/x86_64-linux-gnu/
+SYS_INC_DIR := /usr/include
+SYS_LIB_DIR := /usr/lib/x86_64-linux-gnu
 
 #===========objects list=====================
 ROOT_DIR = $(shell pwd)

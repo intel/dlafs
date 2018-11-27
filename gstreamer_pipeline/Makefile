@@ -2,6 +2,7 @@
 
 all:
 	@make -C hddls_pipe_hal
+	@cp hddls_pipe_hal/src/hddlspipes .
 clean:
 	@make clean -C hddls_pipe_hal
 install:

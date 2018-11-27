@@ -51,7 +51,7 @@ mkdir -p rpm_src_dir/usr/lib/x86_64-linux-gnu/gstreamer-1.0
 cp -raf $PROJECTS_PATH/gstreamer-media-SDK/build/lib/release/* rpm_src_dir/usr/lib/x86_64-linux-gnu/gstreamer-1.0/.
 cp -raf $PROJECTS_PATH/gstreamer_plugin_openVINO/libgstcvdlfilter.so rpm_src_dir/usr/lib/x86_64-linux-gnu/gstreamer-1.0/.
 mkdir -p rpm_src_dir/usr/local/bin
-cp -raf $PROJECTS_PATH/gstreamer_pipeline/hddlspipe rpm_src_dir/usr/local/bin/.
+cp -raf $PROJECTS_PATH/gstreamer_pipeline/hddlspipes rpm_src_dir/usr/local/bin/.
 chmod a+x hddls_prepare.sh
 chmod a+x hddls_pre_install.sh
 cp -raf hddls_prepare.sh rpm_src_dir/usr/local/bin/.
