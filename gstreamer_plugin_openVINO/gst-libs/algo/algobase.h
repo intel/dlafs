@@ -149,10 +149,12 @@ public:
     void start_algo_thread();
     void stop_algo_thread();
 
+    void clear_queue();
     void wait_work_done() {
          // wait IE infer thread finished
          while((mInferCnt>0) ||(mInQueue.size()>0))
             g_usleep(10000);
+            clear_queue();
     }
     int get_in_queue_size();
     int get_out_queue_size();

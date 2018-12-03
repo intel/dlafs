@@ -88,7 +88,7 @@ npm config set proxy <proxy>
 sudo npm install -g n
 sudo n stable
 npm install ws@6.0.0
-npm install child_process arraybuffer-to-string rimraf commander tree-kill
+npm install child_process arraybuffer-to-string rimraf commander tree-kill color
 
 9. generate certifiate files
     Please generate all these certificates in one pc!!!

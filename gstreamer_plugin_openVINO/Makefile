@@ -24,6 +24,9 @@ install:
 	@mkdir -p $(SYS_INC_DIR)/gstcvdl
 	@cp gst-libs/ocl/oclcommon.h $(SYS_INC_DIR)/gstcvdl/.
 	@cp gst-libs/ws/wsclient.h $(SYS_INC_DIR)/gstcvdl/.
+	@cp gst-libs/algo/algoregister.h $(SYS_INC_DIR)/gstcvdl/.
+	@cp gst-libs/algo/exinferdata.h $(SYS_INC_DIR)/gstcvdl/.
+	@cp gst-libs/algo/exinferenceparser.h $(SYS_INC_DIR)/gstcvdl/.
 	@echo "ocl kernel are installed into " $(SYS_LIB_DIR)/libgstcvdl
 	@echo "cvdl model are installed into" $(SYS_LIB_DIR)/libgstcvdl
 	@echo ""

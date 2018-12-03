@@ -413,7 +413,17 @@ void CvdlAlgoBase::stop_algo_thread()
 {
     if(mTask)
         gst_task_set_state(mTask, GST_TASK_STOPPED);
+
     // remove all intem in the Queue
+    clear_queue();
+    mInQueue.flush();
+    wait_work_done();
+    if(mTask)
+        gst_task_join(mTask);
+}
+
+void CvdlAlgoBase::clear_queue()
+{
     while(mInQueue.size()>0) {
             CvdlAlgoData algoData;
             algoData.mGstBuffer=NULL;
@@ -422,10 +432,6 @@ void CvdlAlgoBase::stop_algo_thread()
                         gst_buffer_unref(algoData.mGstBuffer);
             }
     }
-    mInQueue.flush();
-    wait_work_done();
-    if(mTask)
-        gst_task_join(mTask);
 }
 
 void CvdlAlgoBase::queue_buffer(GstBuffer *buffer, guint w, guint h)

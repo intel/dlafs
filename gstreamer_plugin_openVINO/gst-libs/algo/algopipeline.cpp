@@ -33,6 +33,7 @@
 #include "lprecognize.h"
 #include "yolotinyv2.h"
 #include "reid.h"
+#include "genericalgo.h"
 #include "sinkalgo.h"
 #include "algopipeline.h"
 
@@ -40,7 +41,9 @@
 extern "C" {
 #endif
 
-const static char *g_algo_name_str[ALGO_MAX_NUM] = {
+#if 0
+//default algo list
+const static char *g_algo_name_str[ALGO_MAX_DEFAULT_NUM] = {
                 ALGO_DETECTION_NAME,
                 ALGO_TRACKING_NAME,
                 ALGO_CLASSIFICATION_NAME,
@@ -51,6 +54,7 @@ const static char *g_algo_name_str[ALGO_MAX_NUM] = {
                 ALGO_REID_NAME,
                 ALGO_SINK_NAME
 };
+#endif
 
 static AlgoPipelineConfig algoTopologyDefault[] = {
     {0, ALGO_DETECTION,      -1,  1, {1}},
@@ -61,6 +65,7 @@ static AlgoPipelineConfig algoTopologyDefault[] = {
 static CvdlAlgoBase* algo_create(int type)
 {
     CvdlAlgoBase* algo;
+    char *algoName = NULL;
     switch(type) {
         case ALGO_DETECTION:
             algo = new DetectionAlgo;
@@ -90,9 +95,16 @@ static CvdlAlgoBase* algo_create(int type)
             algo = new SinkAlgo;
             break;
         default:
-            algo = NULL;
+            algo =  NULL;
             break;
    };
+
+     // type/id >= 8 is for generic algo
+    if(type>=ALGO_MAX_DEFAULT_NUM) {
+            algoName =register_get_algo_name(type);
+            if(algoName)
+                algo = new GenericAlgo(algoName);
+   }
 
     if(algo)
         algo->mAlgoType = type;
@@ -169,10 +181,14 @@ AlgoPipelineConfig *algo_pipeline_config_create(gchar *desc, int *num)
     AlgoPipelineConfig *config = NULL;
     gchar *p = desc, *pDot, *pName, *pParentName, *descStrip;
     gchar **items = NULL;// **names;
-    int count = 0, i, j,n, index, len, out_index = 1;// nameNum = 0, nameIndex = 0;
+    int count = 0, i, j, index, len, out_index = 1;// nameNum = 0, nameIndex = 0;
     //gboolean newSubBranch = FALSE;
     if(!desc)
         return NULL;
+
+    //register default algo
+    register_init();
+    register_dump();
 
     //TODO: need to support case 2 better
 
@@ -252,24 +268,10 @@ AlgoPipelineConfig *algo_pipeline_config_create(gchar *desc, int *num)
         }
 
         // get algo type
- #if 0
-        if(!strncmp(p, ALGO_DETECTION_NAME, sizeof(ALGO_DETECTION_NAME))) {
-            config[i].curType = ALGO_DETECTION;
-        } else if(!strncmp(p, ALGO_TRACKING_NAME, sizeof(ALGO_TRACKING_NAME))) {
-            config[i].curType = ALGO_TRACKING;
-        } else if(!strncmp(p, ALGO_CLASSIFICATION_NAME, sizeof(ALGO_CLASSIFICATION_NAME))) {
-            config[i].curType = ALGO_CLASSIFICATION;
-        }else if(!strncmp(p, ALGO_SSD_NAME, sizeof(ALGO_SSD_NAME))) {
-            config[i].curType = ALGO_SSD;
-        }else if(!strncmp(p, ALGO_TRACK_LP_NAME, sizeof(ALGO_TRACK_LP_NAME))) {
-            config[i].curType = ALGO_TRACK_LP;
-        }else if(!strncmp(p, ALGO_RECOGNIZE_LP_NAME, sizeof(ALGO_CLASSIFICATION_NAME))) {
-            config[i].curType = ALGO_REGCONIZE_LP;
-        }else if(!strncmp(p, ALGO_YOLO_TINY_V2_NAME, sizeof(ALGO_YOLO_TINY_V2_NAME))) {
-            config[i].curType = ALGO_YOLO_TINY_V2;
-        }
+ #if 1
+        config[i].curType = register_get_algo_id(p);
 #else
-        for(n=0;n<ALGO_MAX_NUM-1;n++) {
+        for(n=0;n<ALGO_MAX_DEFAULT_NUM-1;n++) {
             if(strlen(p) != strlen(g_algo_name_str[n]))
                 continue;
             if(!strncmp(p, g_algo_name_str[n], strlen(g_algo_name_str[n]))) {
@@ -280,7 +282,6 @@ AlgoPipelineConfig *algo_pipeline_config_create(gchar *desc, int *num)
 #endif
     }
     *num = count;
-
     g_strfreev(items);
     return config;
 }
@@ -293,10 +294,10 @@ static void algo_pipeline_print(AlgoPipelineHandle handle)
 
       g_print("algopipeline chain: ");
       while(algo && algo!=last && last) {
-                g_print("%s ->  ", g_algo_name_str[algo->mAlgoType]);
+                g_print("%s ->  ", register_get_algo_name(algo->mAlgoType));
                 algo = algo->mNext;
       }
-      g_print("%s\n", g_algo_name_str[algo->mAlgoType]);
+      g_print("%s\n", register_get_algo_name(algo->mAlgoType));
 }
 
 AlgoPipelineHandle algo_pipeline_create(AlgoPipelineConfig* config, int num)
@@ -392,6 +393,7 @@ void algo_pipeline_destroy(AlgoPipelineHandle handle)
     }
     g_free(pipeline->algo_chain);
     g_free(pipeline);
+    //register_reset();
 }
 void algo_pipeline_set_caps(AlgoPipelineHandle handle, int algo_id, GstCaps* caps)
 {
@@ -551,11 +553,7 @@ void algo_pipeline_flush_buffer(AlgoPipelineHandle handle)
 
 const char* algo_pipeline_get_name(guint  id)
 {
-    const static char * invalid_name = "invalid";
-    if(id>=ALGO_MAX_NUM)
-        return invalid_name;
-    else
-        return g_algo_name_str[id];
+        return register_get_algo_name(id);
 }
 
 #ifdef __cplusplus

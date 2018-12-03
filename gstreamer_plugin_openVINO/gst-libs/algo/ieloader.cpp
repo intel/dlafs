@@ -165,6 +165,11 @@ GstFlowReturn IELoader::read_model(std::string strModelXml,
         case IE_MODEL_YOLOTINYV2:
              networkConfig[VPU_CONFIG_KEY(NETWORK_CONFIG)] = "data=input,scale=128";
              break;
+        case IE_MODEL_GENERIC:
+             //TODO: here only put ssd as an example
+              config_xml = strModelXml.substr(0, strModelXml.rfind(".")) + std::string(".conf.xml");
+              networkConfig[VPU_CONFIG_KEY(NETWORK_CONFIG)] = "file=" + config_xml;
+            break;
         default:
             break;
    }

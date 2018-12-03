@@ -27,9 +27,12 @@ export DEFINES := -DDEBUG
 
 all:
 	@$(MAKE) -C src
+	@$(MAKE) -C tools
 
 clean:
 	@$(MAKE) clean -C src
+	@$(MAKE) clean -C tools
 
 install:
 	@cp src/hddlspipes /usr/local/bin/.
+	@cp tools/registeralgo /usr/local/bin/.

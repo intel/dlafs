@@ -3,6 +3,7 @@
 all:
 	@make -C hddls_pipe_hal
 	@cp hddls_pipe_hal/src/hddlspipes .
+	@cp hddls_pipe_hal/tools/registeralgo .
 clean:
 	@make clean -C hddls_pipe_hal
 install:

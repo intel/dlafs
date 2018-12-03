@@ -49,7 +49,8 @@ enum{
     IE_MODEL_SSD =2,
     IE_MODEL_LP_RECOGNIZE = 3,
     IE_MODEL_YOLOTINYV2 = 4,
-     IE_MODEL_REID = 5,
+    IE_MODEL_REID = 5,
+    IE_MODEL_GENERIC = 6, 
     IE_MODEL_LP_NONE
 };
 
