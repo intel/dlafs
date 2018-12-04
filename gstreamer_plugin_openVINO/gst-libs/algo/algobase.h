@@ -159,7 +159,7 @@ public:
     int get_in_queue_size();
     int get_out_queue_size();
 
-    GstFlowReturn init_ieloader(const char* modeFileName, guint ieType);
+    GstFlowReturn init_ieloader(const char* modeFileName, guint ieType, std::string network_config=std::string("none"));
     void  init_dl_caps(GstCaps* incaps);
     virtual void set_data_caps(GstCaps *incaps)
     {

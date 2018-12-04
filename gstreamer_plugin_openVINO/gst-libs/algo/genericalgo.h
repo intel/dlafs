@@ -51,6 +51,7 @@ public:
     pfPostProcessInferenceDataFunc pfPostProcess;
     pfGetDataTypeFunc pfGetType;
     pfGetMeanScaleFunc pfGetMS;
+    pfGetNetworkConfigFunc pfGetNetworkConfig;
 
     bool mLoaded; // If dynamic library can be loaded
     std::string mLibName;

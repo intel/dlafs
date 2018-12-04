@@ -470,7 +470,7 @@ int CvdlAlgoBase::get_out_queue_size()
     return 0;
 }
 
-GstFlowReturn CvdlAlgoBase::init_ieloader(const char* modeFileName, guint ieType)
+GstFlowReturn CvdlAlgoBase::init_ieloader(const char* modeFileName, guint ieType, std::string network_config)
 {
     GstFlowReturn ret = GST_FLOW_OK;
     if(mIeInited)
@@ -488,7 +488,7 @@ GstFlowReturn CvdlAlgoBase::init_ieloader(const char* modeFileName, guint ieType
     std::string strModelBin = tmpFn + ".bin";
     GST_DEBUG("Algo %d: Model bin = %s", mAlgoType, strModelBin.c_str());
     GST_DEBUG("Algo %d: Model xml = %s", mAlgoType, strModelXml.c_str());
-    ret = mIeLoader.read_model(strModelXml, strModelBin, ieType);
+    ret = mIeLoader.read_model(strModelXml, strModelBin, ieType, network_config);
     
     if(ret != GST_FLOW_OK){
         g_print("IELoder failed to read model!");

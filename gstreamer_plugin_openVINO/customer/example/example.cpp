@@ -97,6 +97,15 @@ int  post_process_inference_data(ExInferData *data)
      return 0;
 }
 
+const char *get_network_config(const char* modelName)
+{
+    std::string modelNameStr = std::string(modelName);
+    std::string config_xml =  std::string("file=") + modelNameStr.substr(0, modelNameStr.rfind(".")) + std::string(".conf.xml");
+    char* config = strdup(config_xml.c_str());
+    return config;
+}
+
+
 // get the data type for inference input and result
 void get_data_type(ExDataType *inData,  ExDataType *outData)
 {

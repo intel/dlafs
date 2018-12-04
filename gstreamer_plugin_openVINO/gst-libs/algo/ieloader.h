@@ -62,7 +62,7 @@ public:
     ~IELoader();
 
     GstFlowReturn set_device(InferenceEngine::TargetDevice dev);
-    GstFlowReturn read_model(std::string strModelXml, std::string strModelBin, int modelType);
+    GstFlowReturn read_model(std::string strModelXml, std::string strModelBin, int modelType, std::string network_config);
     GstFlowReturn convert_input_to_blob(const cv::UMat& img, InferenceEngine::Blob::Ptr& inputBlobPtr);
 
     // move to algoBase

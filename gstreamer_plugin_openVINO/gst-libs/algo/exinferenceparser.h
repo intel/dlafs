@@ -37,4 +37,6 @@ int  post_process_inference_data(ExInferData *data);
 // get the data type for inference input and result
 void get_data_type(ExDataType *inData,  ExDataType *outData);
 void get_mean_scale(float *mean, float *scale);
+// get network config for VPU_CONFIG
+char *get_network_config(const char* modelName);
 #endif

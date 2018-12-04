@@ -78,7 +78,10 @@ static void post_callback(CvdlAlgoData *algoData)
         }
 }
 
-GenericAlgo::GenericAlgo(char *name) : CvdlAlgoBase(post_callback, CVDL_TYPE_DL), mName(std::string(name))
+GenericAlgo::GenericAlgo(char *name) : CvdlAlgoBase(post_callback, CVDL_TYPE_DL), mName(std::string(name)),
+        mHandler(NULL), pfParser(NULL), pfPostProcess(NULL), pfGetType(NULL),
+        pfGetMS(NULL), pfGetNetworkConfig(NULL), mLoaded(false), inType(DataTypeInt8),
+        outType(DataTypeFP32), mCurPts(0)
 {
     const gchar *env = g_getenv("CVDL_MODEL_FULL_PATH");
     gchar libname[256];
@@ -99,9 +102,10 @@ GenericAlgo::GenericAlgo(char *name) : CvdlAlgoBase(post_callback, CVDL_TYPE_DL)
           pfPostProcess  = (pfPostProcessInferenceDataFunc)dlsym(mHandler, "post_process_inference_data");
           pfGetType = (pfGetDataTypeFunc)dlsym(mHandler, "get_data_type");
           pfGetMS = (pfGetMeanScaleFunc)dlsym(mHandler, "get_mean_scale");
+          pfGetNetworkConfig = (pfGetNetworkConfigFunc)dlsym(mHandler,"get_network_config");
     }
 
-    if(pfParser && pfPostProcess &&  pfGetType && pfGetMS)
+    if(pfParser && pfPostProcess &&  pfGetType && pfGetMS && pfGetNetworkConfig)
         mLoaded = true;
     else
         mLoaded = false;
@@ -144,6 +148,7 @@ GstFlowReturn GenericAlgo::algo_dl_init(const char* modeFileName)
     GstFlowReturn ret = GST_FLOW_OK;
     ExDataType in, out;
     float mean=0.0, scale=1.0;
+    std::string network_config=std::string("null");
     if(!mLoaded)
         return GST_FLOW_ERROR;
 
@@ -159,7 +164,14 @@ GstFlowReturn GenericAlgo::algo_dl_init(const char* modeFileName)
          pfGetMS(&mean, &scale);
         mIeLoader.set_mean_and_scale(mean,  scale);
     }
-    ret = init_ieloader(modeFileName, IE_MODEL_GENERIC);
+    if(pfGetNetworkConfig) {
+          char* config = pfGetNetworkConfig(modeFileName);
+          if(config) {
+                network_config  = std::string(config);
+                free(config);
+          }
+    }
+    ret = init_ieloader(modeFileName, IE_MODEL_GENERIC, network_config);
 
     return ret;
 }
@@ -182,7 +194,7 @@ GstFlowReturn GenericAlgo::parse_inference_result(InferenceEngine::Blob::Ptr &re
     int len =  resultBlobFp32->size();
 
     //parse inference result and put them into algoData
-    g_print("input data = %p\n", input);
+    GST_LOG("input data = %p\n", input);
     ExInferData *exInferData = NULL;
     if(pfParser) {
         exInferData = pfParser(input, outType, len,mImageProcessorInVideoWidth,mImageProcessorInVideoHeight);

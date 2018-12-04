@@ -64,6 +64,7 @@ typedef ExInferData * (*pfInferenceResultParseFunc)(void *data,  ExDataType type
 typedef int  (*pfPostProcessInferenceDataFunc)(ExInferData &data);
 typedef void (*pfGetDataTypeFunc)(ExDataType *inData,  ExDataType *outData);
 typedef void (*pfGetMeanScaleFunc)(float *mean, float *scale);
+typedef char *(*pfGetNetworkConfigFunc)(const char* modelName);
 
 #ifdef __cplusplus
 };
