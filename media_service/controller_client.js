@@ -42,6 +42,21 @@ function checksum(str, algorithm, encoding) {
     .digest(encoding || 'hex')
 }
 
+function display_json(data){
+  let i =0;
+  console.log("HERE ARE SERVER MODEL LISTS:".yellow);
+  for(key in data){
+    console.log((i + '. '+ key) .bgBlue);
+    i++;
+    for(innerKey in data[key]){
+      console.log(innerKey + ":     " +JSON.stringify(data[key][innerKey]).yellow); 
+  
+    }
+    console.log("\r\n");
+  }
+
+}
+
 const rl = readline.createInterface(process.stdin, process.stdout, completer);
 const help = [('-help                          ' + 'commanders that you can use.').magenta
   , ('-c <create.json>                  ' + 'create pipeslines').magenta
@@ -196,7 +211,8 @@ function set_websocket() {
           //console.log(JSON.stringify(model_file, null, 4));
           let print_model = JSON.parse(receive_model_file_info);
           //console.log(JSON.stringify(print_model));
-          console.log(JSON.stringify(print_model, null, "  "));
+          //console.log(JSON.stringify(print_model, null, "  "));
+          display_json(print_model);
           prompt();
           break;
 
@@ -231,8 +247,8 @@ function set_websocket() {
               if (receive_model_file_info.indexOf(send_file_name) > -1) {
                 //TODO:compare each file's MD5
                 let model_file_json = JSON.parse(receive_model_file_info);
-                console.log(crypto.createHash("md5").update(file).digest("hex"));
-                console.log(model_file_json[send_file_name].model_file.bin_file.MD5);
+                //console.log(crypto.createHash("md5").update(file).digest("hex"));
+                //console.log(model_file_json[send_file_name].model_file.bin_file.MD5);
                 if (file.indexOf("bin") > -1) {
                   if (crypto.createHash("md5").update(file).digest("hex") === (model_file_json[send_file_name].model_file.bin_file.MD5)) {
                     console.log("server already has this model file".red);
@@ -321,7 +337,8 @@ function set_websocket() {
       } else if (data.indexOf(":") > -1) {
         receive_model_file_info = data;
         if (show_file === 0) {
-          console.log(JSON.parse(data));
+          display_json(JSON.parse(data));
+          //console.log(JSON.parse(data));
           show_file++;
           read_model_file();
         } else {
@@ -363,4 +380,5 @@ function set_websocket() {
 }
 
 read_server_ip();
+
 

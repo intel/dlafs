@@ -188,8 +188,8 @@ controller_wss.on('connection', function (ws) {
                 console.log('temp json: done');
               }
             });
-            console.log(pipe_id);
-            console.log(pipe_count);
+            //console.log(pipe_id);
+            //console.log(pipe_count);
             pipe_count++;
 
           }
@@ -216,7 +216,7 @@ controller_wss.on('connection', function (ws) {
           per_client_pipe = client_map.get(destory_json.client_id);
           per_client_pipe = per_client_pipe.replace(destory_json.command_destroy.pipe_id.toString() + ",", "");
           client_map.set(destory_json.client_id, per_client_pipe);
-          console.log(client_map);
+          //console.log(client_map);
           console.log('we killed pipe ' + destory_json.command_destroy.pipe_id);
           pipe_map.set(destory_json.command_destroy.pipe_id, -1);
           ws.send("we have killed pipe " + destory_json.command_destroy.pipe_id);
@@ -226,7 +226,7 @@ controller_wss.on('connection', function (ws) {
 
         case 'm':
           let length = path.lastIndexOf("/");
-          console.log(length);
+          //console.log(length);
           model_name = path.substring(1, length);
           file_name = path.substring(length + 1);
           console.log(model_name);
@@ -438,6 +438,7 @@ exec('hostname', function (error, stdout, stderr) {
     console.log(('exec error: ' + error).red);
   }
 });
+
 
 
 
