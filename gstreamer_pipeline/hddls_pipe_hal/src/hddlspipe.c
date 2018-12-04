@@ -192,7 +192,7 @@ static void process_commands(HddlsPipe *hp, char *desc)
          g_loop_times++;
          //update g_pipe_desc
          // filesrc location=/home/lijunjie/1600x1200_concat.mp4  ! qtdemux  ! h264parse
-         // ! mfxh264dec  ! cvdlfilter name=cvdlfilter0 algopipeline="detection ! track ! classification"
+         // ! mfxh264dec  ! cvdlfilter name=cvdlfilter0 algopipeline="yolov1tiny ! opticalflowtrack ! googlenetv2"
          // ! resconvert name=resconvert0  resconvert0.src_pic ! mfxjpegenc
          // ! wssink name=wssink0 wsclientid=13   resconvert0.src_txt ! wssink0.
          gchar* begin = g_strstr_len(g_pipe_desc, 1024, "algopipeline=" );
@@ -271,7 +271,7 @@ static gchar* parse_create_command(char *desc,  gint pipe_id )
             if(json_get_string_d2(object, CVDLFILTER_NAME, "algopipeline", &algo_pipeline_desc)) {
                      g_print("property - algopipeline = %s\n",algo_pipeline_desc);
              } else { //default
-                    algo_pipeline_desc = "detection ! track ! classification";
+                    algo_pipeline_desc = "yolov1tiny ! opticalflowtrack ! googlenetv2";
              }
     }
     if(!stream_source || !stream_codec_type) {

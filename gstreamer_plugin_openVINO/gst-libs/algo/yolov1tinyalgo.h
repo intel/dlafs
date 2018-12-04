@@ -19,8 +19,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#ifndef __DETECTION_ALGO_H__
-#define __DETECTION_ALGO_H__
+#ifndef __ALGO_YOLOV1_TINY_H__
+#define __ALGO_YOLOV1_TINY_H__
 
 #include "algobase.h"
 #include <gst/gstbuffer.h>
@@ -42,20 +42,20 @@ typedef struct {
     float **fProbs;
 } RectSortable;
 
-typedef struct _DetectionResultData DetectionResultData;
-struct _DetectionResultData{
+typedef struct _Yolov1TinyResultData Yolov1TinyResultData;
+struct _Yolov1TinyResultData{
     GstBuffer *buffer;
     guint64 pts;
     int object_num;
     std::vector<ObjectData> objects;
 };
 
-class DetectionInternalData;
-class DetectionAlgo : public CvdlAlgoBase 
+class Yolov1TinyInternalData;
+class Yolov1TinyAlgo : public CvdlAlgoBase 
 {
 public:
-    DetectionAlgo();
-    virtual ~DetectionAlgo();
+    Yolov1TinyAlgo();
+    virtual ~Yolov1TinyAlgo();
     virtual void set_data_caps(GstCaps *incaps);
     virtual GstFlowReturn algo_dl_init(const char* modeFileName);
     virtual GstFlowReturn parse_inference_result(InferenceEngine::Blob::Ptr &resultBlobPtr,
@@ -68,27 +68,27 @@ private:
     const float cNMSThreshold = DETECTION_NMS_THRESHOLD; /* 0.4 */
 
     guint64 mCurPts;
-    DetectionResultData mResultData;
+    Yolov1TinyResultData mResultData;
     const char** mLabelNames;
 
     void set_default_label_name();
     void set_label_names(const char** label_names);
 
     //int nms_comparator(const void *pa, const void *pb);
-    void nms_sort(DetectionInternalData *internalData);
+    void nms_sort(Yolov1TinyInternalData *internalData);
     void get_detection_boxes(
-            float *ieResult, DetectionInternalData *internalData,
+            float *ieResult, Yolov1TinyInternalData *internalData,
             int32_t w, int32_t h, int32_t onlyObjectness);
-    void get_result(DetectionInternalData *internalData, CvdlAlgoData *outData);
+    void get_result(Yolov1TinyInternalData *internalData, CvdlAlgoData *outData);
 };
 
 
 // Internal data for detection
 // allocate one for each detection and free it when done
-class DetectionInternalData{
+class Yolov1TinyInternalData{
 public:
-    DetectionInternalData();
-    ~DetectionInternalData();
+    Yolov1TinyInternalData();
+    ~Yolov1TinyInternalData();
 
     const int cGrideSize = DETECTION_GRIDE_SIZE;
     const int cClassNum  = DETECTION_CLASS_NUM;

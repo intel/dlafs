@@ -8,7 +8,7 @@
          "codec_type": "H.264",
          "cvdlfilter0":
         {
-             "algopipeline": "yolotinyv2 ! reid"
+             "algopipeline": "yolov2tiny ! reid"
         },
         "loop_times":1
     }

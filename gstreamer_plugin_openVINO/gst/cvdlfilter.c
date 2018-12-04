@@ -38,8 +38,8 @@ G_DEFINE_TYPE (CvdlFilter, cvdl_filter, GST_TYPE_BASE_TRANSFORM);
 */
 // #define SYNC_WITH_DECODER
 
-char default_algo_pipeline_desc[] = "detection ! track ! classification";
-char default_algo_pipeline_desc2[] = "ssd ! tracklp ! lprecognize";
+char default_algo_pipeline_desc[] = "yolov1tiny ! opticalflowtrack ! googlenetv2";
+char default_algo_pipeline_desc2[] = "mobilenetssd ! tracklp ! lprnet";
 char default_algo_pipeline_descX[] = "detection ! track name=tk ! tk.vehicle_classification  ! tk.person_face_detection ! face_recognication";
 
 /* GstVideoFlip properties */
@@ -542,8 +542,8 @@ cvdl_filter_class_init (CvdlFilterClass * klass)
 
     g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_ALGO_PIPELINE_DESC,
          g_param_spec_string ("algopipeline", "AlgoPipelineDesc",
-             "CV/DL algo pipeline string, support detection, track, classification",
-             "detection ! track ! classification",
+             "CV/DL algo pipeline string, support:  yolov1tiny, opticalflowtrack, googlenetv2, mobilenetssd, tracklp, lprnet, reid, yolov2tiny",
+             "yolov1tiny ! opticalflowtrack ! googlenetv2",
              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
     gst_element_class_add_pad_template (elem_class, gst_static_pad_template_get (&cvdl_src_factory));

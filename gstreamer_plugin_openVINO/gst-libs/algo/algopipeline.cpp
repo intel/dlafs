@@ -25,14 +25,14 @@
 // This file will be compiled by C++ compiler
 //
 
-#include "detectionalgo.h"
-#include "trackalgo.h"
-#include "classificationalgo.h"
-#include "ssdalgo.h"
+#include "yolov1tinyalgo.h"
+#include "opticalflowtrackalgo.h"
+#include "googlenetv2algo.h"
+#include "mobilenetssdalgo.h"
 #include "tracklpalgo.h"
-#include "lprecognize.h"
-#include "yolotinyv2.h"
-#include "reid.h"
+#include "lprnetalgo.h"
+#include "yolov2tinyalgo.h"
+#include "reidalgo.h"
 #include "genericalgo.h"
 #include "sinkalgo.h"
 #include "algopipeline.h"
@@ -44,22 +44,22 @@ extern "C" {
 #if 0
 //default algo list
 const static char *g_algo_name_str[ALGO_MAX_DEFAULT_NUM] = {
-                ALGO_DETECTION_NAME,
+                ALGO_YOLOV1_TINY_NAME,
                 ALGO_TRACKING_NAME,
-                ALGO_CLASSIFICATION_NAME,
-                ALGO_SSD_NAME,
+                ALGO_GOOGLENETV2_NAME,
+                ALGO_MOBILENET_SSD_NAME,,
                 ALGO_TRACK_LP_NAME,
-                ALGO_RECOGNIZE_LP_NAME,
-                ALGO_YOLO_TINY_V2_NAME,
+                ALGO_LPRNET_NAME,
+                ALGO_YOLOV2_TINY_NAME,
                 ALGO_REID_NAME,
                 ALGO_SINK_NAME
 };
 #endif
 
 static AlgoPipelineConfig algoTopologyDefault[] = {
-    {0, ALGO_DETECTION,      -1,  1, {1}},
-    {1, ALGO_TRACKING,        0,  1, {2}},
-    {2, ALGO_CLASSIFICATION,  1,  1, {-1}},
+    {0, ALGO_YOLOV1_TINY, -1,  1, {1}},
+    {1, ALGO_OF_TRACK,        0,  1, {2}},
+    {2, ALGO_GOOGLENETV2,  1,  1, {-1}},
 };
 
 static CvdlAlgoBase* algo_create(int type)
@@ -67,26 +67,26 @@ static CvdlAlgoBase* algo_create(int type)
     CvdlAlgoBase* algo;
     char *algoName = NULL;
     switch(type) {
-        case ALGO_DETECTION:
-            algo = new DetectionAlgo;
+        case ALGO_YOLOV1_TINY:
+            algo = new Yolov1TinyAlgo;
             break;
-        case ALGO_TRACKING:
-            algo = new TrackAlgo;
+        case ALGO_OF_TRACK:
+            algo = new OpticalflowTrackAlgo;
             break;
-        case ALGO_CLASSIFICATION:
-            algo = new ClassificationAlgo;
+        case ALGO_GOOGLENETV2:
+            algo = new GoogleNetv2Algo;
             break;
-         case ALGO_SSD:
-            algo = new SSDAlgo;
+         case ALGO_MOBILENET_SSD:
+            algo = new MobileNetSSDAlgo;
             break;
          case ALGO_TRACK_LP:
             algo = new TrackLpAlgo;
             break;
-         case ALGO_REGCONIZE_LP:
-            algo = new LpRecognizeAlgo;
+         case ALGO_LPRNET:
+            algo = new LPRNetAlgo;
             break;
-         case ALGO_YOLO_TINY_V2:
-            algo = new YoloTinyv2Algo;
+         case ALGO_YOLOV2_TINY:
+            algo = new Yolov2TinyAlgo;
             break;
          case ALGO_REID:
             algo = new ReidAlgo;
@@ -174,7 +174,7 @@ void algo_pipeline_config_destroy(AlgoPipelineConfig *config)
 
 // create a AlgoPipelineConfig from description string
 // The format is:
-//  case 1.   "detection ! track ! classification"
+//  case 1.   "yolov1tiny ! opticalflowtrack ! googlenetv2"
 //  case 2.   "detection ! track name=tk ! tk.vehicle_classification  ! tk.person_face_detection ! face_recognication"
 AlgoPipelineConfig *algo_pipeline_config_create(gchar *desc, int *num)
 {

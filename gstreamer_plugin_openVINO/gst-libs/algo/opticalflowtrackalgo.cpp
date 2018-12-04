@@ -21,7 +21,7 @@
  */
 #include <ocl/oclmemory.h>
 #include "mathutils.h"
-#include "trackalgo.h"
+#include "opticalflowtrackalgo.h"
 #include <interface/videodefs.h>
 
 using namespace HDDLStreamFilter;
@@ -54,7 +54,7 @@ using namespace cv;
 //   1. track each one object
 static void post_track_process(CvdlAlgoData *algoData)
 {
-    TrackAlgo *trackAlgo = static_cast<TrackAlgo*> (algoData->algoBase);
+    OpticalflowTrackAlgo *trackAlgo = static_cast<OpticalflowTrackAlgo*> (algoData->algoBase);
 
     trackAlgo->verify_detection_result(algoData->mObjectVec);
 
@@ -69,23 +69,23 @@ static void post_track_process(CvdlAlgoData *algoData)
     trackAlgo->update_track_object(algoData->mObjectVec);
 }
 
-TrackAlgo::TrackAlgo():CvdlAlgoBase(post_track_process, CVDL_TYPE_CV)
+OpticalflowTrackAlgo::OpticalflowTrackAlgo():CvdlAlgoBase(post_track_process, CVDL_TYPE_CV)
 {
     mInputWidth = TRACKING_INPUT_W;
     mInputHeight = TRACKING_INPUT_H;
     mPreFrame = NULL;
 }
 
-TrackAlgo::~TrackAlgo()
+OpticalflowTrackAlgo::~OpticalflowTrackAlgo()
 {
-    g_print("TrackAlgo: image process %d frames, image preprocess fps = %.2f\n",
+    g_print("OpticalflowTrackAlgo: image process %d frames, image preprocess fps = %.2f\n",
         mFrameDoneNum, 1000000.0*mFrameDoneNum/mImageProcCost);
 }
 
 // set data caps
 //   1. pass orignal video caps to it, which is the input data of image processor
 //   2. create ocl caps for OCL processing the orignal video image to be the Gray format, which is the input of object tracking
-void TrackAlgo::set_data_caps(GstCaps *incaps)
+void OpticalflowTrackAlgo::set_data_caps(GstCaps *incaps)
 {
     if(mInCaps)
         gst_caps_unref(mInCaps);
@@ -109,7 +109,7 @@ void TrackAlgo::set_data_caps(GstCaps *incaps)
   *    private method
   *
   **************************************************************************/
-    cv::UMat& TrackAlgo::get_umat(GstBuffer *buffer)
+    cv::UMat& OpticalflowTrackAlgo::get_umat(GstBuffer *buffer)
     {
         OclMemory *ocl_mem = NULL;
         static cv::UMat empty_umat = cv::UMat();
@@ -125,7 +125,7 @@ void TrackAlgo::set_data_caps(GstCaps *incaps)
         return ocl_mem->frame;
     }
     
-    cv::Mat TrackAlgo::get_mat(GstBuffer *buffer)
+    cv::Mat OpticalflowTrackAlgo::get_mat(GstBuffer *buffer)
     {
         OclMemory *ocl_mem = NULL;
         static cv::Mat empty_mat = cv::Mat();
@@ -144,7 +144,7 @@ void TrackAlgo::set_data_caps(GstCaps *incaps)
  * We will remove the exception results
  * @param vecDetectRt: HDDL detect results
  */
-void TrackAlgo::verify_detection_result(std::vector<ObjectData> &objectVec)
+void OpticalflowTrackAlgo::verify_detection_result(std::vector<ObjectData> &objectVec)
 {
     std::vector<ObjectData> vecObjectCp = objectVec;
     objectVec.clear();
@@ -192,7 +192,7 @@ void TrackAlgo::verify_detection_result(std::vector<ObjectData> &objectVec)
     }
 }
 
-std::vector<cv::Point2f> TrackAlgo::calc_feature_points(cv::UMat &gray)
+std::vector<cv::Point2f> OpticalflowTrackAlgo::calc_feature_points(cv::UMat &gray)
 {
     /* Optical flow parameter */
     cv::TermCriteria termcrit(cv::TermCriteria::COUNT | cv::TermCriteria::EPS, 20, 0.03);
@@ -208,7 +208,7 @@ std::vector<cv::Point2f> TrackAlgo::calc_feature_points(cv::UMat &gray)
     return vecFeatPt;
 }
 
-std::vector<cv::Point2f> TrackAlgo::find_points_in_ROI(cv::Rect roi)
+std::vector<cv::Point2f> OpticalflowTrackAlgo::find_points_in_ROI(cv::Rect roi)
 {
     float x1 = roi.x;
     float y1 = roi.y;
@@ -226,7 +226,7 @@ std::vector<cv::Point2f> TrackAlgo::find_points_in_ROI(cv::Rect roi)
 }
 
 // Based on average shift moment estimating.If fisrt track, default = 2;
-void TrackAlgo::calc_average_shift_moment(TrackObjAttribute& curObj, float& offx, float& offy)
+void OpticalflowTrackAlgo::calc_average_shift_moment(TrackObjAttribute& curObj, float& offx, float& offy)
 {
     float posSz = (float) curObj.vecPos.size();
     if (curObj.vecPos.size() <= 0) {
@@ -243,7 +243,7 @@ void TrackAlgo::calc_average_shift_moment(TrackObjAttribute& curObj, float& offx
 }
 
 // return outRoi based on the size of tracking image
-bool TrackAlgo::track_one_object(cv::Mat& curFrame, TrackObjAttribute& curObj, cv::Rect& outRoi)
+bool OpticalflowTrackAlgo::track_one_object(cv::Mat& curFrame, TrackObjAttribute& curObj, cv::Rect& outRoi)
 {
     // size is based on track image size
     cv::Rect roi = curObj.getLastPos();
@@ -316,7 +316,7 @@ bool TrackAlgo::track_one_object(cv::Mat& curFrame, TrackObjAttribute& curObj, c
     return true;
 }
 
-void TrackAlgo::figure_out_trajectory_points(
+void OpticalflowTrackAlgo::figure_out_trajectory_points(
     ObjectData &objectVec, TrackObjAttribute& curObj)
 {
     std::vector<cv::Rect> &rectVec = curObj.vecPos;
@@ -336,7 +336,7 @@ void TrackAlgo::figure_out_trajectory_points(
     return ;
 }
 
-cv::Rect TrackAlgo::compare_detect_predict(
+cv::Rect OpticalflowTrackAlgo::compare_detect_predict(
     std::vector<ObjectData>& objectVec, TrackObjAttribute& curObj, 
     cv::Rect predictRt, bool& bDetect)
 {
@@ -381,7 +381,7 @@ cv::Rect TrackAlgo::compare_detect_predict(
 /**
  * get ROI based on orignal video size
  */
-void TrackAlgo::get_roi_rect(cv::Rect& roiRect, cv::Rect curRect)
+void OpticalflowTrackAlgo::get_roi_rect(cv::Rect& roiRect, cv::Rect curRect)
 {
     MathUtils utils;
 
@@ -395,7 +395,7 @@ void TrackAlgo::get_roi_rect(cv::Rect& roiRect, cv::Rect curRect)
 
 // Add a new rect to tracking obj, check whether crop roi in the src image.
 //    curRT is based on trackinge size
-void TrackAlgo::add_track_obj(CvdlAlgoData* &algoData,
+void OpticalflowTrackAlgo::add_track_obj(CvdlAlgoData* &algoData,
     cv::Rect curRt, TrackObjAttribute& curObj, bool bDetect)
 {
     // Add real-time detect or track result.
@@ -413,7 +413,7 @@ void TrackAlgo::add_track_obj(CvdlAlgoData* &algoData,
     }
 }
 
-void TrackAlgo::add_new_one_object(ObjectData &objectData, guint64 frameId)
+void OpticalflowTrackAlgo::add_new_one_object(ObjectData &objectData, guint64 frameId)
 {
     TrackObjAttribute obj;
     cv::Rect objRect = objectData.rect;
@@ -449,7 +449,7 @@ void TrackAlgo::add_new_one_object(ObjectData &objectData, guint64 frameId)
     mCurObjId++;
 }
 
-void TrackAlgo::add_new_objects(std::vector<ObjectData>& objectVec, guint64 frameId)
+void OpticalflowTrackAlgo::add_new_objects(std::vector<ObjectData>& objectVec, guint64 frameId)
 {
     for (size_t i = 0; i < objectVec.size(); i++) {
         add_new_one_object(objectVec[i], frameId);
@@ -463,7 +463,7 @@ void TrackAlgo::add_new_objects(std::vector<ObjectData>& objectVec, guint64 fram
 * Note@ Save tracking result to 'm_vecTrackObj'
 */
     
-void TrackAlgo::track_objects_fast(CvdlAlgoData* &algoData)
+void OpticalflowTrackAlgo::track_objects_fast(CvdlAlgoData* &algoData)
 {
     // Rect is based on orignal video frame
     std::vector<ObjectData>& objectVec = algoData->mObjectVec;
@@ -506,7 +506,7 @@ void TrackAlgo::track_objects_fast(CvdlAlgoData* &algoData)
     // Don't use preFrame
     mPreFrame = NULL;
 }
-void TrackAlgo::track_objects(CvdlAlgoData* &algoData)
+void OpticalflowTrackAlgo::track_objects(CvdlAlgoData* &algoData)
 {
     // Rect is based on orignal video frame
     std::vector<ObjectData>& objectVec = algoData->mObjectVec;
@@ -558,7 +558,7 @@ void TrackAlgo::track_objects(CvdlAlgoData* &algoData)
 }
 
 
-bool TrackAlgo::is_at_buttom(TrackObjAttribute& curObj)
+bool OpticalflowTrackAlgo::is_at_buttom(TrackObjAttribute& curObj)
 {
     cv::Rect rt = curObj.getLastPos();
 
@@ -569,7 +569,7 @@ bool TrackAlgo::is_at_buttom(TrackObjAttribute& curObj)
     return false;
 }
 
-void TrackAlgo::update_track_object(std::vector<ObjectData> &objectVec)
+void OpticalflowTrackAlgo::update_track_object(std::vector<ObjectData> &objectVec)
 {
     std::vector<TrackObjAttribute>::iterator it;
     float score = 0.0;

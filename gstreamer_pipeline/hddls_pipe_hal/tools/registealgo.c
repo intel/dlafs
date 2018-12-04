@@ -47,7 +47,7 @@ int main(int argc, char **argv)
                 break;
             case 'c':
                 register_reset();
-                register_write();
+                //register_write();
                 register_dump();
                 break;
             case 'h': /* help */

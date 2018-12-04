@@ -20,8 +20,8 @@
  * SOFTWARE.
  */
 
-#ifndef __TRACK_ALGO_H__
-#define __TRACK_ALGO_H__
+#ifndef __OPTICAL_FLOW_TRACK_ALGO_H__
+#define __OPTICAL_FLOW_TRACK_ALGO_H__
 
 #include <vector>
 #include "algobase.h"
@@ -37,11 +37,11 @@
 
 class TrackObjAttribute;
 
-class TrackAlgo : public CvdlAlgoBase 
+class OpticalflowTrackAlgo : public CvdlAlgoBase 
 {
 public:
-    TrackAlgo();
-    virtual ~TrackAlgo();
+    OpticalflowTrackAlgo();
+    virtual ~OpticalflowTrackAlgo();
     virtual void set_data_caps(GstCaps *incaps);
 
     void verify_detection_result(std::vector<ObjectData> &objectVec);

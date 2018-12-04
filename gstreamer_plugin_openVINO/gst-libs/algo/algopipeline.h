@@ -58,13 +58,13 @@ typedef struct _AlgoPipelineConfig{
 //                    -1  - the first out algo
 //                    -2  -  the second out algo
 //      If it is output, all value in nextId are same
-//        {1, ALGO_TRACKING, 1, 2, {2, 3}}
-//        {2, ALGO_TRACKING, 1, 1, {-2}}
+//        {1, ALGO_OF_TRACK, 1, 2, {2, 3}}
+//        {2, ALGO_OF_TRACK, 1, 1, {-2}}
 //
 //static AlgoPipelineConfig algoTopologyDefault[] = {
-//    {0, ALGO_DETECTION,      -1,  1, {1}},
-//    {1, ALGO_TRACKING,        0,  1, {2}},
-//    {2, ALGO_CLASSIFICATION,  1,  1, {-1}},
+//    {0, ALGO_YOLOV1_TINY, -1,  1, {1}},
+//    {1, ALGO_OF_TRACK,        0,  1, {2}},
+//    {2, ALGO_GOOGLENETV2,  1,  1, {-1}},
 //};
 
 typedef struct _AlgoItem AlgoItem;

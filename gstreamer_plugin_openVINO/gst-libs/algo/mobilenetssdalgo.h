@@ -19,18 +19,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#ifndef __SSD_ALGO_H__
-#define __SSD_ALGO_H__
+#ifndef __MOBILENET_SSD_ALGO_H__
+#define __MOBILENET_SSD_ALGO_H__
 
 #include "algobase.h"
 #include <gst/gstbuffer.h>
 #include "mathutils.h"
 
-class SSDAlgo : public CvdlAlgoBase 
+class MobileNetSSDAlgo : public CvdlAlgoBase 
 {
 public:
-    SSDAlgo();
-    virtual ~SSDAlgo();
+    MobileNetSSDAlgo();
+    virtual ~MobileNetSSDAlgo();
     virtual void set_data_caps(GstCaps *incaps);
     virtual GstFlowReturn algo_dl_init(const char* modeFileName);
     virtual GstFlowReturn parse_inference_result(InferenceEngine::Blob::Ptr &resultBlobPtr,

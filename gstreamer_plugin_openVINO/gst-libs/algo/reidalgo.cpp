@@ -21,7 +21,7 @@
  */
 
 #include <string>
-#include "reid.h"
+#include "reidalgo.h"
 #include "mathutils.h"
 #include <ocl/oclmemory.h>
 #include <ocl/crcmeta.h>

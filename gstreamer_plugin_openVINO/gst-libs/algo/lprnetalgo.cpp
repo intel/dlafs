@@ -21,7 +21,7 @@
  * SOFTWARE.
  */
 #include <string>
-#include "lprecognize.h"
+#include "lprnetalgo.h"
 #include <ocl/oclmemory.h>
 #include <ocl/crcmeta.h>
 #include <ocl/metadata.h>
@@ -124,18 +124,18 @@ static void post_callback(CvdlAlgoData *algoData)
     }
 }
 
-LpRecognizeAlgo::LpRecognizeAlgo() : CvdlAlgoBase(post_callback, CVDL_TYPE_DL)
+LPRNetAlgo::LPRNetAlgo() : CvdlAlgoBase(post_callback, CVDL_TYPE_DL)
 {
 }
 
-LpRecognizeAlgo::~LpRecognizeAlgo()
+LPRNetAlgo::~LPRNetAlgo()
 {
-    g_print("LpRecognizeAlgo: image process %d frames, image preprocess fps = %.2f, infer fps = %.2f\n",
+    g_print("LPRNetAlgo: image process %d frames, image preprocess fps = %.2f, infer fps = %.2f\n",
         mFrameDoneNum, 1000000.0*mFrameDoneNum/mImageProcCost, 
         1000000.0*mFrameDoneNum/mInferCost);
 }
 
-void LpRecognizeAlgo::set_data_caps(GstCaps *incaps)
+void LPRNetAlgo::set_data_caps(GstCaps *incaps)
 {
     // load IE and cnn model
     std::string filenameXML;
@@ -149,7 +149,7 @@ void LpRecognizeAlgo::set_data_caps(GstCaps *incaps)
     init_dl_caps(incaps);
 }
 
-GstFlowReturn LpRecognizeAlgo::algo_dl_init(const char* modeFileName)
+GstFlowReturn LPRNetAlgo::algo_dl_init(const char* modeFileName)
 {
     GstFlowReturn ret = GST_FLOW_OK;
 
@@ -159,7 +159,7 @@ GstFlowReturn LpRecognizeAlgo::algo_dl_init(const char* modeFileName)
     return ret;
 }
 
-GstFlowReturn LpRecognizeAlgo::parse_inference_result(InferenceEngine::Blob::Ptr &resultBlob,
+GstFlowReturn LPRNetAlgo::parse_inference_result(InferenceEngine::Blob::Ptr &resultBlob,
                                                                int precision, CvdlAlgoData *outData, int objId) {
     GstFlowReturn ret = GST_FLOW_OK;
     auto resultBlobFp32 = std::dynamic_pointer_cast<InferenceEngine::TBlob<float>>(resultBlob);
@@ -229,7 +229,7 @@ GstFlowReturn LpRecognizeAlgo::parse_inference_result(InferenceEngine::Blob::Ptr
   *
   **************************************************************************/
 
-void LpRecognizeAlgo::ctc_ref_fp16(float* probabilities, float* output_sequences, float * output_prob,
+void LPRNetAlgo::ctc_ref_fp16(float* probabilities, float* output_sequences, float * output_prob,
                   int T_, int N_, int C_, int in_stride, bool original_layout) {
 
     // Fill output_sequences with -1

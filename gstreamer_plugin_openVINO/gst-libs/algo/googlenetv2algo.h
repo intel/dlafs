@@ -19,45 +19,25 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#ifndef __YOLO_TINY_V2_ALGO_H__
-#define __YOLO_TINY_V2_ALGO_H__
+
+#ifndef __GOOGLENETV2_ALGO_H__
+#define __GOOGLENETV2_ALGO_H__
 
 #include "algobase.h"
-#include "ieloader.h"
-#include "imageproc.h"
-#include <gst/gstbuffer.h>
-#include "mathutils.h"
 
-class YoloTinyv2Algo : public CvdlAlgoBase 
+class GoogleNetv2Algo : public CvdlAlgoBase 
 {
 public:
-    YoloTinyv2Algo();
-    virtual ~YoloTinyv2Algo();
+    GoogleNetv2Algo();
+    virtual ~GoogleNetv2Algo();
+
     virtual void set_data_caps(GstCaps *incaps);
-    virtual GstFlowReturn algo_dl_init(const char* modeFileName);
+    //virtual GstBuffer* dequeue_buffer();
     virtual GstFlowReturn parse_inference_result(InferenceEngine::Blob::Ptr &resultBlobPtr,
-                                                 int precision, CvdlAlgoData *outData, int objId);
-    void set_label_names(const char** label_names) { mLabelNames = label_names; }
+                                                      int precision, CvdlAlgoData *outData, int objId);
+    virtual GstFlowReturn algo_dl_init(const char* modeFileName);
 
-private:
-    void set_default_label_name();
-    bool parse (const float * output, CvdlAlgoData* &outData);
     guint64 mCurPts;
-    static const int mGridWidth = 13;
-    static const int mGridHeight = 13;
-    const char** mLabelNames;
-};
-
-struct YoloBox
-{
-    int classId;
-    float prob;
-    float objectness;
-    float x1;
-    float y1;
-    float x2;
-    float y2;
 };
 
 #endif
-

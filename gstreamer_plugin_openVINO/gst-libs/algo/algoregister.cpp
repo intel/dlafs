@@ -91,13 +91,13 @@ int register_get_algo_id(const char *name)
 
  static void register_init_default_algo()
 {
-     register_add_algo(ALGO_DETECTION,  ALGO_DETECTION_NAME);
-     register_add_algo(ALGO_TRACKING,  ALGO_TRACKING_NAME);
-     register_add_algo(ALGO_CLASSIFICATION,  ALGO_CLASSIFICATION_NAME);
-     register_add_algo(ALGO_SSD,  ALGO_SSD_NAME);
+     register_add_algo(ALGO_YOLOV1_TINY,  ALGO_YOLOV1_TINY_NAME);
+     register_add_algo(ALGO_OF_TRACK,  ALGO_OF_TRACK_NAME);
+     register_add_algo(ALGO_GOOGLENETV2,  ALGO_GOOGLENETV2_NAME);
+     register_add_algo(ALGO_MOBILENET_SSD,  ALGO_MOBILENET_SSD_NAME);
      register_add_algo(ALGO_TRACK_LP,  ALGO_TRACK_LP_NAME);
-     register_add_algo(ALGO_REGCONIZE_LP,  ALGO_RECOGNIZE_LP_NAME);
-     register_add_algo(ALGO_YOLO_TINY_V2,  ALGO_YOLO_TINY_V2_NAME);
+     register_add_algo(ALGO_LPRNET,  ALGO_LPRNET_NAME);
+     register_add_algo(ALGO_YOLOV2_TINY,  ALGO_YOLOV2_TINY_NAME);
      register_add_algo(ALGO_REID,  ALGO_REID_NAME);
      register_add_algo(ALGO_SINK,  ALGO_SINK_NAME);
 }
@@ -117,9 +117,12 @@ int  register_read()
     if(pf) {
         fread(&g_algo_list, sizeof(AlgoList), 1, pf);
         fclose(pf);
-        return 1;
     }
-    return 0;
+
+    if(g_algo_list.algo_num>0)
+        return 1;
+    else
+        return 0;
 }
 
 void register_init()
@@ -144,6 +147,10 @@ void register_dump()
 void register_reset()
 {
     memset(&g_algo_list, 0x0, sizeof(AlgoList));
+    if(remove(ALGO_REGISTER_FILE_NAME))
+        g_print("Success to remove %s\n", ALGO_REGISTER_FILE_NAME);
+    else
+        g_print("Failed to remove %s\n", ALGO_REGISTER_FILE_NAME);
 }
 
 #ifdef __cplusplus

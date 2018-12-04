@@ -3,13 +3,14 @@
     "command_type": 0 ,
     "command_create":    
     {
-         "pipe_num": 2, 
-         "stream_source": "/home/lijunjie/1600x1200_concat.mp4",
+         "pipe_num": 1,
+         "stream_source": "rtsp://10.239.85.88:8554//video0",
          "codec_type": "H.264",    
          "cvdlfilter0":
         {
-             "algopipeline": "mobilenetssd ! tracklp ! lprnet"
+             "algopipeline": "yolov1tiny ! opticalflowtrack ! googlenetv2"
         },
         "loop_times":1
+
     }
  }

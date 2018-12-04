@@ -8,7 +8,7 @@
          "codec_type": "H.264",    
          "cvdlfilter0":
         {
-             "algopipeline": "detection ! track ! classification"
+             "algopipeline": "yolov1tiny ! opticalflowtrack ! googlenetv2"
         },
         "loop_times":100
 

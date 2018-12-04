@@ -21,7 +21,7 @@
  * SOFTWARE.
  */
 #include <string>
-#include "classificationalgo.h"
+#include "googlenetv2algo.h"
 #include <ocl/oclmemory.h>
 #include <ocl/crcmeta.h>
 #include <ocl/metadata.h>
@@ -42,20 +42,20 @@ static void post_callback(CvdlAlgoData *algoData)
         // post process algoData
 }
 
-ClassificationAlgo::ClassificationAlgo() : CvdlAlgoBase(post_callback, CVDL_TYPE_DL)
+GoogleNetv2Algo::GoogleNetv2Algo() : CvdlAlgoBase(post_callback, CVDL_TYPE_DL)
 {
     mInputWidth = CLASSIFICATION_INPUT_W;
     mInputHeight = CLASSIFICATION_INPUT_H;
 }
 
-ClassificationAlgo::~ClassificationAlgo()
+GoogleNetv2Algo::~GoogleNetv2Algo()
 {
-      g_print("ClassificationAlgo: image process %d frames, image preprocess fps = %.2f, infer fps = %.2f\n",
+      g_print("GoogleNetv2Algo: image process %d frames, image preprocess fps = %.2f, infer fps = %.2f\n",
             mFrameDoneNum, 1000000.0*mFrameDoneNum/mImageProcCost, 
            1000000.0*mFrameDoneNum/mInferCost);
 }
 
-void ClassificationAlgo::set_data_caps(GstCaps *incaps)
+void GoogleNetv2Algo::set_data_caps(GstCaps *incaps)
 {
     std::string filenameXML;
     const gchar *env = g_getenv("CVDL_CLASSIFICATION_MODEL_FULL_PATH");
@@ -68,7 +68,7 @@ void ClassificationAlgo::set_data_caps(GstCaps *incaps)
     init_dl_caps(incaps);
 }
 
-GstFlowReturn ClassificationAlgo::algo_dl_init(const char* modeFileName)
+GstFlowReturn GoogleNetv2Algo::algo_dl_init(const char* modeFileName)
 {
     GstFlowReturn ret = GST_FLOW_OK;
 
@@ -77,10 +77,10 @@ GstFlowReturn ClassificationAlgo::algo_dl_init(const char* modeFileName)
     return ret;
 }
 
-GstFlowReturn ClassificationAlgo::parse_inference_result(InferenceEngine::Blob::Ptr &resultBlobPtr,
+GstFlowReturn GoogleNetv2Algo::parse_inference_result(InferenceEngine::Blob::Ptr &resultBlobPtr,
                                                   int precision, CvdlAlgoData *outData, int objId)
 {
-    GST_LOG("ClassificationAlgo::parse_inference_result begin: outData = %p\n", outData);
+    GST_LOG("GoogleNetv2Algo::parse_inference_result begin: outData = %p\n", outData);
 
     if (precision == sizeof(short)) {
         GST_ERROR("Don't support FP16!");

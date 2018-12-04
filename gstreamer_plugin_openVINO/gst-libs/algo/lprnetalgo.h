@@ -20,8 +20,8 @@
  * SOFTWARE.
  */
 
-#ifndef __LP_RECOGNIZE_ALGO_H__
-#define __LP_RECOGNIZE_ALGO_H__
+#ifndef __LPRNET_ALGO_H__
+#define __LPRNET_ALGO_H__
 
 #include "algobase.h"
 
@@ -87,11 +87,11 @@ class LicencePlatePool
         std::vector<LicencePlateData> mLPVec;
 };
 
-class LpRecognizeAlgo : public CvdlAlgoBase 
+class LPRNetAlgo : public CvdlAlgoBase 
 {
 public:
-    LpRecognizeAlgo();
-    virtual ~LpRecognizeAlgo();
+    LPRNetAlgo();
+    virtual ~LPRNetAlgo();
 
     virtual void set_data_caps(GstCaps *incaps);
     //virtual GstBuffer* dequeue_buffer();

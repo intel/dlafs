@@ -21,7 +21,7 @@
  */
 
 #include <string>
-#include "detectionalgo.h"
+#include "yolov1tinyalgo.h"
 #include <ocl/oclmemory.h>
 #include <ocl/crcmeta.h>
 #include <ocl/metadata.h>
@@ -48,7 +48,7 @@ static int nms_comparator(const void *pa, const void *pb)
     return 0;
 }
 
-DetectionInternalData::DetectionInternalData()
+Yolov1TinyInternalData::Yolov1TinyInternalData()
 {
     int boxNumSum = cGrideSize * cGrideSize * cBoxNumEachBlock;
     mBoxes = (RectF*) calloc(boxNumSum, sizeof(RectF));
@@ -65,7 +65,7 @@ DetectionInternalData::DetectionInternalData()
     mRectSorted = (RectSortable*) calloc(total, sizeof(RectSortable));
 }
 
-DetectionInternalData::~DetectionInternalData()
+Yolov1TinyInternalData::~Yolov1TinyInternalData()
 {
     if(mBoxes)
         free(mBoxes);
@@ -90,7 +90,7 @@ static void post_callback(CvdlAlgoData *algoData)
         // post process algoData
 }
 
-DetectionAlgo::DetectionAlgo() : CvdlAlgoBase(post_callback, CVDL_TYPE_DL)
+Yolov1TinyAlgo::Yolov1TinyAlgo() : CvdlAlgoBase(post_callback, CVDL_TYPE_DL)
 {
     set_default_label_name();
 
@@ -98,14 +98,14 @@ DetectionAlgo::DetectionAlgo() : CvdlAlgoBase(post_callback, CVDL_TYPE_DL)
     mInputHeight = DETECTION_INPUT_H;
 }
 
-DetectionAlgo::~DetectionAlgo()
+Yolov1TinyAlgo::~Yolov1TinyAlgo()
 {
-    g_print("DetectionAlgo: image process %d frames, image preprocess fps = %.2f, infer fps = %.2f\n",
+    g_print("Yolov1TinyAlgo: image process %d frames, image preprocess fps = %.2f, infer fps = %.2f\n",
         mFrameDoneNum, 1000000.0*mFrameDoneNum/mImageProcCost, 
         1000000.0*mFrameDoneNum/mInferCost);
 }
 
-void DetectionAlgo::set_data_caps(GstCaps *incaps)
+void Yolov1TinyAlgo::set_data_caps(GstCaps *incaps)
 {
     std::string filenameXML;
     const gchar *env = g_getenv("CVDL_DETECTION_MODEL_FULL_PATH");
@@ -118,7 +118,7 @@ void DetectionAlgo::set_data_caps(GstCaps *incaps)
     init_dl_caps(incaps);
 }
 
-GstFlowReturn DetectionAlgo::algo_dl_init(const char* modeFileName)
+GstFlowReturn Yolov1TinyAlgo::algo_dl_init(const char* modeFileName)
 {
     GstFlowReturn ret = GST_FLOW_OK;
 
@@ -127,10 +127,10 @@ GstFlowReturn DetectionAlgo::algo_dl_init(const char* modeFileName)
     return ret;
 }
 
-GstFlowReturn DetectionAlgo::parse_inference_result(InferenceEngine::Blob::Ptr &resultBlobPtr,
+GstFlowReturn Yolov1TinyAlgo::parse_inference_result(InferenceEngine::Blob::Ptr &resultBlobPtr,
                                                             int precision, CvdlAlgoData *outData, int objId)
 {
-    GST_LOG("DetectionAlgo::parse_inference_result begin: outData = %p\n", outData);
+    GST_LOG("Yolov1TinyAlgo::parse_inference_result begin: outData = %p\n", outData);
 
     auto resultBlobFp32 = std::dynamic_pointer_cast<InferenceEngine::TBlob<float> >(resultBlobPtr);
 
@@ -140,9 +140,9 @@ GstFlowReturn DetectionAlgo::parse_inference_result(InferenceEngine::Blob::Ptr &
         return GST_FLOW_ERROR;
     }
 
-    DetectionInternalData *internalData = new DetectionInternalData;
+    Yolov1TinyInternalData *internalData = new Yolov1TinyInternalData;
     if(!internalData) {
-        GST_ERROR("DetectionInternalData is NULL!");
+        GST_ERROR("Yolov1TinyInternalData is NULL!");
         return GST_FLOW_ERROR;
     }
 
@@ -163,7 +163,7 @@ GstFlowReturn DetectionAlgo::parse_inference_result(InferenceEngine::Blob::Ptr &
   *    private method
   *
   **************************************************************************/
-    void DetectionAlgo::set_default_label_name()
+    void Yolov1TinyAlgo::set_default_label_name()
     {
         if (cClassNum == 9) {
             set_label_names(barrier_names);
@@ -172,7 +172,7 @@ GstFlowReturn DetectionAlgo::parse_inference_result(InferenceEngine::Blob::Ptr &
         }
     }
     
-    void DetectionAlgo::set_label_names(const char** label_names)
+    void Yolov1TinyAlgo::set_label_names(const char** label_names)
     {
         mLabelNames = label_names;
     }
@@ -182,7 +182,7 @@ GstFlowReturn DetectionAlgo::parse_inference_result(InferenceEngine::Blob::Ptr &
  *    total = 7 * 7 * 2 
  *    classes = 9
  */
-void DetectionAlgo::nms_sort(DetectionInternalData *internalData)
+void Yolov1TinyAlgo::nms_sort(Yolov1TinyInternalData *internalData)
 {
     int total = cGrideSize * cGrideSize * cBoxNumEachBlock;
     int32_t idx, m, n;
@@ -222,8 +222,8 @@ void DetectionAlgo::nms_sort(DetectionInternalData *internalData)
     }
 }
 
-void DetectionAlgo::get_detection_boxes(
-            float *ieResult, DetectionInternalData *internalData,
+void Yolov1TinyAlgo::get_detection_boxes(
+            float *ieResult, Yolov1TinyInternalData *internalData,
             int32_t w, int32_t h, int32_t onlyObjectness)
 {
     float top2Thr = cProbThreshold * 4 / 3;// Top2 score threshold
@@ -292,7 +292,7 @@ void DetectionAlgo::get_detection_boxes(
  *    thresh = 0.2
  *    classes = 9
  */
-void DetectionAlgo::get_result(DetectionInternalData *internalData, CvdlAlgoData *outData)
+void Yolov1TinyAlgo::get_result(Yolov1TinyInternalData *internalData, CvdlAlgoData *outData)
 {
     int num = cGrideSize * cGrideSize * cBoxNumEachBlock;
     int idx;
@@ -342,7 +342,7 @@ void DetectionAlgo::get_result(DetectionInternalData *internalData, CvdlAlgoData
             }
             object.rect = cv::Rect(left, top, right - left + 1, bot - top + 1);
             // The classification model will use the car face to do inference, that means we should
-            //  crop the front part of car's object to be ROI, which is done in TrackAlgo::get_roi_rect
+            //  crop the front part of car's object to be ROI, which is done in OpticalflowTrackAlgo::get_roi_rect
            object.rectROI =cv::Rect( object.rect.x ,   object.rect.y + object.rect.height/2,
                                                          object.rect.width,   object.rect.height/2);
             objectNum++;

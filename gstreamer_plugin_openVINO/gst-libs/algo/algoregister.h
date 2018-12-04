@@ -28,25 +28,25 @@ extern "C" {
 
 enum {
     ALGO_NONE      = -1,
-    ALGO_DETECTION                = 0,
-    ALGO_TRACKING                  = 1,
-    ALGO_CLASSIFICATION     = 2,
-    ALGO_SSD                                = 3,
+    ALGO_YOLOV1_TINY           = 0,
+    ALGO_OF_TRACK                  = 1,
+    ALGO_GOOGLENETV2         = 2,
+    ALGO_MOBILENET_SSD     = 3,
     ALGO_TRACK_LP                  =4,
-    ALGO_REGCONIZE_LP         = 5,
-    ALGO_YOLO_TINY_V2         = 6,
+    ALGO_LPRNET                        = 5,
+    ALGO_YOLOV2_TINY           = 6,
     ALGO_REID                               = 7,
     ALGO_SINK,   /*last algo in algopipe*/
     ALGO_MAX_DEFAULT_NUM,
 };
 
-#define ALGO_DETECTION_NAME "detection"
-#define ALGO_TRACKING_NAME "track"
-#define ALGO_CLASSIFICATION_NAME "classification"
-#define ALGO_SSD_NAME "ssd"
+#define ALGO_YOLOV1_TINY_NAME "yolov1tiny"
+#define ALGO_OF_TRACK_NAME "opticalflowtrack"
+#define ALGO_GOOGLENETV2_NAME "googlenetv2"
+#define ALGO_MOBILENET_SSD_NAME "mobilenetssd"
 #define ALGO_TRACK_LP_NAME "tracklp"
-#define ALGO_RECOGNIZE_LP_NAME "lprecognize"
-#define ALGO_YOLO_TINY_V2_NAME "yolotinyv2"
+#define ALGO_LPRNET_NAME "lprnet"
+#define ALGO_YOLOV2_TINY_NAME "yolov2tiny"
 #define ALGO_REID_NAME "reid"
 #define ALGO_GENERIC_DL_NAME "generic"
 #define ALGO_SINK_NAME "sink"

@@ -21,7 +21,7 @@
  */
 
 #include <string>
-#include "ssdalgo.h"
+#include "mobilenetssdalgo.h"
 #include <ocl/oclmemory.h>
 #include <ocl/crcmeta.h>
 #include <ocl/metadata.h>
@@ -43,19 +43,19 @@ static void post_callback(CvdlAlgoData *algoData)
 {
         // post process algoData
 }
-SSDAlgo::SSDAlgo() : CvdlAlgoBase(post_callback, CVDL_TYPE_DL)
+MobileNetSSDAlgo::MobileNetSSDAlgo() : CvdlAlgoBase(post_callback, CVDL_TYPE_DL)
 {
     set_default_label_name();
 }
 
-SSDAlgo::~SSDAlgo()
+MobileNetSSDAlgo::~MobileNetSSDAlgo()
 {
-    g_print("SSDAlgo: image process %d frames, image preprocess fps = %.2f, infer fps = %.2f\n",
+    g_print("MobileNetSSDAlgo: image process %d frames, image preprocess fps = %.2f, infer fps = %.2f\n",
         mFrameDoneNum, 1000000.0*mFrameDoneNum/mImageProcCost, 
         1000000.0*mFrameDoneNum/mInferCost);
 }
 
-void SSDAlgo::set_data_caps(GstCaps *incaps)
+void MobileNetSSDAlgo::set_data_caps(GstCaps *incaps)
 {
     // load IE and cnn model
     std::string filenameXML;
@@ -69,7 +69,7 @@ void SSDAlgo::set_data_caps(GstCaps *incaps)
     init_dl_caps(incaps);
 }
 
-GstFlowReturn SSDAlgo::algo_dl_init(const char* modeFileName)
+GstFlowReturn MobileNetSSDAlgo::algo_dl_init(const char* modeFileName)
 {
     GstFlowReturn ret = GST_FLOW_OK;
 
@@ -89,10 +89,10 @@ GstFlowReturn SSDAlgo::algo_dl_init(const char* modeFileName)
     return ret;
 }
 
-GstFlowReturn SSDAlgo::parse_inference_result(InferenceEngine::Blob::Ptr &resultBlobPtr,
+GstFlowReturn MobileNetSSDAlgo::parse_inference_result(InferenceEngine::Blob::Ptr &resultBlobPtr,
                                                             int precision, CvdlAlgoData *outData, int objId)
 {
-    GST_LOG("SSDAlgo::parse_inference_result begin: outData = %p\n", outData);
+    GST_LOG("MobileNetSSDAlgo::parse_inference_result begin: outData = %p\n", outData);
 
     auto resultBlobFp32 = std::dynamic_pointer_cast<InferenceEngine::TBlob<float> >(resultBlobPtr);
 
@@ -111,7 +111,7 @@ GstFlowReturn SSDAlgo::parse_inference_result(InferenceEngine::Blob::Ptr &result
   *    private method
   *
   **************************************************************************/
-bool SSDAlgo::get_result(float * box,CvdlAlgoData* &outData)
+bool MobileNetSSDAlgo::get_result(float * box,CvdlAlgoData* &outData)
 {
      int objectNum = 0;
     outData->mObjectVec.clear();
@@ -166,12 +166,12 @@ bool SSDAlgo::get_result(float * box,CvdlAlgoData* &outData)
     return true;
 }
 
-void SSDAlgo::set_default_label_name()
+void MobileNetSSDAlgo::set_default_label_name()
 {
     set_label_names(VOC_LABEL_MAPPING);
 }
 
-void SSDAlgo::set_label_names(const char** label_names)
+void MobileNetSSDAlgo::set_label_names(const char** label_names)
 {
     mLabelNames = label_names;
 }

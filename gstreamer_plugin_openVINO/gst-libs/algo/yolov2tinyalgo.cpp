@@ -21,7 +21,7 @@
  */
 
 #include <string>
-#include "yolotinyv2.h"
+#include "yolov2tinyalgo.h"
 #include <ocl/oclmemory.h>
 #include <ocl/crcmeta.h>
 #include <ocl/metadata.h>
@@ -35,19 +35,19 @@ static void post_callback(CvdlAlgoData *algoData)
         // post process algoData
 }
 
-YoloTinyv2Algo::YoloTinyv2Algo() : CvdlAlgoBase(post_callback, CVDL_TYPE_DL)
+Yolov2TinyAlgo::Yolov2TinyAlgo() : CvdlAlgoBase(post_callback, CVDL_TYPE_DL)
 {
     set_default_label_name();
 }
 
-YoloTinyv2Algo::~YoloTinyv2Algo()
+Yolov2TinyAlgo::~Yolov2TinyAlgo()
 {
-    g_print("YoloTinyv2Algo: image process %d frames, image preprocess fps = %.2f, infer fps = %.2f\n",
+    g_print("Yolov2TinyAlgo: image process %d frames, image preprocess fps = %.2f, infer fps = %.2f\n",
         mFrameDoneNum, 1000000.0*mFrameDoneNum/mImageProcCost, 
         1000000.0*mFrameDoneNum/mInferCost);
 }
 
-void YoloTinyv2Algo::set_default_label_name()
+void Yolov2TinyAlgo::set_default_label_name()
 {
     static const char* VOC_LABEL_MAPPING[] = {
         "aeroplane",
@@ -74,7 +74,7 @@ void YoloTinyv2Algo::set_default_label_name()
     mLabelNames = VOC_LABEL_MAPPING;
 }
 
-void YoloTinyv2Algo::set_data_caps(GstCaps *incaps)
+void Yolov2TinyAlgo::set_data_caps(GstCaps *incaps)
 {
     // load IE and cnn model
     std::string filenameXML;
@@ -88,7 +88,7 @@ void YoloTinyv2Algo::set_data_caps(GstCaps *incaps)
     init_dl_caps(incaps);
 }
 
-GstFlowReturn YoloTinyv2Algo::algo_dl_init(const char* modeFileName)
+GstFlowReturn Yolov2TinyAlgo::algo_dl_init(const char* modeFileName)
 {
     GstFlowReturn ret = GST_FLOW_OK;
 
@@ -100,10 +100,10 @@ GstFlowReturn YoloTinyv2Algo::algo_dl_init(const char* modeFileName)
     return ret;
 }
 
-GstFlowReturn YoloTinyv2Algo::parse_inference_result(InferenceEngine::Blob::Ptr &resultBlobPtr,
+GstFlowReturn Yolov2TinyAlgo::parse_inference_result(InferenceEngine::Blob::Ptr &resultBlobPtr,
                                                             int precision, CvdlAlgoData *outData, int objId)
 {
-    GST_LOG("YoloTinyv2Algo::parse_inference_result begin: outData = %p\n", outData);
+    GST_LOG("Yolov2TinyAlgo::parse_inference_result begin: outData = %p\n", outData);
 
     auto resultBlobFp32 = std::dynamic_pointer_cast<InferenceEngine::TBlob<float> >(resultBlobPtr);
 
@@ -265,7 +265,7 @@ static bool roiValid(cv::Rect roi, int cols, int rows)
     return true;
 }
 
-bool YoloTinyv2Algo::parse (const float * output, CvdlAlgoData* &outData)
+bool Yolov2TinyAlgo::parse (const float * output, CvdlAlgoData* &outData)
 {
     std::vector<YoloBox> boxes;
     int anchorStride = mGridHeight * mGridWidth * 25;
@@ -322,7 +322,7 @@ bool YoloTinyv2Algo::parse (const float * output, CvdlAlgoData* &outData)
         objectNum++;
  
         outData->mObjectVec.push_back(object);
-        GST_LOG("SSD %ld-%d: prob = %f, label = %s, rect=(%d,%d)-(%dx%d)\n",outData->mFrameId, objectNum,
+        GST_LOG("YoloV2 %ld-%d: prob = %f, label = %s, rect=(%d,%d)-(%dx%d)\n",outData->mFrameId, objectNum,
             object.prob, object.label.c_str(),  rect.x,  rect.y,  rect.width,  rect.height);
     }
     return true;
