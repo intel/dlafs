@@ -36,6 +36,7 @@ static gint g_loop_times = 1;
 
 static gchar g_default_server_uri[]= "wss://localhost:8123/binaryEchoWithSize?id=3";
 
+#define DEFAULT_ALGO_PIPELINE "yolov1tiny ! opticalflowtrack ! googlenetv2"
 
 #define HDDLSPIPE_SET_PROPERTY( hp, element_name, ...) \
     do { \
@@ -270,8 +271,10 @@ static gchar* parse_create_command(char *desc,  gint pipe_id )
             // 1.3 parse property
             if(json_get_string_d2(object, CVDLFILTER_NAME, "algopipeline", &algo_pipeline_desc)) {
                      g_print("property - algopipeline = %s\n",algo_pipeline_desc);
+                     if(strlen(algo_pipeline_desc)<2)
+                         algo_pipeline_desc = DEFAULT_ALGO_PIPELINE;
              } else { //default
-                    algo_pipeline_desc = "yolov1tiny ! opticalflowtrack ! googlenetv2";
+                    algo_pipeline_desc = DEFAULT_ALGO_PIPELINE;
              }
     }
     if(!stream_source || !stream_codec_type) {

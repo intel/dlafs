@@ -85,6 +85,7 @@ ExInferData* parse_inference_result(void *in_data, int data_type, int data_len, 
             printf("Generic SSD %d: prob = %f, label = %s, rect=(%d,%d)-(%dx%d)\n", i,
                 object.prob, object.label.c_str(), xmin, ymin, xmax - xmin + 1, ymax - ymin + 1);
         }
+        exInferData->outputIndex = 0; //must set its value
         return exInferData;
 }
 
@@ -94,6 +95,7 @@ ExInferData* parse_inference_result(void *in_data, int data_type, int data_len, 
 int  post_process_inference_data(ExInferData *data)
 {
      //TODO
+     data->outputIndex = 0; //must set its value
      return 0;
 }
 
@@ -104,7 +106,6 @@ const char *get_network_config(const char* modelName)
     char* config = strdup(config_xml.c_str());
     return config;
 }
-
 
 // get the data type for inference input and result
 void get_data_type(ExDataType *inData,  ExDataType *outData)

@@ -75,6 +75,7 @@ static void post_callback(CvdlAlgoData *algoData)
                        genericAlgo->exobjdata_2_objdata(exInferData.mObjectVec[index], objItem);
                        ++it;
               }
+              algoData->mOutputIndex = exInferData.outputIndex;
         }
 }
 
@@ -87,6 +88,7 @@ GenericAlgo::GenericAlgo(char *name) : CvdlAlgoBase(post_callback, CVDL_TYPE_DL)
     gchar libname[256];
     g_print("Create generic algo name = %s\n", name);
     if(env) {
+         // $(CVDL_MODEL_FULL_PATH)/<algoname>/libalgo<algoname>.so
         g_snprintf(libname, 256, "%s/%s/libalgo%s.so", env, name,name);
         mHandler = dlopen(libname, RTLD_LAZY);
         if(!mHandler)
@@ -132,6 +134,7 @@ void GenericAlgo::set_data_caps(GstCaps *incaps)
     const gchar *env = g_getenv("CVDL_MODEL_FULL_PATH");
     gchar modelname[256];
     if(env) {
+        // $(CVDL_MODEL_FULL_PATH)/<algoname>/<algoname>.xml
         g_snprintf(modelname, 256, "%s/%s/%s.xml",env,  mName.c_str(), mName.c_str());
         g_print("Try to load model from: %s\n", modelname);
         filenameXML = std::string(modelname);
@@ -205,6 +208,7 @@ GstFlowReturn GenericAlgo::parse_inference_result(InferenceEngine::Blob::Ptr &re
             exobjdata_2_objdata(exInferData->mObjectVec[i], objData);
             outData->mObjectVec.push_back(objData);
         }
+        outData->mOutputIndex = exInferData->outputIndex;
         delete exInferData;
     }
     return GST_FLOW_OK;

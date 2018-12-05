@@ -102,8 +102,12 @@ static CvdlAlgoBase* algo_create(int type)
      // type/id >= 8 is for generic algo
     if(type>=ALGO_MAX_DEFAULT_NUM) {
             algoName =register_get_algo_name(type);
-            if(algoName)
+            if(algoName) {
                 algo = new GenericAlgo(algoName);
+            } else {
+                g_print("Error: cannot find algo in algolist, algo_id = %d\n", type);
+                exit(1);
+            }
    }
 
     if(algo)
@@ -113,7 +117,7 @@ static CvdlAlgoBase* algo_create(int type)
 }
 
 //TODO: need support one algo link to multiple algos,  specified the algo's src pad 
-static void algo_item_link(AlgoItem* from, AlgoItem* to)
+static void algo_item_link(AlgoItem* from, AlgoItem* to, int index)
 {
     CvdlAlgoBase *algoFrom, *algoTo;
     if(!from || !to || !from->algo || !to->algo) {
@@ -122,7 +126,7 @@ static void algo_item_link(AlgoItem* from, AlgoItem* to)
     }
     algoFrom = static_cast<CvdlAlgoBase *>(from->algo);
     algoTo   = static_cast<CvdlAlgoBase *>(to->algo);
-    algoFrom->algo_connect(algoTo);
+    algoFrom->algo_connect_with_index(algoTo, index);
 }
 
 static void algo_item_link_sink(AlgoItem *preItem[], int num, AlgoItem *sinkItem)
@@ -270,6 +274,8 @@ AlgoPipelineConfig *algo_pipeline_config_create(gchar *desc, int *num)
         // get algo type
  #if 1
         config[i].curType = register_get_algo_id(p);
+        if(config[i].curType==-1)
+            exit(1);
 #else
         for(n=0;n<ALGO_MAX_DEFAULT_NUM-1;n++) {
             if(strlen(p) != strlen(g_algo_name_str[n]))
@@ -292,10 +298,11 @@ static void algo_pipeline_print(AlgoPipelineHandle handle)
       CvdlAlgoBase* algo = (CvdlAlgoBase *)pipeline->first;
       CvdlAlgoBase* last = (CvdlAlgoBase *)pipeline->last;
 
+      //TODO: print tree-shape algo pipeline
       g_print("algopipeline chain: ");
       while(algo && algo!=last && last) {
                 g_print("%s ->  ", register_get_algo_name(algo->mAlgoType));
-                algo = algo->mNext;
+                algo = algo->mNext[0];//TODO
       }
       g_print("%s\n", register_get_algo_name(algo->mAlgoType));
 }
@@ -335,11 +342,13 @@ AlgoPipelineHandle algo_pipeline_create(AlgoPipelineConfig* config, int num)
         }
     }
 
-    // link algo and get first and last algo
+// link algo and get first and last algo
+#if 0
+    // link from previous item to current item 
     for(i=0; i< num; i++) {
         item = pipeline->algo_chain + i;
         if(item->preItem){
-            algo_item_link(item->preItem, item);
+            algo_item_link(item->preItem, item, 0);
         }else {
             // here preId = -1, means it is the first algo item
             // Note: we should only have one first algo
@@ -359,6 +368,35 @@ AlgoPipelineHandle algo_pipeline_create(AlgoPipelineConfig* config, int num)
             }
         }
     }
+    #else
+     // link from current item to next item 
+    for(i=0; i< num; i++) {
+        item = pipeline->algo_chain + i;
+        if(!item->algo)
+            continue;
+        if(!item->preItem){
+            // Note: we should only have one first algo
+            pipeline->first = item->algo;
+        }
+        for(j=0;j<MAX_DOWN_STREAM_ALGO_NUM;j++) {
+            if(item->nextItem[j])
+                algo_item_link(item, item->nextItem[j], j);
+        }
+        for(j=0;j<config[i].nextNum;j++) {
+            nextId = config[i].nextId[j];
+            if(nextId>=0){
+                // next algo has not been created
+                //algo_item_link(item, item->nextItem[j]);
+            }else {
+                nextId = (-1 * nextId) - 1;
+                if(nextId < MAX_PIPELINE_OUT_NUM)
+                     preSinkItem[nextId] = item;
+                else
+                    g_print("Error when algo pipe create: output algo nextId = %d\n", nextId);
+            }
+        }
+    }
+    #endif
 
      //create sinkalgo
      item = pipeline->algo_chain + num;
@@ -508,18 +546,28 @@ int algo_pipeline_get_all_queue_size(AlgoPipelineHandle handle)
 {
     AlgoPipeline *pipeline = (AlgoPipeline *) handle;
     CvdlAlgoBase* algo = NULL;
-    int size = 0;
+    int size = 0,i;
 
     if(pipeline==NULL) {
         GST_ERROR("algo pipeline handle is NULL!\n");
         return 0;
     }
+    #if 0
     algo = static_cast<CvdlAlgoBase *>(pipeline->first);
     while(algo) {
         size += algo->get_in_queue_size() + algo->get_out_queue_size();
         size += algo->mInferCnt;
-        algo=algo->mNext;
+        algo=algo->mNext[0];
     }
+    #else
+    for(i=0;i<pipeline->algo_num;i++) {
+        algo = static_cast<CvdlAlgoBase *>(pipeline->algo_chain[i].algo);
+        if(algo) {
+            size += algo->get_in_queue_size() + algo->get_out_queue_size();
+            size += algo->mInferCnt;
+        }
+    }
+    #endif
     return size;
 }
 

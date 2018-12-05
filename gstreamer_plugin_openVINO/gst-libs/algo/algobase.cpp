@@ -27,9 +27,6 @@
 using namespace std;
 using namespace cv;
 
-#define QUEUE_ELEMENT_MAX_NUM 100
-#define LOG_DIR "/home/hddls_log/"
-
 static void algo_enter_thread (GstTask * task, GThread * thread, gpointer user_data)
 {
     GST_DEBUG("enter algo thread.");
@@ -68,7 +65,7 @@ static void try_process_algo_data(CvdlAlgoData *algoData)
             //put algoData;
             GST_LOG("algo %d - output GstBuffer = %p(%d)\n",
                    hddlAlgo->mAlgoType, algoData->mGstBuffer, GST_MINI_OBJECT_REFCOUNT(algoData->mGstBuffer));
-            hddlAlgo->mNext->mInQueue.put(*algoData);
+            hddlAlgo->mNext[algoData->mOutputIndex]->mInQueue.put(*algoData);
         } else {
             GST_LOG("algo %d - unref GstBuffer = %p(%d)\n",
                 hddlAlgo->mAlgoType, algoData->mGstBuffer, GST_MINI_OBJECT_REFCOUNT(algoData->mGstBuffer));
@@ -178,7 +175,7 @@ static void base_hddl_algo_func(gpointer userData)
     const char*algo_name = algo_pipeline_get_name(hddlAlgo->mAlgoType);
     GST_LOG("\n%s:%s - new an algoData = %p\n", __func__, algo_name, algoData);
 
-    if(!hddlAlgo->mNext) {
+    if(!hddlAlgo->mNext[0]) {
         GST_LOG("The %s algo's next algo is NULL", algo_name);
     }
 
@@ -249,7 +246,7 @@ void push_algo_data(CvdlAlgoData* &algoData)
             objectVec[i].rect.x, objectVec[i].rect.y,
             objectVec[i].rect.width, objectVec[i].rect.height, objectVec[i].score);
     }
-    cvAlgo->mNext->mInQueue.put(*algoData);
+    cvAlgo->mNext[algoData->mOutputIndex]->mInQueue.put(*algoData);
     delete algoData;
 }
 
@@ -268,7 +265,7 @@ static void base_cv_algo_func(gpointer userData)
     const char*algo_name = algo_pipeline_get_name(cvAlgo->mAlgoType);
     GST_LOG("\n%s:%s - new an algoData = %p\n", __func__, algo_name, algoData);
 
-    if(!cvAlgo->mNext) {
+    if(!cvAlgo->mNext[0]) {
         GST_WARNING("Algo %d: the next algo is NULL, return!", cvAlgo->mAlgoType);
         delete algoData;
         return;
@@ -346,7 +343,7 @@ CvdlAlgoBase::CvdlAlgoBase(PostCallback  cb, guint cvdlType )
     :mCapsInited(false), mCvdlType(cvdlType), mTask(NULL), mIeInited(false),
      mInputWidth(0), mInputHeight(0), mImageProcessorInVideoWidth(0),
      mImageProcessorInVideoHeight(0), mInCaps(NULL), mOclCaps(NULL), 
-     mNext(NULL), mPrev(NULL), mObsoletedAlgoData(NULL), postCb(cb),
+     mPrev(NULL), mObsoletedAlgoData(NULL), postCb(cb),
      mInferCnt(0), mInferCntTotal(0), mFrameIndex(0), mFrameDoneNum(0),
      mImageProcCost(1), mInferCost(1), mFrameIndexLast(0), mObjIndex(0),
      fpOclResult(NULL)
@@ -357,6 +354,9 @@ CvdlAlgoBase::CvdlAlgoBase(PostCallback  cb, guint cvdlType )
         mTask = NULL;
         return;
     }
+
+    for(int i=0;i<MAX_DOWN_STREAM_ALGO_NUM;i++)
+        mNext[i]=NULL;
 
     /* Create task for this algo */
     if(cvdlType==CVDL_TYPE_DL) {
@@ -384,7 +384,9 @@ CvdlAlgoBase::~CvdlAlgoBase()
         mTask = NULL;
     }
     mInQueue.close();
-    mNext = mPrev = NULL;
+    mPrev = NULL;
+    for(int i=0;i<MAX_DOWN_STREAM_ALGO_NUM;i++)
+        mNext[i]=NULL;
     if(mInCaps)
         gst_caps_unref(mInCaps);
 
@@ -399,7 +401,19 @@ CvdlAlgoBase::~CvdlAlgoBase()
 
 void CvdlAlgoBase::algo_connect(CvdlAlgoBase *algoTo)
 {
-    this->mNext = algoTo;
+    this->mNext[0] = algoTo;
+    algoTo->mPrev = this;
+}
+
+void CvdlAlgoBase::algo_connect_with_index(CvdlAlgoBase *algoTo, int index)
+{
+    if(index>=0 && index<MAX_DOWN_STREAM_ALGO_NUM) {
+        this->mNext[index] = algoTo;
+    } else {
+        g_print("Warning: invalid algo nextIndex = %d, default: 0~%d, use index=0 instead!\n",
+            index, MAX_DOWN_STREAM_ALGO_NUM);
+        this->mNext[0] = algoTo;
+    }
     algoTo->mPrev = this;
 }
 

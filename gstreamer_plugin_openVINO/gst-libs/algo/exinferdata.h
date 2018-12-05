@@ -58,6 +58,8 @@ typedef struct _ExInferData {
 //    ExInferData();
 //    ~ExInferData() {mObjectVec.clear();}
     std::vector<ExObjectData> mObjectVec;
+    // output index, for multiple output algo, default is 0
+    int outputIndex;
 }ExInferData;
 
 typedef ExInferData * (*pfInferenceResultParseFunc)(void *data,  ExDataType type, int len,int image_width, int image_height); 

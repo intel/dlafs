@@ -34,12 +34,7 @@
 #include "imageproc.h"
 #include <ocl/oclmemory.h>
 #include "ieloader.h"
-
-const static guint CVDL_OBJECT_FLAG_DONE =0x1;
-
-const static guint  CVDL_TYPE_DL = 0;
-const static guint  CVDL_TYPE_CV = 1;
-const static guint  CVDL_TYPE_NONE = 2;
+#include "private.h"
 
 class ObjectData{
 public:
@@ -101,9 +96,9 @@ using PostCallback = std::function<void(CvdlAlgoData* algoData)>;
 
 class CvdlAlgoData{
 public:
-    CvdlAlgoData(): mGstBuffer(NULL) ,mFrameId(0), mPts(0), mAllObjectDone(true),
+    CvdlAlgoData(): mGstBuffer(NULL) ,mFrameId(0), mPts(0),mOutputIndex(0),  mAllObjectDone(true),
                                                 mGstBufferOcl(NULL), algoBase(NULL){};
-    CvdlAlgoData(GstBuffer *buf) : mGstBuffer(buf), mFrameId(0), mPts(0),mAllObjectDone(true),
+    CvdlAlgoData(GstBuffer *buf) : mGstBuffer(buf), mFrameId(0), mPts(0),mOutputIndex(0), mAllObjectDone(true),
                                                 mGstBufferOcl(NULL), algoBase(NULL)
     {
         if(buf){
@@ -121,6 +116,10 @@ public:
     GstBuffer *mGstBuffer;
     guint64 mFrameId;
     guint64 mPts;
+
+    // For multiple output algo, 0 is output[0], 1 is for output[1]
+    // default is 0
+    gint mOutputIndex; 
 
     // If all objects are done.
     gboolean mAllObjectDone;
@@ -144,6 +143,7 @@ public:
     virtual ~CvdlAlgoBase();
 
     void algo_connect(CvdlAlgoBase *algoTo);
+    void algo_connect_with_index(CvdlAlgoBase *algoTo, int index);
     void queue_buffer(GstBuffer *buffer, guint w, guint h);
     void queue_out_buffer(GstBuffer *buffer);
     void start_algo_thread();
@@ -213,7 +213,7 @@ public:
     GstCaps *mOclCaps; 
 
     /* link algo to form a algo chain/pipeline */
-    CvdlAlgoBase *mNext;
+    CvdlAlgoBase *mNext[MAX_DOWN_STREAM_ALGO_NUM];
     CvdlAlgoBase *mPrev;
 
     // queue input buffer

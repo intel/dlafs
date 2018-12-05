@@ -30,20 +30,9 @@ extern "C" {
 #include <gst/gstbuffer.h>
 #include <gst/gstpad.h>
 #include "algoregister.h"
+#include "private.h"
 
 typedef void* AlgoHandle;
-
-// Each algo in the algo chain can link to multiple downstream algo
-// Here we set 1 by default
-#define MAX_DOWN_STREAM_ALGO_NUM 2
-
-// PIPELINE can output multiple output,  one output with one buffer_queue
-// Here we set 1
-#define MAX_PIPELINE_OUT_NUM 1
-
-// SinkAlgo item can accept multiple preItem, one is a algo branch
-#define MAX_PRE_SINK_ALGO_NUM 2
-
 typedef struct _AlgoPipelineConfig{
     int curId; 
     int curType;/* current algo id */
