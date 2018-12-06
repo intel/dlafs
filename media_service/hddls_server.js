@@ -22,6 +22,12 @@ let model_path = "";
 let model_name = "";
 let file_name = "";
 let model_file = "";
+let controller_client = "";
+
+let controller_map = new Map();
+for (let i = 0; i < 100; i++) {
+  controller_map.set(i, 0);
+}
 
 let pipe_map = new Map();
 for (let i = 0; i < 100; i++) {
@@ -72,6 +78,7 @@ controller_wss.on('connection', function (ws) {
   console.log('controller connected !'.bgYellow);
   client_id++;
   ws.send(client_id);
+  controller_map.set(client_id, ws);
   //model_file = JSON.parse(fs.readFileSync('./model/model_info.json', 'utf8'));
   model_file = fs.readFileSync('./model/model_info.json', 'utf8');
   //console.log(JSON.parse(model_file));
@@ -333,6 +340,40 @@ hddlpipe_wss.on('connection', function connection(ws) {
   console.log("this is " + userArray.indexOf(ws) + "th loop time");
 
 
+  function update_pipe_info() {
+    //console.log("I know you have closed!!!" .red);
+    console.log(pipe_map);
+    //console.log(pipe_map.length());
+    //let temp = pipe_map.get(i);
+    //console.log(temp);
+    for (let i = 0; i < 100; i++) {
+      if (pipe_map.get(i) !== 0 && pipe_map.get(i) !== -1 && pipe_map.get(i).readyState === WebSocket.CLOSED) {
+        pipe_map.set(i, -1);
+        //console.log("I know you have closed!!!" .blue);
+        console.log(client_map);
+        console.log("i is" + i);
+        for (let j = 0; j < 100; j++) {
+          if (client_map.get(j) !== "" && client_map.get(j).indexOf(i.toString()) > -1) {
+            console.log(client_map.get(j).indexOf(i.toString()));
+            console.log("j is" + j);
+            let temple = client_map.get(j).replace(i.toString() + ",", "");
+            console.log(temple);
+            client_map.set(j, temple);
+            if (controller_map.get(j).readyState === WebSocket.OPEN) {
+              controller_map.get(j).send("pipe " + i + " has finished and exit!");
+              controller_map.get(j).send(temple);
+            }
+
+          }
+
+        }
+      }
+
+
+    }
+  }
+
+
   ws.on('message', function incoming(data) {
     if (typeof data === "string") {
       console.log(data);
@@ -341,6 +382,7 @@ hddlpipe_wss.on('connection', function connection(ws) {
       pipe_id = parseInt(pipe_client[1]);
       console.log(pipe_id);
       pipe_map.set(pipe_id, ws);
+      console.log(pipe_map);
     }
     else {
       if (receive_client.readyState === WebSocket.OPEN) {
@@ -357,8 +399,9 @@ hddlpipe_wss.on('connection', function connection(ws) {
     console.log(e);
   });
 
-  ws.on('close', function (ws) {
+  ws.on('close', function () {
     console.log("pipeline closed!".bgMagenta);
+    update_pipe_info();
   });
 
 

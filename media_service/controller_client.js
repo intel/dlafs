@@ -42,15 +42,15 @@ function checksum(str, algorithm, encoding) {
     .digest(encoding || 'hex')
 }
 
-function display_json(data){
-  let i =0;
+function display_json(data) {
+  let i = 0;
   console.log("HERE ARE SERVER MODEL LISTS:".yellow);
-  for(key in data){
-    console.log((i + '. '+ key) .bgBlue);
+  for (key in data) {
+    console.log((i + '. ' + key).bgBlue);
     i++;
-    for(innerKey in data[key]){
-      console.log(innerKey + ":     " +JSON.stringify(data[key][innerKey]).yellow); 
-  
+    for (innerKey in data[key]) {
+      console.log(innerKey + ":     " + JSON.stringify(data[key][innerKey]).yellow);
+
     }
     console.log("\r\n");
   }
@@ -198,7 +198,11 @@ function set_websocket() {
           break;
 
         case 'pipe':
-          console.log(("Rgiht now this client owns pipes as: " + pipe_constuctor).blue);
+          if (pipe_constuctor === "") {
+            console.log("There are NO pipes owned by this client".red);
+          } else {
+            console.log(("Rgiht now this client owns pipes as: " + pipe_constuctor).blue);
+          }
           prompt();
           break;
 
@@ -345,9 +349,13 @@ function set_websocket() {
           prompt();
         }
 
+      } else if (data.indexOf("has finished and exit!") > -1) {
+        console.log(`${data} `.blue);
+        prompt();
+
       } else {
         pipe_constuctor = data;
-        console.log(pipe_constuctor);
+        //console.log(pipe_constuctor);
         prompt();
 
       }
