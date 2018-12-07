@@ -65,7 +65,7 @@ static void item_free_func(gpointer data)
      wsclient->data = NULL;
      wsclient->data_len = 0;
      wsclient->message_queue = g_async_queue_new_full (item_free_func);
- 
+
      std::thread t([&wsclient, serverUri, client_id]{
          uWS::Hub hub;
  
@@ -113,7 +113,7 @@ static void item_free_func(gpointer data)
  
      while(!wsclient->client)
          g_usleep(1000);
- 
+
      return (WsClientHandle)wsclient;
  }
  
@@ -203,10 +203,12 @@ void wsclient_free_item(MessageItem *item)
  
      if(!handle)
          return;
+
      if(wsclient->client) {
-         wsclient->client->close();
-         g_usleep(1000);
+        wsclient->client->close();
+        g_usleep(1000);
      }
+
      if(wsclient->data)
          g_free(wsclient->data);
 

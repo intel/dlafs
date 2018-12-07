@@ -182,12 +182,14 @@ static void base_hddl_algo_func(gpointer userData)
     if(!hddlAlgo->mInQueue.get(*algoData)) {
         GST_WARNING("InQueue is empty!");
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        delete algoData;
         return;
     }
 
     if(algoData->mGstBuffer==NULL) {
         GST_WARNING("Invalid buffer!!!");
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        delete algoData;
         return;
     }
 
@@ -196,6 +198,7 @@ static void base_hddl_algo_func(gpointer userData)
 
     if(algoData->mGstBuffer==NULL) {
         g_print("%s() - get null buffer\n", __func__);
+        delete algoData;
         return;
     }
     GST_LOG("%s() - algo = %p, algoData->mFrameId = %ld\n", __func__,
@@ -394,6 +397,7 @@ CvdlAlgoBase::~CvdlAlgoBase()
         delete mObsoletedAlgoData;
     mObsoletedAlgoData=NULL;
 
+    g_rec_mutex_clear(&mMutex);
     if(fpOclResult)
         fclose(fpOclResult);
     //gst_object_unref(mPool);

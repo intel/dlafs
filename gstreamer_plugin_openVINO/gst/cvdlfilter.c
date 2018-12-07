@@ -221,6 +221,7 @@ cvdl_filter_finalize (GObject * object)
     gst_task_set_state(cvdlfilter->mPushTask, GST_TASK_STOPPED);
     algo_pipeline_flush_buffer(cvdlfilter->algoHandle);
     gst_task_join(cvdlfilter->mPushTask);
+    gst_object_unref(cvdlfilter->mPushTask);
 
     // destroy algo pipeline
     if(cvdlfilter->algoHandle) {

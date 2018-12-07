@@ -113,6 +113,7 @@ res_memory_free (GstAllocator* allocator, GstMemory* memory)
     //ResAllocator* res_alloc = RES_ALLOCATOR_CAST (allocator);
     InferenceData *data = RES_MEMORY_DATA(memory);
     //int count = RES_MEMORY_DATA_COUNT(memory);
+    // g_print("res_memory_free: res_mem = %p, res_mem->data=%p\n",memory, data );
     if(data)
         g_free(data);
     RES_MEMORY_DATA(memory) = NULL;

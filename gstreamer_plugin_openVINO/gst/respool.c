@@ -71,10 +71,15 @@ res_memory_alloc (ResPool* respool)
     res_mem->data = g_new0(InferenceData, 1);
     res_mem->data_count = 1;
     res_mem->pts  = 0;
+    //g_print("res_memory_alloc: res_mem = %p, res_mem->data=%p\n",res_mem, res_mem->data );
 
     /* find the real parent */
     if ((parent = res_mem->parent.parent) == NULL)
       parent = (GstMemory *) res_mem;
+
+    //Only for gst-1.8.3,  but not sure if be removed when gst-1.14.2
+    //It is used to avoid res_mem to be ref twice in gst_memory_init
+    parent = NULL;
 
     GstMemory *memory = GST_MEMORY_CAST (res_mem);
     gst_memory_init (memory, GST_MEMORY_FLAG_NO_SHARE, priv->allocator, parent,
@@ -82,7 +87,6 @@ res_memory_alloc (ResPool* respool)
 
     return memory;
 }
-
 
 static GstFlowReturn
 res_pool_alloc (GstBufferPool* pool, GstBuffer** buffer,
@@ -103,9 +107,10 @@ res_pool_alloc (GstBufferPool* pool, GstBuffer** buffer,
     }
 
     //TODO: GDestroyNotify need to release InferenceData?
-    //gst_mini_object_set_qdata (GST_MINI_OBJECT_CAST (res_mem),
-    //    RES_MEMORY_QUARK, GST_MEMORY_CAST (res_mem),
-    //    (GDestroyNotify) gst_memory_unref);
+   // gst_mini_object_set_qdata (GST_MINI_OBJECT_CAST (res_mem),
+   //     RES_MEMORY_QUARK, GST_MEMORY_CAST (res_mem),
+   //     (GDestroyNotify) gst_memory_unref);
+
     gst_buffer_append_memory (res_buf, (GstMemory *)res_mem);
 
     *buffer = res_buf;

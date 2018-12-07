@@ -334,11 +334,11 @@ gst_ws_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
     {
-      GstCaps *caps;
+      //GstCaps *caps;
       GST_DEBUG_OBJECT (basesink, "caps %p", event);
 
       // we will not replace the caps
-      gst_event_parse_caps (event, &caps);
+      //gst_event_parse_caps (event, &caps);
       break;
     }
     case GST_EVENT_TAG:

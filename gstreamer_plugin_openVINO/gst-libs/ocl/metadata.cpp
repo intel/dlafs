@@ -50,6 +50,9 @@ gpointer
 inference_meta_create (VideoRect *rect, const char *label, float prob, guint32 color)
 {
     InferenceMeta *meta = g_new0 (InferenceMeta, 1);
+    int len = strlen(label);
+    if(len>=LABEL_MAX_LENGTH)
+        len = LABEL_MAX_LENGTH - 1;
 
     meta->rect = *rect;
     memcpy(meta->label,label,LABEL_MAX_LENGTH);

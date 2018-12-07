@@ -645,6 +645,7 @@ res_convert_init (ResConvert * convertor)
 
     /* create a pool for src_txt buffer */
     convertor->src_pool = res_pool_create (caps, sizeof(InferenceData), 3, 10);
+    gst_caps_unref(caps);
 
     /* create src pads */
     //TODO: also we can create src pads dynamically in future

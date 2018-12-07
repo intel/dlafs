@@ -139,19 +139,22 @@ ocl_memory_alloc (OclPool* oclpool)
         case GST_VIDEO_FORMAT_GRAY8:
             ocl_mem->frame.create(cv::Size(OCL_MEMORY_WIDTH (ocl_mem),OCL_MEMORY_HEIGHT (ocl_mem)), CV_8UC1);
             OCL_MEMORY_FOURCC (ocl_mem) = OCL_FOURCC_GRAY;
+            ocl_mem->mem_size = OCL_MEMORY_WIDTH (ocl_mem) * OCL_MEMORY_HEIGHT (ocl_mem);
             break;
         case GST_VIDEO_FORMAT_BGR:
             ocl_mem->frame.create(cv::Size(OCL_MEMORY_WIDTH (ocl_mem),OCL_MEMORY_HEIGHT (ocl_mem)), CV_8UC3);
             OCL_MEMORY_FOURCC (ocl_mem) = OCL_FOURCC_BGR3;
+            ocl_mem->mem_size = OCL_MEMORY_WIDTH (ocl_mem) * OCL_MEMORY_HEIGHT (ocl_mem) * 3;
             break;
         case GST_VIDEO_FORMAT_BGRA:
             // For blender module
             ocl_mem->frame.create(cv::Size(OCL_MEMORY_WIDTH (ocl_mem),OCL_MEMORY_HEIGHT (ocl_mem)), CV_8UC4);
             OCL_MEMORY_FOURCC (ocl_mem) = OCL_FOURCC_BGRA;
+            ocl_mem->mem_size = OCL_MEMORY_WIDTH (ocl_mem) * OCL_MEMORY_HEIGHT (ocl_mem) * 4;
             break;
         default:
             g_print("Not support format = %d\n", priv->info.finfo->format);
-            while(1);
+            ocl_mem->mem_size = 0;
             break;
     }
     g_return_val_if_fail(ocl_mem->frame.offset == 0, NULL);
@@ -168,10 +171,13 @@ ocl_memory_alloc (OclPool* oclpool)
         OCL_MEMORY_MEM (ocl_mem) = (cl_mem)ocl_mem->frame.handle(ACCESS_RW);//CL address
     }
 
+    //g_print("ocl_memory_alloc: ocl_mem = %p, ocl_mem->mem=%p, size = %ld\n",ocl_mem, ocl_mem->mem, ocl_mem->mem_size );
+    #if 0
     /* find the real parent */
     GstMemory *parent;
     if ((parent = ocl_mem->parent.parent) == NULL)
       parent = (GstMemory *) ocl_mem;
+    #endif
 
     GstMemory *memory = GST_MEMORY_CAST (ocl_mem);
     gst_memory_init (memory, GST_MEMORY_FLAG_NO_SHARE, priv->allocator, NULL,
