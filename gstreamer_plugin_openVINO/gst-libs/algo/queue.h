@@ -76,8 +76,8 @@ public:
             return false;
         }
 
-        ret = *it; 		//copy construct the return value
-        _q.erase(it);	//remove from deque
+        ret = *it;          //copy construct the return value
+        _q.erase(it);   //remove from deque
 
         if (_q.size() < _size_limit) {
             _cv_notfull.notify_all();

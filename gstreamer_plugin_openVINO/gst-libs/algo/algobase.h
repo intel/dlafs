@@ -97,13 +97,19 @@ using PostCallback = std::function<void(CvdlAlgoData* algoData)>;
 class CvdlAlgoData{
 public:
     CvdlAlgoData(): mGstBuffer(NULL) ,mFrameId(0), mPts(0),mOutputIndex(0),  mAllObjectDone(true),
-                                                mGstBufferOcl(NULL), algoBase(NULL){};
+                                                mGstBufferOcl(NULL), algoBase(NULL)
+    {
+        mObjectVec.clear();
+        mObjectVecIn.clear();
+    }
     CvdlAlgoData(GstBuffer *buf) : mGstBuffer(buf), mFrameId(0), mPts(0),mOutputIndex(0), mAllObjectDone(true),
                                                 mGstBufferOcl(NULL), algoBase(NULL)
     {
         if(buf){
             //gst_buffer_ref(buf);
         }
+        mObjectVec.clear();
+        mObjectVecIn.clear();
      }
     ~CvdlAlgoData() {
         // Dont unref it, which will cause unref when copy this data structure into Queue
@@ -161,9 +167,11 @@ public:
 
     GstFlowReturn init_ieloader(const char* modeFileName, guint ieType, std::string network_config=std::string("none"));
     void  init_dl_caps(GstCaps* incaps);
-    virtual void set_data_caps(GstCaps *incaps)
+    virtual void set_data_caps(GstCaps *incaps);
+    // only for dl algo
+    virtual GstFlowReturn algo_dl_init(const char* modeFileName)
     {
-
+        return GST_FLOW_OK;
     }
     virtual GstFlowReturn parse_inference_result(
         InferenceEngine::Blob::Ptr &resultBlobPtr,
@@ -185,6 +193,7 @@ public:
 
     // which algo it belongs
     guint  mAlgoType;
+    std::string mName;
 
    // There are 2 tasks,  DL task and CV task
    //  DL task - run with IE inference engine

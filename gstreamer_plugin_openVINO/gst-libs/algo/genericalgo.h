@@ -34,7 +34,7 @@ class GenericAlgo : public CvdlAlgoBase
 public:
     GenericAlgo(char *name);
     virtual ~GenericAlgo();
-    virtual void set_data_caps(GstCaps *incaps);
+    //virtual void set_data_caps(GstCaps *incaps);
     virtual GstFlowReturn algo_dl_init(const char* modeFileName);
     virtual GstFlowReturn parse_inference_result(InferenceEngine::Blob::Ptr &resultBlobPtr,
                                                  int precision, CvdlAlgoData *outData, int objId);
@@ -45,7 +45,7 @@ public:
     void objdata_2_exobjdata(ObjectData &objData,  ExObjectData &exObjData);
     InferenceEngine::Precision getIEPrecision(ExDataType type) ;
 
-    std::string mName;
+    //std::string mName;
     void *mHandler;
     pfInferenceResultParseFunc pfParser;
     pfPostProcessInferenceDataFunc pfPostProcess;

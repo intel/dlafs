@@ -123,6 +123,7 @@ static void post_tracklp_process(CvdlAlgoData *algoData)
 
 KalmanTrackAlgo::KalmanTrackAlgo():CvdlAlgoBase(post_tracklp_process, CVDL_TYPE_CV)
 {
+    mName = std::string("kalmantrack");
     mInputWidth = TRACKING_LP_INPUT_W;
     mInputHeight = TRACKING_LP_INPUT_H;
 

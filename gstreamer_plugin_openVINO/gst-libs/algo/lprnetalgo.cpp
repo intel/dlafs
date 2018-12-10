@@ -25,6 +25,7 @@
 #include <ocl/oclmemory.h>
 #include <ocl/crcmeta.h>
 #include <ocl/metadata.h>
+#include "algoregister.h"
 
 using namespace std;
 
@@ -126,6 +127,7 @@ static void post_callback(CvdlAlgoData *algoData)
 
 LPRNetAlgo::LPRNetAlgo() : CvdlAlgoBase(post_callback, CVDL_TYPE_DL)
 {
+    mName = std::string(ALGO_LPRNET_NAME);
 }
 
 LPRNetAlgo::~LPRNetAlgo()
@@ -135,19 +137,24 @@ LPRNetAlgo::~LPRNetAlgo()
         1000000.0*mFrameDoneNum/mInferCost);
 }
 
+#if 0
 void LPRNetAlgo::set_data_caps(GstCaps *incaps)
 {
-    // load IE and cnn model
     std::string filenameXML;
-    const gchar *env = g_getenv("CVDL_LP_RECOGNIZE_MODEL_FULL_PATH");
+    const gchar *env = g_getenv("HDDLS_CVDL_MODEL_PATH");
     if(env) {
-        filenameXML = std::string(env);
+        //($HDDLS_CVDL_MODEL_PATH)/<model_name>/<model_name>.xml
+        filenameXML = std::string(env) + std::string("/") + mName + std::string("/") + mName + std::string(".xml");
     }else{
-        filenameXML = std::string(CVDL_MODEL_DIR_DEFAULT"/license_plate_recognize/license-plate-recognition-barrier-0001.xml");
+        filenameXML = std::string("HDDLS_CVDL_MODEL_PATH") + std::string("/") + mName
+                                  + std::string("/") + mName + std::string(".xml");
+        g_print("Error: cannot find %s model files: %s\n", mName.c_str(), filenameXML.c_str());
+        exit(1);
     }
     algo_dl_init(filenameXML.c_str());
     init_dl_caps(incaps);
 }
+#endif
 
 GstFlowReturn LPRNetAlgo::algo_dl_init(const char* modeFileName)
 {

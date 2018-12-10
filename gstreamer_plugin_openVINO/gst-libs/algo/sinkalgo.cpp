@@ -34,7 +34,7 @@ using namespace HDDLStreamFilter;
 
 SinkAlgo::SinkAlgo():CvdlAlgoBase(NULL, CVDL_TYPE_NONE)
 {
-
+    mName = std::string(ALGO_SINK_NAME);
 }
 
 SinkAlgo::~SinkAlgo()

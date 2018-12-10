@@ -23,6 +23,7 @@
 #include "mathutils.h"
 #include "opticalflowtrackalgo.h"
 #include <interface/videodefs.h>
+#include "algoregister.h"
 
 using namespace HDDLStreamFilter;
 using namespace cv;
@@ -71,6 +72,7 @@ static void post_track_process(CvdlAlgoData *algoData)
 
 OpticalflowTrackAlgo::OpticalflowTrackAlgo():CvdlAlgoBase(post_track_process, CVDL_TYPE_CV)
 {
+    mName = std::string(ALGO_OF_TRACK_NAME);
     mInputWidth = TRACKING_INPUT_W;
     mInputHeight = TRACKING_INPUT_H;
     mPreFrame = NULL;

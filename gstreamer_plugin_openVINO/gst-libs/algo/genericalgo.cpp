@@ -79,12 +79,13 @@ static void post_callback(CvdlAlgoData *algoData)
         }
 }
 
-GenericAlgo::GenericAlgo(char *name) : CvdlAlgoBase(post_callback, CVDL_TYPE_DL), mName(std::string(name)),
+GenericAlgo::GenericAlgo(char *name) : CvdlAlgoBase(post_callback, CVDL_TYPE_DL),
         mHandler(NULL), pfParser(NULL), pfPostProcess(NULL), pfGetType(NULL),
         pfGetMS(NULL), pfGetNetworkConfig(NULL), mLoaded(false), inType(DataTypeInt8),
         outType(DataTypeFP32), mCurPts(0)
 {
-    const gchar *env = g_getenv("CVDL_MODEL_FULL_PATH");
+    mName = std::string(name);
+    const gchar *env = g_getenv("HDDLS_CVDL_MODEL_PATH");
     gchar libname[256];
     g_print("Create generic algo name = %s\n", name);
     if(env) {
@@ -127,24 +128,25 @@ void GenericAlgo::set_default_label_name()
      //set default label name
 }
 
+#if 0
 void GenericAlgo::set_data_caps(GstCaps *incaps)
 {
-    // load IE and cnn model
     std::string filenameXML;
-    const gchar *env = g_getenv("CVDL_MODEL_FULL_PATH");
-    gchar modelname[256];
+    const gchar *env = g_getenv("HDDLS_CVDL_MODEL_PATH");
     if(env) {
-        // $(CVDL_MODEL_FULL_PATH)/<algoname>/<algoname>.xml
-        g_snprintf(modelname, 256, "%s/%s/%s.xml",env,  mName.c_str(), mName.c_str());
-        g_print("Try to load model from: %s\n", modelname);
-        filenameXML = std::string(modelname);
-        algo_dl_init(filenameXML.c_str());
-        init_dl_caps(incaps);
-    } else {
-        g_print("Please set CVDL_MODEL_FULL_PATH for model root drectory!\n\n");
+        //($HDDLS_CVDL_MODEL_PATH)/<model_name>/<model_name>.xml
+        filenameXML = std::string(env) + std::string("/") + mName + std::string("/") + mName + std::string(".xml");
+    }else{
+        filenameXML = std::string("HDDLS_CVDL_MODEL_PATH") + std::string("/") + mName
+                                  + std::string("/") + mName + std::string(".xml");
+        g_print("Error: cannot find %s model files: %s\n", mName.c_str(), filenameXML.c_str());
         mLoaded = false;
+        exit(1);
     }
+    algo_dl_init(filenameXML.c_str());
+    init_dl_caps(incaps);
 }
+#endif
 
 GstFlowReturn GenericAlgo::algo_dl_init(const char* modeFileName)
 {

@@ -28,6 +28,7 @@
 #include "tracklpalgo.h"
 #include <interface/videodefs.h>
 #include "dlib/optimization.h"
+#include "algoregister.h"
 
 using namespace cv;
 using namespace HDDLStreamFilter;
@@ -240,6 +241,7 @@ TrackLpAlgo::TrackLpAlgo():CvdlAlgoBase(post_tracklp_process, CVDL_TYPE_CV)
 {
     mInputWidth = TRACKING_LP_INPUT_W;
     mInputHeight = TRACKING_LP_INPUT_H;
+    mName = std::string(ALGO_TRACK_LP_NAME);
 
     mSvmModelStr = std::string(CVDL_MODEL_DIR_DEFAULT"/svm_model.xml");
 

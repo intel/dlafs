@@ -31,7 +31,7 @@ class MobileNetSSDAlgo : public CvdlAlgoBase
 public:
     MobileNetSSDAlgo();
     virtual ~MobileNetSSDAlgo();
-    virtual void set_data_caps(GstCaps *incaps);
+    //virtual void set_data_caps(GstCaps *incaps);
     virtual GstFlowReturn algo_dl_init(const char* modeFileName);
     virtual GstFlowReturn parse_inference_result(InferenceEngine::Blob::Ptr &resultBlobPtr,
                                                  int precision, CvdlAlgoData *outData, int objId);

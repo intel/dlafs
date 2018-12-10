@@ -63,12 +63,14 @@ static void try_process_algo_data(CvdlAlgoData *algoData)
         std::vector<ObjectData> &objectVec = algoData->mObjectVec;
         if(objectVec.size()>0) {
             //put algoData;
-            GST_LOG("algo %d - output GstBuffer = %p(%d)\n",
-                   hddlAlgo->mAlgoType, algoData->mGstBuffer, GST_MINI_OBJECT_REFCOUNT(algoData->mGstBuffer));
+            GST_LOG("algo %d(%s) - output GstBuffer = %p(%d)\n",
+                   hddlAlgo->mAlgoType, hddlAlgo->mName.c_str(), algoData->mGstBuffer,
+                   GST_MINI_OBJECT_REFCOUNT(algoData->mGstBuffer));
             hddlAlgo->mNext[algoData->mOutputIndex]->mInQueue.put(*algoData);
         } else {
-            GST_LOG("algo %d - unref GstBuffer = %p(%d)\n",
-                hddlAlgo->mAlgoType, algoData->mGstBuffer, GST_MINI_OBJECT_REFCOUNT(algoData->mGstBuffer));
+            GST_LOG("algo %d(%s) - unref GstBuffer = %p(%d)\n",
+                hddlAlgo->mAlgoType, hddlAlgo->mName.c_str(), algoData->mGstBuffer,
+                GST_MINI_OBJECT_REFCOUNT(algoData->mGstBuffer));
             gst_buffer_unref(algoData->mGstBuffer);
             //delete algoData;
         }
@@ -146,8 +148,9 @@ static void try_process_algo_data(CvdlAlgoData *algoData)
                                                         ocl_mem->frame, onHddlResult);
 
     // this ocl will not use, free it here
-    GST_LOG("algo %d - unref Ocl GstBuffer = %p(%d)\n",
-                hddlAlgo->mAlgoType, objectData.oclBuf, GST_MINI_OBJECT_REFCOUNT(objectData.oclBuf));
+    GST_LOG("algo %d(%s) - unref Ocl GstBuffer = %p(%d)\n",
+                hddlAlgo->mAlgoType, hddlAlgo->mName.c_str(), objectData.oclBuf,
+                GST_MINI_OBJECT_REFCOUNT(objectData.oclBuf));
     gst_buffer_unref(objectData.oclBuf);
     objectData.oclBuf  = NULL;
 
@@ -203,9 +206,10 @@ static void base_hddl_algo_func(gpointer userData)
     }
     GST_LOG("%s() - algo = %p, algoData->mFrameId = %ld\n", __func__,
             hddlAlgo, algoData->mFrameId);
-    GST_LOG("%s() - algo  %d, get one buffer, GstBuffer = %p, refcout = %d, queueSize = %d,"\
+    GST_LOG("%s() - algo  %d(%s), get one buffer, GstBuffer = %p, refcout = %d, queueSize = %d,"\
             "algoData = %p, algoBase = %p\n",
-        __func__,hddlAlgo->mAlgoType, algoData->mGstBuffer, GST_MINI_OBJECT_REFCOUNT (algoData->mGstBuffer),
+            __func__,hddlAlgo->mAlgoType, hddlAlgo->mName.c_str(), algoData->mGstBuffer,
+            GST_MINI_OBJECT_REFCOUNT (algoData->mGstBuffer),
         hddlAlgo->mInQueue.size(), algoData, algoData->algoBase);
 
     // get input data and process it here, put the result into algoData
@@ -343,7 +347,8 @@ static void base_cv_algo_func(gpointer userData)
 }
 
 CvdlAlgoBase::CvdlAlgoBase(PostCallback  cb, guint cvdlType )
-    :mCapsInited(false), mCvdlType(cvdlType), mTask(NULL), mIeInited(false),
+    :mCapsInited(false), mAlgoType(ALGO_NONE), mName(std::string("")),
+     mCvdlType(cvdlType), mTask(NULL), mIeInited(false),
      mInputWidth(0), mInputHeight(0), mImageProcessorInVideoWidth(0),
      mImageProcessorInVideoHeight(0), mInCaps(NULL), mOclCaps(NULL), 
      mPrev(NULL), mObsoletedAlgoData(NULL), postCb(cb),
@@ -372,6 +377,26 @@ CvdlAlgoBase::CvdlAlgoBase(PostCallback  cb, guint cvdlType )
      gst_task_set_leave_callback (mTask, algo_leave_thread, NULL, NULL);
 }
 
+void CvdlAlgoBase::set_data_caps(GstCaps *incaps)
+{
+    // Only used for DL algo, for other algo need implement this virtual function
+    if(mCvdlType != CVDL_TYPE_DL)
+        return;
+
+    std::string filenameXML;
+    const gchar *env = g_getenv("HDDLS_CVDL_MODEL_PATH");
+    if(env) {
+        //($HDDLS_CVDL_MODEL_PATH)/<model_name>/<model_name>.xml
+        filenameXML = std::string(env) + std::string("/") + mName + std::string("/") + mName + std::string(".xml");
+    }else{
+       filenameXML = std::string("HDDLS_CVDL_MODEL_PATH") + std::string("/") + mName
+                                + std::string("/") + mName + std::string(".xml");
+        g_print("Error: cannot find %s model files: %s\n", mName.c_str(), filenameXML.c_str());
+        exit(1);
+    }
+    algo_dl_init(filenameXML.c_str());
+    init_dl_caps(incaps);
+}
 
 CvdlAlgoBase::~CvdlAlgoBase()
 {

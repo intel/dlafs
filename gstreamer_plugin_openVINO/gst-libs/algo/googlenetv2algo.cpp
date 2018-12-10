@@ -25,6 +25,7 @@
 #include <ocl/oclmemory.h>
 #include <ocl/crcmeta.h>
 #include <ocl/metadata.h>
+#include "algopipeline.h"
 
 using namespace std;
 
@@ -44,6 +45,7 @@ static void post_callback(CvdlAlgoData *algoData)
 
 GoogleNetv2Algo::GoogleNetv2Algo() : CvdlAlgoBase(post_callback, CVDL_TYPE_DL)
 {
+    mName = std::string(ALGO_GOOGLENETV2_NAME);
     mInputWidth = CLASSIFICATION_INPUT_W;
     mInputHeight = CLASSIFICATION_INPUT_H;
 }
@@ -55,18 +57,22 @@ GoogleNetv2Algo::~GoogleNetv2Algo()
            1000000.0*mFrameDoneNum/mInferCost);
 }
 
+#if 0
 void GoogleNetv2Algo::set_data_caps(GstCaps *incaps)
 {
     std::string filenameXML;
-    const gchar *env = g_getenv("CVDL_CLASSIFICATION_MODEL_FULL_PATH");
+    const gchar *env = g_getenv("HDDLS_CVDL_MODEL_PATH");
     if(env) {
-        filenameXML = std::string(env);
+        //($HDDLS_CVDL_MODEL_PATH)/<model_name>/<model_name>.xml
+        filenameXML = std::string(env) + std::string("/") + mName + std::string("/") + mName + std::string(".xml");
     }else{
-        filenameXML = std::string(CVDL_MODEL_DIR_DEFAULT"/vehicle_classify/carmodel_fine_tune_1062_bn_iter_370000.xml");
+        g_print("Error: cannot find %s model files: %s\n", mName.c_str(), filenameXML.c_str());
+        exit(1);
     }
     algo_dl_init(filenameXML.c_str());
     init_dl_caps(incaps);
 }
+#endif
 
 GstFlowReturn GoogleNetv2Algo::algo_dl_init(const char* modeFileName)
 {
@@ -107,7 +113,7 @@ GstFlowReturn GoogleNetv2Algo::parse_inference_result(InferenceEngine::Blob::Ptr
             objData.label = strLabel;
             objData.objectClass =  topIndexes[i];
             outData->mObjectVec.push_back(objData);
-            GST_LOG("classification-%ld-%d-%ld: prob = %f, label = %s\n", 
+            GST_LOG("GoogleNetv2Algo-%ld-%d-%ld: prob = %f, label = %s\n", 
                 outData->mFrameId,objId,i,prob,  objData.label.c_str());
             break;
         }

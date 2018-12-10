@@ -34,6 +34,10 @@ public:
     SinkAlgo();
     virtual ~SinkAlgo();
     virtual GstBuffer* dequeue_buffer();
+    virtual void set_data_caps(GstCaps *incaps)
+    {
+        //DO nothing
+    }
 
    void set_linked_item(CvdlAlgoBase *item, int index)
    {
