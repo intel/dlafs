@@ -86,19 +86,17 @@ GenericAlgo::GenericAlgo(char *name) : CvdlAlgoBase(post_callback, CVDL_TYPE_DL)
 {
     mName = std::string(name);
     const gchar *env = g_getenv("HDDLS_CVDL_MODEL_PATH");
-    gchar libname[256];
     g_print("Create generic algo name = %s\n", name);
     if(env) {
          // $(CVDL_MODEL_FULL_PATH)/<algoname>/libalgo<algoname>.so
-        g_snprintf(libname, 256, "%s/%s/libalgo%s.so", env, name,name);
-        mHandler = dlopen(libname, RTLD_LAZY);
+        mLibName = std::string(env) + std::string("/") + std::string(name) + std::string("/") 
+                            + std::string("libalgo") + std::string(name) + std::string(".so");
+        mHandler = dlopen(mLibName.c_str(), RTLD_LAZY);
         if(!mHandler)
-            g_print("Failed to dlopen %s\n", libname);
+            g_print("Failed to dlopen %s\n", mLibName.c_str());
     }else {
-        g_print("Cannot get CVDL_MODEL_FULL_PATH\n");
+        g_print("Cannot get HDDLS_CVDL_MODEL_PATH\n");
     }
-
-    mLibName = std::string(libname);
 
     if(mHandler) {
           pfParser  = (pfInferenceResultParseFunc)dlsym(mHandler, "parse_inference_result");

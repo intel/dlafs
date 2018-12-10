@@ -38,8 +38,8 @@ using namespace cv::va_intel;
 
 namespace HDDLStreamFilter {
 
-#ifndef CVDL_KERNEL_DIR_DEFAULT
-#define CVDL_KERNEL_DIR_DEFAULT "/usr/lib/x86_64-linux-gnu/libgstcvdl/kernels"
+#ifndef HDDLS_CVDL_KERNEL_PATH_DEFAULT
+#define HDDLS_CVDL_KERNEL_PATH_DEFAULT "/usr/lib/x86_64-linux-gnu/libgstcvdl/kernels"
 #endif
 
 ///internal class hold device id and make sure *.cl compile in serial
@@ -635,11 +635,11 @@ OclDevice::loadKernel (const char* name, const char* file)
     cl_kernel kernel = NULL;
     GString *fullname = g_string_new (NULL);
 
-    const gchar *env = g_getenv("CVDL_KERNEL_DIR");
+    const gchar *env = g_getenv("HDDLS_CVDL_KERNEL_PATH");
     if(env) {
         g_string_printf (fullname, "%s/%s.cl.bin", env, (file ? file : name));
     } else {
-        g_string_printf (fullname, "%s/%s.cl.bin", CVDL_KERNEL_DIR_DEFAULT, (file ? file : name));
+        g_string_printf (fullname, "%s/%s.cl.bin", HDDLS_CVDL_KERNEL_PATH_DEFAULT, (file ? file : name));
     }
 
     cl_program program = createProgramFromBinary (fullname->str);
@@ -728,17 +728,17 @@ OclDevice::loadKernelCV (const char* name, const char* file)
     cv::ocl::Kernel kernel;
     cv::ocl::Program program;
     GString *fullname = g_string_new (NULL);
-    const gchar *env = g_getenv("CVDL_KERNEL_DIR");
+    const gchar *env = g_getenv("HDDLS_CVDL_KERNEL_PATH");
 
     if(env) {
         g_string_printf (fullname, "%s/%s.cl", env, (file ? file : name));
     } else {
-        g_string_printf (fullname, "%s/%s.cl", CVDL_KERNEL_DIR_DEFAULT, (file ? file : name));
+        g_string_printf (fullname, "%s/%s.cl", HDDLS_CVDL_KERNEL_PATH_DEFAULT, (file ? file : name));
     }
 
     guint8 *data = NULL;
     if (!readFile (fullname->str, &data)) {
-        g_print("It cannot find kernel source, please set CVDL_KERNEL_DIR!\n");
+        g_print("It cannot find kernel source, please set HDDLS_CVDL_KERNEL_PATH!\n");
         return cv::ocl::Kernel();
     }
     g_string_free (fullname, TRUE);
