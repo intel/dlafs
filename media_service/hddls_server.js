@@ -23,6 +23,10 @@ let model_name = "";
 let file_name = "";
 let model_file = "";
 let controller_client = "";
+let received_bin_md5 = "";
+let received_conf_md5 = "";
+let received_xml_md5 = "";
+let file_number = 0;
 
 let controller_map = new Map();
 for (let i = 0; i < 100; i++) {
@@ -86,159 +90,193 @@ controller_wss.on('connection', function (ws) {
   ws.send(model_file);
   //client_pipe = "";
 
-
-  function update_model_info() {
-    //console.log("I'm updating.....");
-    let model_update = JSON.parse(fs.readFileSync('./model/model_info.json', 'utf8'));
-    //console.log(model_update);
-    fs.readdirSync('./model').forEach(subdir => {
-      let cou = 0;
-
-      if (fs.lstatSync('./model/' + subdir).isDirectory()) {
-
-        fs.readdirSync('./model/' + subdir).forEach(files => {
-          /*for(let key in model_update){
-            if(cou===0){
-              model_update[key].model_file.bin_file.name = "";
-              model_update[key].model_file.bin_file.MD5 = "";
-              model_update[key].model_file.conf_file.name = "";
-              model_update[key].model_file.conf_file.MD5 = "";
-              model_update[key].model_file.xml_file.name = "";
-              model_update[key].model_file.xml_file.MD5 = "";
-              model_update[key].has_model = 'No';
-            }*/
-          fs.readFile('./model/' + subdir + '/' + files, function (err, data) {
-            //console.log('./model/'+ subdir);
-            if (files.indexOf("bin") > -1) {
-              //console.log("written MD5 of bin file");
-              cou++;
-              model_update[subdir].model_file.bin_file.name = files;
-              //console.log(model_update[subdir].model_file.bin_file.name);
-              model_update[subdir].model_file.bin_file.MD5 = crypto.createHash("md5").update(files).digest("hex");
-            } else if (files.indexOf("xml") > -1) {
-              if (files.indexOf("conf") > -1) {
-                // console.log("written MD5 of conf file");
-                cou++;
-                model_update[subdir].model_file.conf_file.name = files;
-                model_update[subdir].model_file.conf_file.MD5 = crypto.createHash("md5").update(files).digest("hex");
-              } else {
-                //console.log("written MD5 of xml file");
-                cou++;
-                model_update[subdir].model_file.xml_file.name = files;
-                model_update[subdir].model_file.xml_file.MD5 = crypto.createHash("md5").update(files).digest("hex");
-              }
-
-            }
-            if (err)
-              console.log(err);
-
-            if (cou > 1) {
-              model_update[subdir].has_model = 'Yes';
-              //console.log(cou);
-            }
-            fs.writeFileSync('./model/model_info.json', JSON.stringify(model_update));
-            model_file = fs.readFileSync('./model/model_info.json', 'utf8');
-            ws.send(model_file);
-
-          })
-
-        });
-
+  // Broadcast to all.
+  controller_wss.broadcast = function broadcast(msg) {
+    controller_wss.clients.forEach(function each(client) {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(msg);
       }
     });
+  };
+
+
+  function update_model_info(subdir) {
+    let model_update = JSON.parse(fs.readFileSync('./model/model_info.json', 'utf8'));
+    //console.log(model_update);
+    let cou = 0;
+    if (fs.lstatSync('./model/' + subdir).isDirectory()) {
+      fs.readdirSync('./model/' + subdir).forEach(files => {
+        fs.readFile('./model/' + subdir + '/' + files, function (err) {
+          if (files.indexOf("bin") > -1) {
+            cou++;
+            model_update[subdir].model_file.bin_file.name = files;
+            //console.log(model_update[subdir].model_file.bin_file.name);
+            model_update[subdir].model_file.bin_file.MD5 = crypto.createHash("md5").update(files).digest("hex");
+            if (model_update[subdir].model_file.bin_file.MD5 !== received_bin_md5) {
+              ws.send("Bin file send error!");
+            } else {
+              ws.send("Bin file send successfully!");
+            }
+            //ws.send("Bin file Md5 is:"+crypto.createHash("md5").update(files).digest("hex"));
+
+          } else if (files.indexOf("xml") > -1) {
+            if (files.indexOf("conf") > -1) {
+              // console.log("written MD5 of conf file");
+              cou++;
+              model_update[subdir].model_file.conf_file.name = files;
+              model_update[subdir].model_file.conf_file.MD5 = crypto.createHash("md5").update(files).digest("hex");
+              if (model_update[subdir].model_file.conf_file.MD5 !== received_conf_md5) {
+                ws.send("Conf file send error!");
+              } else {
+                ws.send("Conf file send successfully!");
+              }
+              //ws.send("Conf file Md5 is:"+crypto.createHash("md5").update(files).digest("hex"));
+            } else {
+              //console.log("written MD5 of xml file");
+              cou++;
+              model_update[subdir].model_file.xml_file.name = files;
+              model_update[subdir].model_file.xml_file.MD5 = crypto.createHash("md5").update(files).digest("hex");
+              if (model_update[subdir].model_file.xml_file.MD5 !== received_xml_md5) {
+                ws.send("Xml file send error!");
+              } else {
+                ws.send("Xml file send successfully!");
+              }
+              //ws.send("Xml file Md5 is:"+crypto.createHash("md5").update(files).digest("hex"));
+            }
+          }
+
+          if (err) {
+            console.log(err);
+          }
+          if (cou > 1) {
+            model_update[subdir].has_model = 'Yes';
+            console.log(cou);
+          }
+          fs.writeFileSync('./model/model_info.json', JSON.stringify(model_update));
+          model_file = fs.readFileSync('./model/model_info.json', 'utf8');
+          controller_wss.broadcast(model_file);
+          //ws.send(model_file);
+        });
+      });
+    }
+    /* model_file = fs.readFileSync('./model/model_info.json', 'utf8');
+     ws.send(model_file);
+     console.log(JSON.stringify(JSON.parse(model_file)));*/
   }
 
   ws.on('message', function (path) {
 
     //console.log("receive message:" + path);
-    //console.log(typeof path);
+    //console.log(typeof path);    
     if (typeof path === 'string') {
+      if (path.indexOf("file Md5 is") > -1) {
+        let length = path.indexOf(":");
+        switch (path[0]) {
+          case 'B':
+            received_bin_md5 = path.substring(length + 1);
+            break;
 
-      switch (path[0]) {
-        case 'c':
-          create_json = JSON.parse(path.substring(1));
-          if (client_map.get(create_json.client_id) === "") {
-            client_pipe = "";
+          case 'C':
+            received_conf_md5 = path.substring(length + 1);
+            break;
 
-          } else {
-            client_pipe = client_map.get(create_json.client_id);
-          }
+          case 'X':
+            received_xml_md5 = path.substring(length + 1);
+            break;
 
-          for (let i = 0; i < create_json.command_create.pipe_num; i++) {
-            gst_cmd = 'hddlspipes -i  ' + pipe_count + ' -l ' + create_json.command_create.loop_times;
+        }
+      } else if (path.indexOf("file numbers are") > -1) {
+        let temp = path.indexOf(":");
+        file_number = parseInt(path.substring(temp + 1));
+      }
+      else {
 
-            let child = spawn(gst_cmd, {
-              shell: true
-            });
+        switch (path[0]) {
+          case 'c':
+            create_json = JSON.parse(path.substring(1));
+            if (client_map.get(create_json.client_id) === "") {
+              client_pipe = "";
 
-            child.stderr.on('data', function (data) {
-              console.error("STDERR:", data.toString());
-            });
+            } else {
+              client_pipe = client_map.get(create_json.client_id);
+            }
 
-            child.stdout.on('data', function (data) {
-              console.log("STDOUT:", data.toString());
-            });
+            for (let i = 0; i < create_json.command_create.pipe_num; i++) {
+              gst_cmd = 'hddlspipes -i  ' + pipe_count + ' -l ' + create_json.command_create.loop_times;
 
-            child.on('exit', function (exitCode) {
-              console.log("Child exited with code: " + exitCode);
-            });
+              let child = spawn(gst_cmd, {
+                shell: true
+              });
 
-            client_pipe = client_pipe + pipe_count.toString() + ",";
-            pipe_id = pipe_count;
+              child.stderr.on('data', function (data) {
+                console.error("STDERR:", data.toString());
+              });
+
+              child.stdout.on('data', function (data) {
+                console.log("STDOUT:", data.toString());
+              });
+
+              child.on('exit', function (exitCode) {
+                console.log("Child exited with code: " + exitCode);
+              });
+
+              client_pipe = client_pipe + pipe_count.toString() + ",";
+              pipe_id = pipe_count;
 
 
-            temp_json_path = './client_' + create_json.client_id + '_temp_create.json';
-            fs.writeFile(temp_json_path, JSON.stringify(create_json), { flag: 'w' }, function (err) {
-              if (err) {
-                console.error("write file failed: ", err);
-              } else {
-                console.log('temp json: done');
-              }
-            });
-            //console.log(pipe_id);
-            //console.log(pipe_count);
-            pipe_count++;
+              temp_json_path = './client_' + create_json.client_id + '_temp_create.json';
+              fs.writeFile(temp_json_path, JSON.stringify(create_json), { flag: 'w' }, function (err) {
+                if (err) {
+                  console.error("write file failed: ", err);
+                } else {
+                  console.log('temp json: done');
+                }
+              });
+              //console.log(pipe_id);
+              //console.log(pipe_count);
+              pipe_count++;
 
-          }
+            }
 
-          client_map.set(create_json.client_id, client_pipe);
-          //console.log(client_map);
-          ws.send(client_map.get(create_json.client_id));
-          break;
+            client_map.set(create_json.client_id, client_pipe);
+            //console.log(client_map);
+            ws.send(client_map.get(create_json.client_id));
+            break;
 
-        case 'p':
-          property_json = JSON.parse(path.substring(1));
-          ws_index = pipe_map.get(property_json.command_set_property.pipe_id);
-          ws_index.send(path.substring(1));
-          break;
+          case 'p':
+            property_json = JSON.parse(path.substring(1));
+            ws_index = pipe_map.get(property_json.command_set_property.pipe_id);
+            ws_index.send(path.substring(1));
+            break;
 
-        case 'd':
-          destory_json = JSON.parse(path.substring(1));
-          ws_index = pipe_map.get(destory_json.command_destroy.pipe_id);
-          //console.log(ws_index);
-          //ws_index.close();
-          console.log(path.substring(1));
-          ws_index.send(path.substring(1));
-          //console.log(pipe_map);
-          per_client_pipe = client_map.get(destory_json.client_id);
-          per_client_pipe = per_client_pipe.replace(destory_json.command_destroy.pipe_id.toString() + ",", "");
-          client_map.set(destory_json.client_id, per_client_pipe);
-          //console.log(client_map);
-          console.log('we killed pipe ' + destory_json.command_destroy.pipe_id);
-          pipe_map.set(destory_json.command_destroy.pipe_id, -1);
-          ws.send("we have killed pipe " + destory_json.command_destroy.pipe_id);
-          console.log("we have send to client".bgRed);
-          ws.send(client_map.get(destory_json.client_id));
-          break;
+          case 'd':
+            destory_json = JSON.parse(path.substring(1));
+            ws_index = pipe_map.get(destory_json.command_destroy.pipe_id);
+            //console.log(ws_index);
+            //ws_index.close();
+            console.log(path.substring(1));
+            ws_index.send(path.substring(1));
+            //console.log(pipe_map);
+            per_client_pipe = client_map.get(destory_json.client_id);
+            per_client_pipe = per_client_pipe.replace(destory_json.command_destroy.pipe_id.toString() + ",", "");
+            client_map.set(destory_json.client_id, per_client_pipe);
+            //console.log(client_map);
+            console.log('we killed pipe ' + destory_json.command_destroy.pipe_id);
+            pipe_map.set(destory_json.command_destroy.pipe_id, -1);
+            ws.send("we have killed pipe " + destory_json.command_destroy.pipe_id);
+            console.log("we have send to client".bgRed);
+            ws.send(client_map.get(destory_json.client_id));
+            break;
 
-        case 'm':
-          let length = path.lastIndexOf("/");
-          //console.log(length);
-          model_name = path.substring(1, length);
-          file_name = path.substring(length + 1);
-          console.log(model_name);
-          console.log(file_name);
-          break;
+          case 'm':
+            let length = path.lastIndexOf("/");
+            //console.log(length);
+            model_name = path.substring(1, length);
+            file_name = path.substring(length + 1);
+            console.log(model_name);
+            console.log(file_name);
+            break;
+        }
       }
 
     } else if (typeof path === 'object') {
@@ -283,7 +321,10 @@ controller_wss.on('connection', function (ws) {
         if (err) throw 'error writing file: ' + err;
         fs.close(fd, function () {
           console.log('file written');
-          update_model_info();
+          file_number--;
+          if (file_number === 0) {
+            update_model_info(model_name);
+          }
         })
       });
     }
@@ -350,14 +391,14 @@ hddlpipe_wss.on('connection', function connection(ws) {
       if (pipe_map.get(i) !== 0 && pipe_map.get(i) !== -1 && pipe_map.get(i).readyState === WebSocket.CLOSED) {
         pipe_map.set(i, -1);
         //console.log("I know you have closed!!!" .blue);
-        console.log(client_map);
-        console.log("i is" + i);
+        //console.log(client_map);
+        //console.log("i is" + i);
         for (let j = 0; j < 100; j++) {
           if (client_map.get(j) !== "" && client_map.get(j).indexOf(i.toString()) > -1) {
-            console.log(client_map.get(j).indexOf(i.toString()));
-            console.log("j is" + j);
+            //console.log(client_map.get(j).indexOf(i.toString()));
+            //console.log("j is" + j);
             let temple = client_map.get(j).replace(i.toString() + ",", "");
-            console.log(temple);
+            //console.log(temple);
             client_map.set(j, temple);
             if (controller_map.get(j).readyState === WebSocket.OPEN) {
               controller_map.get(j).send("pipe " + i + " has finished and exit!");
@@ -376,13 +417,13 @@ hddlpipe_wss.on('connection', function connection(ws) {
 
   ws.on('message', function incoming(data) {
     if (typeof data === "string") {
-      console.log(data);
+      //console.log(data);
       pipe_client = data.split("=");
-      console.log(pipe_client);
+      // console.log(pipe_client);
       pipe_id = parseInt(pipe_client[1]);
-      console.log(pipe_id);
+      //console.log(pipe_id);
       pipe_map.set(pipe_id, ws);
-      console.log(pipe_map);
+      //console.log(pipe_map);
     }
     else {
       if (receive_client.readyState === WebSocket.OPEN) {

@@ -14,6 +14,15 @@ let pipe_constuctor_to_number = "";
 let client_id = 0;
 let receive_model_file_info = "";
 let show_file = 0;
+let bin_md5 = "";
+let xml_md5 = "";
+let conf_md5 = "";
+let send_file = "";
+let send_file_name = "";
+let model_file_json = "";
+let file_count = 0;
+let file_number = 0;
+
 
 let model_file_map = new Map();
 for (let i = 0; i < 100; i++) {
@@ -54,7 +63,6 @@ function display_json(data) {
     }
     console.log("\r\n");
   }
-
 }
 
 const rl = readline.createInterface(process.stdin, process.stdout, completer);
@@ -234,6 +242,29 @@ function set_websocket() {
     //prompt();
   }
 
+  function compare_MD5(model_information) {
+    if (model_information[send_file_name].model_file.bin_file.MD5 === bin_md5) {
+      if (model_information[send_file_name].model_file.xml_file.MD5 === xml_md5) {
+        if (model_information[send_file_name].model_file.conf_file.MD5 === conf_md5) {
+          console.log("Server has received your models files".blue);
+          prompt();
+          rl.on('line', function (cmd) {
+            exec(cmd.trim());
+          });
+        } else {
+          console.log("Conf file send error!!!Please check again!!!".red);
+          read_model_file();
+        }
+      } else {
+        console.log("Xml file send error!!!Please check again!!!".red);
+        read_model_file();
+      }
+    } else {
+      console.log("Bin file send error!!!Please check again!!!".red);
+      read_model_file();
+    }
+  }
+
   function read_model_file() {
 
     rl.question('Please type model dictionary: '.green, (answer) => {
@@ -245,73 +276,105 @@ function set_websocket() {
             fs.readdirSync(answer).forEach(file => {
               model_file_map.set(i, file);
               console.log(file.blue);
-              console.log("Analyzing your model......".yellow);
-              let send_file = answer.lastIndexOf("/");
-              let send_file_name = answer.substring(send_file + 1);
+              //console.log("Analyzing your model......".yellow);
+              send_file = answer.lastIndexOf("/");
+              send_file_name = answer.substring(send_file + 1);
               if (receive_model_file_info.indexOf(send_file_name) > -1) {
                 //TODO:compare each file's MD5
-                let model_file_json = JSON.parse(receive_model_file_info);
+                model_file_json = JSON.parse(receive_model_file_info);
                 //console.log(crypto.createHash("md5").update(file).digest("hex"));
                 //console.log(model_file_json[send_file_name].model_file.bin_file.MD5);
                 if (file.indexOf("bin") > -1) {
-                  if (crypto.createHash("md5").update(file).digest("hex") === (model_file_json[send_file_name].model_file.bin_file.MD5)) {
+                  bin_md5 = crypto.createHash("md5").update(file).digest("hex");
+                  if (bin_md5 === (model_file_json[send_file_name].model_file.bin_file.MD5)) {
                     console.log("server already has this model file".red);
-
                   } else {
                     console.log("updating this file in server".green);
                     let data = fs.readFileSync(answer + '/' + file);
                     let buf = Buffer.from(data);
+                    ws.send("Bin file Md5 is:" + bin_md5);
                     ws.send("m" + send_file_name + "/" + file);
                     ws.send(buf);
+                    file_count++;
                   }
                 } else if (file.indexOf("xml") > -1) {
                   if (file.indexOf("conf") > -1) {
-                    if (crypto.createHash("md5").update(file).digest("hex") === (model_file_json[send_file_name].model_file.conf_file.MD5)) {
+                    conf_md5 = crypto.createHash("md5").update(file).digest("hex");
+                    if (conf_md5 === (model_file_json[send_file_name].model_file.conf_file.MD5)) {
                       console.log("server already has this model file".red);
 
                     } else {
                       console.log("updating this file in server".green);
                       let data = fs.readFileSync(answer + '/' + file);
                       let buf = Buffer.from(data);
+                      ws.send("Conf file Md5 is:" + conf_md5);
                       ws.send("m" + send_file_name + "/" + file);
                       ws.send(buf);
+                      file_count++;
                     }
 
                   } else {
-                    if (crypto.createHash("md5").update(file).digest("hex") === (model_file_json[send_file_name].model_file.xml_file.MD5)) {
+                    xml_md5 = crypto.createHash("md5").update(file).digest("hex");
+                    if (xml_md5 === (model_file_json[send_file_name].model_file.xml_file.MD5)) {
                       console.log("server already has this model file".red);
 
                     } else {
                       console.log("updating this file in server".green);
                       let data = fs.readFileSync(answer + '/' + file);
                       let buf = Buffer.from(data);
+                      ws.send("XML file Md5 is:" + xml_md5);
                       ws.send("m" + send_file_name + "/" + file);
                       ws.send(buf);
+                      file_count++;
                     }
 
                   }
 
                 }
+                if (bin_md5 === model_file_json[send_file_name].model_file.bin_file.MD5 && conf_md5 === model_file_json[send_file_name].model_file.conf_file.MD5 && xml_md5 === model_file_json[send_file_name].model_file.xml_file.MD5) {
+                  prompt();
+                  rl.on('line', function (cmd) {
+                    exec(cmd.trim());
+                  });
+                }
+
+                i++;
               } else {
                 let data = fs.readFileSync(answer + '/' + file);
+                if (file.indexOf("bin") > -1) {
+                  bin_md5 = crypto.createHash("md5").update(file).digest("hex");
+                  file_count++;
+                  ws.send("Bin file Md5 is:" + bin_md5);
+                } else if (file.indexOf("xml") > -1) {
+                  if (file.indexOf("conf") > -1) {
+                    conf_md5 = crypto.createHash("md5").update(file).digest("hex");
+                    file_count++;
+                    ws.send("Conf file Md5 is:" + conf_md5);
+                  } else {
+                    xml_md5 = crypto.createHash("md5").update(file).digest("hex");
+                    file_count++;
+                    ws.send("XML file Md5 is:" + xml_md5);
+                  }
+                }
                 let buf = Buffer.from(data);
                 ws.send("m" + send_file_name + "/" + file);
                 ws.send(buf);
                 //TODO:send files and create new dictionary in server
               }
 
-              i++;
-
             })
+            ws.send("file numbers are:" + file_count);
+            file_number = file_count;
+            //console.log(file_count);
             if (i === 0) {
               console.log("No files included in this dictionary, please check again".red);
               read_model_file();
             }
 
-            prompt();
-            rl.on('line', function (cmd) {
-              exec(cmd.trim());
-            })
+            // prompt();
+            // rl.on('line', function (cmd) {
+            //   exec(cmd.trim());
+            // });
 
           } else {
             console.log("dictionary NOT exist, please check again".red);
@@ -332,32 +395,38 @@ function set_websocket() {
 
   ws.on('message', function (data) {
     if (count > 0) {
-      //console.log(count);
-      //console.log(data);
-
       if (data.indexOf("we have killed pipe") > -1) {
         console.log(`${data} `.blue);
         prompt();
-      } else if (data.indexOf(":") > -1) {
+      } else if (data.indexOf("{") > -1) {
         receive_model_file_info = data;
         if (show_file === 0) {
           display_json(JSON.parse(data));
           //console.log(JSON.parse(data));
           show_file++;
           read_model_file();
-        } else {
-          prompt();
         }
-
+        // else {
+        //console.log("Server has updated its model, use -model to check".blue);
+        //console.log(JSON.stringify(JSON.parse(receive_model_file_info)));
+        //prompt();
+        // }
       } else if (data.indexOf("has finished and exit!") > -1) {
         console.log(`${data} `.blue);
         prompt();
-
+        //compare_MD5(JSON.parse(receive_model_file_info));
+      } else if (data.indexOf("file send") > -1) {
+        file_number--;
+        console.log(data);
+        if (file_number == 0) {
+          prompt();
+          // rl.on('line', function (cmd) {
+          //   exec(cmd.trim());
+          // });
+        }
       } else {
         pipe_constuctor = data;
-        //console.log(pipe_constuctor);
         prompt();
-
       }
 
     } else {
