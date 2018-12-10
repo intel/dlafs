@@ -233,6 +233,7 @@ cvdl_filter_finalize (GObject * object)
     if(cvdlfilter->algo_pipeline_desc)
         g_free(cvdlfilter->algo_pipeline_desc);
     cvdlfilter->algo_pipeline_desc = NULL;
+    g_rec_mutex_clear(&cvdlfilter->mMutex);
 
     G_OBJECT_CLASS (parent_class)->finalize (object);
 }

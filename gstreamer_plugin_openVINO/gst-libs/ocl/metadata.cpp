@@ -55,7 +55,7 @@ inference_meta_create (VideoRect *rect, const char *label, float prob, guint32 c
         len = LABEL_MAX_LENGTH - 1;
 
     meta->rect = *rect;
-    memcpy(meta->label,label,LABEL_MAX_LENGTH);
+    memcpy(meta->label,label,len);
     meta->color = color;
     meta->next = NULL;
     meta->track_count = 1;

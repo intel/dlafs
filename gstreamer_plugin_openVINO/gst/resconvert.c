@@ -280,7 +280,10 @@ res_convert_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         //GstCaps *current_caps = gst_pad_get_current_caps (pad);
         //g_print("current_caps =\n %s\n", gst_caps_to_string(current_caps));
         //if(current_caps) gst_caps_unref(current_caps);
-        g_print("event_caps =\n %s\n", gst_caps_to_string(caps));
+        gchar *log = gst_caps_to_string(caps);
+        g_print("event_caps =\n %s\n", log);
+        g_free(log);
+        log = NULL;
 
         // get info of caps
         gst_video_info_from_caps (&convertor->sink_info, caps);

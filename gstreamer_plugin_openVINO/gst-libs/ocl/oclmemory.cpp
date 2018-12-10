@@ -139,12 +139,14 @@ ocl_memory_free (GstAllocator* allocator, GstMemory* memory)
         GST_ERROR("Error in ocl_memory_free(): mem_type is %d\n", ocl_alloc->mem_type);
     }
 
-    //g_print("ocl_memory_free: ocl_mem = %p, ocl_mem->mem=%p, mem_size = %ld\n",ocl_mem, ocl_mem->mem,ocl_mem->mem_size );
+    //g_print("ocl_memory_free: ocl_mem = %p, ocl_mem->mem=%p, mem_size = %ld, address=%p\n",
+    //    ocl_mem, ocl_mem->mem,ocl_mem->mem_size,ocl_mem->frame.getMat(0).ptr() );
     // release cv::UMAT
     ocl_mem->frame.release();
-    //ocl_mem->frame = cv::UMat();
     ocl_mem->mem = 0;
-    g_free (memory);
+
+    //g_free (ocl_mem);
+    delete ocl_mem;
 }
 
 static gpointer

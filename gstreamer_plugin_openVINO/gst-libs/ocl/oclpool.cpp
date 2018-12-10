@@ -129,7 +129,8 @@ static GstMemory*
 ocl_memory_alloc (OclPool* oclpool)
 {
     OclPoolPrivate *priv = oclpool->priv;
-    OclMemory *ocl_mem = g_new0(OclMemory, 1);
+    //OclMemory *ocl_mem = g_new0(OclMemory, 1);
+    OclMemory *ocl_mem = new OclMemory;
 
     OCL_MEMORY_WIDTH (ocl_mem) = GST_VIDEO_INFO_WIDTH (&priv->info);
     OCL_MEMORY_HEIGHT (ocl_mem) = GST_VIDEO_INFO_HEIGHT (&priv->info);
@@ -154,6 +155,7 @@ ocl_memory_alloc (OclPool* oclpool)
             break;
         default:
             g_print("Not support format = %d\n", priv->info.finfo->format);
+            ocl_mem->frame =  cv::UMat();
             ocl_mem->mem_size = 0;
             break;
     }
@@ -171,13 +173,8 @@ ocl_memory_alloc (OclPool* oclpool)
         OCL_MEMORY_MEM (ocl_mem) = (cl_mem)ocl_mem->frame.handle(ACCESS_RW);//CL address
     }
 
-    //g_print("ocl_memory_alloc: ocl_mem = %p, ocl_mem->mem=%p, size = %ld\n",ocl_mem, ocl_mem->mem, ocl_mem->mem_size );
-    #if 0
-    /* find the real parent */
-    GstMemory *parent;
-    if ((parent = ocl_mem->parent.parent) == NULL)
-      parent = (GstMemory *) ocl_mem;
-    #endif
+    //g_print("ocl_memory_alloc: ocl_mem = %p, ocl_mem->mem=%p, size = %ld, address=%p\n",
+    //      ocl_mem, ocl_mem->mem, ocl_mem->mem_size, ocl_mem->frame.getMat(0).ptr() );
 
     GstMemory *memory = GST_MEMORY_CAST (ocl_mem);
     gst_memory_init (memory, GST_MEMORY_FLAG_NO_SHARE, priv->allocator, NULL,
