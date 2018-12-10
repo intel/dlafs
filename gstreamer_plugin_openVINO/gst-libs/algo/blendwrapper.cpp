@@ -155,13 +155,25 @@ static GstBuffer *generate_osd(BlendHandle handle, GstBuffer *input_buf)
     osd_mem = ocl_memory_acquire(osd_buf);
     osd_mem->purpose = 2;
 
+    std::ostringstream stream_ts;
+    GstClockTime ts_ms = GST_BUFFER_PTS (input_buf)/1000000; //ms
+    int hour,minute,second,ms;
+    second = ts_ms/1000;
+    hour = second/3600;
+    minute = (second - hour*3600)/60;
+    second = second % 60;
+    ms = ts_ms % 1000;
+    stream_ts << std::setfill('0') << std::setw(2) << hour << ":" << std::setfill('0') << std::setw(2) << minute << ":";
+    stream_ts << std::setfill('0') << std::setw(2) << second << "." << std::setw(3) << ms;
+
     InferenceMeta *inference_result = cvdl_meta->inference_result;
     int meta_count = cvdl_meta->meta_count;
     int i;
     cv::Mat mdraw = osd_mem->frame.getMat(0);
     uint32_t x,y;
-
     cv::rectangle(mdraw, cv::Rect(0,0,osd_mem->width, osd_mem->height), cv::Scalar(0, 0, 0, 0), cv::FILLED);
+    cv::putText(mdraw, stream_ts.str(), cv::Point(10, 30), 1, 1.8, cv::Scalar(255, 0, 255, 255), 2);//RGBA
+
     for(i=0;i<meta_count && inference_result;i++){
 
         VideoRect *rect = &inference_result->rect;
@@ -169,16 +181,6 @@ static GstBuffer *generate_osd(BlendHandle handle, GstBuffer *input_buf)
         // Create an output string stream
         std::ostringstream stream_prob;
         stream_prob << std::fixed << std::setprecision(3) << inference_result->probility;
-        std::ostringstream stream_ts;
-        GstClockTime ts_ms = GST_BUFFER_PTS (input_buf)/1000000; //ms
-        int hour,minute,second,ms;
-        second = ts_ms/1000;
-        hour = second/3600;
-        minute = (second - hour*3600)/60;
-        second = second % 60;
-        ms = ts_ms % 1000;
-        stream_ts << std::setfill('0') << std::setw(2) << hour << ":" << std::setfill('0') << std::setw(2) << minute << ":";
-        stream_ts << std::setfill('0') << std::setw(2) << second << "." << std::setw(3) << ms;
 
         x = rect->x;
         y = rect->y + 30;
@@ -197,8 +199,6 @@ static GstBuffer *generate_osd(BlendHandle handle, GstBuffer *input_buf)
             cv::putText(mdraw, strTxt, cv::Point(x, y), 1, 1.8, cv::Scalar(255, 0, 255, 255), 2);//RGBA
             strTxt = std::string("prob=") + stream_prob.str();
             cv::putText(mdraw, strTxt, cv::Point(x, y+30), 1, 1.8, cv::Scalar(255, 0, 255, 255), 2);//RGBA
-            strTxt = /*std::string("time=") + */stream_ts.str();
-            cv::putText(mdraw, strTxt, cv::Point(x, y+60), 1, 1.8, cv::Scalar(255, 0, 255, 255), 2);//RGBA
         }
  
         // Draw rectangle on target object
