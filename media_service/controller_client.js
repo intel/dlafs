@@ -125,38 +125,75 @@ function set_websocket() {
     requestCert: true
   });
 
+  function check_json_file(jsonfile, id) {
+    let vali = true;
+
+    switch (id) {
+      case 0:
+        if (jsonfile.command_create.pipe_number < 1) {
+          vali = false;
+          console.log("Please check pipe number in json file".red);
+        } else if (jsonfile.command_create.stream_source === "") {
+          vali = false;
+          console.log("Please check stream source in json file".red);
+
+        } else if (jsonfile.command_create.loop_times < 1) {
+          vali = false;
+          console.log("Please check loop times in json file".red);
+        }
+        break;
+
+      case 1:
+        vali = true;
+        break;
+
+      case 2:
+        if (jsonfile.command_set_property.cvdlfilter0.algopipeline === "") {
+          vali = false;
+          console.log("Please check algopipeline in json file".red);
+        }
+        break;
+    }
+    return vali;
+  }
+
   function read_file_sync(path, jfile, type, clientid, pipeid) {
     fs.exists(path, function (exists) {
       if (exists) {
         jfile = JSON.parse(fs.readFileSync(path, 'utf8'));
-        //console.log(create_json);       
-        if (jfile.command_type === type) {
-          switch (type) {
-            case 0:
-              jfile.client_id = parseInt(clientid);
-              ws.send('c' + JSON.stringify(jfile));
-              console.log("Send json create command!!!".green);
-              break;
+        //console.log(create_json); 
+        if (check_json_file(jfile, type)) {
+          if (jfile.command_type === type) {
+            switch (type) {
+              case 0:
+                jfile.client_id = parseInt(clientid);
+                ws.send('c' + JSON.stringify(jfile));
+                console.log("Send json create command!!!".green);
+                break;
 
-            case 1:
-              jfile.client_id = parseInt(clientid);
-              jfile.command_destroy.pipe_id = parseInt(pipeid);
-              ws.send('d' + JSON.stringify(jfile));
-              console.log("Send json destory command!!!".green);
-              break;
+              case 1:
+                jfile.client_id = parseInt(clientid);
+                jfile.command_destroy.pipe_id = parseInt(pipeid);
+                ws.send('d' + JSON.stringify(jfile));
+                console.log("Send json destory command!!!".green);
+                break;
 
-            case 2:
-              jfile.client_id = parseInt(clientid);
-              jfile.command_set_property.pipe_id = parseInt(pipeid);
-              ws.send('p' + JSON.stringify(jfile));
-              console.log("Send json set_property command!!!".green);
-              break;
+              case 2:
+                jfile.client_id = parseInt(clientid);
+                jfile.command_set_property.pipe_id = parseInt(pipeid);
+                ws.send('p' + JSON.stringify(jfile));
+                console.log("Send json set_property command!!!".green);
+                break;
+
+            }
+
+          } else {
+            console.log("Incorrect json command!!!".red);
 
           }
-
         } else {
-          console.log("Incorrect json command!!!".red);
           prompt();
+
         }
 
       } else {

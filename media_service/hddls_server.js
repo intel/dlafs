@@ -152,7 +152,7 @@ controller_wss.on('connection', function (ws) {
           }
           if (cou > 1) {
             model_update[subdir].has_model = 'Yes';
-            console.log(cou);
+            // console.log(cou);
           }
           fs.writeFileSync('./model/model_info.json', JSON.stringify(model_update));
           model_file = fs.readFileSync('./model/model_info.json', 'utf8');
@@ -385,7 +385,7 @@ hddlpipe_wss.on('connection', function connection(ws) {
 
   function update_pipe_info() {
     //console.log("I know you have closed!!!" .red);
-    console.log(pipe_map);
+    // console.log(pipe_map);
     //console.log(pipe_map.length());
     //let temp = pipe_map.get(i);
     //console.log(temp);
@@ -495,7 +495,6 @@ const receiver_server = https.createServer({
 
 const receiver_wss = new WebSocketServer({ server: receiver_server, path: '/routeData', verifyClient: ClientVerify });
 receiver_wss.on('connection', function connection(ws) {
-  console.log(receiver_count);
   receiver_count++;
   console.log("Receiver connected!".bgMagenta);
   receive_client = ws;
