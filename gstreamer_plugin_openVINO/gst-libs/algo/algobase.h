@@ -226,7 +226,7 @@ public:
     CvdlAlgoBase *mPrev;
 
     // queue input buffer
-    thread_queue<CvdlAlgoData> mInQueue;
+    thread_queue<CvdlAlgoData *> mInQueue;
 
     // Obsoleted unused buffers, which need deleted but delay some times
     CvdlAlgoData  *mObsoletedAlgoData;;

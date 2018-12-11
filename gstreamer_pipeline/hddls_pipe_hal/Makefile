@@ -28,11 +28,13 @@ export DEFINES := -DDEBUG
 all:
 	@$(MAKE) -C src
 	@$(MAKE) -C tools
+	@$(MAKE) -C test
 
 clean:
 	@$(MAKE) clean -C src
 	@$(MAKE) clean -C tools
-
+	@$(MAKE) clean -C test
 install:
 	@cp src/hddlspipes /usr/local/bin/.
 	@cp tools/registeralgo /usr/local/bin/.
+	@cp test/hddlspipestest /usr/local/bin/.

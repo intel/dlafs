@@ -66,18 +66,17 @@ static void try_process_algo_data(CvdlAlgoData *algoData)
             GST_LOG("algo %d(%s) - output GstBuffer = %p(%d)\n",
                    hddlAlgo->mAlgoType, hddlAlgo->mName.c_str(), algoData->mGstBuffer,
                    GST_MINI_OBJECT_REFCOUNT(algoData->mGstBuffer));
-            hddlAlgo->mNext[algoData->mOutputIndex]->mInQueue.put(*algoData);
+            hddlAlgo->mNext[algoData->mOutputIndex]->mInQueue.put(algoData);
         } else {
             GST_LOG("algo %d(%s) - unref GstBuffer = %p(%d)\n",
                 hddlAlgo->mAlgoType, hddlAlgo->mName.c_str(), algoData->mGstBuffer,
                 GST_MINI_OBJECT_REFCOUNT(algoData->mGstBuffer));
             gst_buffer_unref(algoData->mGstBuffer);
-            //delete algoData;
-        }
-        // delete the obsoleted algoData delayed some time to avoid race condition.
-       if(hddlAlgo->mObsoletedAlgoData)
+             // delete the obsoleted algoData delayed some time to avoid race condition.
+            if(hddlAlgo->mObsoletedAlgoData)
                 delete hddlAlgo->mObsoletedAlgoData;
-       hddlAlgo->mObsoletedAlgoData = algoData;
+            hddlAlgo->mObsoletedAlgoData = algoData;
+        }
     }
     hddlAlgo->mAlgoDataMutex.unlock();
 }
@@ -174,7 +173,7 @@ static void try_process_algo_data(CvdlAlgoData *algoData)
 static void base_hddl_algo_func(gpointer userData)
 {
     CvdlAlgoBase *hddlAlgo = static_cast<CvdlAlgoBase*> (userData);
-    CvdlAlgoData *algoData = new CvdlAlgoData;
+    CvdlAlgoData *algoData = NULL;//new CvdlAlgoData;
     const char*algo_name = algo_pipeline_get_name(hddlAlgo->mAlgoType);
     GST_LOG("\n%s:%s - new an algoData = %p\n", __func__, algo_name, algoData);
 
@@ -182,10 +181,10 @@ static void base_hddl_algo_func(gpointer userData)
         GST_LOG("The %s algo's next algo is NULL", algo_name);
     }
 
-    if(!hddlAlgo->mInQueue.get(*algoData)) {
+    if(!hddlAlgo->mInQueue.get(algoData)) {
         GST_WARNING("InQueue is empty!");
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        delete algoData;
+        //delete algoData;
         return;
     }
 
@@ -199,11 +198,6 @@ static void base_hddl_algo_func(gpointer userData)
     // bind algoTask into algoData, so that can be used when sync callback
     algoData->algoBase = static_cast<CvdlAlgoBase *>(hddlAlgo);
 
-    if(algoData->mGstBuffer==NULL) {
-        g_print("%s() - get null buffer\n", __func__);
-        delete algoData;
-        return;
-    }
     GST_LOG("%s() - algo = %p, algoData->mFrameId = %ld\n", __func__,
             hddlAlgo, algoData->mFrameId);
     GST_LOG("%s() - algo  %d(%s), get one buffer, GstBuffer = %p, refcout = %d, queueSize = %d,"\
@@ -253,8 +247,8 @@ void push_algo_data(CvdlAlgoData* &algoData)
             objectVec[i].rect.x, objectVec[i].rect.y,
             objectVec[i].rect.width, objectVec[i].rect.height, objectVec[i].score);
     }
-    cvAlgo->mNext[algoData->mOutputIndex]->mInQueue.put(*algoData);
-    delete algoData;
+    cvAlgo->mNext[algoData->mOutputIndex]->mInQueue.put(algoData);
+    //delete algoData;
 }
 
 /*
@@ -266,7 +260,7 @@ void push_algo_data(CvdlAlgoData* &algoData)
 static void base_cv_algo_func(gpointer userData)
 {
     CvdlAlgoBase *cvAlgo = static_cast<CvdlAlgoBase*> (userData);
-    CvdlAlgoData *algoData = new CvdlAlgoData;
+    CvdlAlgoData *algoData = NULL;//new CvdlAlgoData;
     gint64 start, stop;
 
     const char*algo_name = algo_pipeline_get_name(cvAlgo->mAlgoType);
@@ -274,14 +268,12 @@ static void base_cv_algo_func(gpointer userData)
 
     if(!cvAlgo->mNext[0]) {
         GST_WARNING("Algo %d: the next algo is NULL, return!", cvAlgo->mAlgoType);
-        delete algoData;
         return;
     }
 
-    if(!cvAlgo->mInQueue.get(*algoData)) {
+    if(!cvAlgo->mInQueue.get(algoData)) {
         GST_WARNING("Algo %d:InQueue is empty!", cvAlgo->mAlgoType);
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        delete algoData;
         return;
     }
     if(algoData->mGstBuffer==NULL) {
@@ -467,37 +459,37 @@ void CvdlAlgoBase::stop_algo_thread()
 
 void CvdlAlgoBase::clear_queue()
 {
+    CvdlAlgoData *algoData = NULL;
     while(mInQueue.size()>0) {
-            CvdlAlgoData algoData;
-            algoData.mGstBuffer=NULL;
             if(mInQueue.get(algoData)) {
-                   if(algoData.mGstBuffer)
-                        gst_buffer_unref(algoData.mGstBuffer);
+                   if(algoData->mGstBuffer)
+                        gst_buffer_unref(algoData->mGstBuffer);
+                   delete algoData;
             }
     }
 }
 
 void CvdlAlgoBase::queue_buffer(GstBuffer *buffer, guint w, guint h)
 {
-    CvdlAlgoData algoData(buffer);
-    algoData.mFrameId = mFrameIndex++;
+    CvdlAlgoData *algoData = new CvdlAlgoData(buffer);
+    algoData->mFrameId = mFrameIndex++;
     if(buffer)
-        algoData.mPts = GST_BUFFER_TIMESTAMP (buffer);
+        algoData->mPts = GST_BUFFER_TIMESTAMP (buffer);
 
     ObjectData objData;
     objData.rect = cv::Rect(0,0, w,h);
     objData.rectROI =  cv::Rect(0,0, w,h);
-    algoData.mObjectVec.push_back(objData);
+    algoData->mObjectVec.push_back(objData);
     mInQueue.put(algoData);
     GST_LOG("InQueue size = %d\n", mInQueue.size());
 }
 
 void CvdlAlgoBase::queue_out_buffer(GstBuffer *buffer)
 {
-    CvdlAlgoData algoData(buffer);
-    algoData.mFrameId = mFrameIndex++;
+    CvdlAlgoData *algoData = new CvdlAlgoData(buffer);
+    algoData->mFrameId = mFrameIndex++;
     if(buffer)
-        algoData.mPts = GST_BUFFER_TIMESTAMP (buffer);
+        algoData->mPts = GST_BUFFER_TIMESTAMP (buffer);
     
     mInQueue.put(algoData);
     GST_LOG("InQueue size = %d\n", mInQueue.size());
