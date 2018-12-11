@@ -120,7 +120,7 @@ function set_websocket() {
     });
 
     ws.on('error', function () {
-        console.log(`connect wrong!`.red);
+        console.log(`Receiver already CONNECTED to server!`.red);
 
     });
 

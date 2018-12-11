@@ -27,6 +27,8 @@ let received_bin_md5 = "";
 let received_conf_md5 = "";
 let received_xml_md5 = "";
 let file_number = 0;
+let receiver_count = 0;
+
 
 let controller_map = new Map();
 for (let i = 0; i < 100; i++) {
@@ -473,6 +475,15 @@ hddlpipe_wss.on('connection', function connection(ws) {
    return ret;
 }*/
 
+function ClientVerify(info) {
+
+  let ret = false;//refuse
+  if (receiver_count === 0) {
+    ret = true;
+  }
+  return ret;
+}
+
 
 const receiver_server = https.createServer({
   key: fs.readFileSync('./cert_server_8126_8124/server-key.pem'),
@@ -482,19 +493,21 @@ const receiver_server = https.createServer({
   rejectUnauthorized: true
 });
 
-const receiver_wss = new WebSocketServer({ server: receiver_server, path: '/routeData' });
-
+const receiver_wss = new WebSocketServer({ server: receiver_server, path: '/routeData', verifyClient: ClientVerify });
 receiver_wss.on('connection', function connection(ws) {
-
+  console.log(receiver_count);
+  receiver_count++;
   console.log("Receiver connected!".bgMagenta);
   receive_client = ws;
 
   ws.on('error', function (e) {
     console.log('receiver connection error!'.bgRed);
     console.log(e);
+
   });
 
   ws.on('close', function (ws) {
+    receiver_count--;
     console.log("Receiver closed!".bgMagenta);
   });
 
