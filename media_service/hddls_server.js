@@ -22,12 +22,12 @@ let model_path = "";
 let model_name = "";
 let file_name = "";
 let model_file = "";
-let controller_client = "";
-let received_bin_md5 = "";
-let received_conf_md5 = "";
-let received_xml_md5 = "";
 let file_number = 0;
 let receiver_count = 0;
+let file_count = 0;
+let count = 0;
+let controller_client = "";
+let received_md5 = "";
 
 
 let controller_map = new Map();
@@ -85,12 +85,8 @@ controller_wss.on('connection', function (ws) {
   client_id++;
   ws.send(client_id);
   controller_map.set(client_id, ws);
-  //model_file = JSON.parse(fs.readFileSync('./model/model_info.json', 'utf8'));
-  model_file = fs.readFileSync('./model/model_info.json', 'utf8');
-  //console.log(JSON.parse(model_file));
-  //console.log(model_file.index1.has_model);
+  model_file = fs.readFileSync('./models/model_info.json', 'utf8');
   ws.send(model_file);
-  //client_pipe = "";
 
   // Broadcast to all.
   controller_wss.broadcast = function broadcast(msg) {
@@ -102,91 +98,132 @@ controller_wss.on('connection', function (ws) {
   };
 
 
-  function update_model_info(subdir) {
-    let model_update = JSON.parse(fs.readFileSync('./model/model_info.json', 'utf8'));
+  function update_model_info() {
+    console.log("models updating...");
+    let model_update = JSON.parse(fs.readFileSync('./models/model_info.json', 'utf8'));
     //console.log(model_update);
-    let cou = 0;
-    if (fs.lstatSync('./model/' + subdir).isDirectory()) {
-      fs.readdirSync('./model/' + subdir).forEach(files => {
-        fs.readFile('./model/' + subdir + '/' + files, function (err) {
-          if (files.indexOf("bin") > -1) {
-            cou++;
-            model_update[subdir].model_file.bin_file.name = files;
-            //console.log(model_update[subdir].model_file.bin_file.name);
-            model_update[subdir].model_file.bin_file.MD5 = crypto.createHash("md5").update(files).digest("hex");
-            if (model_update[subdir].model_file.bin_file.MD5 !== received_bin_md5) {
-              ws.send("Bin file send error!");
-            } else {
-              ws.send("Bin file send successfully!");
-            }
-            //ws.send("Bin file Md5 is:"+crypto.createHash("md5").update(files).digest("hex"));
 
-          } else if (files.indexOf("xml") > -1) {
-            if (files.indexOf("conf") > -1) {
-              // console.log("written MD5 of conf file");
-              cou++;
-              model_update[subdir].model_file.conf_file.name = files;
-              model_update[subdir].model_file.conf_file.MD5 = crypto.createHash("md5").update(files).digest("hex");
-              if (model_update[subdir].model_file.conf_file.MD5 !== received_conf_md5) {
-                ws.send("Conf file send error!");
-              } else {
-                ws.send("Conf file send successfully!");
-              }
-              //ws.send("Conf file Md5 is:"+crypto.createHash("md5").update(files).digest("hex"));
-            } else {
-              //console.log("written MD5 of xml file");
-              cou++;
-              model_update[subdir].model_file.xml_file.name = files;
-              model_update[subdir].model_file.xml_file.MD5 = crypto.createHash("md5").update(files).digest("hex");
-              if (model_update[subdir].model_file.xml_file.MD5 !== received_xml_md5) {
-                ws.send("Xml file send error!");
-              } else {
-                ws.send("Xml file send successfully!");
-              }
-              //ws.send("Xml file Md5 is:"+crypto.createHash("md5").update(files).digest("hex"));
-            }
+    for (let key in received_md5) {
+      let cou = 0;
+      let temp = "";
+      if (fs.lstatSync('./models/' + key).isDirectory()) {
+        for (let innerkey in received_md5[key]) {
+          //console.log(received_md5[key][innerkey]);
+          switch (innerkey) {
+            case "bin_file":
+              fs.readFile('./models/' + key + '/' + received_md5[key].bin_file.name, function (err) {
+                temp = received_md5[key].bin_file.name;
+                model_update[key].model_file.bin_file.MD5 = crypto.createHash("md5").update(temp).digest("hex");
+                if (model_update[key].model_file.bin_file.MD5 === received_md5[key].bin_file.MD5) {
+                  model_update[key].model_file.bin_file.name = temp;
+                  cou++;
+                  count++;
+                  //console.log(count);
+                  //console.log(cou);
+                  if (cou > 1) {
+                    model_update[key].has_model = 'Yes';
+                  }
+                  console.log("Bin file updated successfully!!!".green);
+                  fs.writeFileSync('./models/model_info.json', JSON.stringify(model_update));
+                  //console.log("count:" + count + "    " + "file_number:" + file_number);
+                  if (count === file_number) {
+                    model_file = fs.readFileSync('./models/model_info.json', 'utf8');
+                    controller_wss.broadcast(model_file);
+                    console.log("send json file!!!".red);
+                  }
+                } else {
+                  console.log("Bin file send error".red);
+                }
+                if (err) {
+                  console.log("File not exist!!!".red);
+                  throw err;
+                }
+              });
+
+              break;
+
+            case "xml_file":
+              fs.readFile('./models/' + key + '/' + received_md5[key].xml_file.name, function (err) {
+                temp = received_md5[key].xml_file.name;
+                model_update[key].model_file.xml_file.MD5 = crypto.createHash("md5").update(temp).digest("hex");
+                if (model_update[key].model_file.xml_file.MD5 === received_md5[key].xml_file.MD5) {
+                  model_update[key].model_file.xml_file.name = temp;
+                  cou++;
+                  count++;
+                  //console.log(count);
+                  //console.log(cou);
+                  if (cou > 1) {
+                    model_update[key].has_model = 'Yes';
+                  }
+                  console.log("Xml file updated successfully!!!".green);
+                  fs.writeFileSync('./models/model_info.json', JSON.stringify(model_update));
+                  //console.log("count:" + count + "    " + "file_number:" + file_number);
+                  if (count === file_number) {
+                    model_file = fs.readFileSync('./models/model_info.json', 'utf8');
+                    controller_wss.broadcast(model_file);
+                    console.log("send json file!!!".red);
+                  }
+                } else {
+                  console.log("Xml file send error".red);
+                }
+                if (err) {
+                  console.log("File not exist!!!".red);
+                  throw err;
+                }
+              });
+
+              break;
+
+            case "conf_file":
+              fs.readFile('./models/' + key + '/' + received_md5[key].conf_file.name, function (err) {
+                temp = received_md5[key].conf_file.name;
+                model_update[key].model_file.conf_file.MD5 = crypto.createHash("md5").update(temp).digest("hex");
+                if (model_update[key].model_file.conf_file.MD5 === received_md5[key].conf_file.MD5) {
+                  model_update[key].model_file.conf_file.name = temp;
+                  count++;
+                  //console.log(count);
+                  console.log("Conf file updated successfully!!!".green);
+                  fs.writeFileSync('./models/model_info.json', JSON.stringify(model_update));
+                  //console.log("count:" + count + "    " + "file_number:" + file_number);
+                  if (count === file_number) {
+                    model_file = fs.readFileSync('./models/model_info.json', 'utf8');
+                    controller_wss.broadcast(model_file);
+                    console.log("send json file!!!".red);
+                  }
+                } else {
+                  console.log("Conf file send error".red);
+                }
+                if (err) {
+                  console.log("File not exist!!!".red);
+                  throw err;
+                }
+
+              });
+
+              break;
           }
 
-          if (err) {
-            console.log(err);
-          }
-          if (cou > 1) {
-            model_update[subdir].has_model = 'Yes';
-            // console.log(cou);
-          }
-          fs.writeFileSync('./model/model_info.json', JSON.stringify(model_update));
-          model_file = fs.readFileSync('./model/model_info.json', 'utf8');
-          controller_wss.broadcast(model_file);
-          //ws.send(model_file);
-        });
-      });
+        }
+
+      } else {
+        console.log("Dictionary not exist!!!".red);
+      }
     }
-    /* model_file = fs.readFileSync('./model/model_info.json', 'utf8');
-     ws.send(model_file);
-     console.log(JSON.stringify(JSON.parse(model_file)));*/
+
   }
+
 
   ws.on('message', function (path) {
 
     //console.log("receive message:" + path);
     //console.log(typeof path);    
     if (typeof path === 'string') {
-      if (path.indexOf("file Md5 is") > -1) {
+      if (path.indexOf("file MD5 are") > -1) {
         let length = path.indexOf(":");
-        switch (path[0]) {
-          case 'B':
-            received_bin_md5 = path.substring(length + 1);
-            break;
-
-          case 'C':
-            received_conf_md5 = path.substring(length + 1);
-            break;
-
-          case 'X':
-            received_xml_md5 = path.substring(length + 1);
-            break;
-
-        }
+        received_md5 = JSON.parse(path.substring(length + 1));
+        console.log(received_md5);
+        //broadcast_to_all();
+        //console.log(received_md5);
       } else if (path.indexOf("file numbers are") > -1) {
         let temp = path.indexOf(":");
         file_number = parseInt(path.substring(temp + 1));
@@ -284,9 +321,10 @@ controller_wss.on('connection', function (ws) {
     } else if (typeof path === 'object') {
       console.log("I received buffer");
       let buff = Buffer.from(path);
-      let model_dir_path = './model/' + model_name;
+      let model_dir_path = './models/' + model_name;
+      let temp = model_dir_path.lastIndexOf("/");
+      let dire = model_dir_path.substring(temp + 1);
       console.log(("output dir: ", model_dir_path).bgMagenta);
-
       try {
         fs.accessSync(model_dir_path, fs.constants.F_OK);
       } catch (ex) {
@@ -297,8 +335,8 @@ controller_wss.on('connection', function (ws) {
             if (err) {
               console.log(("Failed to create dir, err =  ", err).red);
             }
-            let model_update = JSON.parse(fs.readFileSync('./model/model_info.json', 'utf8'));
-            model_update[model_name] = {
+            let model_update = JSON.parse(fs.readFileSync('./models/model_info.json', 'utf8'));
+            model_update[dire] = {
               "has_model": "No", "model_file":
               {
                 "bin_file": { "name": "", "MD5": "" },
@@ -306,7 +344,9 @@ controller_wss.on('connection', function (ws) {
                 "conf_file": { "name": "", "MD5": "" }
               }
             };
-            fs.writeFileSync('./model/model_info.json', JSON.stringify(model_update));
+            console.log(dire.bgBlue);
+            fs.writeFileSync('./models/model_info.json', JSON.stringify(model_update));
+            console.log("write down");
           });
         } else {
           console.log(("output data will be put into ", model_dir_path).green);
@@ -318,19 +358,29 @@ controller_wss.on('connection', function (ws) {
 
 
       console.log(buff);
-      let fd = fs.openSync(model_path, 'w');
-      fs.write(fd, buff, 0, buff.length, null, function (err) {
-        if (err) throw 'error writing file: ' + err;
-        fs.close(fd, function () {
-          console.log('file written');
-          file_number--;
-          if (file_number === 0) {
-            update_model_info(model_name);
+      //let fd = fs.openSync(model_path, 'w');
+      fs.open(model_path, 'w', function (err, fd) {
+        if (err) throw err;
+        //console.log('Saved!');
+        fs.write(fd, buff, 0, buff.length, null, function (err) {
+          if (err) throw 'error writing file: ' + err;
+          fs.close(fd, function (errs) {
+            console.log('file written');
+            file_count++;
+            // console.log(file_count);
+            if (file_count === parseInt(file_number)) {
+              update_model_info();
+            }
+          })
+          if (err) {
+            throw err;
           }
-        })
+        });
       });
+
     }
   });
+
 
 
   ws.on('close', function () {
@@ -362,14 +412,6 @@ const hddlpipe_server = https.createServer({
 });
 
 const hddlpipe_wss = new WebSocketServer({ server: hddlpipe_server, path: '/binaryEchoWithSize' });
-// Broadcast to all.
-/*data_wss.broadcast = function broadcast(data) {
-  data_wss.clients.forEach(function each(client) {
-    if (client.readyState === WebSocket.OPEN) {
-      client.send(data);
-    }
-  });
-};*/
 
 hddlpipe_wss.on('connection', function connection(ws) {
 
@@ -449,31 +491,6 @@ hddlpipe_wss.on('connection', function connection(ws) {
 
 
 });
-
-
-/*function ClientVerify(info) {
-
-   let ret = false;//refuse
-   params = url.parse(info.req.url, true).query;
-
-   if (params["id"] == "1") {
-     if(params["key"] == "b"){
-       ret = true;//pass
-     }
-   }
-
-   if (params["id"] == "2") {
-     if(params["key"] == "c"){
-       ret = true;//pass
-     }
-   }
-
-   if (params["id"] == "3") {
-     ret = true;//pass
-   }
-
-   return ret;
-}*/
 
 function ClientVerify(info) {
 
