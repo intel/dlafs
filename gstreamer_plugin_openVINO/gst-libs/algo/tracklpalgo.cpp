@@ -513,6 +513,8 @@ void TrackLpAlgo::remove_no_lp(std::vector<ObjectData> &objectVec)
 //  Licence Plate Locate
 //
 //-------------------------------------------------------------------------
+
+#if 0
 struct HSVScope{
     int minH;
     int maxH;
@@ -522,18 +524,6 @@ struct HSVScope{
     int maxV;
 };
 
-#if 0
-static struct HSVScope hsvScope[] = {
-    {100, 140, 95, 255, 95, 255}, // Blue plate
-    {15, 40,    95, 255, 95, 255}, // Yellow palte
-};
-static struct HSVScope hsvScope[] = {
-    {90, 120, 80, 220, 80, 255}, // Blue plate
-    {11, 34,    43, 255, 46, 255}, // Yellow palte
-    {0, 180,       0, 255,   0,   46 }, // black plate
-    {0,180,        0,    30, 46, 220} // white plate
-};
-#else
 static struct HSVScope hsvScope[] = {
     {90, 140,  80,  255, 80, 255}, // Blue plate
     {11,    34,  43,  255, 46, 255}, // Yellow palte
@@ -541,7 +531,6 @@ static struct HSVScope hsvScope[] = {
     {0,    180,    0,    30,  46, 220} // white plate
 };
 
-#endif
 static bool checkHSV(const cv::Vec3b & hsv)
 {
    int i = 0;
@@ -556,7 +545,102 @@ static bool checkHSV(const cv::Vec3b & hsv)
     }
     return false;
 }
+#else
 
+/*
+static int checkHSV_full_C( unsigned char  *hsv_in, int size, unsigned char *gray_out)
+{
+   int i = 0, index = 0,j ;
+   int  ret = 0;
+  int  ret2 = 0;
+   static unsigned char hsvScope[] = {
+       //Hmin, Hmax, Smin, Smax, Vmin,Vmax
+       90, 140,  80,  255, 80, 255, // Blue plate
+       11,    34,  43,  255, 46, 255, // Yellow palte
+       0,    180,    0,  255,   0,   46 , // black plate
+       0,    180,    0,    30,  46, 220, // white plate
+   };
+
+    unsigned char  *hsv = NULL;
+    for(j=0;j<size;j+=2) {
+        hsv = hsv_in + j*3;
+         ret = 0;
+         ret2 = 0;
+        for(i=0;i<2;i++) {
+            index = i*6;
+            ret    |= (hsv[0] >hsvScope[index]) && (hsv[0]<=hsvScope[index+1]) &&
+                         (hsv[1] >hsvScope[index+2]) && (hsv[1]<=hsvScope[index+3]) &&
+                        (hsv[2] >hsvScope[index+4]) && (hsv[2]<=hsvScope[index+5]);
+            ret2   |= (hsv[3] >hsvScope[index]) && (hsv[3]<=hsvScope[index+1]) &&
+                        (hsv[4] >hsvScope[index+2]) && (hsv[4]<=hsvScope[index+3])&&
+                         (hsv[5] >hsvScope[index+4]) && (hsv[5]<=hsvScope[index+5]);
+        }
+        gray_out[j] = ret * 255;
+        gray_out[j+1] = ret2 * 255;
+   }
+    return 0;
+}
+*/
+#include <emmintrin.h> //SSE2(include xmmintrin.h)
+static int checkHSV_full_SSE( unsigned char  *hsv, int size, unsigned char *gray_out)
+{
+   int i = 0, index = 0, len = 0;
+   int ret = 0;
+   // SSE2 only support signed char cmp instruct, so we convert uchar to char
+   //   hsvScope[] - 128
+   static unsigned char  hsvScope[] = {
+       //Hmin, Hmax, Smin, Smax, Vmin,Vmax,
+        90, 140,  80,  255, 80, 255,// Blue plate
+        90, 140,  80,  255, 80, 255,// Blue plate
+        11,    34,  43,  255, 46, 255, // Yellow palte
+        11,    34,  43,  255, 46, 255, // Yellow palte
+        0,    180,    0,  255,   0,   46 ,// black plate
+        0,    180,    0,  255,   0,   46 ,// black plate
+        0,    180,    0,    30,  46, 220, // white plate
+        0,    180,    0,    30,  46, 220// white plate
+   };
+     const __m128i  value_mean = _mm_set1_epi8(128);
+      // load scope data, 16 uchar
+    __m128i blue_scope_16_uchar= _mm_loadu_si128((__m128i*)hsvScope); // load 128bits data, not need 16 bytes aligned
+    blue_scope_16_uchar = _mm_add_epi8(blue_scope_16_uchar, value_mean);
+     // load scope data, 16 uchar
+    __m128i yellow_scope_16_uchar= _mm_loadu_si128((__m128i*)(&hsvScope[12])); // load 128bits data, not need 16 bytes aligned
+   yellow_scope_16_uchar = _mm_add_epi8(yellow_scope_16_uchar, value_mean);
+
+    len = size - (16 - 6);
+    for(i=0;i<len;i+=2) { // processs 2 pixels per loop
+        index = i*3;// hsv 3 char per pixels
+        // load pixel data, 16 uchar, we only use the first 6 uchar, 2 pixels
+        const __m128i src_16_uchar = _mm_loadu_si128((__m128i*)(hsv+index)); // load 128bits data, not need 16 bytes aligned
+        __m128i src_lower_8_uchar_unpack_8_short = _mm_unpacklo_epi8(src_16_uchar, src_16_uchar);   //r0=_A0, r1=_B0, r2=_A1, r3=_B1, ... r14=_A7, r15=_B7
+        src_lower_8_uchar_unpack_8_short = _mm_add_epi8(src_lower_8_uchar_unpack_8_short, value_mean);
+
+        // compare _mm_cmpgt_epi8 is for char, but not for uchar
+        __m128i result_16_uchar = _mm_cmpgt_epi8(src_lower_8_uchar_unpack_8_short, blue_scope_16_uchar);
+        int blue_result = _mm_movemask_epi8(result_16_uchar); // r=(_A15[7] << 15) | (_A14[7] << 14) ... (_A1[7] << 1) | _A0[7]
+
+        // compare _mm_cmpgt_epi8 is for char, but not for uchar
+        result_16_uchar = _mm_cmpgt_epi8(src_lower_8_uchar_unpack_8_short, yellow_scope_16_uchar);
+        int yellow_result = _mm_movemask_epi8(result_16_uchar); // r=(_A15[7] << 15) | (_A14[7] << 14) ... (_A1[7] << 1) | _A0[7]
+
+        //  B7       B6      B5       B4       B3       B2      B1     B0
+        //                     V         V         S        S        H      H
+        //                     Vmax   Vmin   Smax   Smin   Hmax   Hmin
+        //   X        X       0x0     0xFF     0x0    0xFF    0x0    0xFF
+        //   x         x        0         1         0        1        0       1
+        //   0x15
+        gray_out[i]       =( ((yellow_result&0x3F)  == 0x15)||((blue_result & 0x3F)==0x15)) ? 255:0;
+        gray_out[i+1]  = (((yellow_result&0x7C0)  == 0x540)||((blue_result & 0x7C0)==0x540)) ? 255:0;
+   }
+   for(i=len;i<size;i++) {
+       ret   = (hsv[3*i] >hsvScope[0]) && (hsv[3*i]<=hsvScope[1]) &&
+                  (hsv[3*i+1] >hsvScope[2]) && (hsv[3*i+1]<=hsvScope[3]) &&
+                  (hsv[3*i+2] >hsvScope[4]) && (hsv[3*i+2]<=hsvScope[5]);
+       gray_out[i]  = ret * 255;
+   }
+   return 0;
+}
+#endif
 
 static bool checkSize(cv::RotatedRect rect)
 {
@@ -628,6 +712,8 @@ cv::Rect LicencePlateDetect::detectLicencePlates(const cv::Mat & image)
 
     cv::Mat candidateMask(hsvImage.rows, hsvImage.cols, CV_8UC1);
 
+   // hot code, optimized
+#if 0
     for(int i = 0; i < hsvImage.rows; i ++){
         uchar * rowPtr = hsvImage.ptr(i);
         uchar * rowPtrMask = candidateMask.ptr(i);
@@ -636,7 +722,14 @@ cv::Rect LicencePlateDetect::detectLicencePlates(const cv::Mat & image)
             rowPtrMask[j] = checkHSV(hsvValue) ? 255 : 0;
         }
     }
+#else
+   for(int i = 0; i < hsvImage.rows; i ++){
+        uchar * rowPtr = hsvImage.ptr(i);
+        uchar * rowPtrMask = candidateMask.ptr(i);
+        checkHSV_full_SSE( rowPtr, hsvImage.cols, rowPtrMask);
+    }
 
+#endif
     // apply morphological processing to the mask.
     cv::Mat morphoElement = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(10, 2));
     cv::morphologyEx(candidateMask, candidateMask, cv::MORPH_CLOSE,  morphoElement);

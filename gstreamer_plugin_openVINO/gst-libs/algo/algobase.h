@@ -158,9 +158,16 @@ public:
     void clear_queue();
     void wait_work_done() {
          // wait IE infer thread finished
-         while((mInferCnt>0) ||(mInQueue.size()>0))
+         int times = 100;
+         while((mInferCnt>0) ||(mInQueue.size()>0)) {
             g_usleep(10000);
             clear_queue();
+            if(times--<=0) {
+                int value = mInferCnt;
+                g_print("warning: mInferCnt = %d in %s\n", value, mName.c_str() );
+                break;
+            }
+         }
     }
     int get_in_queue_size();
     int get_out_queue_size();
