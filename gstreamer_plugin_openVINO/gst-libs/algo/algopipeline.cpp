@@ -304,7 +304,8 @@ static void algo_pipeline_print(AlgoPipelineHandle handle)
                 g_print("%s ->  ", register_get_algo_name(algo->mAlgoType));
                 algo = algo->mNext[0];//TODO
       }
-      g_print("%s\n", register_get_algo_name(algo->mAlgoType));
+      if(algo)
+        g_print("%s\n", register_get_algo_name(algo->mAlgoType));
 }
 
 AlgoPipelineHandle algo_pipeline_create(AlgoPipelineConfig* config, int num)

@@ -110,8 +110,9 @@ static void item_free_func(gpointer data)
          hub.run();
      });
      t.detach();
- 
-     while(!wsclient->client)
+
+    int times=1000;
+     while(!wsclient->client  && times-->0)
          g_usleep(1000);
 
      return (WsClientHandle)wsclient;

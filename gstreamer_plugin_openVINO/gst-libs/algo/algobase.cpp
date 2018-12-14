@@ -93,7 +93,7 @@ static void try_process_algo_data(CvdlAlgoData *algoData)
                       (uint32_t)objectData.rectROI.width,
                       (uint32_t)objectData.rectROI.height};
 
-    if(crop.width<=0 || crop.height<=0 || crop.x<0 || crop.y<0) {
+    if((int)crop.width<=0 || (int)crop.height<=0 || (int)crop.x<0 || (int)crop.y<0) {
         GST_ERROR("Invalid  crop = (%d,%d) %dx%d", crop.x, crop.y, crop.width, crop.height);
         objectData.flags |= CVDL_OBJECT_FLAG_DONE;
         try_process_algo_data(algoData);

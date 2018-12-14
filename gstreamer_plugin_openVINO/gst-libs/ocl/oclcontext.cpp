@@ -230,8 +230,9 @@ OclContext::releaseVAMemoryCL (gpointer info)
 {
     OclCLMemInfo** mem_info = (OclCLMemInfo**) info;
 
-    if (!mem_info || !*mem_info || !(*mem_info)->num_planes || !(*mem_info)->cl_memory[0])
+    if (!mem_info || !*mem_info || !(*mem_info)->num_planes || !(*mem_info)->cl_memory[0]) {
         return;
+    }
 
     m_device->clEnqueueReleaseVA_Intel ((*mem_info)->num_planes, &(*mem_info)->cl_memory[0]);
 

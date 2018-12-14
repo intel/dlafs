@@ -152,10 +152,12 @@ res_convert_send_data (ResConvert * convertor, GstBuffer * buf, GstBuffer * inbu
     cvdl_meta = gst_buffer_get_cvdl_meta (inbuf);
     if(convertor->txt_srcpad && cvdl_meta){
         txt_buf = res_buffer_alloc(convertor->src_pool);
-        txt_mem = RES_MEMORY_CAST(res_memory_acquire(txt_buf));
-        res_convert_fill_txt_data(txt_mem, cvdl_meta);
-        txt_mem->pts = GST_BUFFER_PTS (inbuf);
-        gst_pad_push (convertor->txt_srcpad, txt_buf);
+        if(txt_buf){
+            txt_mem = RES_MEMORY_CAST(res_memory_acquire(txt_buf));
+            res_convert_fill_txt_data(txt_mem, cvdl_meta);
+            txt_mem->pts = GST_BUFFER_PTS (inbuf);
+            gst_pad_push (convertor->txt_srcpad, txt_buf);
+        }
     }
 
     void *data = NULL;

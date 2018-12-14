@@ -90,10 +90,15 @@ public:
     Yolov1TinyInternalData();
     ~Yolov1TinyInternalData();
 
+private:
+    //It's not expected that class instances are copied, the operator= should be declared as private.
+    //In this case, if an attempt to copy is made, the compiler produces an error.
+    Yolov1TinyInternalData& operator=(const Yolov1TinyInternalData& src){return *this;}
+
     const int cGrideSize = DETECTION_GRIDE_SIZE;
     const int cClassNum  = DETECTION_CLASS_NUM;
     const int cBoxNumEachBlock = DETECTION_BOX_NUM_FOR_EACH_BLOCK;
-
+public:
     RectF *mBoxes;
     float **mProbData;
     RectSortable *mRectSorted;

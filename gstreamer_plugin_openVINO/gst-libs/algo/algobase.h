@@ -188,7 +188,13 @@ public:
     void save_buffer(unsigned char *buf, int w, int h, int p, int id, int bPlannar,char *info);
     void save_image(unsigned char *buf, int w, int h, int p, int bPlannar, char *info);
     void print_objects(std::vector<ObjectData> &objectVec);
-    
+
+private:
+        //It's not expected that class instances are copied, the operator= should be declared as private.
+        //In this case, if an attempt to copy is made, the compiler produces an error.
+        CvdlAlgoBase& operator=(const CvdlAlgoBase& src){return *this;}
+
+public:
     gboolean mCapsInited;
 
     // which algo it belongs

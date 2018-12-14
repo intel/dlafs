@@ -55,7 +55,7 @@ GstBuffer* SinkAlgo::dequeue_buffer()
 {
     GstBuffer* buf = NULL;
     CvdlAlgoData *algoData = NULL;
-    gpointer meta_data;
+    gpointer meta_data = NULL;
 
     while(true)
     {
@@ -109,10 +109,11 @@ GstBuffer* SinkAlgo::dequeue_buffer()
                 algoData->mObjectVec[i].label.c_str(),
                 rect.x, rect.y, rect.width, rect.height);
     }
-    ((CvdlMeta *)meta_data)->meta_count = algoData->mObjectVec.size();
 
-    gst_buffer_set_cvdl_meta(buf, (CvdlMeta *)meta_data);
-
+    if(meta_data) {
+        ((CvdlMeta *)meta_data)->meta_count = algoData->mObjectVec.size();
+        gst_buffer_set_cvdl_meta(buf, (CvdlMeta *)meta_data);
+    }
     delete algoData;
     return buf;
 }

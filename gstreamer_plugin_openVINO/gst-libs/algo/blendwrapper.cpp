@@ -153,6 +153,7 @@ static GstBuffer *generate_osd(BlendHandle handle, GstBuffer *input_buf)
         return NULL;
     }
     osd_mem = ocl_memory_acquire(osd_buf);
+    g_return_val_if_fail(osd_mem, NULL);
     osd_mem->purpose = 2;
 
     std::ostringstream stream_ts;
@@ -259,7 +260,7 @@ GstBuffer* blender_process_cvdl_buffer(BlendHandle handle, GstBuffer* buffer)
     //if(cvdl_meta)
     //    gst_buffer_set_cvdl_meta(out_buf, cvdl_meta);
 
-
+    g_return_val_if_fail(out_buf, NULL);
     // set pts for it
     GST_BUFFER_TIMESTAMP(out_buf) = GST_BUFFER_TIMESTAMP (buffer);
     GST_BUFFER_DURATION (out_buf) = GST_BUFFER_DURATION (buffer);

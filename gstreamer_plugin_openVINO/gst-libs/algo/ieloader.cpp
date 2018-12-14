@@ -266,6 +266,7 @@ GstFlowReturn IELoader::convert_input_to_blob(const cv::UMat& img,
     } else {
         src = img.getMat(0);
     }
+    g_return_val_if_fail(src.data, GST_FLOW_ERROR);
 
     auto numBlobChannels = inputBlobPtr->dims()[2];
     size_t numImageChannels = src.channels();

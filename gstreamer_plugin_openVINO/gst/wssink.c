@@ -185,22 +185,23 @@ static void process_sink_buffers(gpointer userData)
         txt_mem = RES_MEMORY_CAST(res_memory_acquire(txt_buf));
         if(!txt_mem || !txt_mem->data || !txt_mem->data_count) {
             g_print("Failed to get data from txt buffer!!!\n");
-        }
-        // packaged txt data into websocket
-        InferenceData *infer_data = txt_mem->data;
-        int count = txt_mem->data_count;
-        GST_LOG("object num = %d\n",count);
-        for(i=0; i<count; i++) {
-            data_len = g_snprintf(txt_cache, TXT_BUFFER_SIZE_MAX,
-                "ts=%.3fs, prob=%f,name=%s, rect=(%d,%d)@%dx%d\n",
-                txt_mem->pts/1000000000.0, infer_data->probility, infer_data->label,
-                infer_data->rect.x, infer_data->rect.y,
-                infer_data->rect.width, infer_data->rect.height);
-            basesink->data_index++;
-            g_print("pipe %d:  send %2d xml_data: size=%ld, %s",basesink->wsc_id, basesink->data_index, data_len, txt_cache);
-            wsclient_send_data(basesink->wsclient_handle, (char *)txt_cache, data_len);
-            size += data_len;
-            infer_data++;
+        }else{
+            // packaged txt data into websocket
+            InferenceData *infer_data = txt_mem->data;
+            int count = txt_mem->data_count;
+            GST_LOG("object num = %d\n",count);
+            for(i=0; i<count; i++) {
+                data_len = g_snprintf(txt_cache, TXT_BUFFER_SIZE_MAX,
+                    "ts=%.3fs, prob=%f,name=%s, rect=(%d,%d)@%dx%d\n",
+                    txt_mem->pts/1000000000.0, infer_data->probility, infer_data->label,
+                    infer_data->rect.x, infer_data->rect.y,
+                    infer_data->rect.width, infer_data->rect.height);
+                basesink->data_index++;
+                g_print("pipe %d:  send %2d xml_data: size=%ld, %s",basesink->wsc_id, basesink->data_index, data_len, txt_cache);
+                wsclient_send_data(basesink->wsclient_handle, (char *)txt_cache, data_len);
+                size += data_len;
+                infer_data++;
+             }
         }
     }
 
@@ -502,7 +503,7 @@ static gboolean
 //gst_ws_sink_default_query (GstWsSink * basesink, GstPad *pad, GstQuery * query)
 gst_ws_sink_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
-  gboolean res;
+  gboolean res = TRUE;
   GstWsSink *basesink;
   //GstWsSinkClass *bclass;
 
@@ -512,7 +513,7 @@ gst_ws_sink_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_ALLOCATION:
     {
-      gst_ws_sink_propose_allocation (basesink, query);
+      res = gst_ws_sink_propose_allocation (basesink, query);
       break;
     }
     case GST_QUERY_CAPS:

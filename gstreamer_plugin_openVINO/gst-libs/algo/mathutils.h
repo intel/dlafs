@@ -37,10 +37,10 @@
 #endif
 
 typedef struct {
-	float x;
-	float y;
-	float w;
-	float h;
+    float x;
+    float y;
+    float w;
+    float h;
 }RectF;
 
 class MathUtils{
