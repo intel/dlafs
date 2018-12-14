@@ -43,6 +43,8 @@ copy_image (GstMfxVideoMemory * mem)
     src_plane = gst_mfx_surface_get_plane (mem->surface, i);
     src_stride = gst_mfx_surface_get_pitch (mem->surface, i);
 
+    if(!src_plane)
+        continue;
     dest_stride = GST_VIDEO_INFO_PLANE_STRIDE (mem->image_info, i);
     offset = GST_VIDEO_INFO_PLANE_OFFSET (mem->image_info, i);
 

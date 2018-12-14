@@ -77,6 +77,7 @@ get_display_fd (GstMfxDisplay * display)
         }
 
         devpath = udev_device_get_devnode (device);
+
         priv->display_fd = open (devpath, O_RDWR | O_CLOEXEC);
         if (priv->display_fd < 0) {
           udev_device_unref (device);

@@ -999,6 +999,8 @@ gst_mfx_encoder_start (GstMfxEncoder *encoder)
 
     request->NumFrameSuggested += (1 - encoder->params.AsyncDepth);
 
+    if(!encoder->filter)
+	return GST_MFX_ENCODER_STATUS_ERROR_OPERATION_FAILED;
     gst_mfx_filter_set_request (encoder->filter, request,
         GST_MFX_TASK_VPP_OUT);
 

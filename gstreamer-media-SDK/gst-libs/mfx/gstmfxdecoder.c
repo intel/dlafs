@@ -654,7 +654,8 @@ gst_mfx_decoder_new (GstMfxTaskAggregator * aggregator,
 
   return decoder;
 error:
-  gst_mfx_mini_object_unref (GST_MFX_MINI_OBJECT(decoder));
+  if(decoder)
+      gst_mfx_mini_object_unref (GST_MFX_MINI_OBJECT(decoder));
   return NULL;
 }
 
