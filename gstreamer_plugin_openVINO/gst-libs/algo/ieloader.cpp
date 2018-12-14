@@ -57,6 +57,58 @@ using namespace std;
 
 std::mutex requestCreateMutex;
 
+#include <emmintrin.h> //SSE2(include xmmintrin.h)
+static void data_norm_SSE(float* pfOut, unsigned char* pcInput,  int data_len, float scale, float mean)
+{
+    int i, len;
+    const __m128i zero_16_uchar = _mm_setzero_si128(); // set 128bit to be zero
+    const __m128i zero_8_short = _mm_set1_epi16(0);// return 8 short ,  r0=_W, r1=_W, ... r7=_W
+    __m128 reg128_scale = _mm_set1_ps(scale); // r0 = r1 = r2 = r3 = w
+    __m128 reg128_mean = _mm_set1_ps(-1.0*mean); // r0 = r1 = r2 = r3 = w
+
+    len = data_len & (~15);
+    for (i = 0; i < len; i += 16) {
+        const __m128i src_16_uchar = _mm_loadu_si128((__m128i*)(pcInput+i)); // load 128bits data, not need 16 bytes aligned
+        const __m128i src_lower_8_uchar_unpack_8_short = _mm_unpacklo_epi8(src_16_uchar, zero_16_uchar);   // First 8 short values
+        __m128i src_lo_4_int = _mm_unpacklo_epi16(src_lower_8_uchar_unpack_8_short, zero_8_short); //r0=_A0, r1=_B0, r2=_A1, r3=_B1, r4=_A2, r5=_B2, r6=_A3, r7=_B3
+        __m128i src_hi_4_int = _mm_unpackhi_epi16(src_lower_8_uchar_unpack_8_short, zero_8_short);
+
+        __m128 src_lo_4_float = _mm_cvtepi32_ps(src_lo_4_int); // r0=(float)_A0, r1=(float)_A1, r2=(float)_A2, r3=(float)_A3
+        __m128 dst_4_float_0 = _mm_mul_ps(_mm_add_ps(src_lo_4_float, reg128_mean), reg128_scale);
+        __m128 src_hi_4_float = _mm_cvtepi32_ps(src_hi_4_int);
+        __m128 dst_4_float_1 = _mm_mul_ps(_mm_add_ps(src_hi_4_float, reg128_mean), reg128_scale);
+
+        const __m128i src_higher_8_uchar_unpack_8_short = _mm_unpackhi_epi8(src_16_uchar, zero_16_uchar);  // Last 8 short values
+
+        src_lo_4_int = _mm_unpacklo_epi16(src_higher_8_uchar_unpack_8_short, zero_8_short);
+        src_hi_4_int = _mm_unpackhi_epi16(src_higher_8_uchar_unpack_8_short, zero_8_short);
+
+        src_lo_4_float = _mm_cvtepi32_ps(src_lo_4_int);
+        __m128 dst_4_float_2 = _mm_mul_ps(_mm_add_ps(src_lo_4_float, reg128_mean), reg128_scale);
+
+        src_hi_4_float = _mm_cvtepi32_ps(src_hi_4_int);
+        __m128 dst_4_float_3 = _mm_mul_ps(_mm_add_ps(src_hi_4_float, reg128_mean), reg128_scale);
+
+        _mm_store_ps(pfOut + i, dst_4_float_0);
+        _mm_store_ps(pfOut + i + 4, dst_4_float_1);
+        _mm_store_ps(pfOut + i + 8, dst_4_float_2);
+        _mm_store_ps(pfOut + i + 12, dst_4_float_3);
+    }
+
+    for (i = len; i < data_len; ++i) {
+        pfOut[i] = ((float)pcInput[i]  -mean )* scale;
+    }
+}
+
+#if 0
+static void data_norm_C(float* pfOut, unsigned char* pcInput,  int data_len,  float scale, float mean)
+ {
+    int i;
+    for (i = 0; i < data_len; ++i) {
+        pfOut[i] = ((float)pcInput[i]  -mean )* scale;
+    }
+}
+#endif
 IELoader::IELoader()
 {
 
@@ -231,8 +283,9 @@ GstFlowReturn IELoader::convert_input_to_blob(const cv::UMat& img,
 
             // Src data has been converted to be BGR planar format
             int nPixels = w * h * numBlobChannels;
-            for (int i = 0; i < nPixels; i++)
-                inputDataPtr[i] = src.data[i];
+            //for (int i = 0; i < nPixels; i++)
+            //    inputDataPtr[i] = src.data[i];
+            memcpy(inputDataPtr, src.data, nPixels*sizeof(char));
         }
     }else if(InferenceEngine::Precision::FP32 == mInputPrecision){
         InferenceEngine::TBlob<float>::Ptr inputBlobDataPtr = 
@@ -242,8 +295,12 @@ GstFlowReturn IELoader::convert_input_to_blob(const cv::UMat& img,
 
             // Src data has been converted to be BGR planar format
             int nPixels = w * h * numBlobChannels;
-            for (int i = 0; i < nPixels; i++)
-                inputDataPtr[i] = ((float)src.data[i] - mInputMean) * mInputScale;
+            #if 1
+            // hot code, SSE optimized
+            data_norm_SSE(inputDataPtr, src.data, nPixels,  mInputScale, mInputMean);
+            #else
+            data_norm_C(inputDataPtr, src.data, nPixels,  mInputScale, mInputMean);
+            #endif
         }
     }else {
             GST_ERROR("InferenceEngine::Precision not support: %d", (int)mInputPrecision);
