@@ -407,7 +407,7 @@ GstFlowReturn IELoader::do_inference_async(void *data, uint64_t frmId, int objId
                 CvdlAlgoBase *algo = algoData->algoBase;
                 GST_LOG("WaitAsync - do_inference_async begin: algo = %p(%p), algoData = %p\n",
                     algo, algoData->algoBase, algoData);
-                g_usleep(10);
+                //g_usleep(10);
                 //avoid race condition when push object
                 algo->mAlgoDataMutex.lock();
                 algo->parse_inference_result(resultBlobPtr, sizeof(float), algoData, objId);

@@ -87,7 +87,10 @@ npm config set proxy <proxy>
 sudo npm install -g n
 sudo n stable
 npm install ws@6.0.0
-npm install child_process arraybuffer-to-string rimraf commander tree-kill color
+npm install child_process arraybuffer-to-string commander tree-kill colors fs path jsonwebtoken crypto
+
+note: please run "npm audit fix --force" command to fix package audit issues.
+      Need fixing packages: jsonwebtoken async-limiter buffer-equal-constant-time
 
 9. generate certifiate files
     Please generate all these certificates in one pc!!!
