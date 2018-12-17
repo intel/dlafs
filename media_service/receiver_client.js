@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 const WebSocket = require('ws');
 const fs = require('fs');
-const path = require('path');
 const readline = require('readline');
 const colors = require("colors");
 
@@ -18,13 +17,6 @@ const rl = readline.createInterface({
     output: process.stdout
 });
 
-
-function mkdirs(dirpath) {
-    if (!fs.existsSync(path.dirname(dirpath))) {
-        mkdirs(path.dirname(dirpath));
-    }
-    fs.mkdirSync(dirpath);
-}
 
 const filename = 'hostname.txt';
 let url = 0;
