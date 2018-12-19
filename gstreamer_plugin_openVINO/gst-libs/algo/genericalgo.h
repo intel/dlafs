@@ -32,7 +32,7 @@
 class GenericAlgo : public CvdlAlgoBase 
 {
 public:
-    GenericAlgo(char *name);
+    GenericAlgo(const char *name);
     virtual ~GenericAlgo();
     //virtual void set_data_caps(GstCaps *incaps);
     virtual GstFlowReturn algo_dl_init(const char* modeFileName);

@@ -41,6 +41,9 @@
 extern "C" {
 #endif
 
+
+static AlgoRegister g_algoRegister;
+
 #if 0
 //default algo list
 const static char *g_algo_name_str[ALGO_MAX_DEFAULT_NUM] = {
@@ -65,7 +68,7 @@ static AlgoPipelineConfig algoTopologyDefault[] = {
 static CvdlAlgoBase* algo_create(int type)
 {
     CvdlAlgoBase* algo;
-    char *algoName = NULL;
+    const char *algoName = NULL;
     switch(type) {
         case ALGO_YOLOV1_TINY:
             algo = new Yolov1TinyAlgo;
@@ -101,7 +104,7 @@ static CvdlAlgoBase* algo_create(int type)
 
      // type/id >= 8 is for generic algo
     if(type>=ALGO_MAX_DEFAULT_NUM) {
-            algoName =register_get_algo_name(type);
+            algoName =g_algoRegister.get_algo_name(type);
             if(algoName) {
                 algo = new GenericAlgo(algoName);
             } else {
@@ -191,8 +194,8 @@ AlgoPipelineConfig *algo_pipeline_config_create(gchar *desc, int *num)
         return NULL;
 
     //register default algo
-    register_init();
-    register_dump();
+    g_algoRegister.register_init();
+    g_algoRegister.register_dump();
 
     //TODO: need to support case 2 better
 
@@ -273,7 +276,7 @@ AlgoPipelineConfig *algo_pipeline_config_create(gchar *desc, int *num)
 
         // get algo type
  #if 1
-        config[i].curType = register_get_algo_id(p);
+        config[i].curType = g_algoRegister.get_algo_id(p);
         if(config[i].curType==-1)
             exit(1);
 #else
@@ -301,11 +304,11 @@ static void algo_pipeline_print(AlgoPipelineHandle handle)
       //TODO: print tree-shape algo pipeline
       g_print("algopipeline chain: ");
       while(algo && algo!=last && last) {
-                g_print("%s ->  ", register_get_algo_name(algo->mAlgoType));
+                g_print("%s ->  ",g_algoRegister.get_algo_name(algo->mAlgoType));
                 algo = algo->mNext[0];//TODO
       }
       if(algo)
-        g_print("%s\n", register_get_algo_name(algo->mAlgoType));
+        g_print("%s\n",g_algoRegister.get_algo_name(algo->mAlgoType));
 }
 
 AlgoPipelineHandle algo_pipeline_create(AlgoPipelineConfig* config, int num)
@@ -602,7 +605,7 @@ void algo_pipeline_flush_buffer(AlgoPipelineHandle handle)
 
 const char* algo_pipeline_get_name(guint  id)
 {
-        return register_get_algo_name(id);
+        return g_algoRegister.get_algo_name(id);
 }
 
 #ifdef __cplusplus

@@ -286,7 +286,9 @@ GstFlowReturn IELoader::convert_input_to_blob(const cv::UMat& img,
             int nPixels = w * h * numBlobChannels;
             //for (int i = 0; i < nPixels; i++)
             //    inputDataPtr[i] = src.data[i];
-            memcpy(inputDataPtr, src.data, nPixels*sizeof(char));
+            //memcpy(inputDataPtr, src.data, nPixels*sizeof(char));
+            unsigned char *src_buf = src.data;
+            std::copy(src_buf, src_buf + nPixels, inputDataPtr);
         }
     }else if(InferenceEngine::Precision::FP32 == mInputPrecision){
         InferenceEngine::TBlob<float>::Ptr inputBlobDataPtr = 

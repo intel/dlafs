@@ -79,7 +79,7 @@ static void post_callback(CvdlAlgoData *algoData)
         }
 }
 
-GenericAlgo::GenericAlgo(char *name) : CvdlAlgoBase(post_callback, CVDL_TYPE_DL),
+GenericAlgo::GenericAlgo(const char *name) : CvdlAlgoBase(post_callback, CVDL_TYPE_DL),
         mHandler(NULL), pfParser(NULL), pfPostProcess(NULL), pfGetType(NULL),
         pfGetMS(NULL), pfGetNetworkConfig(NULL), mLoaded(false), inType(DataTypeInt8),
         outType(DataTypeFP32), mCurPts(0)

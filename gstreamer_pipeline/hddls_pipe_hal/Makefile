@@ -1,4 +1,5 @@
 .PHONY: src
+CXX := g++
 
 SYS_INC_DIR := /usr/include
 SYS_LIB_DIR := /usr/lib/x86_64-linux-gnu
@@ -17,7 +18,7 @@ export CXXFLAGS += -g -O0 -pthread -Wall -Wno-deprecated-declarations $(JSON_CFL
 JSON_C_LIBS := $(shell pkg-config --libs json-c)
 GST_LIBS :=  $(shell pkg-config --libs gstreamer-1.0)
 LIB_PATH = -L$(SYS_LIB_DIR)  -L$(SYS_LIB_DIR)/gstreamer-1.0 $(JSON_C_LIBS) $(GST_LIBS)
-export LDFLAGS += $(LIB_PATH) -lgstvideo-1.0  -lgstbase-1.0 -lgstreamer-1.0 -lgobject-2.0 -lglib-2.0  -lgstapp-1.0 -ljson-c -lgstcvdlfilter
+export LDFLAGS += $(LIB_PATH) -lgstvideo-1.0  -lgstbase-1.0 -lgstreamer-1.0 -lgobject-2.0 -lglib-2.0  -lgstapp-1.0 -ljson-c -lgstcvdlfilter -lstdc++
 
 export DEFINES := -DDEBUG
 

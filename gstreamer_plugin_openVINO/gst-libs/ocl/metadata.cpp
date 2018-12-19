@@ -33,12 +33,14 @@ static InferenceMeta* inference_meta_copy(InferenceMeta *meta_src) {
     InferenceMeta *meta_dst = NULL, *temp;
 
     meta_dst = g_slice_new (InferenceMeta);
-    memcpy(meta_dst, meta_src, sizeof(InferenceMeta));
+    //memcpy(meta_dst, meta_src, sizeof(InferenceMeta));
+    std::copy(meta_src, meta_src+1, meta_dst);
 
     temp = meta_dst;
     while(meta_src->next) {
         temp->next = g_slice_new (InferenceMeta);
-        memcpy(temp->next, meta_src->next, sizeof(InferenceMeta));
+        //memcpy(temp->next, meta_src->next, sizeof(InferenceMeta));
+        std::copy(meta_src->next, meta_src->next+1, temp->next);
         temp = temp->next;
         meta_src = meta_src->next;
     }
@@ -55,7 +57,8 @@ inference_meta_create (VideoRect *rect, const char *label, float prob, guint32 c
         len = LABEL_MAX_LENGTH - 1;
 
     meta->rect = *rect;
-    memcpy(meta->label,label,len);
+    //memcpy(meta->label,label,len);
+    std::copy(label, label+len, meta->label);
     meta->color = color;
     meta->next = NULL;
     meta->track_count = 1;
@@ -259,7 +262,8 @@ cvdl_meta_copy(CvdlMeta *meta_src) {
     CvdlMeta *meta_dst = NULL;
 
     meta_dst = g_slice_new (CvdlMeta);
-    memcpy(meta_dst, meta_src, sizeof(CvdlMeta));
+    //memcpy(meta_dst, meta_src, sizeof(CvdlMeta));
+    std::copy(meta_src, meta_src+1, meta_dst);
     meta_dst->inference_result = inference_meta_copy(meta_src->inference_result);
 
     return meta_dst;

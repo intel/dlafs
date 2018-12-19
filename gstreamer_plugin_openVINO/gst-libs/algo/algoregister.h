@@ -22,9 +22,13 @@
 #ifndef __CVDL_ALGO_REGISTER_H__
 #define __CVDL_ALGO_REGISTER_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+using namespace std;
+#include <vector>
+#include <string>
+
+//#ifdef __cplusplus
+//extern "C" {
+//#endif
 
 enum {
     ALGO_NONE      = -1,
@@ -52,32 +56,46 @@ enum {
 #define ALGO_SINK_NAME "sink"
 
 #define ALGO_REGISTER_FILE_NAME  ".algocache.register"
-
-struct _AlgoListItem {
+class AlgoListItem {
+public:
     int id;
-    char name[32];
+    std::string name_str;
 };
-typedef struct _AlgoListItem AlgoListItem;
-#define ALGO_LIST_ITEM_MAX_NUM 32
 
-typedef struct _AlgoList{
-    int algo_num;
+class AlgoRegister{
+public:
+    AlgoRegister():  generic_algo_num(0), algo_id(0), inited(false)
+   {
+   };
+    ~AlgoRegister(){};
+    void add_algo(int id, const char* name);
+    const char *get_algo_name(int id);
+    int get_algo_id(const char *name);
+    int get_free_id();
+    void register_init();
+    int register_read();
+    void register_write();
+    void register_reset();
+    void register_dump();
+
+    int get_algo_num()
+    {
+        return algo_vec.size();
+     }
+    int get_generic_algo_num()
+    {
+        return generic_algo_num;
+    }
+private:
+    void init_default_algo();
+    std::vector<AlgoListItem>  algo_vec;
     int generic_algo_num; // number of generic algo
-    AlgoListItem algo_item[ALGO_LIST_ITEM_MAX_NUM];
-}AlgoList;
-
-void register_add_algo(int id, const char* name);
-char *register_get_algo_name(int id);
-int register_get_algo_id(const char *name);
-int register_get_free_algo_id();
-void register_init();
-int register_read();
-void register_write();
-void register_reset();
-void register_dump();
-
-#ifdef __cplusplus
+    int algo_id;
+    bool inited;
 };
-#endif
+
+//#ifdef __cplusplus
+//};
+//#endif
 
 #endif
