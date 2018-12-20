@@ -25,10 +25,12 @@
 #include "wsclient.h"
 #include <uWS/uWS.h>
 #include <string.h>
- 
+
 using namespace std;
 #include <thread>
- 
+#include <string>
+#include <sstream>
+
 #ifdef __cplusplus
  extern "C" {
 #endif
@@ -53,7 +55,7 @@ static void item_free_func(gpointer data)
        return;
 }
 
- WsClientHandle wsclient_setup(char *serverUri, int client_id)
+ WsClientHandle wsclient_setup(const char *serverUri, int client_id)
  {
      WsClient *wsclient = (WsClient *)g_new0 (WsClient, 1);
      if(!wsclient) {
@@ -71,9 +73,12 @@ static void item_free_func(gpointer data)
  
          hub.onConnection([wsclient, serverUri, client_id](uWS::WebSocket<uWS::CLIENT> *ws, uWS::HttpRequest req) {
              wsclient->client = ws;
-             char msg[16];
-             g_snprintf(msg,16,"pipe_id=%d", client_id);
-             ws->send(msg, strlen(msg), uWS::OpCode::TEXT);
+             std::stringstream ss;
+             std::string s;
+             ss << client_id;
+             ss >> s;
+             std::string msg = std::string("pipe_id=") + s;
+             ws->send(msg.c_str(), msg.size(), uWS::OpCode::TEXT);
              g_print("Success to connect with %s!\n", serverUri);
          });
 

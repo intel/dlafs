@@ -36,27 +36,15 @@
 #include "genericalgo.h"
 #include "sinkalgo.h"
 #include "algopipeline.h"
+#include <safe_mem_lib.h>
+#include <safe_str_lib.h>
+
+using namespace std;
+
+#define TEST_STR_FUNC 1
 
 #ifdef __cplusplus
 extern "C" {
-#endif
-
-
-static AlgoRegister g_algoRegister;
-
-#if 0
-//default algo list
-const static char *g_algo_name_str[ALGO_MAX_DEFAULT_NUM] = {
-                ALGO_YOLOV1_TINY_NAME,
-                ALGO_TRACKING_NAME,
-                ALGO_GOOGLENETV2_NAME,
-                ALGO_MOBILENET_SSD_NAME,,
-                ALGO_TRACK_LP_NAME,
-                ALGO_LPRNET_NAME,
-                ALGO_YOLOV2_TINY_NAME,
-                ALGO_REID_NAME,
-                ALGO_SINK_NAME
-};
 #endif
 
 static AlgoPipelineConfig algoTopologyDefault[] = {
@@ -104,7 +92,7 @@ static CvdlAlgoBase* algo_create(int type)
 
      // type/id >= 8 is for generic algo
     if(type>=ALGO_MAX_DEFAULT_NUM) {
-            algoName =g_algoRegister.get_algo_name(type);
+            algoName =register_get_algo_name(type);
             if(algoName) {
                 algo = new GenericAlgo(algoName);
             } else {
@@ -155,20 +143,37 @@ static void algo_item_link_sink(AlgoItem *preItem[], int num, AlgoItem *sinkItem
     return;
 }
 
-static int get_str_count(gchar *str, gchar *token, int len)
+static int get_str_count(gchar *str, const gchar *token, int len)
 {
     int count = 0;
-    gchar *p = str;
-
     if(!str || !token || !len)
         return 0;
 
+    // In str, find the occurrence times of this token
+    std::string str_buf = std::string(str);
+    size_t pos = str_buf.find(token, 0);
+
+    while(pos != std::string::npos ) {
+         count++;
+         pos = str_buf.find(token, pos+1);
+     }
+
+#if  TEST_STR_FUNC
+   int count_2 = 0;
+   gchar *p = str;
+
     p=g_strstr_len(p,len,token);
     while(p){
-        count++;
+        count_2++;
         p++;
         p=g_strstr_len(p,len,token);
     }
+    if(count != count_2) {
+        g_print("%s() - get incorrent result!\n", __func__);
+        exit(1);
+     }
+ #endif
+
     return count;
 }
 
@@ -188,14 +193,14 @@ AlgoPipelineConfig *algo_pipeline_config_create(gchar *desc, int *num)
     AlgoPipelineConfig *config = NULL;
     gchar *p = desc, *pDot, *pName, *pParentName, *descStrip;
     gchar **items = NULL;// **names;
-    int count = 0, i, j, index, len, out_index = 1;// nameNum = 0, nameIndex = 0;
+    int count = 0, i, j, index, len,  out_index = 1;// nameNum = 0, nameIndex = 0;
     //gboolean newSubBranch = FALSE;
     if(!desc)
         return NULL;
 
     //register default algo
-    g_algoRegister.register_init();
-    g_algoRegister.register_dump();
+    register_init();
+    register_dump();
 
     //TODO: need to support case 2 better
 
@@ -218,6 +223,7 @@ AlgoPipelineConfig *algo_pipeline_config_create(gchar *desc, int *num)
     for(i=0;i<count;i++)
         items[i] = g_strstrip(items[i]);
 
+    std::string temp;
     config = g_new0 (AlgoPipelineConfig, count);
     for(i=0;i<count;i++) {
         // get curId
@@ -225,32 +231,43 @@ AlgoPipelineConfig *algo_pipeline_config_create(gchar *desc, int *num)
         p = items[i];
 
         // get nextNum
-        pName = g_strstr_len(p, strlen(p),"name=");
+        temp = std::string(p);
+        pName = g_strstr_len(p, temp.size(),"name=");
         if(pName) {
             // get branch algo name list
             //names[nameIndex++] = g_strndup(pName+5,g_strlen(pName+5));
-            config[i].nextNum = get_str_count(descStrip, pName+5, strlen(descStrip)) - 1;
+            temp = std::string(descStrip);
+            config[i].nextNum = get_str_count(descStrip, pName+5, temp.size()) - 1;
             // set nextId
             index = 0;
             pName = pName + 5;
             for(j=0;j<count;j++) {
-                if(!strncmp(items[j],pName,strlen(pName)))
+                //temp = std::string(items[j]);
+                temp = std::string(pName);
+                //if(!strcmp_s(items[j],strnlen_s(pName, 32), pName, &indicator))
+                if(!temp.compare(0, temp.size(), items[j] ))
                     config[i].nextId[index++] = j;
             }
         } else {
             config[i].nextNum = 1;
             // next is the end or other sub branch, set -1
-            if((i==count-1) || (g_strstr_len(items[i+1], strlen(items[i+1]),"."))) {
+            if(i==count-1) {
                 config[i].nextId[0] = -1 * out_index;
                 out_index ++;
             } else {
-                config[i].nextId[0] = i+1;
+                temp = std::string(items[i+1]);
+                if(g_strstr_len(items[i+1],temp.size(), ".")) {
+                    config[i].nextId[0] = -1 * out_index;
+                    out_index ++;
+                } else
+                    config[i].nextId[0] = i+1;
             }
         }
 
         // set preId
         // get parent branch name
-        pDot = g_strstr_len(p, strlen(items[i]),".");
+        temp = std::string(items[i]);
+        pDot = g_strstr_len(p, temp.size(),".");
         if(pDot) {
             // It is a sub branch
             pName = p;
@@ -258,10 +275,13 @@ AlgoPipelineConfig *algo_pipeline_config_create(gchar *desc, int *num)
             len = pDot - pName;
             // find parent branch id
             for(j=0;j<count;j++) {
-                pParentName = g_strstr_len(items[j], strlen(items[j]),"name=");
+                temp = std::string(items[j]);
+                pParentName = g_strstr_len(items[j], temp.size(),"name=");
                 if(!pParentName)
                     continue;
-                if(!strncmp(pParentName+5,pName, len)) {
+                temp = std::string(pParentName+5);
+                //if(!strcmp_s(pParentName+5,len , pName, &indicator)) {
+                if(!temp.compare(0, len, pName)) {
                     config[i].preId = j;
                     break;
                 }
@@ -276,7 +296,7 @@ AlgoPipelineConfig *algo_pipeline_config_create(gchar *desc, int *num)
 
         // get algo type
  #if 1
-        config[i].curType = g_algoRegister.get_algo_id(p);
+        config[i].curType = register_get_algo_id(p);
         if(config[i].curType==-1)
             exit(1);
 #else
@@ -304,11 +324,11 @@ static void algo_pipeline_print(AlgoPipelineHandle handle)
       //TODO: print tree-shape algo pipeline
       g_print("algopipeline chain: ");
       while(algo && algo!=last && last) {
-                g_print("%s ->  ",g_algoRegister.get_algo_name(algo->mAlgoType));
+                g_print("%s ->  ",register_get_algo_name(algo->mAlgoType));
                 algo = algo->mNext[0];//TODO
       }
       if(algo)
-        g_print("%s\n",g_algoRegister.get_algo_name(algo->mAlgoType));
+        g_print("%s\n",register_get_algo_name(algo->mAlgoType));
 }
 
 AlgoPipelineHandle algo_pipeline_create(AlgoPipelineConfig* config, int num)
@@ -605,7 +625,7 @@ void algo_pipeline_flush_buffer(AlgoPipelineHandle handle)
 
 const char* algo_pipeline_get_name(guint  id)
 {
-        return g_algoRegister.get_algo_name(id);
+        return register_get_algo_name(id);
 }
 
 #ifdef __cplusplus

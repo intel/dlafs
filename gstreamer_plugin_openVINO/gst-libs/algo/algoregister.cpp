@@ -30,10 +30,45 @@ using namespace std;
 #include<iostream>
 #include<cstdio>
 #include <fstream>
+#include <vector>
 
-//#ifdef __cplusplus
-//extern "C" {
-//#endif
+class AlgoListItem {
+public:
+    int id;
+    std::string name_str;
+};
+
+class AlgoRegister{
+public:
+    AlgoRegister():  generic_algo_num(0), algo_id(0), inited(false)
+   {
+   };
+    ~AlgoRegister(){};
+    void add_algo(int id, const char* name);
+    const char *get_algo_name(int id);
+    int get_algo_id(const char *name);
+    int get_free_id();
+    void register_init();
+    int register_read();
+    void register_write();
+    void register_reset();
+    void register_dump();
+
+    int get_algo_num()
+    {
+        return algo_vec.size();
+     }
+    int get_generic_algo_num()
+    {
+        return generic_algo_num;
+    }
+private:
+    void init_default_algo();
+    std::vector<AlgoListItem>  algo_vec;
+    int generic_algo_num; // number of generic algo
+    int algo_id;
+    bool inited;
+};
 
 void AlgoRegister::add_algo(int id, const char* name)
 {
@@ -184,6 +219,49 @@ void AlgoRegister::register_reset()
         g_print("Failed to remove %s\n", ALGO_REGISTER_FILE_NAME);
 }
 
-//#ifdef __cplusplus
-//};
-//#endif
+static AlgoRegister g_algoRegister;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void register_add_algo(int id, const char* name)
+{
+    g_algoRegister.add_algo(id,name);
+}
+const char *register_get_algo_name(int id)
+{
+    return g_algoRegister.get_algo_name(id);
+}
+ int register_get_algo_id(const char *name)
+{
+    return g_algoRegister.get_algo_id(name);
+}
+ int register_get_free_algo_id()
+{
+    return g_algoRegister.get_free_id();
+}
+void register_init()
+{
+    g_algoRegister.register_init();
+}
+ int register_read()
+{
+    return g_algoRegister.register_read();
+ }
+ void register_write()
+ {
+    return g_algoRegister.register_write();
+ }
+ void register_reset()
+ {
+    g_algoRegister.register_reset();
+ }
+ void register_dump()
+ {
+    g_algoRegister.register_dump();
+ }
+
+#ifdef __cplusplus
+};
+#endif

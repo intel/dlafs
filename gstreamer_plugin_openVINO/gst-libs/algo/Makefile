@@ -31,7 +31,7 @@ LIB_NAME    := libcvdl_algo
 SHARE_LIB   := $(LIB_NAME).so
 DYNAMIC_LIB := $(LIB_NAME).a
 
-INC := -I../ -I$(SYS_INC_DIR)
+INC := -I../ -I$(SYS_INC_DIR) -I../safestringlib/include
 
 all: $(OBJ)
 	$(AR) $(ARFLAGS) $(DIR_LIB)/$(DYNAMIC_LIB) $(OBJ)

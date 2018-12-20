@@ -24,17 +24,20 @@
 #include <json-c/json.h>
 #include "jsonparser.h"
 
+using namespace std;
+#include <string>
+
 #define CVDLFILTER_NAME "cvdlfilter0"
 #define RESCONVERT_NAME "resconvert0"
 #define WSSINK_NAME "wssink0"
 
-static gchar g_pipe_desc[1024] = "null";
-static gchar g_server_uri[128] = "null"; 
-static gchar g_algopipeline[128] = "null";
+static std::string g_str_pipe_desc = std::string("null");
+static std::string g_str_server_uri = std::string("null");
+static std::string g_str_algopipeline = std::string("null");
+static std::string g_str_default_server_uri = std::string("wss://localhost:8123/binaryEchoWithSize?id=3");
+
 static gint g_pipe_id = 0;
 static gint g_loop_times = 1;
-
-static gchar g_default_server_uri[]= "wss://localhost:8123/binaryEchoWithSize?id=3";
 
 #define DEFAULT_ALGO_PIPELINE "yolov1tiny ! opticalflowtrack ! googlenetv2"
 
@@ -77,7 +80,8 @@ static gboolean  parse_cmdline (int argc, char *argv[])
         opt = getopt_long (argc, argv, brief, details, NULL);
         switch (opt) {
             case 'u':
-                g_snprintf(g_server_uri, 128, "%s", optarg);
+                //g_snprintf(g_server_uri, 128, "%s", optarg);
+                g_str_pipe_desc = std::string(optarg);
                 break;
             case 'i':
                  g_pipe_id  = atoi(optarg);
@@ -108,11 +112,14 @@ static int set_property(struct json_object *parent, HddlsPipe *hp, const char *f
         struct json_object *element = NULL, *property;
         struct json_object_iterator iter, end;
         const char *property_name = NULL;
+        std::string  str_property_name;
         enum json_type property_type;
        const char *property_string = NULL;
         int property_int = 0;
         double property_double = 0.0;
         int ret = 0;
+        //size_t property_len = 0;
+        //int indicator=0;
         
         if( !json_get_object_d2(parent, "command_set_property", filter_name, &element) ) {
                g_print("It didn't find new property for %s\n", filter_name);
@@ -124,11 +131,12 @@ static int set_property(struct json_object *parent, HddlsPipe *hp, const char *f
          while (!json_object_iter_equal (&iter, &end)) {
                     property_name = json_object_iter_peek_name (&iter);
                     property = json_object_iter_peek_value (&iter);
-                    if(!strncmp(property_name, "algopipeline", 12)) {
+                    str_property_name = std::string(property_name);
+                    //if(!strcmp_s(property_name, 12, "algopipeline", &indicator)) {
+                    if(!str_property_name.compare(0, 12, "algopipeline")) {
                         property_string = json_object_get_string (property);
-                        strncpy(g_algopipeline,  property_string, strlen(property_string));
-                        g_algopipeline[strlen(property_string)] = '\0';
-                        g_print("g_algopipeline = %s\n ",g_algopipeline);
+                        g_str_algopipeline =  std::string(property_string);
+                        g_print("g_algopipeline = %s\n ",g_str_algopipeline.c_str());
                         ret = 1;
                         json_object_iter_next (&iter);
                         continue;
@@ -199,23 +207,22 @@ static void process_commands(HddlsPipe *hp, char *desc)
          // ! mfxh264dec  ! cvdlfilter name=cvdlfilter0 algopipeline="yolov1tiny ! opticalflowtrack ! googlenetv2"
          // ! resconvert name=resconvert0  resconvert0.src_pic ! mfxjpegenc
          // ! wssink name=wssink0 wsclientid=13   resconvert0.src_txt ! wssink0.
-         gchar* begin = g_strstr_len(g_pipe_desc, 1024, "algopipeline=" );
+         gchar* begin = g_strstr_len(g_str_pipe_desc.c_str(), 1024, "algopipeline=" );
          gchar*end = NULL;
          gchar *secA = NULL, *secC=NULL;
          if(begin) {
                 begin = begin+14;
                 end = g_strstr_len(begin,64, "\"" );
                 if(end) {
-                    secA = g_strndup(g_pipe_desc, begin - g_pipe_desc);
-                    secC = g_strndup(end, strlen(end));
+                    secA = g_strndup(g_str_pipe_desc.c_str(), begin - g_str_pipe_desc.c_str());
+                    secC = end;//g_strndup(end, strnlen_s(end, 1024));
                     // replace g_pipe_desc
-                    g_print("old g_pipe_desc = %s\n", g_pipe_desc);
-                   g_snprintf(g_pipe_desc, 1024, "%s %s %s", secA, g_algopipeline, secC);
-                   g_print("new g_pipe_desc = %s\n", g_pipe_desc);
+                    g_print("old g_pipe_desc = %s\n", g_str_pipe_desc.c_str());
+                   g_str_pipe_desc = std::string(secA) + g_str_algopipeline + std::string(secC);
+                   g_print("new g_pipe_desc = %s\n", g_str_pipe_desc.c_str());
                    if(secA && secC)
                         hddlspipe_stop (hp);
                    if(secA) g_free(secA);
-                   if(secC) g_free(secC);
                 }
         }
       }
@@ -238,7 +245,7 @@ static gpointer thread_handle_message(void *data)
         return NULL;
 }
 
-static gchar* parse_create_command(char *desc,  gint pipe_id )
+static const gchar* parse_create_command(char *desc,  gint pipe_id )
 {
       struct json_object *root = NULL;
       struct json_object *object = NULL;
@@ -274,7 +281,8 @@ static gchar* parse_create_command(char *desc,  gint pipe_id )
             // 1.3 parse property
             if(json_get_string_d2(object, CVDLFILTER_NAME, "algopipeline", &algo_pipeline_desc)) {
                      g_print("property - algopipeline = %s\n",algo_pipeline_desc);
-                     if(strlen(algo_pipeline_desc)<2)
+                     std::string str_algo_pipeline_desc = std::string(algo_pipeline_desc);
+                     if(str_algo_pipeline_desc.size()<2)
                          algo_pipeline_desc = DEFAULT_ALGO_PIPELINE;
              } else { //default
                     algo_pipeline_desc = DEFAULT_ALGO_PIPELINE;
@@ -288,11 +296,12 @@ static gchar* parse_create_command(char *desc,  gint pipe_id )
 
      // 2. generate pipe desc based on input stream source
      // 2.1 get codec type
-     if(!strncmp(stream_codec_type,"H.264", 5) ||!strncmp(stream_codec_type,"h.264", 5) ) {
+     std::string str_stream_codec_type = std::string(stream_codec_type);
+     if(!str_stream_codec_type.compare( "H.264") ||!str_stream_codec_type.compare("h.264") ) {
            // H.264
            codec_type = eCodecTypeH264;
-     } else if(!strncmp(stream_codec_type,"H.265", 5)  || !strncmp(stream_codec_type,"h.265", 5) 
-               || !strncmp(stream_codec_type,"HEVC", 4) || !strncmp(stream_codec_type,"hevc", 4)){
+     } else if(!str_stream_codec_type.compare("H.265")  || !str_stream_codec_type.compare( "h.265") 
+               || !str_stream_codec_type.compare( "HEVC") || !str_stream_codec_type.compare( "hevc")){
           // H.265
           codec_type = eCodecTypeH265;
      } else {
@@ -308,25 +317,39 @@ static gchar* parse_create_command(char *desc,  gint pipe_id )
      // 2.2 get source type: rtsp or local file
      if( g_strrstr_len(stream_source, 256, "rtsp")  || g_strrstr_len(stream_source, 256, "RTSP")) {
            // rtsp
-           if(codec_type == eCodecTypeH264)
-                g_snprintf (g_pipe_desc, 1024, "rtspsrc location=%s udp-buff-size=800000 ! rtph264depay "
-                                      " ! h264parse ! mfxh264dec %s ",  stream_source,  helper_desc );
-           else if(codec_type == eCodecTypeH265)
-                 g_snprintf (g_pipe_desc, 1024, "rtspsrc location=%s udp-buff-size=800000 ! rtph265depay "
-                                     " ! h265parse ! mfxhevcdec  %s ", stream_source,  helper_desc );
+           if(codec_type == eCodecTypeH264) {
+                //g_snprintf (g_pipe_desc, 1024, "rtspsrc location=%s udp-buff-size=800000 ! rtph264depay "
+                //                      " ! h264parse ! mfxh264dec %s ",  stream_source,  helper_desc );
+                g_str_pipe_desc = std::string("rtspsrc location=") + std::string(stream_source)
+                                                +std::string(" udp-buff-size=800000 ! rtph264depay  ! h264parse ! mfxh264dec ")
+                                                +std::string(helper_desc);
+           } else if(codec_type == eCodecTypeH265) {
+                //g_snprintf (g_pipe_desc, 1024, "rtspsrc location=%s udp-buff-size=800000 ! rtph265depay "
+                //                     " ! h265parse ! mfxhevcdec  %s ", stream_source,  helper_desc );
+                g_str_pipe_desc = std::string("rtspsrc location=") + std::string(stream_source)
+                                                +std::string(" udp-buff-size=800000 ! rtph265depay  ! h265parse ! mfxhevcdec ")
+                                                +std::string(helper_desc);
+            }
      } else {
           // local files
-           if(codec_type == eCodecTypeH264)
-                g_snprintf (g_pipe_desc, 1024,
-                     "filesrc location=%s  ! qtdemux  ! h264parse ! mfxh264dec %s",  stream_source,  helper_desc );
-           else if(codec_type == eCodecTypeH265)
-                 g_snprintf (g_pipe_desc, 1024,
-                     "filesrc location=%s ! qtdemux  ! h265parse ! mfxhevcdec  %s",  stream_source,  helper_desc );
+           if(codec_type == eCodecTypeH264) {
+                //g_snprintf (g_pipe_desc, 1024,
+                //     "filesrc location=%s  ! qtdemux  ! h264parse ! mfxh264dec %s",  stream_source,  helper_desc );
+                g_str_pipe_desc = std::string("filesrc location=") + std::string(stream_source)
+                                                +std::string("  ! qtdemux  ! h264parse ! mfxh264dec ")
+                                                +std::string(helper_desc);
+           } else if(codec_type == eCodecTypeH265) {
+                 //g_snprintf (g_pipe_desc, 1024,
+                 //    "filesrc location=%s ! qtdemux  ! h265parse ! mfxhevcdec  %s",  stream_source,  helper_desc );
+                 g_str_pipe_desc = std::string("filesrc location=") + std::string(stream_source)
+                                                +std::string("  ! qtdemux  ! h265parse ! mfxhevcdec ")
+                                                +std::string(helper_desc);
+            }
     }
-    g_print("pipeline: %s\n",g_pipe_desc );
+    g_print("pipeline: %s\n",g_str_pipe_desc.c_str() );
     json_destroy(&root);
 
-    return g_pipe_desc;
+    return g_str_pipe_desc.c_str();
 }
 
 static gboolean bus_callback (GstBus* bus, GstMessage* msg, gpointer data)
@@ -382,14 +405,15 @@ void hddlspipe_prepare(int argc, char **argv)
 {
     HddlsPipe *hp = g_new0(HddlsPipe, 1);
     MessageItem *item = NULL;
-    gchar* pipeline_desc = NULL;
+    const gchar* pipeline_desc = NULL;
     GError     *error = NULL;
 
    // 1. create ws client
-   if(!strncmp(g_server_uri,"null", 4)) {
-        hp->ws = wsclient_setup(g_default_server_uri,  g_pipe_id);
+   //if(!strcmp_s(g_server_uri, 4, "null", &indicator)) {
+   if(!g_str_server_uri.compare("null")) {
+        hp->ws = wsclient_setup(g_str_default_server_uri.c_str(),  g_pipe_id);
    } else {
-         hp->ws = wsclient_setup(g_server_uri,  g_pipe_id);
+         hp->ws = wsclient_setup(g_str_server_uri.c_str(),  g_pipe_id);
     }
    hp->pipe_id = g_pipe_id;
     //it has connected to ws server.
@@ -480,7 +504,7 @@ static void hddlspipes_replay(HddlsPipe *hp)
       gst_object_unref (hp->pipeline);
       g_main_loop_unref (hp->loop);
 
-      hp->pipeline = gst_parse_launch (g_pipe_desc, &error);
+      hp->pipeline = gst_parse_launch (g_str_pipe_desc.c_str(), &error);
       if (error) {
           g_print ("ERROR: %s\n", error->message);
           //g_error_free (error);

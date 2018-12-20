@@ -33,6 +33,9 @@
 #include <interface/videodefs.h>
 #include <ocl/metadata.h>
 
+#include <safe_mem_lib.h>
+#include <safe_str_lib.h>
+
 GST_DEBUG_CATEGORY_STATIC (resconvert_debug);
 #define GST_CAT_DEFAULT (resconvert_debug)
 
@@ -116,6 +119,7 @@ res_convert_fill_txt_data(ResMemory *res_mem, CvdlMeta *cvdl_meta)
     InferenceData *dst ;
     InferenceMeta *src = cvdl_meta->inference_result;
     int count = cvdl_meta->meta_count;
+    rsize_t size = 0;
 
     if(!src || !count)
         return GST_FLOW_OK;
@@ -130,8 +134,9 @@ res_convert_fill_txt_data(ResMemory *res_mem, CvdlMeta *cvdl_meta)
     for(int i=0; i<count; i++) {
         dst[i].rect = src->rect;
         dst[i].probility = src->probility;
-        memcpy(dst[i].label, src->label, 128);
-        memcpy(dst[i].track, src->track, src->track_count*sizeof(VideoPoint));
+        strcpy_s(dst[i].label,128, src->label);
+        size = src->track_count*sizeof(VideoPoint);
+        memcpy_s(dst[i].track, size, src->track, size);
         dst[i].track_num = src->track_count;
         src = src->next;
     }

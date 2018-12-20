@@ -1,4 +1,5 @@
 .PHONY: all clean
+CXX := g++
 
 SRC_FILES := $(wildcard *.c)
 OBJECTS := $(patsubst %.c, %.o, $(SRC_FILES))

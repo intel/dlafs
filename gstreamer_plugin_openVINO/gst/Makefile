@@ -27,7 +27,7 @@ DIR_LIB := .
 LIB_OCL_PATH := ..
 GST_LIBS_DIR := ../gst-libs
 
-CFLAGS += $(GST_LIBS_DIR)/safestringlib/include
+CFLAGS += -I$(GST_LIBS_DIR)/safestringlib/include
 
 SRCS = cvdlfilter.c resconvert.c resmemory.c respool.c wssink.c plugin.c
 

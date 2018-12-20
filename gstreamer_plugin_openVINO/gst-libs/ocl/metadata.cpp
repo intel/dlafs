@@ -20,10 +20,12 @@
  * SOFTWARE.
  */
 #include <string.h>
-
 #include "oclutils.h"
 #include "oclcommon.h"
 #include "metadata.h"
+
+using namespace std;
+#include <string>
 
 #ifdef __cplusplus
 extern "C" {
@@ -52,7 +54,7 @@ gpointer
 inference_meta_create (VideoRect *rect, const char *label, float prob, guint32 color)
 {
     InferenceMeta *meta = g_new0 (InferenceMeta, 1);
-    int len = strlen(label);
+    int len = std::string(label).size();
     if(len>=LABEL_MAX_LENGTH)
         len = LABEL_MAX_LENGTH - 1;
 

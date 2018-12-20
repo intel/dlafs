@@ -7,7 +7,7 @@
         "pipe_id": 0,
         "cvdlfilter0":    
         {
-            "algopipeline": "mobilenetssd ! tracklp ! lprnet"
+            "algopipeline":  "yolov1tiny ! opticalflowtrack ! googlenetv2"
         }
    }
  }

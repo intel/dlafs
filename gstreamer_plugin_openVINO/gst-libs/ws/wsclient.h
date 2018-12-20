@@ -33,7 +33,7 @@
      gint len;
  }MessageItem;
  
- WsClientHandle wsclient_setup(char *serverUri, int client_id);
+ WsClientHandle wsclient_setup(const char *serverUri, int client_id);
  void wsclient_send_data(WsClientHandle handle, char *data, int len);
  void wsclient_destroy(WsClientHandle handle);
  MessageItem * wsclient_get_data(WsClientHandle handle);

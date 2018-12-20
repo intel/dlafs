@@ -200,7 +200,8 @@ GstFlowReturn ReidAlgo::parse_inference_result(InferenceEngine::Blob::Ptr &resul
         descriptor[i]=input[i];
     }
     #else
-    memcpy(descriptor, input, descriptorSize*sizeof(float));
+    //memcpy(descriptor, input, descriptorSize*sizeof(float));
+    std::copy(input, input+descriptorSize, descriptor);
     #endif
     outData->mObjectVec.push_back(object);
     return GST_FLOW_OK;

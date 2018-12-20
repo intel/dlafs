@@ -56,7 +56,8 @@ class LicencePlatePool
               int num = mLPVec.size();
               for(int i=0; i<num; i++) {
                   LicencePlateData &item =mLPVec[i];
-                  if(!strncmp(lp.label.c_str(), item.label.c_str(), lp.label.size())) {
+                  //if(!strncmp(lp.label.c_str(), item.label.c_str(), lp.label.size())) {
+                  if(!lp.label.compare(item.label)) {
                         //hit it
                         item.life=0;
                         hit = TRUE;

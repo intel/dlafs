@@ -31,27 +31,26 @@ int main(int argc, char **argv)
        };
     int opt = 0;
     int id = 0;
-    AlgoRegister algoRegister;
 
     while (opt != -1) {
         opt = getopt_long (argc, argv, brief, details, NULL);
         switch (opt) {
             case 'l':
-                algoRegister.register_init();
-                algoRegister.register_dump();
+                register_init();
+                register_dump();
                 break;
             case 'a':
-                algoRegister.register_init();
-                 id = algoRegister.get_free_id();
+                register_init();
+                 id = register_get_free_algo_id();
                  g_print("register: id=%d, name=%s\n",id, optarg);
-                algoRegister.add_algo(id, optarg);
-                 algoRegister.register_write();
-                 algoRegister.register_dump();
+                register_add_algo(id, optarg);
+                register_write();
+                register_dump();
                 break;
             case 'c':
-                algoRegister.register_reset();
+                register_reset();
                 //register_write();
-                algoRegister.register_dump();
+                register_dump();
                 break;
             case 'h': /* help */
                 print_usage (argv[0], 0);

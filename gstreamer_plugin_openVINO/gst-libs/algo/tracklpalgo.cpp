@@ -104,11 +104,15 @@ static void post_tracklp_process(CvdlAlgoData *algoData)
        for(guint i=0; i<algoData->mObjectVec.size();i++) {
              ObjectData &objectData = algoData->mObjectVec[i];
              objectData.flags = 0;
-             if(strncmp(objectData.label.c_str(), "car", 3) &&
-                 strncmp(objectData.label.c_str(), "bus", 3) ) {
-                    continue;
+             //if(strncmp(objectData.label.c_str(), "car", 3) &&
+             //    strncmp(objectData.label.c_str(), "bus", 3) ) {
+             //       continue;
+             //}
+             if(objectData.label.compare("car")  &&
+                 objectData.label.compare("bus")) {
+                 continue;
              }
-    
+
              cv::Rect vehicleBox = objectData.rect;
              cv::Rect licensePlateBox = objectData.rectROI;
     
