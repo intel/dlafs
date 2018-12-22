@@ -514,21 +514,21 @@ GstFlowReturn CvdlAlgoBase::init_ieloader(const char* modeFileName, guint ieType
         return ret;
     mIeInited = true;
 
-    ret = mIeLoader.set_device(InferenceEngine::TargetDevice::eMYRIAD);
+    ret = mIeLoader.set_device(InferenceEngine::TargetDevice::eHDDL);
     if(ret != GST_FLOW_OK){
-        GST_ERROR("IE failed to set device be eMYRIAD!");
+        GST_ERROR("IE failed to set device be eHDDL!");
         return GST_FLOW_ERROR;
     }
     // Load different Model based on different device.
     std::string strModelXml(modeFileName);
     std::string tmpFn = strModelXml.substr(0, strModelXml.rfind("."));
     std::string strModelBin = tmpFn + ".bin";
-    GST_DEBUG("Algo %d: Model bin = %s", mAlgoType, strModelBin.c_str());
-    GST_DEBUG("Algo %d: Model xml = %s", mAlgoType, strModelXml.c_str());
+    GST_DEBUG("Algo %d: Model bin = %s\n", mAlgoType, strModelBin.c_str());
+    GST_DEBUG("Algo %d: Model xml = %s\n", mAlgoType, strModelXml.c_str());
     ret = mIeLoader.read_model(strModelXml, strModelBin, ieType, network_config);
     
     if(ret != GST_FLOW_OK){
-        g_print("IELoder failed to read model!");
+        g_print("IELoder failed to read model!\n");
         return GST_FLOW_ERROR;
     }
 

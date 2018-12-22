@@ -39,7 +39,7 @@ VppInstanceCreate (const char *mimeType)
     if (!instance) {
         g_print ("Failed to create vpp for mimeType: '%s'\n", mimeType);
     } else {
-        g_print ("Created vpp for mimeType: '%s'", mimeType);
+        g_print ("Created vpp for mimeType: '%s\n'", mimeType);
     }
 
     return instance;

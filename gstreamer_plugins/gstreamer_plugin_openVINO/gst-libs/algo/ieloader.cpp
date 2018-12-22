@@ -121,9 +121,11 @@ IELoader::~IELoader()
     //TODO: how to release IE?
 }
 
+
 GstFlowReturn IELoader::set_device(InferenceEngine::TargetDevice dev)
 {
     mTargetDev = dev;
+    std::string pluginPath = std::string("/opt/intel/computer_vision_sdk/inference_engine/lib/ubuntu_16.04/intel64");
     switch (dev) {
     case InferenceEngine::TargetDevice::eCPU:
         mIEPlugin = InferenceEnginePluginPtr("libMKLDNNPlugin.so");
@@ -131,8 +133,9 @@ GstFlowReturn IELoader::set_device(InferenceEngine::TargetDevice dev)
     case InferenceEngine::TargetDevice::eGPU:
         mIEPlugin = InferenceEnginePluginPtr("libclDNNPlugin.so");
         break;
-    case InferenceEngine::TargetDevice::eMYRIAD:
-        mIEPlugin = InferenceEnginePluginPtr(HDDL_PLUGIN);
+    case InferenceEngine::TargetDevice::eHDDL:
+        mIEPlugin = InferenceEngine::PluginDispatcher({ pluginPath }).getPluginByDevice("HDDL");
+        //mIEPlugin = InferenceEnginePluginPtr(HDDL_PLUGIN);
         break;
     default:
         GST_ERROR("Not support device [ %d ]", (int)dev);
@@ -153,15 +156,17 @@ GstFlowReturn IELoader::read_model(std::string strModelXml,
     InferenceEngine::CNNNetReader netReader = InferenceEngine::CNNNetReader();
     netReader.ReadNetwork(strModelXml);
     if (!netReader.isParseSuccess()) {
-        GST_ERROR("read model %s fail", strModelXml.c_str());
+        g_print("read model %s fail", strModelXml.c_str());
         return GST_FLOW_ERROR;
     }
+    g_print("Success to read %s\n", strModelXml.c_str());
 
     netReader.ReadWeights(strModelBin);
     if (!netReader.isParseSuccess()) {
-        GST_ERROR("read model %s fail", strModelBin.c_str());
+        g_print("read model %s fail", strModelBin.c_str());
         return GST_FLOW_ERROR;
     }
+    g_print("Success to read %s\n", strModelBin.c_str());
 
     InferenceEngine::CNNNetwork cnnNetwork = netReader.getNetwork();
     InferenceEngine::InputsDataMap networkInputs;
@@ -195,17 +200,12 @@ GstFlowReturn IELoader::read_model(std::string strModelXml,
     std::map<std::string, std::string> networkConfig;
     networkConfig[InferenceEngine::PluginConfigParams::KEY_LOG_LEVEL]
         = InferenceEngine::PluginConfigParams::LOG_INFO;
-    //networkConfig[VPU_CONFIG_KEY(HW_STAGES_OPTIMIZATION)] = CONFIG_VALUE(YES);
+    networkConfig[VPU_CONFIG_KEY(HW_STAGES_OPTIMIZATION)] = CONFIG_VALUE(YES);
 
     mModelType = modelType;
     switch(modelType) {
         case IE_MODEL_DETECTION:
-#ifdef WIN32
-            //IE for windows do not support NETWORK_CONFIG yet
-            networkConfig[VPU_CONFIG_KEY(INPUT_NORM)] = "255.0";
-#else
             networkConfig[VPU_CONFIG_KEY(NETWORK_CONFIG)] = "data=data,scale=64";
-#endif
             break;
        case IE_MODEL_SSD:
                // Get moblienet_ssd_config_xml file name based on strModelXml
@@ -235,8 +235,10 @@ GstFlowReturn IELoader::read_model(std::string strModelXml,
     // Executable Network for inference engine
     ret = mIEPlugin->LoadNetwork(mExeNetwork, cnnNetwork, networkConfig, &resp);
     if (InferenceEngine::StatusCode::OK != ret) {
-        GST_ERROR("mIEPlugin->LoadNetwork FAIL, ret = %d", ret);
-        return GST_FLOW_ERROR;
+        // GENERAL_ERROR = -1
+        g_print("Failed to call mIEPlugin->LoadNetwork, ret_code = %d, models=%s\n", ret, strModelBin.c_str());
+        //return GST_FLOW_ERROR;
+        exit(-1);
     }
 
     // First create 16 request for current thread.

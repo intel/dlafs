@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-<net batch="1" name="LPRNet" version="2">
+<net batch="1" name="LPRNet" version="3">
 	<layers>
 		<layer id="0" name="data" precision="FP16" type="Input">
 			<output>
@@ -12,7 +12,7 @@
 			</output>
 		</layer>
 		<layer id="1" name="conv1" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="3" kernel-y="3" output="64" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="3,3" output="64" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -54,7 +54,7 @@
 			</output>
 		</layer>
 		<layer id="3" name="pool1" precision="FP16" type="Pooling">
-			<data exclude-pad="false" kernel-x="3" kernel-y="3" pad-x="0" pad-y="0" pool-method="max" rounding_type="ceil" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data exclude-pad="false" kernel="3,3" pads_begin="0,0" pads_end="0,0" pool-method="max" rounding_type="ceil" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -73,7 +73,7 @@
 			</output>
 		</layer>
 		<layer id="4" name="fire1_small/conv_reduce" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="32" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="32" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -115,7 +115,7 @@
 			</output>
 		</layer>
 		<layer id="6" name="fire1_small/conv_3x1" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="3" output="32" pad-x="0" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="3,1" output="32" pads_begin="1,0" pads_end="1,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -157,7 +157,7 @@
 			</output>
 		</layer>
 		<layer id="8" name="fire1_small/conv_1x3" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="3" kernel-y="1" output="32" pad-x="1" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,3" output="32" pads_begin="0,1" pads_end="0,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -199,7 +199,7 @@
 			</output>
 		</layer>
 		<layer id="10" name="fire1_small/conv_expand" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="128" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="128" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -241,7 +241,7 @@
 			</output>
 		</layer>
 		<layer id="12" name="pool2" precision="FP16" type="Pooling">
-			<data exclude-pad="false" kernel-x="3" kernel-y="3" pad-x="0" pad-y="0" pool-method="max" rounding_type="ceil" stride="1,1,2,1" stride-x="1" stride-y="2"/>
+			<data exclude-pad="false" kernel="3,3" pads_begin="0,0" pads_end="0,0" pool-method="max" rounding_type="ceil" strides="2,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -260,7 +260,7 @@
 			</output>
 		</layer>
 		<layer id="13" name="fire2_small/conv_reduce" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="64" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="64" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -302,7 +302,7 @@
 			</output>
 		</layer>
 		<layer id="15" name="fire2_small/conv_3x1" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="3" output="64" pad-x="0" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="3,1" output="64" pads_begin="1,0" pads_end="1,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -344,7 +344,7 @@
 			</output>
 		</layer>
 		<layer id="17" name="fire2_small/conv_1x3" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="3" kernel-y="1" output="64" pad-x="1" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,3" output="64" pads_begin="0,1" pads_end="0,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -386,7 +386,7 @@
 			</output>
 		</layer>
 		<layer id="19" name="fire2_small/conv_expand" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="256" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="256" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -428,7 +428,7 @@
 			</output>
 		</layer>
 		<layer id="21" name="fire3_small/conv_reduce" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="64" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="64" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -470,7 +470,7 @@
 			</output>
 		</layer>
 		<layer id="23" name="fire3_small/conv_3x1" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="3" output="64" pad-x="0" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="3,1" output="64" pads_begin="1,0" pads_end="1,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -512,7 +512,7 @@
 			</output>
 		</layer>
 		<layer id="25" name="fire3_small/conv_1x3" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="3" kernel-y="1" output="64" pad-x="1" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,3" output="64" pads_begin="0,1" pads_end="0,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -554,7 +554,7 @@
 			</output>
 		</layer>
 		<layer id="27" name="fire3_small/conv_expand" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="256" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="256" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -596,7 +596,7 @@
 			</output>
 		</layer>
 		<layer id="29" name="pool3" precision="FP16" type="Pooling">
-			<data exclude-pad="false" kernel-x="3" kernel-y="3" pad-x="0" pad-y="0" pool-method="max" rounding_type="ceil" stride="1,1,2,1" stride-x="1" stride-y="2"/>
+			<data exclude-pad="false" kernel="3,3" pads_begin="0,0" pads_end="0,0" pool-method="max" rounding_type="ceil" strides="2,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -615,7 +615,7 @@
 			</output>
 		</layer>
 		<layer id="30" name="conv2" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="5" output="128" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="5,1" output="128" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -657,7 +657,7 @@
 			</output>
 		</layer>
 		<layer id="32" name="conv3_w" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="13" kernel-y="1" output="71" pad-x="6" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,13" output="71" pads_begin="0,6" pads_end="0,6" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -781,7 +781,7 @@
 			</output>
 		</layer>
 		<layer id="38" name="result" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="71" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="71" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -840,6 +840,36 @@
 				</port>
 			</output>
 		</layer>
+		<layer id="41" name="seq_ind" precision="FP16" type="Input">
+			<output>
+				<port id="0">
+					<dim>88</dim>
+					<dim>1</dim>
+				</port>
+			</output>
+		</layer>
+		<layer id="42" name="decode" precision="FP16" type="CTCGreedyDecoder">
+			<data ctc_merge_repeated="1"/>
+			<input>
+				<port id="0">
+					<dim>88</dim>
+					<dim>1</dim>
+					<dim>71</dim>
+				</port>
+				<port id="1">
+					<dim>88</dim>
+					<dim>1</dim>
+				</port>
+			</input>
+			<output>
+				<port id="2">
+					<dim>1</dim>
+					<dim>88</dim>
+					<dim>1</dim>
+					<dim>1</dim>
+				</port>
+			</output>
+		</layer>
 	</layers>
 	<edges>
 		<edge from-layer="0" from-port="0" to-layer="1" to-port="0"/>
@@ -883,5 +913,43 @@
 		<edge from-layer="37" from-port="2" to-layer="38" to-port="0"/>
 		<edge from-layer="38" from-port="3" to-layer="39" to-port="0"/>
 		<edge from-layer="39" from-port="1" to-layer="40" to-port="0"/>
+		<edge from-layer="40" from-port="1" to-layer="42" to-port="0"/>
+		<edge from-layer="41" from-port="0" to-layer="42" to-port="1"/>
 	</edges>
+	<meta_data>
+		<MO_version value="1.4.288.16472e37"/>
+		<cli_parameters>
+			<data_type value="FP16"/>
+			<disable_fusing value="False"/>
+			<disable_gfusing value="False"/>
+			<disable_nhwc_to_nchw value="False"/>
+			<disable_omitting_optional value="False"/>
+			<disable_resnet_optimization value="False"/>
+			<enable_flattening_nested_params value="False"/>
+			<extensions value="DIR"/>
+			<framework value="caffe"/>
+			<generate_deprecated_IR_V2 value="False"/>
+			<input value="data,seq_ind"/>
+			<input_model value="DIR/lprnet.caffemodel"/>
+			<input_model_is_text value="False"/>
+			<input_proto value="DIR/lprnet_deploy.prototxt"/>
+			<input_shape value="[1,3,24,94],[88,1]"/>
+			<k value="DIR/CustomLayersMapping.xml"/>
+			<legacy_mxnet_model value="False"/>
+			<log_level value="ERROR"/>
+			<mean_values value="()"/>
+			<model_name value="license-plate-recognition-barrier-0001"/>
+			<move_to_preprocess value="False"/>
+			<offload_unsupported_operations_to_tf value="False"/>
+			<output value="decode"/>
+			<output_dir value="DIR"/>
+			<remove_output_softmax value="False"/>
+			<reverse_input_channels value="True"/>
+			<save_params_from_nd value="False"/>
+			<scale_values value="()"/>
+			<silent value="False"/>
+			<version value="False"/>
+			<unset unset_cli_parameters="batch, counts, finegrain_fusing, freeze_placeholder_with_value, input_checkpoint, input_meta_graph, input_symbol, mean_file, mean_file_offsets, nd_prefix_name, pretrained_model_name, saved_model_dir, saved_model_tags, scale, tensorboard_logdir, tensorflow_custom_layer_libraries, tensorflow_custom_operations_config_update, tensorflow_object_detection_api_pipeline_config, tensorflow_operation_patterns, tensorflow_subgraph_patterns, tensorflow_use_custom_operations_config"/>
+		</cli_parameters>
+	</meta_data>
 </net>

@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-<net batch="1" name="yolov1-tiny" version="2">
+<net batch="1" name="yolov1-tiny" version="3">
 	<layers>
 		<layer id="0" name="data" precision="FP16" type="Input">
 			<output>
@@ -12,7 +12,7 @@
 			</output>
 		</layer>
 		<layer id="1" name="conv1" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="3" kernel-y="3" output="16" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="3,3" output="16" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -54,7 +54,7 @@
 			</output>
 		</layer>
 		<layer id="3" name="pool1" precision="FP16" type="Pooling">
-			<data exclude-pad="false" kernel-x="2" kernel-y="2" pad-x="0" pad-y="0" pool-method="max" rounding_type="ceil" stride="1,1,2,2" stride-x="2" stride-y="2"/>
+			<data exclude-pad="false" kernel="2,2" pads_begin="0,0" pads_end="0,0" pool-method="max" rounding_type="ceil" strides="2,2"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -73,7 +73,7 @@
 			</output>
 		</layer>
 		<layer id="4" name="conv2" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="3" kernel-y="3" output="32" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="3,3" output="32" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -115,7 +115,7 @@
 			</output>
 		</layer>
 		<layer id="6" name="pool2" precision="FP16" type="Pooling">
-			<data exclude-pad="false" kernel-x="2" kernel-y="2" pad-x="0" pad-y="0" pool-method="max" rounding_type="ceil" stride="1,1,2,2" stride-x="2" stride-y="2"/>
+			<data exclude-pad="false" kernel="2,2" pads_begin="0,0" pads_end="0,0" pool-method="max" rounding_type="ceil" strides="2,2"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -134,7 +134,7 @@
 			</output>
 		</layer>
 		<layer id="7" name="conv3" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="3" kernel-y="3" output="64" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="3,3" output="64" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -176,7 +176,7 @@
 			</output>
 		</layer>
 		<layer id="9" name="pool3" precision="FP16" type="Pooling">
-			<data exclude-pad="false" kernel-x="2" kernel-y="2" pad-x="0" pad-y="0" pool-method="max" rounding_type="ceil" stride="1,1,2,2" stride-x="2" stride-y="2"/>
+			<data exclude-pad="false" kernel="2,2" pads_begin="0,0" pads_end="0,0" pool-method="max" rounding_type="ceil" strides="2,2"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -195,7 +195,7 @@
 			</output>
 		</layer>
 		<layer id="10" name="conv4" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="3" kernel-y="3" output="128" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="3,3" output="128" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -237,7 +237,7 @@
 			</output>
 		</layer>
 		<layer id="12" name="pool4" precision="FP16" type="Pooling">
-			<data exclude-pad="false" kernel-x="2" kernel-y="2" pad-x="0" pad-y="0" pool-method="max" rounding_type="ceil" stride="1,1,2,2" stride-x="2" stride-y="2"/>
+			<data exclude-pad="false" kernel="2,2" pads_begin="0,0" pads_end="0,0" pool-method="max" rounding_type="ceil" strides="2,2"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -256,7 +256,7 @@
 			</output>
 		</layer>
 		<layer id="13" name="conv5" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="3" kernel-y="3" output="256" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="3,3" output="256" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -298,7 +298,7 @@
 			</output>
 		</layer>
 		<layer id="15" name="pool5" precision="FP16" type="Pooling">
-			<data exclude-pad="false" kernel-x="2" kernel-y="2" pad-x="0" pad-y="0" pool-method="max" rounding_type="ceil" stride="1,1,2,2" stride-x="2" stride-y="2"/>
+			<data exclude-pad="false" kernel="2,2" pads_begin="0,0" pads_end="0,0" pool-method="max" rounding_type="ceil" strides="2,2"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -317,7 +317,7 @@
 			</output>
 		</layer>
 		<layer id="16" name="conv6" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="3" kernel-y="3" output="512" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="3,3" output="512" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -359,7 +359,7 @@
 			</output>
 		</layer>
 		<layer id="18" name="pool6" precision="FP16" type="Pooling">
-			<data exclude-pad="false" kernel-x="2" kernel-y="2" pad-x="0" pad-y="0" pool-method="max" rounding_type="ceil" stride="1,1,2,2" stride-x="2" stride-y="2"/>
+			<data exclude-pad="false" kernel="2,2" pads_begin="0,0" pads_end="0,0" pool-method="max" rounding_type="ceil" strides="2,2"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -378,7 +378,7 @@
 			</output>
 		</layer>
 		<layer id="19" name="conv7" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="3" kernel-y="3" output="1024" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="3,3" output="1024" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -420,7 +420,7 @@
 			</output>
 		</layer>
 		<layer id="21" name="conv8" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="3" kernel-y="3" output="256" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="3,3" output="256" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -508,4 +508,37 @@
 		<edge from-layer="21" from-port="3" to-layer="22" to-port="0"/>
 		<edge from-layer="22" from-port="1" to-layer="23" to-port="0"/>
 	</edges>
+	<meta_data>
+		<MO_version value="1.4.292.6ef7232d"/>
+		<cli_parameters>
+			<data_type value="FP16"/>
+			<disable_fusing value="False"/>
+			<disable_gfusing value="False"/>
+			<disable_nhwc_to_nchw value="False"/>
+			<disable_omitting_optional value="False"/>
+			<disable_resnet_optimization value="False"/>
+			<enable_flattening_nested_params value="False"/>
+			<extensions value="DIR"/>
+			<framework value="caffe"/>
+			<generate_deprecated_IR_V2 value="False"/>
+			<input_model value="DIR/yolov1-tiny.caffmodel"/>
+			<input_model_is_text value="False"/>
+			<input_proto value="DIR/yolov1-tiny_deploy.prototxt"/>
+			<k value="DIR/CustomLayersMapping.xml"/>
+			<legacy_mxnet_model value="False"/>
+			<log_level value="ERROR"/>
+			<mean_values value="()"/>
+			<move_to_preprocess value="False"/>
+			<offload_unsupported_operations_to_tf value="False"/>
+			<output_dir value="DIR"/>
+			<remove_output_softmax value="False"/>
+			<reverse_input_channels value="False"/>
+			<save_params_from_nd value="False"/>
+			<scale value="255.0"/>
+			<scale_values value="()"/>
+			<silent value="False"/>
+			<version value="False"/>
+			<unset unset_cli_parameters="batch, counts, finegrain_fusing, freeze_placeholder_with_value, input, input_checkpoint, input_meta_graph, input_shape, input_symbol, mean_file, mean_file_offsets, model_name, nd_prefix_name, output, pretrained_model_name, saved_model_dir, saved_model_tags, tensorboard_logdir, tensorflow_custom_layer_libraries, tensorflow_custom_operations_config_update, tensorflow_object_detection_api_pipeline_config, tensorflow_operation_patterns, tensorflow_subgraph_patterns, tensorflow_use_custom_operations_config"/>
+		</cli_parameters>
+	</meta_data>
 </net>

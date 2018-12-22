@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-<net batch="1" name="MobileNet-SSD" version="2">
+<net batch="1" name="MobileNet-SSD" version="4">
 	<layers>
 		<layer id="0" name="data" precision="FP16" type="Input">
 			<output>
@@ -12,7 +12,7 @@
 			</output>
 		</layer>
 		<layer id="1" name="conv0" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="3" kernel-y="3" output="32" pad-b="1" pad-r="1" pad-x="1" pad-y="1" stride="1,1,2,2" stride-x="2" stride-y="2"/>
+			<data dilations="1,1" group="1" kernel="3,3" output="32" pads_begin="1,1" pads_end="1,1" strides="2,2"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -54,7 +54,7 @@
 			</output>
 		</layer>
 		<layer id="3" name="conv1/dw" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="32" kernel-x="3" kernel-y="3" output="32" pad-b="1" pad-r="1" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="32" kernel="3,3" output="32" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -96,7 +96,7 @@
 			</output>
 		</layer>
 		<layer id="5" name="conv1" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="64" pad-b="0" pad-r="0" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="64" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -138,7 +138,7 @@
 			</output>
 		</layer>
 		<layer id="7" name="conv2/dw" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="64" kernel-x="3" kernel-y="3" output="64" pad-b="1" pad-r="1" pad-x="1" pad-y="1" stride="1,1,2,2" stride-x="2" stride-y="2"/>
+			<data dilations="1,1" group="64" kernel="3,3" output="64" pads_begin="1,1" pads_end="1,1" strides="2,2"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -180,7 +180,7 @@
 			</output>
 		</layer>
 		<layer id="9" name="conv2" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="128" pad-b="0" pad-r="0" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="128" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -222,7 +222,7 @@
 			</output>
 		</layer>
 		<layer id="11" name="conv3/dw" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="128" kernel-x="3" kernel-y="3" output="128" pad-b="1" pad-r="1" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="128" kernel="3,3" output="128" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -264,7 +264,7 @@
 			</output>
 		</layer>
 		<layer id="13" name="conv3" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="128" pad-b="0" pad-r="0" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="128" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -306,7 +306,7 @@
 			</output>
 		</layer>
 		<layer id="15" name="conv4/dw" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="128" kernel-x="3" kernel-y="3" output="128" pad-b="1" pad-r="1" pad-x="1" pad-y="1" stride="1,1,2,2" stride-x="2" stride-y="2"/>
+			<data dilations="1,1" group="128" kernel="3,3" output="128" pads_begin="1,1" pads_end="1,1" strides="2,2"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -348,7 +348,7 @@
 			</output>
 		</layer>
 		<layer id="17" name="conv4" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="256" pad-b="0" pad-r="0" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="256" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -390,7 +390,7 @@
 			</output>
 		</layer>
 		<layer id="19" name="conv5/dw" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="256" kernel-x="3" kernel-y="3" output="256" pad-b="1" pad-r="1" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="256" kernel="3,3" output="256" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -432,7 +432,7 @@
 			</output>
 		</layer>
 		<layer id="21" name="conv5" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="256" pad-b="0" pad-r="0" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="256" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -474,7 +474,7 @@
 			</output>
 		</layer>
 		<layer id="23" name="conv6/dw" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="256" kernel-x="3" kernel-y="3" output="256" pad-b="1" pad-r="1" pad-x="1" pad-y="1" stride="1,1,2,2" stride-x="2" stride-y="2"/>
+			<data dilations="1,1" group="256" kernel="3,3" output="256" pads_begin="1,1" pads_end="1,1" strides="2,2"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -516,7 +516,7 @@
 			</output>
 		</layer>
 		<layer id="25" name="conv6" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="512" pad-b="0" pad-r="0" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="512" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -558,7 +558,7 @@
 			</output>
 		</layer>
 		<layer id="27" name="conv7/dw" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="512" kernel-x="3" kernel-y="3" output="512" pad-b="1" pad-r="1" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="512" kernel="3,3" output="512" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -600,7 +600,7 @@
 			</output>
 		</layer>
 		<layer id="29" name="conv7" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="512" pad-b="0" pad-r="0" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="512" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -642,7 +642,7 @@
 			</output>
 		</layer>
 		<layer id="31" name="conv8/dw" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="512" kernel-x="3" kernel-y="3" output="512" pad-b="1" pad-r="1" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="512" kernel="3,3" output="512" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -684,7 +684,7 @@
 			</output>
 		</layer>
 		<layer id="33" name="conv8" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="512" pad-b="0" pad-r="0" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="512" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -726,7 +726,7 @@
 			</output>
 		</layer>
 		<layer id="35" name="conv9/dw" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="512" kernel-x="3" kernel-y="3" output="512" pad-b="1" pad-r="1" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="512" kernel="3,3" output="512" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -768,7 +768,7 @@
 			</output>
 		</layer>
 		<layer id="37" name="conv9" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="512" pad-b="0" pad-r="0" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="512" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -810,7 +810,7 @@
 			</output>
 		</layer>
 		<layer id="39" name="conv10/dw" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="512" kernel-x="3" kernel-y="3" output="512" pad-b="1" pad-r="1" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="512" kernel="3,3" output="512" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -852,7 +852,7 @@
 			</output>
 		</layer>
 		<layer id="41" name="conv10" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="512" pad-b="0" pad-r="0" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="512" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -894,7 +894,7 @@
 			</output>
 		</layer>
 		<layer id="43" name="conv11/dw" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="512" kernel-x="3" kernel-y="3" output="512" pad-b="1" pad-r="1" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="512" kernel="3,3" output="512" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -936,7 +936,7 @@
 			</output>
 		</layer>
 		<layer id="45" name="conv11" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="512" pad-b="0" pad-r="0" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="512" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -978,7 +978,7 @@
 			</output>
 		</layer>
 		<layer id="47" name="conv11_mbox_loc" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="12" pad-b="0" pad-r="0" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="12" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1020,7 +1020,7 @@
 			</output>
 		</layer>
 		<layer id="49" name="conv11_mbox_loc_flat" precision="FP16" type="Flatten">
-			<data axis="1"/>
+			<data axis="1" end_axis="-1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1037,7 +1037,7 @@
 			</output>
 		</layer>
 		<layer id="50" name="conv12/dw" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="512" kernel-x="3" kernel-y="3" output="512" pad-b="1" pad-r="1" pad-x="1" pad-y="1" stride="1,1,2,2" stride-x="2" stride-y="2"/>
+			<data dilations="1,1" group="512" kernel="3,3" output="512" pads_begin="1,1" pads_end="1,1" strides="2,2"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1079,7 +1079,7 @@
 			</output>
 		</layer>
 		<layer id="52" name="conv12" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="1024" pad-b="0" pad-r="0" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="1024" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1121,7 +1121,7 @@
 			</output>
 		</layer>
 		<layer id="54" name="conv13/dw" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1024" kernel-x="3" kernel-y="3" output="1024" pad-b="1" pad-r="1" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1024" kernel="3,3" output="1024" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1163,7 +1163,7 @@
 			</output>
 		</layer>
 		<layer id="56" name="conv13" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="1024" pad-b="0" pad-r="0" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="1024" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1205,7 +1205,7 @@
 			</output>
 		</layer>
 		<layer id="58" name="conv13_mbox_loc" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="24" pad-b="0" pad-r="0" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="24" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1247,7 +1247,7 @@
 			</output>
 		</layer>
 		<layer id="60" name="conv13_mbox_loc_flat" precision="FP16" type="Flatten">
-			<data axis="1"/>
+			<data axis="1" end_axis="-1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1264,7 +1264,7 @@
 			</output>
 		</layer>
 		<layer id="61" name="conv14_1" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="256" pad-b="0" pad-r="0" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="256" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1306,7 +1306,7 @@
 			</output>
 		</layer>
 		<layer id="63" name="conv14_2" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="3" kernel-y="3" output="512" pad-b="1" pad-r="1" pad-x="1" pad-y="1" stride="1,1,2,2" stride-x="2" stride-y="2"/>
+			<data dilations="1,1" group="1" kernel="3,3" output="512" pads_begin="1,1" pads_end="1,1" strides="2,2"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1348,7 +1348,7 @@
 			</output>
 		</layer>
 		<layer id="65" name="conv14_2_mbox_loc" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="24" pad-b="0" pad-r="0" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="24" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1390,7 +1390,7 @@
 			</output>
 		</layer>
 		<layer id="67" name="conv14_2_mbox_loc_flat" precision="FP16" type="Flatten">
-			<data axis="1"/>
+			<data axis="1" end_axis="-1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1407,7 +1407,7 @@
 			</output>
 		</layer>
 		<layer id="68" name="conv15_1" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="128" pad-b="0" pad-r="0" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="128" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1449,7 +1449,7 @@
 			</output>
 		</layer>
 		<layer id="70" name="conv15_2" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="3" kernel-y="3" output="256" pad-b="1" pad-r="1" pad-x="1" pad-y="1" stride="1,1,2,2" stride-x="2" stride-y="2"/>
+			<data dilations="1,1" group="1" kernel="3,3" output="256" pads_begin="1,1" pads_end="1,1" strides="2,2"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1491,7 +1491,7 @@
 			</output>
 		</layer>
 		<layer id="72" name="conv15_2_mbox_loc" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="24" pad-b="0" pad-r="0" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="24" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1533,7 +1533,7 @@
 			</output>
 		</layer>
 		<layer id="74" name="conv15_2_mbox_loc_flat" precision="FP16" type="Flatten">
-			<data axis="1"/>
+			<data axis="1" end_axis="-1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1550,7 +1550,7 @@
 			</output>
 		</layer>
 		<layer id="75" name="conv16_1" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="128" pad-b="0" pad-r="0" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="128" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1592,7 +1592,7 @@
 			</output>
 		</layer>
 		<layer id="77" name="conv16_2" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="3" kernel-y="3" output="256" pad-b="1" pad-r="1" pad-x="1" pad-y="1" stride="1,1,2,2" stride-x="2" stride-y="2"/>
+			<data dilations="1,1" group="1" kernel="3,3" output="256" pads_begin="1,1" pads_end="1,1" strides="2,2"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1634,7 +1634,7 @@
 			</output>
 		</layer>
 		<layer id="79" name="conv16_2_mbox_loc" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="24" pad-b="0" pad-r="0" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="24" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1676,7 +1676,7 @@
 			</output>
 		</layer>
 		<layer id="81" name="conv16_2_mbox_loc_flat" precision="FP16" type="Flatten">
-			<data axis="1"/>
+			<data axis="1" end_axis="-1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1693,7 +1693,7 @@
 			</output>
 		</layer>
 		<layer id="82" name="conv17_1" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="64" pad-b="0" pad-r="0" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="64" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1735,7 +1735,7 @@
 			</output>
 		</layer>
 		<layer id="84" name="conv17_2" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="3" kernel-y="3" output="128" pad-b="1" pad-r="1" pad-x="1" pad-y="1" stride="1,1,2,2" stride-x="2" stride-y="2"/>
+			<data dilations="1,1" group="1" kernel="3,3" output="128" pads_begin="1,1" pads_end="1,1" strides="2,2"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1777,7 +1777,7 @@
 			</output>
 		</layer>
 		<layer id="86" name="conv17_2_mbox_loc" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="24" pad-b="0" pad-r="0" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="24" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1819,7 +1819,7 @@
 			</output>
 		</layer>
 		<layer id="88" name="conv17_2_mbox_loc_flat" precision="FP16" type="Flatten">
-			<data axis="1"/>
+			<data axis="1" end_axis="-1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1871,7 +1871,7 @@
 			</output>
 		</layer>
 		<layer id="90" name="conv11_mbox_conf" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="63" pad-b="0" pad-r="0" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="63" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1913,7 +1913,7 @@
 			</output>
 		</layer>
 		<layer id="92" name="conv11_mbox_conf_flat" precision="FP16" type="Flatten">
-			<data axis="1"/>
+			<data axis="1" end_axis="-1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1930,7 +1930,7 @@
 			</output>
 		</layer>
 		<layer id="93" name="conv13_mbox_conf" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="126" pad-b="0" pad-r="0" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="126" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1972,7 +1972,7 @@
 			</output>
 		</layer>
 		<layer id="95" name="conv13_mbox_conf_flat" precision="FP16" type="Flatten">
-			<data axis="1"/>
+			<data axis="1" end_axis="-1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1989,7 +1989,7 @@
 			</output>
 		</layer>
 		<layer id="96" name="conv14_2_mbox_conf" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="126" pad-b="0" pad-r="0" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="126" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2031,7 +2031,7 @@
 			</output>
 		</layer>
 		<layer id="98" name="conv14_2_mbox_conf_flat" precision="FP16" type="Flatten">
-			<data axis="1"/>
+			<data axis="1" end_axis="-1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2048,7 +2048,7 @@
 			</output>
 		</layer>
 		<layer id="99" name="conv15_2_mbox_conf" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="126" pad-b="0" pad-r="0" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="126" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2090,7 +2090,7 @@
 			</output>
 		</layer>
 		<layer id="101" name="conv15_2_mbox_conf_flat" precision="FP16" type="Flatten">
-			<data axis="1"/>
+			<data axis="1" end_axis="-1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2107,7 +2107,7 @@
 			</output>
 		</layer>
 		<layer id="102" name="conv16_2_mbox_conf" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="126" pad-b="0" pad-r="0" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="126" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2149,7 +2149,7 @@
 			</output>
 		</layer>
 		<layer id="104" name="conv16_2_mbox_conf_flat" precision="FP16" type="Flatten">
-			<data axis="1"/>
+			<data axis="1" end_axis="-1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2166,7 +2166,7 @@
 			</output>
 		</layer>
 		<layer id="105" name="conv17_2_mbox_conf" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="126" pad-b="0" pad-r="0" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="126" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2208,7 +2208,7 @@
 			</output>
 		</layer>
 		<layer id="107" name="conv17_2_mbox_conf_flat" precision="FP16" type="Flatten">
-			<data axis="1"/>
+			<data axis="1" end_axis="-1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2293,7 +2293,7 @@
 			</output>
 		</layer>
 		<layer id="111" name="mbox_conf_flatten" precision="FP16" type="Flatten">
-			<data axis="1"/>
+			<data axis="1" end_axis="-1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2495,7 +2495,7 @@
 			</output>
 		</layer>
 		<layer id="119" name="detection_out" precision="FP16" type="DetectionOutput">
-			<data background_label_id="0" code_type="caffe.PriorBoxParameter.CENTER_SIZE" confidence_threshold="0.10000000149011612" eta="1.0" input_height="-1" input_width="-1" keep_top_k="100" nms_threshold="0.44999998807907104" normalized="1" num_classes="21" share_location="1" top_k="100" variance_encoded_in_target="0" visualize="False"/>
+			<data background_label_id="0" code_type="caffe.PriorBoxParameter.CENTER_SIZE" confidence_threshold="0.10000000149011612" eta="1.0" input_height="1" input_width="1" keep_top_k="100" nms_threshold="0.44999998807907104" normalized="1" num_classes="21" share_location="1" top_k="100" variance_encoded_in_target="0" visualize="False"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2665,4 +2665,37 @@
 		<edge from-layer="111" from-port="1" to-layer="119" to-port="1"/>
 		<edge from-layer="118" from-port="6" to-layer="119" to-port="2"/>
 	</edges>
+	<meta_data>
+		<MO_version value="1.5.12.49d067a0"/>
+		<cli_parameters>
+			<data_type value="FP16"/>
+			<disable_fusing value="False"/>
+			<disable_gfusing value="False"/>
+			<disable_nhwc_to_nchw value="False"/>
+			<disable_omitting_optional value="False"/>
+			<disable_resnet_optimization value="False"/>
+			<enable_flattening_nested_params value="False"/>
+			<extensions value="DIR"/>
+			<framework value="caffe"/>
+			<generate_deprecated_IR_V2 value="False"/>
+			<input_model value="DIR/deploy.caffemodel"/>
+			<input_model_is_text value="False"/>
+			<input_proto value="DIR/deploy.prototxt"/>
+			<k value="DIR/CustomLayersMapping.xml"/>
+			<legacy_mxnet_model value="False"/>
+			<log_level value="ERROR"/>
+			<mean_values value="()"/>
+			<model_name value="MobileNetSSD"/>
+			<move_to_preprocess value="False"/>
+			<offload_unsupported_operations_to_tf value="False"/>
+			<output_dir value="DIR"/>
+			<remove_output_softmax value="False"/>
+			<reverse_input_channels value="False"/>
+			<save_params_from_nd value="False"/>
+			<scale_values value="()"/>
+			<silent value="False"/>
+			<version value="False"/>
+			<unset unset_cli_parameters="batch, counts, finegrain_fusing, freeze_placeholder_with_value, input, input_checkpoint, input_meta_graph, input_shape, input_symbol, mean_file, mean_file_offsets, nd_prefix_name, output, pretrained_model_name, saved_model_dir, saved_model_tags, scale, tensorboard_logdir, tensorflow_custom_layer_libraries, tensorflow_custom_operations_config_update, tensorflow_object_detection_api_pipeline_config, tensorflow_operation_patterns, tensorflow_subgraph_patterns, tensorflow_use_custom_operations_config"/>
+		</cli_parameters>
+	</meta_data>
 </net>

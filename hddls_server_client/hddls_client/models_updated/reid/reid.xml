@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-<net batch="1" name="ICV-RMNet-PD-ReID-Middle" version="2">
+<net batch="1" name="ICV-RMNet-PD-ReID-Middle" version="3">
 	<layers>
 		<layer id="0" name="data" precision="FP16" type="Input">
 			<output>
@@ -11,7 +11,7 @@
 				</port>
 			</output>
 		</layer>
-		<layer id="1" name="Mul_1829/Fused_Mul_/FusedScaleShift_" precision="FP16" type="ScaleShift">
+		<layer id="1" name="Mul_1576/Fused_Mul_/FusedScaleShift_" precision="FP16" type="ScaleShift">
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -34,7 +34,7 @@
 			</blobs>
 		</layer>
 		<layer id="2" name="init_block1/dim_inc/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="3" kernel-y="3" output="32" pad-x="1" pad-y="1" stride="1,1,2,2" stride-x="2" stride-y="2"/>
+			<data dilations="1,1" group="1" kernel="3,3" output="32" pads_begin="1,1" pads_end="1,1" strides="2,2"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -76,7 +76,7 @@
 			</output>
 		</layer>
 		<layer id="4" name="bottleneck1_1/dim_red/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="8" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="8" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -99,7 +99,7 @@
 			</blobs>
 		</layer>
 		<layer id="5" name="bottleneck1_1/dim_red/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -118,7 +118,7 @@
 			</output>
 		</layer>
 		<layer id="6" name="bottleneck1_1/inner/dw1/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="8" kernel-x="3" kernel-y="3" output="8" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="8" kernel="3,3" output="8" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -141,7 +141,7 @@
 			</blobs>
 		</layer>
 		<layer id="7" name="bottleneck1_1/inner/dw1/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -160,7 +160,7 @@
 			</output>
 		</layer>
 		<layer id="8" name="bottleneck1_1/dim_inc/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="32" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="32" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -208,7 +208,7 @@
 			</output>
 		</layer>
 		<layer id="10" name="bottleneck1_1/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -227,7 +227,7 @@
 			</output>
 		</layer>
 		<layer id="11" name="bottleneck1_2/dim_red/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="8" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="8" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -250,7 +250,7 @@
 			</blobs>
 		</layer>
 		<layer id="12" name="bottleneck1_2/dim_red/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -269,7 +269,7 @@
 			</output>
 		</layer>
 		<layer id="13" name="bottleneck1_2/inner/dw1/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="8" kernel-x="3" kernel-y="3" output="8" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="8" kernel="3,3" output="8" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -292,7 +292,7 @@
 			</blobs>
 		</layer>
 		<layer id="14" name="bottleneck1_2/inner/dw1/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -311,7 +311,7 @@
 			</output>
 		</layer>
 		<layer id="15" name="bottleneck1_2/dim_inc/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="32" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="32" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -359,7 +359,7 @@
 			</output>
 		</layer>
 		<layer id="17" name="bottleneck1_2/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -378,7 +378,7 @@
 			</output>
 		</layer>
 		<layer id="18" name="bottleneck1_3/dim_red/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="8" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="8" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -401,7 +401,7 @@
 			</blobs>
 		</layer>
 		<layer id="19" name="bottleneck1_3/dim_red/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -420,7 +420,7 @@
 			</output>
 		</layer>
 		<layer id="20" name="bottleneck1_3/inner/dw1/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="8" kernel-x="3" kernel-y="3" output="8" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="8" kernel="3,3" output="8" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -443,7 +443,7 @@
 			</blobs>
 		</layer>
 		<layer id="21" name="bottleneck1_3/inner/dw1/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -462,7 +462,7 @@
 			</output>
 		</layer>
 		<layer id="22" name="bottleneck1_3/dim_inc/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="32" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="32" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -510,7 +510,7 @@
 			</output>
 		</layer>
 		<layer id="24" name="bottleneck1_3/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -529,7 +529,7 @@
 			</output>
 		</layer>
 		<layer id="25" name="bottleneck1_4/dim_red/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="8" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="8" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -552,7 +552,7 @@
 			</blobs>
 		</layer>
 		<layer id="26" name="bottleneck1_4/dim_red/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -571,7 +571,7 @@
 			</output>
 		</layer>
 		<layer id="27" name="bottleneck1_4/inner/dw1/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="8" kernel-x="3" kernel-y="3" output="8" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="8" kernel="3,3" output="8" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -594,7 +594,7 @@
 			</blobs>
 		</layer>
 		<layer id="28" name="bottleneck1_4/inner/dw1/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -613,7 +613,7 @@
 			</output>
 		</layer>
 		<layer id="29" name="bottleneck1_4/dim_inc/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="32" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="32" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -661,7 +661,7 @@
 			</output>
 		</layer>
 		<layer id="31" name="bottleneck1_4/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -680,7 +680,7 @@
 			</output>
 		</layer>
 		<layer id="32" name="bottleneck2_0/skip/pooling" precision="FP16" type="Pooling">
-			<data exclude-pad="false" kernel-x="2" kernel-y="2" pad-x="0" pad-y="0" pool-method="max" rounding_type="ceil" stride="1,1,2,2" stride-x="2" stride-y="2"/>
+			<data exclude-pad="false" kernel="2,2" pads_begin="0,0" pads_end="0,0" pool-method="max" rounding_type="ceil" strides="2,2"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -699,7 +699,7 @@
 			</output>
 		</layer>
 		<layer id="33" name="bottleneck2_0/skip/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="64" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="64" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -722,7 +722,7 @@
 			</blobs>
 		</layer>
 		<layer id="34" name="bottleneck2_0/dim_red/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="16" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="16" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -745,7 +745,7 @@
 			</blobs>
 		</layer>
 		<layer id="35" name="bottleneck2_0/dim_red/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -764,7 +764,7 @@
 			</output>
 		</layer>
 		<layer id="36" name="bottleneck2_0/inner/dw1/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="16" kernel-x="3" kernel-y="3" output="16" pad-x="1" pad-y="1" stride="1,1,2,2" stride-x="2" stride-y="2"/>
+			<data dilations="1,1" group="16" kernel="3,3" output="16" pads_begin="1,1" pads_end="1,1" strides="2,2"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -787,7 +787,7 @@
 			</blobs>
 		</layer>
 		<layer id="37" name="bottleneck2_0/inner/dw1/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -806,7 +806,7 @@
 			</output>
 		</layer>
 		<layer id="38" name="bottleneck2_0/dim_inc/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="64" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="64" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -854,7 +854,7 @@
 			</output>
 		</layer>
 		<layer id="40" name="bottleneck2_0/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -873,7 +873,7 @@
 			</output>
 		</layer>
 		<layer id="41" name="bottleneck2_1/dim_red/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="16" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="16" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -896,7 +896,7 @@
 			</blobs>
 		</layer>
 		<layer id="42" name="bottleneck2_1/dim_red/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -915,7 +915,7 @@
 			</output>
 		</layer>
 		<layer id="43" name="bottleneck2_1/inner/dw1/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="16" kernel-x="3" kernel-y="3" output="16" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="16" kernel="3,3" output="16" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -938,7 +938,7 @@
 			</blobs>
 		</layer>
 		<layer id="44" name="bottleneck2_1/inner/dw1/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -957,7 +957,7 @@
 			</output>
 		</layer>
 		<layer id="45" name="bottleneck2_1/dim_inc/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="64" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="64" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1005,7 +1005,7 @@
 			</output>
 		</layer>
 		<layer id="47" name="bottleneck2_1/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1024,7 +1024,7 @@
 			</output>
 		</layer>
 		<layer id="48" name="bottleneck2_2/dim_red/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="16" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="16" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1047,7 +1047,7 @@
 			</blobs>
 		</layer>
 		<layer id="49" name="bottleneck2_2/dim_red/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1066,7 +1066,7 @@
 			</output>
 		</layer>
 		<layer id="50" name="bottleneck2_2/inner/dw1/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="16" kernel-x="3" kernel-y="3" output="16" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="16" kernel="3,3" output="16" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1089,7 +1089,7 @@
 			</blobs>
 		</layer>
 		<layer id="51" name="bottleneck2_2/inner/dw1/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1108,7 +1108,7 @@
 			</output>
 		</layer>
 		<layer id="52" name="bottleneck2_2/dim_inc/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="64" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="64" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1156,7 +1156,7 @@
 			</output>
 		</layer>
 		<layer id="54" name="bottleneck2_2/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1175,7 +1175,7 @@
 			</output>
 		</layer>
 		<layer id="55" name="bottleneck2_3/dim_red/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="16" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="16" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1198,7 +1198,7 @@
 			</blobs>
 		</layer>
 		<layer id="56" name="bottleneck2_3/dim_red/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1217,7 +1217,7 @@
 			</output>
 		</layer>
 		<layer id="57" name="bottleneck2_3/inner/dw1/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="16" kernel-x="3" kernel-y="3" output="16" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="16" kernel="3,3" output="16" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1240,7 +1240,7 @@
 			</blobs>
 		</layer>
 		<layer id="58" name="bottleneck2_3/inner/dw1/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1259,7 +1259,7 @@
 			</output>
 		</layer>
 		<layer id="59" name="bottleneck2_3/dim_inc/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="64" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="64" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1307,7 +1307,7 @@
 			</output>
 		</layer>
 		<layer id="61" name="bottleneck2_3/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1326,7 +1326,7 @@
 			</output>
 		</layer>
 		<layer id="62" name="bottleneck2_4/dim_red/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="16" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="16" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1349,7 +1349,7 @@
 			</blobs>
 		</layer>
 		<layer id="63" name="bottleneck2_4/dim_red/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1368,7 +1368,7 @@
 			</output>
 		</layer>
 		<layer id="64" name="bottleneck2_4/inner/dw1/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="16" kernel-x="3" kernel-y="3" output="16" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="16" kernel="3,3" output="16" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1391,7 +1391,7 @@
 			</blobs>
 		</layer>
 		<layer id="65" name="bottleneck2_4/inner/dw1/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1410,7 +1410,7 @@
 			</output>
 		</layer>
 		<layer id="66" name="bottleneck2_4/dim_inc/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="64" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="64" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1458,7 +1458,7 @@
 			</output>
 		</layer>
 		<layer id="68" name="bottleneck2_4/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1477,7 +1477,7 @@
 			</output>
 		</layer>
 		<layer id="69" name="bottleneck2_5/dim_red/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="16" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="16" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1500,7 +1500,7 @@
 			</blobs>
 		</layer>
 		<layer id="70" name="bottleneck2_5/dim_red/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1519,7 +1519,7 @@
 			</output>
 		</layer>
 		<layer id="71" name="bottleneck2_5/inner/dw1/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="16" kernel-x="3" kernel-y="3" output="16" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="16" kernel="3,3" output="16" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1542,7 +1542,7 @@
 			</blobs>
 		</layer>
 		<layer id="72" name="bottleneck2_5/inner/dw1/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1561,7 +1561,7 @@
 			</output>
 		</layer>
 		<layer id="73" name="bottleneck2_5/dim_inc/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="64" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="64" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1609,7 +1609,7 @@
 			</output>
 		</layer>
 		<layer id="75" name="bottleneck2_5/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1628,7 +1628,7 @@
 			</output>
 		</layer>
 		<layer id="76" name="bottleneck2_6/dim_red/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="16" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="16" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1651,7 +1651,7 @@
 			</blobs>
 		</layer>
 		<layer id="77" name="bottleneck2_6/dim_red/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1670,7 +1670,7 @@
 			</output>
 		</layer>
 		<layer id="78" name="bottleneck2_6/inner/dw1/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="16" kernel-x="3" kernel-y="3" output="16" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="16" kernel="3,3" output="16" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1693,7 +1693,7 @@
 			</blobs>
 		</layer>
 		<layer id="79" name="bottleneck2_6/inner/dw1/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1712,7 +1712,7 @@
 			</output>
 		</layer>
 		<layer id="80" name="bottleneck2_6/dim_inc/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="64" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="64" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1760,7 +1760,7 @@
 			</output>
 		</layer>
 		<layer id="82" name="bottleneck2_6/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1779,7 +1779,7 @@
 			</output>
 		</layer>
 		<layer id="83" name="bottleneck2_7/dim_red/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="16" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="16" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1802,7 +1802,7 @@
 			</blobs>
 		</layer>
 		<layer id="84" name="bottleneck2_7/dim_red/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1821,7 +1821,7 @@
 			</output>
 		</layer>
 		<layer id="85" name="bottleneck2_7/inner/dw1/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="16" kernel-x="3" kernel-y="3" output="16" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="16" kernel="3,3" output="16" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1844,7 +1844,7 @@
 			</blobs>
 		</layer>
 		<layer id="86" name="bottleneck2_7/inner/dw1/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1863,7 +1863,7 @@
 			</output>
 		</layer>
 		<layer id="87" name="bottleneck2_7/dim_inc/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="64" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="64" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1911,7 +1911,7 @@
 			</output>
 		</layer>
 		<layer id="89" name="bottleneck2_7/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1930,7 +1930,7 @@
 			</output>
 		</layer>
 		<layer id="90" name="bottleneck2_8/dim_red/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="16" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="16" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1953,7 +1953,7 @@
 			</blobs>
 		</layer>
 		<layer id="91" name="bottleneck2_8/dim_red/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1972,7 +1972,7 @@
 			</output>
 		</layer>
 		<layer id="92" name="bottleneck2_8/inner/dw1/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="16" kernel-x="3" kernel-y="3" output="16" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="16" kernel="3,3" output="16" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1995,7 +1995,7 @@
 			</blobs>
 		</layer>
 		<layer id="93" name="bottleneck2_8/inner/dw1/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2014,7 +2014,7 @@
 			</output>
 		</layer>
 		<layer id="94" name="bottleneck2_8/dim_inc/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="64" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="64" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2062,7 +2062,7 @@
 			</output>
 		</layer>
 		<layer id="96" name="bottleneck2_8/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2081,7 +2081,7 @@
 			</output>
 		</layer>
 		<layer id="97" name="bottleneck3_0/skip/pooling" precision="FP16" type="Pooling">
-			<data exclude-pad="false" kernel-x="2" kernel-y="2" pad-x="0" pad-y="0" pool-method="max" rounding_type="ceil" stride="1,1,2,2" stride-x="2" stride-y="2"/>
+			<data exclude-pad="false" kernel="2,2" pads_begin="0,0" pads_end="0,0" pool-method="max" rounding_type="ceil" strides="2,2"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2100,7 +2100,7 @@
 			</output>
 		</layer>
 		<layer id="98" name="bottleneck3_0/skip/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="128" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="128" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2123,7 +2123,7 @@
 			</blobs>
 		</layer>
 		<layer id="99" name="bottleneck3_0/dim_red/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="32" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="32" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2146,7 +2146,7 @@
 			</blobs>
 		</layer>
 		<layer id="100" name="bottleneck3_0/dim_red/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2165,7 +2165,7 @@
 			</output>
 		</layer>
 		<layer id="101" name="bottleneck3_0/inner/dw1/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="32" kernel-x="3" kernel-y="3" output="32" pad-x="1" pad-y="1" stride="1,1,2,2" stride-x="2" stride-y="2"/>
+			<data dilations="1,1" group="32" kernel="3,3" output="32" pads_begin="1,1" pads_end="1,1" strides="2,2"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2188,7 +2188,7 @@
 			</blobs>
 		</layer>
 		<layer id="102" name="bottleneck3_0/inner/dw1/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2207,7 +2207,7 @@
 			</output>
 		</layer>
 		<layer id="103" name="bottleneck3_0/dim_inc/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="128" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="128" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2255,7 +2255,7 @@
 			</output>
 		</layer>
 		<layer id="105" name="bottleneck3_0/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2274,7 +2274,7 @@
 			</output>
 		</layer>
 		<layer id="106" name="bottleneck3_1/dim_red/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="32" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="32" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2297,7 +2297,7 @@
 			</blobs>
 		</layer>
 		<layer id="107" name="bottleneck3_1/dim_red/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2316,7 +2316,7 @@
 			</output>
 		</layer>
 		<layer id="108" name="bottleneck3_1/inner/dw1/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="32" kernel-x="3" kernel-y="3" output="32" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="32" kernel="3,3" output="32" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2339,7 +2339,7 @@
 			</blobs>
 		</layer>
 		<layer id="109" name="bottleneck3_1/inner/dw1/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2358,7 +2358,7 @@
 			</output>
 		</layer>
 		<layer id="110" name="bottleneck3_1/dim_inc/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="128" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="128" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2406,7 +2406,7 @@
 			</output>
 		</layer>
 		<layer id="112" name="bottleneck3_1/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2425,7 +2425,7 @@
 			</output>
 		</layer>
 		<layer id="113" name="bottleneck3_2/dim_red/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="32" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="32" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2448,7 +2448,7 @@
 			</blobs>
 		</layer>
 		<layer id="114" name="bottleneck3_2/dim_red/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2467,7 +2467,7 @@
 			</output>
 		</layer>
 		<layer id="115" name="bottleneck3_2/inner/dw1/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="32" kernel-x="3" kernel-y="3" output="32" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="32" kernel="3,3" output="32" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2490,7 +2490,7 @@
 			</blobs>
 		</layer>
 		<layer id="116" name="bottleneck3_2/inner/dw1/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2509,7 +2509,7 @@
 			</output>
 		</layer>
 		<layer id="117" name="bottleneck3_2/dim_inc/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="128" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="128" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2557,7 +2557,7 @@
 			</output>
 		</layer>
 		<layer id="119" name="bottleneck3_2/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2576,7 +2576,7 @@
 			</output>
 		</layer>
 		<layer id="120" name="bottleneck3_3/dim_red/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="32" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="32" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2599,7 +2599,7 @@
 			</blobs>
 		</layer>
 		<layer id="121" name="bottleneck3_3/dim_red/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2618,7 +2618,7 @@
 			</output>
 		</layer>
 		<layer id="122" name="bottleneck3_3/inner/dw1/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="32" kernel-x="3" kernel-y="3" output="32" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="32" kernel="3,3" output="32" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2641,7 +2641,7 @@
 			</blobs>
 		</layer>
 		<layer id="123" name="bottleneck3_3/inner/dw1/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2660,7 +2660,7 @@
 			</output>
 		</layer>
 		<layer id="124" name="bottleneck3_3/dim_inc/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="128" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="128" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2708,7 +2708,7 @@
 			</output>
 		</layer>
 		<layer id="126" name="bottleneck3_3/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2727,7 +2727,7 @@
 			</output>
 		</layer>
 		<layer id="127" name="bottleneck3_4/dim_red/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="32" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="32" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2750,7 +2750,7 @@
 			</blobs>
 		</layer>
 		<layer id="128" name="bottleneck3_4/dim_red/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2769,7 +2769,7 @@
 			</output>
 		</layer>
 		<layer id="129" name="bottleneck3_4/inner/dw1/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="32" kernel-x="3" kernel-y="3" output="32" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="32" kernel="3,3" output="32" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2792,7 +2792,7 @@
 			</blobs>
 		</layer>
 		<layer id="130" name="bottleneck3_4/inner/dw1/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2811,7 +2811,7 @@
 			</output>
 		</layer>
 		<layer id="131" name="bottleneck3_4/dim_inc/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="128" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="128" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2859,7 +2859,7 @@
 			</output>
 		</layer>
 		<layer id="133" name="bottleneck3_4/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2878,7 +2878,7 @@
 			</output>
 		</layer>
 		<layer id="134" name="bottleneck3_5/dim_red/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="32" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="32" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2901,7 +2901,7 @@
 			</blobs>
 		</layer>
 		<layer id="135" name="bottleneck3_5/dim_red/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2920,7 +2920,7 @@
 			</output>
 		</layer>
 		<layer id="136" name="bottleneck3_5/inner/dw1/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="32" kernel-x="3" kernel-y="3" output="32" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="32" kernel="3,3" output="32" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2943,7 +2943,7 @@
 			</blobs>
 		</layer>
 		<layer id="137" name="bottleneck3_5/inner/dw1/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2962,7 +2962,7 @@
 			</output>
 		</layer>
 		<layer id="138" name="bottleneck3_5/dim_inc/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="128" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="128" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -3010,7 +3010,7 @@
 			</output>
 		</layer>
 		<layer id="140" name="bottleneck3_5/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -3029,7 +3029,7 @@
 			</output>
 		</layer>
 		<layer id="141" name="bottleneck3_6/dim_red/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="32" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="32" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -3052,7 +3052,7 @@
 			</blobs>
 		</layer>
 		<layer id="142" name="bottleneck3_6/dim_red/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -3071,7 +3071,7 @@
 			</output>
 		</layer>
 		<layer id="143" name="bottleneck3_6/inner/dw1/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="32" kernel-x="3" kernel-y="3" output="32" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="32" kernel="3,3" output="32" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -3094,7 +3094,7 @@
 			</blobs>
 		</layer>
 		<layer id="144" name="bottleneck3_6/inner/dw1/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -3113,7 +3113,7 @@
 			</output>
 		</layer>
 		<layer id="145" name="bottleneck3_6/dim_inc/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="128" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="128" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -3161,7 +3161,7 @@
 			</output>
 		</layer>
 		<layer id="147" name="bottleneck3_6/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -3180,7 +3180,7 @@
 			</output>
 		</layer>
 		<layer id="148" name="bottleneck3_7/dim_red/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="32" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="32" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -3203,7 +3203,7 @@
 			</blobs>
 		</layer>
 		<layer id="149" name="bottleneck3_7/dim_red/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -3222,7 +3222,7 @@
 			</output>
 		</layer>
 		<layer id="150" name="bottleneck3_7/inner/dw1/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="32" kernel-x="3" kernel-y="3" output="32" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="32" kernel="3,3" output="32" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -3245,7 +3245,7 @@
 			</blobs>
 		</layer>
 		<layer id="151" name="bottleneck3_7/inner/dw1/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -3264,7 +3264,7 @@
 			</output>
 		</layer>
 		<layer id="152" name="bottleneck3_7/dim_inc/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="128" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="128" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -3312,7 +3312,7 @@
 			</output>
 		</layer>
 		<layer id="154" name="bottleneck3_7/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -3331,7 +3331,7 @@
 			</output>
 		</layer>
 		<layer id="155" name="bottleneck3_8/dim_red/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="32" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="32" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -3354,7 +3354,7 @@
 			</blobs>
 		</layer>
 		<layer id="156" name="bottleneck3_8/dim_red/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -3373,7 +3373,7 @@
 			</output>
 		</layer>
 		<layer id="157" name="bottleneck3_8/inner/dw1/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="32" kernel-x="3" kernel-y="3" output="32" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="32" kernel="3,3" output="32" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -3396,7 +3396,7 @@
 			</blobs>
 		</layer>
 		<layer id="158" name="bottleneck3_8/inner/dw1/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -3415,7 +3415,7 @@
 			</output>
 		</layer>
 		<layer id="159" name="bottleneck3_8/dim_inc/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="128" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="128" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -3463,7 +3463,7 @@
 			</output>
 		</layer>
 		<layer id="161" name="bottleneck3_8/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -3482,7 +3482,7 @@
 			</output>
 		</layer>
 		<layer id="162" name="bottleneck3_9/dim_red/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="32" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="32" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -3505,7 +3505,7 @@
 			</blobs>
 		</layer>
 		<layer id="163" name="bottleneck3_9/dim_red/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -3524,7 +3524,7 @@
 			</output>
 		</layer>
 		<layer id="164" name="bottleneck3_9/inner/dw1/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="32" kernel-x="3" kernel-y="3" output="32" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="32" kernel="3,3" output="32" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -3547,7 +3547,7 @@
 			</blobs>
 		</layer>
 		<layer id="165" name="bottleneck3_9/inner/dw1/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -3566,7 +3566,7 @@
 			</output>
 		</layer>
 		<layer id="166" name="bottleneck3_9/dim_inc/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="128" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="128" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -3614,7 +3614,7 @@
 			</output>
 		</layer>
 		<layer id="168" name="bottleneck3_9/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -3633,7 +3633,7 @@
 			</output>
 		</layer>
 		<layer id="169" name="bottleneck3_10/dim_red/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="32" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="32" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -3656,7 +3656,7 @@
 			</blobs>
 		</layer>
 		<layer id="170" name="bottleneck3_10/dim_red/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -3675,7 +3675,7 @@
 			</output>
 		</layer>
 		<layer id="171" name="bottleneck3_10/inner/dw1/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="32" kernel-x="3" kernel-y="3" output="32" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="32" kernel="3,3" output="32" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -3698,7 +3698,7 @@
 			</blobs>
 		</layer>
 		<layer id="172" name="bottleneck3_10/inner/dw1/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -3717,7 +3717,7 @@
 			</output>
 		</layer>
 		<layer id="173" name="bottleneck3_10/dim_inc/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="128" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="128" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -3765,7 +3765,7 @@
 			</output>
 		</layer>
 		<layer id="175" name="bottleneck3_10/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -3784,7 +3784,7 @@
 			</output>
 		</layer>
 		<layer id="176" name="bottleneck4_0/skip/pooling" precision="FP16" type="Pooling">
-			<data exclude-pad="false" kernel-x="2" kernel-y="2" pad-x="0" pad-y="0" pool-method="max" rounding_type="ceil" stride="1,1,2,2" stride-x="2" stride-y="2"/>
+			<data exclude-pad="false" kernel="2,2" pads_begin="0,0" pads_end="0,0" pool-method="max" rounding_type="ceil" strides="2,2"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -3803,7 +3803,7 @@
 			</output>
 		</layer>
 		<layer id="177" name="bottleneck4_0/skip/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="256" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="256" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -3826,7 +3826,7 @@
 			</blobs>
 		</layer>
 		<layer id="178" name="bottleneck4_0/dim_red/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="64" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="64" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -3849,7 +3849,7 @@
 			</blobs>
 		</layer>
 		<layer id="179" name="bottleneck4_0/dim_red/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -3868,7 +3868,7 @@
 			</output>
 		</layer>
 		<layer id="180" name="bottleneck4_0/inner/dw1/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="64" kernel-x="3" kernel-y="3" output="64" pad-x="1" pad-y="1" stride="1,1,2,2" stride-x="2" stride-y="2"/>
+			<data dilations="1,1" group="64" kernel="3,3" output="64" pads_begin="1,1" pads_end="1,1" strides="2,2"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -3891,7 +3891,7 @@
 			</blobs>
 		</layer>
 		<layer id="181" name="bottleneck4_0/inner/dw1/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -3910,7 +3910,7 @@
 			</output>
 		</layer>
 		<layer id="182" name="bottleneck4_0/dim_inc/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="256" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="256" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -3958,7 +3958,7 @@
 			</output>
 		</layer>
 		<layer id="184" name="bottleneck4_0/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -3977,7 +3977,7 @@
 			</output>
 		</layer>
 		<layer id="185" name="bottleneck4_1/dim_red/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="64" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="64" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -4000,7 +4000,7 @@
 			</blobs>
 		</layer>
 		<layer id="186" name="bottleneck4_1/dim_red/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -4019,7 +4019,7 @@
 			</output>
 		</layer>
 		<layer id="187" name="bottleneck4_1/inner/dw1/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="64" kernel-x="3" kernel-y="3" output="64" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="64" kernel="3,3" output="64" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -4042,7 +4042,7 @@
 			</blobs>
 		</layer>
 		<layer id="188" name="bottleneck4_1/inner/dw1/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -4061,7 +4061,7 @@
 			</output>
 		</layer>
 		<layer id="189" name="bottleneck4_1/dim_inc/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="256" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="256" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -4109,7 +4109,7 @@
 			</output>
 		</layer>
 		<layer id="191" name="bottleneck4_1/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -4128,7 +4128,7 @@
 			</output>
 		</layer>
 		<layer id="192" name="bottleneck4_2/dim_red/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="64" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="64" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -4151,7 +4151,7 @@
 			</blobs>
 		</layer>
 		<layer id="193" name="bottleneck4_2/dim_red/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -4170,7 +4170,7 @@
 			</output>
 		</layer>
 		<layer id="194" name="bottleneck4_2/inner/dw1/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="64" kernel-x="3" kernel-y="3" output="64" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="64" kernel="3,3" output="64" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -4193,7 +4193,7 @@
 			</blobs>
 		</layer>
 		<layer id="195" name="bottleneck4_2/inner/dw1/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -4212,7 +4212,7 @@
 			</output>
 		</layer>
 		<layer id="196" name="bottleneck4_2/dim_inc/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="256" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="256" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -4260,7 +4260,7 @@
 			</output>
 		</layer>
 		<layer id="198" name="bottleneck4_2/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -4279,7 +4279,7 @@
 			</output>
 		</layer>
 		<layer id="199" name="bottleneck4_3/dim_red/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="64" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="64" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -4302,7 +4302,7 @@
 			</blobs>
 		</layer>
 		<layer id="200" name="bottleneck4_3/dim_red/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -4321,7 +4321,7 @@
 			</output>
 		</layer>
 		<layer id="201" name="bottleneck4_3/inner/dw1/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="64" kernel-x="3" kernel-y="3" output="64" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="64" kernel="3,3" output="64" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -4344,7 +4344,7 @@
 			</blobs>
 		</layer>
 		<layer id="202" name="bottleneck4_3/inner/dw1/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -4363,7 +4363,7 @@
 			</output>
 		</layer>
 		<layer id="203" name="bottleneck4_3/dim_inc/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="256" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="256" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -4411,7 +4411,7 @@
 			</output>
 		</layer>
 		<layer id="205" name="bottleneck4_3/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -4430,7 +4430,7 @@
 			</output>
 		</layer>
 		<layer id="206" name="bottleneck4_4/dim_red/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="64" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="64" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -4453,7 +4453,7 @@
 			</blobs>
 		</layer>
 		<layer id="207" name="bottleneck4_4/dim_red/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -4472,7 +4472,7 @@
 			</output>
 		</layer>
 		<layer id="208" name="bottleneck4_4/inner/dw1/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="64" kernel-x="3" kernel-y="3" output="64" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="64" kernel="3,3" output="64" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -4495,7 +4495,7 @@
 			</blobs>
 		</layer>
 		<layer id="209" name="bottleneck4_4/inner/dw1/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -4514,7 +4514,7 @@
 			</output>
 		</layer>
 		<layer id="210" name="bottleneck4_4/dim_inc/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="256" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="256" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -4562,7 +4562,7 @@
 			</output>
 		</layer>
 		<layer id="212" name="bottleneck4_4/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -4581,7 +4581,7 @@
 			</output>
 		</layer>
 		<layer id="213" name="bottleneck4_5/dim_red/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="64" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="64" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -4604,7 +4604,7 @@
 			</blobs>
 		</layer>
 		<layer id="214" name="bottleneck4_5/dim_red/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -4623,7 +4623,7 @@
 			</output>
 		</layer>
 		<layer id="215" name="bottleneck4_5/inner/dw1/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="64" kernel-x="3" kernel-y="3" output="64" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="64" kernel="3,3" output="64" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -4646,7 +4646,7 @@
 			</blobs>
 		</layer>
 		<layer id="216" name="bottleneck4_5/inner/dw1/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -4665,7 +4665,7 @@
 			</output>
 		</layer>
 		<layer id="217" name="bottleneck4_5/dim_inc/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="256" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="256" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -4713,7 +4713,7 @@
 			</output>
 		</layer>
 		<layer id="219" name="bottleneck4_5/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -4732,7 +4732,7 @@
 			</output>
 		</layer>
 		<layer id="220" name="bottleneck4_6/dim_red/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="64" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="64" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -4755,7 +4755,7 @@
 			</blobs>
 		</layer>
 		<layer id="221" name="bottleneck4_6/dim_red/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -4774,7 +4774,7 @@
 			</output>
 		</layer>
 		<layer id="222" name="bottleneck4_6/inner/dw1/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="64" kernel-x="3" kernel-y="3" output="64" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="64" kernel="3,3" output="64" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -4797,7 +4797,7 @@
 			</blobs>
 		</layer>
 		<layer id="223" name="bottleneck4_6/inner/dw1/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -4816,7 +4816,7 @@
 			</output>
 		</layer>
 		<layer id="224" name="bottleneck4_6/dim_inc/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="256" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="256" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -4864,7 +4864,7 @@
 			</output>
 		</layer>
 		<layer id="226" name="bottleneck4_6/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -4883,7 +4883,7 @@
 			</output>
 		</layer>
 		<layer id="227" name="bottleneck4_7/dim_red/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="64" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="64" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -4906,7 +4906,7 @@
 			</blobs>
 		</layer>
 		<layer id="228" name="bottleneck4_7/dim_red/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -4925,7 +4925,7 @@
 			</output>
 		</layer>
 		<layer id="229" name="bottleneck4_7/inner/dw1/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="64" kernel-x="3" kernel-y="3" output="64" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="64" kernel="3,3" output="64" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -4948,7 +4948,7 @@
 			</blobs>
 		</layer>
 		<layer id="230" name="bottleneck4_7/inner/dw1/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -4967,7 +4967,7 @@
 			</output>
 		</layer>
 		<layer id="231" name="bottleneck4_7/dim_inc/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="256" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="256" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -5015,7 +5015,7 @@
 			</output>
 		</layer>
 		<layer id="233" name="bottleneck4_7/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -5034,7 +5034,7 @@
 			</output>
 		</layer>
 		<layer id="234" name="bottleneck4_8/dim_red/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="64" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="64" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -5057,7 +5057,7 @@
 			</blobs>
 		</layer>
 		<layer id="235" name="bottleneck4_8/dim_red/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -5076,7 +5076,7 @@
 			</output>
 		</layer>
 		<layer id="236" name="bottleneck4_8/inner/dw1/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="64" kernel-x="3" kernel-y="3" output="64" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="64" kernel="3,3" output="64" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -5099,7 +5099,7 @@
 			</blobs>
 		</layer>
 		<layer id="237" name="bottleneck4_8/inner/dw1/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -5118,7 +5118,7 @@
 			</output>
 		</layer>
 		<layer id="238" name="bottleneck4_8/dim_inc/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="256" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="256" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -5166,7 +5166,7 @@
 			</output>
 		</layer>
 		<layer id="240" name="bottleneck4_8/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -5185,7 +5185,7 @@
 			</output>
 		</layer>
 		<layer id="241" name="bottleneck4_9/dim_red/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="64" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="64" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -5208,7 +5208,7 @@
 			</blobs>
 		</layer>
 		<layer id="242" name="bottleneck4_9/dim_red/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -5227,7 +5227,7 @@
 			</output>
 		</layer>
 		<layer id="243" name="bottleneck4_9/inner/dw1/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="64" kernel-x="3" kernel-y="3" output="64" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="64" kernel="3,3" output="64" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -5250,7 +5250,7 @@
 			</blobs>
 		</layer>
 		<layer id="244" name="bottleneck4_9/inner/dw1/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -5269,7 +5269,7 @@
 			</output>
 		</layer>
 		<layer id="245" name="bottleneck4_9/dim_inc/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="256" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="256" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -5317,7 +5317,7 @@
 			</output>
 		</layer>
 		<layer id="247" name="bottleneck4_9/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -5336,7 +5336,7 @@
 			</output>
 		</layer>
 		<layer id="248" name="bottleneck4_10/dim_red/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="64" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="64" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -5359,7 +5359,7 @@
 			</blobs>
 		</layer>
 		<layer id="249" name="bottleneck4_10/dim_red/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -5378,7 +5378,7 @@
 			</output>
 		</layer>
 		<layer id="250" name="bottleneck4_10/inner/dw1/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="64" kernel-x="3" kernel-y="3" output="64" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="64" kernel="3,3" output="64" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -5401,7 +5401,7 @@
 			</blobs>
 		</layer>
 		<layer id="251" name="bottleneck4_10/inner/dw1/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -5420,7 +5420,7 @@
 			</output>
 		</layer>
 		<layer id="252" name="bottleneck4_10/dim_inc/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="256" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="256" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -5468,7 +5468,7 @@
 			</output>
 		</layer>
 		<layer id="254" name="bottleneck4_10/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -5487,7 +5487,7 @@
 			</output>
 		</layer>
 		<layer id="255" name="bottleneck4_11/dim_red/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="64" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="64" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -5510,7 +5510,7 @@
 			</blobs>
 		</layer>
 		<layer id="256" name="bottleneck4_11/dim_red/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -5529,7 +5529,7 @@
 			</output>
 		</layer>
 		<layer id="257" name="bottleneck4_11/inner/dw1/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="64" kernel-x="3" kernel-y="3" output="64" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="64" kernel="3,3" output="64" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -5552,7 +5552,7 @@
 			</blobs>
 		</layer>
 		<layer id="258" name="bottleneck4_11/inner/dw1/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -5571,7 +5571,7 @@
 			</output>
 		</layer>
 		<layer id="259" name="bottleneck4_11/dim_inc/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="256" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="256" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -5619,7 +5619,7 @@
 			</output>
 		</layer>
 		<layer id="261" name="bottleneck4_11/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -5638,7 +5638,7 @@
 			</output>
 		</layer>
 		<layer id="262" name="pooling/out" precision="FP16" type="Pooling">
-			<data exclude-pad="false" kernel-x="4" kernel-y="10" pad-x="0" pad-y="0" pool-method="max" rounding_type="ceil" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data exclude-pad="false" kernel="10,4" pads_begin="0,0" pads_end="0,0" pool-method="max" rounding_type="ceil" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -5657,7 +5657,7 @@
 			</output>
 		</layer>
 		<layer id="263" name="embd/dim_inc/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="512" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="512" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -5680,7 +5680,7 @@
 			</blobs>
 		</layer>
 		<layer id="264" name="embd/dim_inc/fn" precision="FP16" type="Activation">
-			<data type="elu"/>
+			<data alpha="1.0" type="elu"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -5699,7 +5699,7 @@
 			</output>
 		</layer>
 		<layer id="265" name="embd/dim_red/conv" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="256" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="256" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -6025,4 +6025,40 @@
 		<edge from-layer="263" from-port="3" to-layer="264" to-port="0"/>
 		<edge from-layer="264" from-port="1" to-layer="265" to-port="0"/>
 	</edges>
+	<meta_data>
+		<MO_version value="1.4.288.16472e37"/>
+		<cli_parameters>
+			<data_type value="FP16"/>
+			<disable_fusing value="False"/>
+			<disable_gfusing value="False"/>
+			<disable_nhwc_to_nchw value="False"/>
+			<disable_omitting_optional value="False"/>
+			<disable_resnet_optimization value="False"/>
+			<enable_flattening_nested_params value="False"/>
+			<extensions value="DIR"/>
+			<framework value="caffe"/>
+			<generate_deprecated_IR_V2 value="False"/>
+			<input value="data"/>
+			<input_model value="DIR/weights.caffemodel"/>
+			<input_model_is_text value="False"/>
+			<input_proto value="DIR/deploy.prototxt"/>
+			<input_shape value="[1,3,160,64]"/>
+			<k value="DIR/CustomLayersMapping.xml"/>
+			<legacy_mxnet_model value="False"/>
+			<log_level value="ERROR"/>
+			<mean_values value="()"/>
+			<model_name value="person-reidentification-retail-0079"/>
+			<move_to_preprocess value="False"/>
+			<offload_unsupported_operations_to_tf value="False"/>
+			<output value="embd/dim_red/scale"/>
+			<output_dir value="DIR"/>
+			<remove_output_softmax value="False"/>
+			<reverse_input_channels value="False"/>
+			<save_params_from_nd value="False"/>
+			<scale_values value="()"/>
+			<silent value="False"/>
+			<version value="False"/>
+			<unset unset_cli_parameters="batch, counts, finegrain_fusing, freeze_placeholder_with_value, input_checkpoint, input_meta_graph, input_symbol, mean_file, mean_file_offsets, nd_prefix_name, pretrained_model_name, saved_model_dir, saved_model_tags, scale, tensorboard_logdir, tensorflow_custom_layer_libraries, tensorflow_custom_operations_config_update, tensorflow_object_detection_api_pipeline_config, tensorflow_operation_patterns, tensorflow_subgraph_patterns, tensorflow_use_custom_operations_config"/>
+		</cli_parameters>
+	</meta_data>
 </net>

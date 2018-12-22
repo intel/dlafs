@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-<net batch="1" name="GoogleNet" version="2">
+<net batch="1" name="GoogleNet" version="3">
 	<layers>
 		<layer id="0" name="data" precision="FP16" type="Input">
 			<output>
@@ -34,7 +34,7 @@
 			</blobs>
 		</layer>
 		<layer id="2" name="conv1/7x7_s2" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="7" kernel-y="7" output="64" pad-x="3" pad-y="3" stride="1,1,2,2" stride-x="2" stride-y="2"/>
+			<data dilations="1,1" group="1" kernel="7,7" output="64" pads_begin="3,3" pads_end="3,3" strides="2,2"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -76,7 +76,7 @@
 			</output>
 		</layer>
 		<layer id="4" name="pool1/3x3_s2" precision="FP16" type="Pooling">
-			<data exclude-pad="false" kernel-x="3" kernel-y="3" pad-x="0" pad-y="0" pool-method="max" rounding_type="ceil" stride="1,1,2,2" stride-x="2" stride-y="2"/>
+			<data exclude-pad="false" kernel="3,3" pads_begin="0,0" pads_end="0,0" pool-method="max" rounding_type="ceil" strides="2,2"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -95,7 +95,7 @@
 			</output>
 		</layer>
 		<layer id="5" name="conv2/3x3_reduce" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="64" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="64" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -137,7 +137,7 @@
 			</output>
 		</layer>
 		<layer id="7" name="conv2/3x3" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="3" kernel-y="3" output="192" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="3,3" output="192" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -179,7 +179,7 @@
 			</output>
 		</layer>
 		<layer id="9" name="pool2/3x3_s2" precision="FP16" type="Pooling">
-			<data exclude-pad="false" kernel-x="3" kernel-y="3" pad-x="0" pad-y="0" pool-method="max" rounding_type="ceil" stride="1,1,2,2" stride-x="2" stride-y="2"/>
+			<data exclude-pad="false" kernel="3,3" pads_begin="0,0" pads_end="0,0" pool-method="max" rounding_type="ceil" strides="2,2"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -198,7 +198,7 @@
 			</output>
 		</layer>
 		<layer id="10" name="inception_3a/1x1" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="64" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="64" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -240,7 +240,7 @@
 			</output>
 		</layer>
 		<layer id="12" name="inception_3a/3x3_reduce" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="96" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="96" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -282,7 +282,7 @@
 			</output>
 		</layer>
 		<layer id="14" name="inception_3a/3x3" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="3" kernel-y="3" output="128" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="3,3" output="128" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -324,7 +324,7 @@
 			</output>
 		</layer>
 		<layer id="16" name="inception_3a/5x5_reduce" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="16" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="16" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -366,7 +366,7 @@
 			</output>
 		</layer>
 		<layer id="18" name="inception_3a/5x5" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="5" kernel-y="5" output="32" pad-x="2" pad-y="2" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="5,5" output="32" pads_begin="2,2" pads_end="2,2" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -408,7 +408,7 @@
 			</output>
 		</layer>
 		<layer id="20" name="inception_3a/pool" precision="FP16" type="Pooling">
-			<data exclude-pad="false" kernel-x="3" kernel-y="3" pad-x="1" pad-y="1" pool-method="max" rounding_type="ceil" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data exclude-pad="false" kernel="3,3" pads_begin="1,1" pads_end="1,1" pool-method="max" rounding_type="ceil" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -427,7 +427,7 @@
 			</output>
 		</layer>
 		<layer id="21" name="inception_3a/pool_proj" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="32" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="32" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -506,7 +506,7 @@
 			</output>
 		</layer>
 		<layer id="24" name="inception_3b/1x1" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="128" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="128" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -548,7 +548,7 @@
 			</output>
 		</layer>
 		<layer id="26" name="inception_3b/3x3_reduce" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="128" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="128" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -590,7 +590,7 @@
 			</output>
 		</layer>
 		<layer id="28" name="inception_3b/3x3" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="3" kernel-y="3" output="192" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="3,3" output="192" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -632,7 +632,7 @@
 			</output>
 		</layer>
 		<layer id="30" name="inception_3b/5x5_reduce" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="32" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="32" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -674,7 +674,7 @@
 			</output>
 		</layer>
 		<layer id="32" name="inception_3b/5x5" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="5" kernel-y="5" output="96" pad-x="2" pad-y="2" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="5,5" output="96" pads_begin="2,2" pads_end="2,2" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -716,7 +716,7 @@
 			</output>
 		</layer>
 		<layer id="34" name="inception_3b/pool" precision="FP16" type="Pooling">
-			<data exclude-pad="false" kernel-x="3" kernel-y="3" pad-x="1" pad-y="1" pool-method="max" rounding_type="ceil" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data exclude-pad="false" kernel="3,3" pads_begin="1,1" pads_end="1,1" pool-method="max" rounding_type="ceil" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -735,7 +735,7 @@
 			</output>
 		</layer>
 		<layer id="35" name="inception_3b/pool_proj" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="64" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="64" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -814,7 +814,7 @@
 			</output>
 		</layer>
 		<layer id="38" name="pool3/3x3_s2" precision="FP16" type="Pooling">
-			<data exclude-pad="false" kernel-x="3" kernel-y="3" pad-x="0" pad-y="0" pool-method="max" rounding_type="ceil" stride="1,1,2,2" stride-x="2" stride-y="2"/>
+			<data exclude-pad="false" kernel="3,3" pads_begin="0,0" pads_end="0,0" pool-method="max" rounding_type="ceil" strides="2,2"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -833,7 +833,7 @@
 			</output>
 		</layer>
 		<layer id="39" name="inception_4a/1x1" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="192" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="192" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -875,7 +875,7 @@
 			</output>
 		</layer>
 		<layer id="41" name="inception_4a/3x3_reduce" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="96" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="96" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -917,7 +917,7 @@
 			</output>
 		</layer>
 		<layer id="43" name="inception_4a/3x3" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="3" kernel-y="3" output="208" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="3,3" output="208" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -959,7 +959,7 @@
 			</output>
 		</layer>
 		<layer id="45" name="inception_4a/5x5_reduce" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="16" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="16" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1001,7 +1001,7 @@
 			</output>
 		</layer>
 		<layer id="47" name="inception_4a/5x5" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="5" kernel-y="5" output="48" pad-x="2" pad-y="2" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="5,5" output="48" pads_begin="2,2" pads_end="2,2" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1043,7 +1043,7 @@
 			</output>
 		</layer>
 		<layer id="49" name="inception_4a/pool" precision="FP16" type="Pooling">
-			<data exclude-pad="false" kernel-x="3" kernel-y="3" pad-x="1" pad-y="1" pool-method="max" rounding_type="ceil" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data exclude-pad="false" kernel="3,3" pads_begin="1,1" pads_end="1,1" pool-method="max" rounding_type="ceil" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1062,7 +1062,7 @@
 			</output>
 		</layer>
 		<layer id="50" name="inception_4a/pool_proj" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="64" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="64" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1141,7 +1141,7 @@
 			</output>
 		</layer>
 		<layer id="53" name="inception_4b/1x1" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="160" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="160" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1183,7 +1183,7 @@
 			</output>
 		</layer>
 		<layer id="55" name="inception_4b/3x3_reduce" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="112" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="112" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1225,7 +1225,7 @@
 			</output>
 		</layer>
 		<layer id="57" name="inception_4b/3x3" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="3" kernel-y="3" output="224" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="3,3" output="224" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1267,7 +1267,7 @@
 			</output>
 		</layer>
 		<layer id="59" name="inception_4b/5x5_reduce" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="24" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="24" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1309,7 +1309,7 @@
 			</output>
 		</layer>
 		<layer id="61" name="inception_4b/5x5" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="5" kernel-y="5" output="64" pad-x="2" pad-y="2" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="5,5" output="64" pads_begin="2,2" pads_end="2,2" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1351,7 +1351,7 @@
 			</output>
 		</layer>
 		<layer id="63" name="inception_4b/pool" precision="FP16" type="Pooling">
-			<data exclude-pad="false" kernel-x="3" kernel-y="3" pad-x="1" pad-y="1" pool-method="max" rounding_type="ceil" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data exclude-pad="false" kernel="3,3" pads_begin="1,1" pads_end="1,1" pool-method="max" rounding_type="ceil" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1370,7 +1370,7 @@
 			</output>
 		</layer>
 		<layer id="64" name="inception_4b/pool_proj" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="64" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="64" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1449,7 +1449,7 @@
 			</output>
 		</layer>
 		<layer id="67" name="inception_4c/1x1" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="128" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="128" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1491,7 +1491,7 @@
 			</output>
 		</layer>
 		<layer id="69" name="inception_4c/3x3_reduce" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="128" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="128" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1533,7 +1533,7 @@
 			</output>
 		</layer>
 		<layer id="71" name="inception_4c/3x3" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="3" kernel-y="3" output="256" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="3,3" output="256" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1575,7 +1575,7 @@
 			</output>
 		</layer>
 		<layer id="73" name="inception_4c/5x5_reduce" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="24" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="24" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1617,7 +1617,7 @@
 			</output>
 		</layer>
 		<layer id="75" name="inception_4c/5x5" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="5" kernel-y="5" output="64" pad-x="2" pad-y="2" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="5,5" output="64" pads_begin="2,2" pads_end="2,2" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1659,7 +1659,7 @@
 			</output>
 		</layer>
 		<layer id="77" name="inception_4c/pool" precision="FP16" type="Pooling">
-			<data exclude-pad="false" kernel-x="3" kernel-y="3" pad-x="1" pad-y="1" pool-method="max" rounding_type="ceil" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data exclude-pad="false" kernel="3,3" pads_begin="1,1" pads_end="1,1" pool-method="max" rounding_type="ceil" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1678,7 +1678,7 @@
 			</output>
 		</layer>
 		<layer id="78" name="inception_4c/pool_proj" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="64" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="64" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1757,7 +1757,7 @@
 			</output>
 		</layer>
 		<layer id="81" name="inception_4d/1x1" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="112" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="112" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1799,7 +1799,7 @@
 			</output>
 		</layer>
 		<layer id="83" name="inception_4d/3x3_reduce" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="144" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="144" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1841,7 +1841,7 @@
 			</output>
 		</layer>
 		<layer id="85" name="inception_4d/3x3" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="3" kernel-y="3" output="288" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="3,3" output="288" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1883,7 +1883,7 @@
 			</output>
 		</layer>
 		<layer id="87" name="inception_4d/5x5_reduce" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="32" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="32" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1925,7 +1925,7 @@
 			</output>
 		</layer>
 		<layer id="89" name="inception_4d/5x5" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="5" kernel-y="5" output="64" pad-x="2" pad-y="2" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="5,5" output="64" pads_begin="2,2" pads_end="2,2" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1967,7 +1967,7 @@
 			</output>
 		</layer>
 		<layer id="91" name="inception_4d/pool" precision="FP16" type="Pooling">
-			<data exclude-pad="false" kernel-x="3" kernel-y="3" pad-x="1" pad-y="1" pool-method="max" rounding_type="ceil" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data exclude-pad="false" kernel="3,3" pads_begin="1,1" pads_end="1,1" pool-method="max" rounding_type="ceil" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -1986,7 +1986,7 @@
 			</output>
 		</layer>
 		<layer id="92" name="inception_4d/pool_proj" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="64" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="64" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2065,7 +2065,7 @@
 			</output>
 		</layer>
 		<layer id="95" name="inception_4e/1x1" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="256" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="256" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2107,7 +2107,7 @@
 			</output>
 		</layer>
 		<layer id="97" name="inception_4e/3x3_reduce" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="160" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="160" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2149,7 +2149,7 @@
 			</output>
 		</layer>
 		<layer id="99" name="inception_4e/3x3" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="3" kernel-y="3" output="320" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="3,3" output="320" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2191,7 +2191,7 @@
 			</output>
 		</layer>
 		<layer id="101" name="inception_4e/5x5_reduce" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="32" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="32" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2233,7 +2233,7 @@
 			</output>
 		</layer>
 		<layer id="103" name="inception_4e/5x5" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="5" kernel-y="5" output="128" pad-x="2" pad-y="2" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="5,5" output="128" pads_begin="2,2" pads_end="2,2" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2275,7 +2275,7 @@
 			</output>
 		</layer>
 		<layer id="105" name="inception_4e/pool" precision="FP16" type="Pooling">
-			<data exclude-pad="false" kernel-x="3" kernel-y="3" pad-x="1" pad-y="1" pool-method="max" rounding_type="ceil" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data exclude-pad="false" kernel="3,3" pads_begin="1,1" pads_end="1,1" pool-method="max" rounding_type="ceil" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2294,7 +2294,7 @@
 			</output>
 		</layer>
 		<layer id="106" name="inception_4e/pool_proj" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="128" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="128" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2373,7 +2373,7 @@
 			</output>
 		</layer>
 		<layer id="109" name="pool4/3x3_s2" precision="FP16" type="Pooling">
-			<data exclude-pad="false" kernel-x="3" kernel-y="3" pad-x="0" pad-y="0" pool-method="max" rounding_type="ceil" stride="1,1,2,2" stride-x="2" stride-y="2"/>
+			<data exclude-pad="false" kernel="3,3" pads_begin="0,0" pads_end="0,0" pool-method="max" rounding_type="ceil" strides="2,2"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2392,7 +2392,7 @@
 			</output>
 		</layer>
 		<layer id="110" name="inception_5a/1x1" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="256" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="256" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2434,7 +2434,7 @@
 			</output>
 		</layer>
 		<layer id="112" name="inception_5a/3x3_reduce" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="160" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="160" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2476,7 +2476,7 @@
 			</output>
 		</layer>
 		<layer id="114" name="inception_5a/3x3" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="3" kernel-y="3" output="320" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="3,3" output="320" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2518,7 +2518,7 @@
 			</output>
 		</layer>
 		<layer id="116" name="inception_5a/5x5_reduce" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="32" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="32" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2560,7 +2560,7 @@
 			</output>
 		</layer>
 		<layer id="118" name="inception_5a/5x5" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="5" kernel-y="5" output="128" pad-x="2" pad-y="2" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="5,5" output="128" pads_begin="2,2" pads_end="2,2" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2602,7 +2602,7 @@
 			</output>
 		</layer>
 		<layer id="120" name="inception_5a/pool" precision="FP16" type="Pooling">
-			<data exclude-pad="false" kernel-x="3" kernel-y="3" pad-x="1" pad-y="1" pool-method="max" rounding_type="ceil" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data exclude-pad="false" kernel="3,3" pads_begin="1,1" pads_end="1,1" pool-method="max" rounding_type="ceil" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2621,7 +2621,7 @@
 			</output>
 		</layer>
 		<layer id="121" name="inception_5a/pool_proj" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="128" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="128" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2700,7 +2700,7 @@
 			</output>
 		</layer>
 		<layer id="124" name="inception_5b/1x1" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="384" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="384" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2742,7 +2742,7 @@
 			</output>
 		</layer>
 		<layer id="126" name="inception_5b/3x3_reduce" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="192" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="192" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2784,7 +2784,7 @@
 			</output>
 		</layer>
 		<layer id="128" name="inception_5b/3x3" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="3" kernel-y="3" output="384" pad-x="1" pad-y="1" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="3,3" output="384" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2826,7 +2826,7 @@
 			</output>
 		</layer>
 		<layer id="130" name="inception_5b/5x5_reduce" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="48" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="48" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2868,7 +2868,7 @@
 			</output>
 		</layer>
 		<layer id="132" name="inception_5b/5x5" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="5" kernel-y="5" output="128" pad-x="2" pad-y="2" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="5,5" output="128" pads_begin="2,2" pads_end="2,2" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2910,7 +2910,7 @@
 			</output>
 		</layer>
 		<layer id="134" name="inception_5b/pool" precision="FP16" type="Pooling">
-			<data exclude-pad="false" kernel-x="3" kernel-y="3" pad-x="1" pad-y="1" pool-method="max" rounding_type="ceil" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data exclude-pad="false" kernel="3,3" pads_begin="1,1" pads_end="1,1" pool-method="max" rounding_type="ceil" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -2929,7 +2929,7 @@
 			</output>
 		</layer>
 		<layer id="135" name="inception_5b/pool_proj" precision="FP16" type="Convolution">
-			<data dilation-x="1" dilation-y="1" group="1" kernel-x="1" kernel-y="1" output="128" pad-x="0" pad-y="0" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data dilations="1,1" group="1" kernel="1,1" output="128" pads_begin="0,0" pads_end="0,0" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -3008,7 +3008,7 @@
 			</output>
 		</layer>
 		<layer id="138" name="pool5/7x7_s1" precision="FP16" type="Pooling">
-			<data exclude-pad="false" kernel-x="7" kernel-y="7" pad-x="0" pad-y="0" pool-method="avg" rounding_type="ceil" stride="1,1,1,1" stride-x="1" stride-y="1"/>
+			<data exclude-pad="false" kernel="7,7" pads_begin="0,0" pads_end="0,0" pool-method="avg" rounding_type="ceil" strides="1,1"/>
 			<input>
 				<port id="0">
 					<dim>1</dim>
@@ -3232,4 +3232,36 @@
 		<edge from-layer="138" from-port="1" to-layer="139" to-port="0"/>
 		<edge from-layer="139" from-port="3" to-layer="140" to-port="0"/>
 	</edges>
+	<meta_data>
+		<MO_version value="1.4.292.6ef7232d"/>
+		<cli_parameters>
+			<data_type value="FP16"/>
+			<disable_fusing value="False"/>
+			<disable_gfusing value="False"/>
+			<disable_nhwc_to_nchw value="False"/>
+			<disable_omitting_optional value="False"/>
+			<disable_resnet_optimization value="False"/>
+			<enable_flattening_nested_params value="False"/>
+			<extensions value="DIR"/>
+			<framework value="caffe"/>
+			<generate_deprecated_IR_V2 value="False"/>
+			<input_model value="DIR/carmodel_fine_tune_1062_bn_iter_370000.caffemodel"/>
+			<input_model_is_text value="False"/>
+			<input_proto value="DIR/deploy.prototxt"/>
+			<k value="DIR/CustomLayersMapping.xml"/>
+			<legacy_mxnet_model value="False"/>
+			<log_level value="ERROR"/>
+			<mean_values value="[104,117,123]"/>
+			<move_to_preprocess value="False"/>
+			<offload_unsupported_operations_to_tf value="False"/>
+			<output_dir value="DIR"/>
+			<remove_output_softmax value="False"/>
+			<reverse_input_channels value="False"/>
+			<save_params_from_nd value="False"/>
+			<scale_values value="()"/>
+			<silent value="False"/>
+			<version value="False"/>
+			<unset unset_cli_parameters="batch, counts, finegrain_fusing, freeze_placeholder_with_value, input, input_checkpoint, input_meta_graph, input_shape, input_symbol, mean_file, mean_file_offsets, model_name, nd_prefix_name, output, pretrained_model_name, saved_model_dir, saved_model_tags, scale, tensorboard_logdir, tensorflow_custom_layer_libraries, tensorflow_custom_operations_config_update, tensorflow_object_detection_api_pipeline_config, tensorflow_operation_patterns, tensorflow_subgraph_patterns, tensorflow_use_custom_operations_config"/>
+		</cli_parameters>
+	</meta_data>
 </net>
