@@ -22,8 +22,7 @@
   */
 
 #include "oclvppcrc.h"
-#include "common/log.h"
-#include "common/macros.h"
+#include "common.h"
 #include "Vppfactory.h"
 
 #ifdef HAVE_CONFIG_H

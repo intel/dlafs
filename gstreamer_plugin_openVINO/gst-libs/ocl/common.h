@@ -20,11 +20,15 @@
 
 #include <interface/vpphost.h>
 #include <interface/videodefs.h>
-#include <interface/vppdefs.h>
 #include <interface/vppinterface.h>
 #include <ocl/oclvppcrc.h>
 #include <ocl/oclmemory.h>
 #include <ocl/oclutils.h>
 #include <ocl/crcmeta.h>
+
+#ifndef ALIGN_POW2
+#define ALIGN_POW2(a, b) ((a + (b - 1)) & ~(b - 1))
+#endif
+
 
 #endif

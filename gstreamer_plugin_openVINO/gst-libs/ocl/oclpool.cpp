@@ -31,7 +31,6 @@
 #include "oclpool.h"
 #include "oclmemory.h"
 #include "interface/vpphost.h"
-#include "common/macros.h"
 
 #include <CL/cl.h>
 

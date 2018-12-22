@@ -55,9 +55,6 @@ public:
     virtual OclStatus
     setOclContext (const SharedPtr<OclContext>&);
 
-    virtual OclStatus
-    setNativeDisplay (const VADisplay, const OclNativeDisplayType);
-
     virtual const char*
     getKernelFileName () { return NULL; }
 

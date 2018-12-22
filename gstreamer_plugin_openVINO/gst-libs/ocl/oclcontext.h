@@ -30,7 +30,7 @@
 #include <opencv2/core/ocl.hpp>
 #include <opencv2/core/va_intel.hpp>
 
-#include "common/lock.h"
+#include "interface/lock.h"
 #include "interface/videodefs.h"
 
 typedef struct {
@@ -86,7 +86,7 @@ private:
 };
 }
 
-const char* getCLErrorString (cl_int error);
+const char* getErrorString (cl_int error);
 
 gboolean checkCLError (cl_int status, const char* func, const char* file, const int line);
 

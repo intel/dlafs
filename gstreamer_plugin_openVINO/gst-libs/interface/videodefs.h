@@ -79,89 +79,11 @@ extern "C" {
 #define OCL_FOURCC_BGRP OCL_FOURCC('B','G','G','P')
 #define OCL_FOURCC_GRAY OCL_FOURCC('G','R','A','Y')
 
-
-typedef enum {
-    NATIVE_DISPLAY_AUTO,    // decided by ocl
-    NATIVE_DISPLAY_VA,      /* client need init va*/
-} OclNativeDisplayType;
-
-#define INVALID_DISPLAY_FD     -1
-#define INVALID_DISPLAY_HANDLE NULL
-
-typedef struct {
-    intptr_t handle;
-    OclNativeDisplayType type;
-} NativeDisplay;
-
-typedef enum {
-    VIDEO_DATA_MEMORY_TYPE_RAW_POINTER,  // pass data pointer to client
-    VIDEO_DATA_MEMORY_TYPE_RAW_COPY,     // copy data to client provided buffer, renderDone() is not necessary
-    VIDEO_DATA_MEMORY_TYPE_DRM_NAME,     // render output frame by egl/gles, connect with OpenCL
-    VIDEO_DATA_MEMORY_TYPE_DMA_BUF,      // share buffer with camera device etc
-    VIDEO_DATA_MEMORY_TYPE_SURFACE_ID,  // it can be used for surface sharing of transcoding, benefits suppressed rendering as well.
-                                        //it is discouraged to use it for video rendering.
-    VIDEO_DATA_MEMORY_TYPE_ANDROID_NATIVE_BUFFER, // ANativeWindowBuffer for android
-} VideoDataMemoryType;
-
-typedef struct {
-    VideoDataMemoryType memoryType;
-    uint32_t width;
-    uint32_t height;
-    uint32_t pitch[3];
-    uint32_t offset[3];
-    uint32_t fourcc;
-    uint32_t size;
-    intptr_t handle;        // planar data has one fd for now, raw data also uses one pointer (+ offset)
-    uint32_t internalID; // internal identification for image/surface recycle
-    int64_t  timeStamp;
-    uint32_t flags;             //see VIDEO_FRAME_FLAGS_XXX
-}VideoFrameRawData;
-
-#define VIDEO_FRAME_FLAGS_KEY 1
-
 typedef enum {
     OCL_SUCCESS = 0,
-    OCL_MORE_DATA,
-    OCL_NOT_IMPLEMENT,
     OCL_INVALID_PARAM,
-    OCL_OUT_MEMORY,
-
-    OCL_FATAL_ERROR = 128,
     OCL_FAIL,
-    OCL_NO_CONFIG,
-    OCL_DRIVER_FAIL,
 } OclStatus;
-
-typedef struct {
-    //in
-    uint32_t fourcc;
-    uint32_t width;
-    uint32_t height;
-
-    //in, out, number of surfaces
-    //for decoder, this min surfaces size need for decoder
-    //you should alloc extra size for perfomance or display queue
-    //you have two chance to get this size
-    // 1. from VideoFormatInfo.surfaceNumber, after you got DECODE_FORMAT_CHANGE
-    // 2. in SurfaceAllocator::alloc
-    uint32_t size;
-
-    //out
-    intptr_t* surfaces;
-} SurfaceAllocParams;
-
-typedef struct _SurfaceAllocator SurfaceAllocator;
-//allocator for surfaces, ocl uses this to get
-// 1. decoded surface for decoder.
-// 2. reconstruct surface for encoder.
-struct _SurfaceAllocator {
-    void*      *user;   /* you can put your private data here, ocl will not touch it */
-    /* alloc and free surfaces */
-    OclStatus (*alloc) (SurfaceAllocator* thiz, SurfaceAllocParams* params);
-    OclStatus (*free)  (SurfaceAllocator* thiz, SurfaceAllocParams* params);
-    /* after this called, ocl will not use the allocator */
-    void       (*unref) (SurfaceAllocator* thiz);
-};
 
 typedef struct {
     uint32_t  x;
@@ -203,6 +125,7 @@ typedef struct _OclGstMfxVideoMetaHolder
   OclGstMfxVideoMeta *meta;
 }OclGstMfxVideoMetaHolder;
 
+
 typedef struct {
     cl_mem      mem;
     uint32_t    fourcc;
@@ -214,15 +137,39 @@ typedef struct {
     VideoRect   crop;
     uint32_t    flags;
     int64_t     timeStamp;
-
-#ifdef __ENABLE_CAPI__
-    /**
-     * for frame destory, cpp should not touch here
-     */
-    intptr_t    user_data;
-    void        (*free)(struct VideoFrame* );
-#endif
 } VideoFrame;
+
+enum CRCFormat{
+    CRC_FORMAT_BGR = 0,
+    CRC_FORMAT_BGR_PLANNAR = 1,
+    CRC_FORMAT_GRAY = 2,
+};
+
+typedef enum {
+    VPP_CRC_PARAM,
+    VPP_BLEND_PARAM,
+} VppParamType;
+
+typedef struct {
+    VppParamType type;
+    guint32 src_w;
+    guint32 src_h;
+    guint32 crop_x;
+    guint32 crop_y;
+    guint32 crop_w;
+    guint32 crop_h;
+    guint32 dst_w;
+    guint32 dst_h;
+} VppCrcParam;
+
+typedef struct {
+    VppParamType type;
+    guint32 x;
+    guint32 y;
+    guint32 w;
+    guint32 h;
+} VppBlendParam;
+
 
 #define OCL_MIME_H264 "video/h264"
 #define OCL_MIME_AVC  "video/avc"

@@ -18,7 +18,7 @@
 #ifndef _VAAPI_VPP_FACTORY_H_
 #define _VAAPI_VPP_FACTORY_H_
 
-#include "common/factory.h"
+#include "interface/factory.h"
 #include "interface/vppinterface.h"
 
 namespace HDDLStreamFilter

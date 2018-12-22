@@ -23,12 +23,11 @@
 
 
 #include "imageproc.h"
-#include <common/common.h>
+#include <ocl/common.h>
 #include <ocl/oclpool.h>
 #include <mutex>
 
 using namespace HDDLStreamFilter;
-
 using namespace std;
 // vpp lock for ocl context
 static std::mutex vpp_mutext;

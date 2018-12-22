@@ -31,7 +31,6 @@
 #include <gst/base/gstbytereader.h>
 #include <memory.h>
 #include "resmemory.h"
-#include "common/macros.h"
 
 GST_DEBUG_CATEGORY_STATIC (res_memory_debug);
 #define GST_CAT_DEFAULT res_memory_debug

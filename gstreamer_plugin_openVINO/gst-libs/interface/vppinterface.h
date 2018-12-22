@@ -19,7 +19,6 @@
 #define _VPP_INTERFACE_H_
 
 #include "videodefs.h"
-#include "vppdefs.h"
 #include "ocl/oclcontext.h"
 
 namespace HDDLStreamFilter
@@ -47,9 +46,6 @@ class VppInterface
 
     virtual OclStatus
     setOclContext (const SharedPtr<OclContext>&) = 0;
-
-    virtual OclStatus
-    setNativeDisplay (const VADisplay, const OclNativeDisplayType) = 0;
 
     virtual void
     setOclFormat(CRCFormat crc_format) = 0;

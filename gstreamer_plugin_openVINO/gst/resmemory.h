@@ -26,7 +26,6 @@
 #define __RES_MEMORY_H__
 
 #include <gst/gst.h>
-//#include "common/lock.h"
 #include <interface/videodefs.h>
 
 G_BEGIN_DECLS

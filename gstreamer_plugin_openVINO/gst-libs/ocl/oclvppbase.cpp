@@ -16,10 +16,7 @@
  */
 
 #include <va/va_drmcommon.h>
-
 #include "oclvppbase.h"
-#include "common/log.h"
-
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -134,13 +131,6 @@ OclVppBase::printOclKernelInfo()
         }
     }
 #endif
-    return OCL_SUCCESS;
-}
-
-
-OclStatus
-OclVppBase::setNativeDisplay (const VADisplay, const OclNativeDisplayType)
-{
     return OCL_SUCCESS;
 }
 

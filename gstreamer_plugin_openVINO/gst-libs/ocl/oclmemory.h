@@ -29,7 +29,7 @@
 #include <gst/video/video.h>
 
 #include "va/va.h"
-#include "common/lock.h"
+#include "interface/lock.h"
 #include <vector>
 #include <opencv2/opencv.hpp>
 #include <va/va.h>

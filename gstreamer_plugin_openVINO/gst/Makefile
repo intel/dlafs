@@ -1,3 +1,18 @@
+#Copyright (C) 2018 Intel Corporation 
+# 
+#SPDX-License-Identifier: LGPL-2.1-only 
+# 
+#This library is free software; you can redistribute it and/or modify it under the terms 
+# of the GNU Lesser General Public License as published by the Free Software Foundation; 
+# version 2.1. 
+# 
+#This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; 
+# without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+# See the GNU Lesser General Public License for more details. 
+# 
+# You should have received a copy of the GNU Lesser General Public License along with this library; 
+# if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA 
+#
 GXX := gcc
 LD := gcc
 
@@ -37,7 +52,7 @@ DYNAMIC_LIB := $(LIB_OCL_PATH)/$(LIB_NAME).a
 
 INC := -I$(DIR_INC) -I$(GST_LIBS_DIR) -I$(GST_LIBS_DIR)/interface/ -I$(SYS_INC_DIR)
 OBJS := $(patsubst %.c, %.o, $(SRCS))
-GST_LIBS := $(GST_LIBS_DIR)/common/libocl_common.a $(GST_LIBS_DIR)/ocl/libocl_vpp.a $(GST_LIBS_DIR)/algo/libcvdl_algo.a $(GST_LIBS_DIR)/ws/libws_client.a
+GST_LIBS := $(GST_LIBS_DIR)/ocl/libocl_vpp.a $(GST_LIBS_DIR)/algo/libcvdl_algo.a $(GST_LIBS_DIR)/ws/libws_client.a
 GST_LIBS += $(GST_LIBS_DIR)/safestringlib/libsafestring.a
 
 all: $(OBJS)

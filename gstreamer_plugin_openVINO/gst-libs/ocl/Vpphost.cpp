@@ -17,7 +17,6 @@
 
 #include "vpphost.h"
 #include "Vppfactory.h"
-#include "common/log.h"
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -30,19 +29,17 @@ extern "C" {
 VppInterface*
 VppInstanceCreate (const char *mimeType)
 {
-    oclTraceInit();
-
     if (!mimeType) {
-        g_print ("NULL mime type.\n");
+        g_print ("Null  mime type.\n");
         return NULL;
     }
 
-    OclVppFactory::Type instance = OclVppFactory::create (mimeType);
+   VppInterface* instance = OclVppFactory::create (mimeType);
 
     if (!instance) {
         g_print ("Failed to create vpp for mimeType: '%s'\n", mimeType);
     } else {
-        INFO ("Created vpp for mimeType: '%s'", mimeType);
+        g_print ("Created vpp for mimeType: '%s'", mimeType);
     }
 
     return instance;

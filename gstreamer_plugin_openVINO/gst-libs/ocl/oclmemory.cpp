@@ -29,7 +29,6 @@
 
 #include "oclmemory.h"
 #include "ocl/oclutils.h"
-#include "common/macros.h"
 #include <CL/cl.h>
 
 using namespace cv;

@@ -28,12 +28,7 @@ using namespace HDDLStreamFilter;
 extern "C"
 {
     VppInterface* VppInstanceCreate (const char* mimeType);
-
     void VppInstanceDestroy(VppInterface* vpp);
-
-    typedef VppInterface *(*OclCreateVideoPostProcessFuncPtr) (const char *);
-
-    typedef void (*OclReleaseVideoPostProcessFuncPtr)(VppInterface*);
 }
 
 #endif                          /* _VPP_HOST_H_ */

@@ -26,9 +26,6 @@
 #include <string.h>
 #include "respool.h"
 
-//#include "interface/vpphost.h"
-#include "common/macros.h"
-
 struct _ResPoolPrivate
 {
     GstCaps *caps;
