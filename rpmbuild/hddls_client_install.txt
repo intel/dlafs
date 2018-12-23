@@ -25,7 +25,12 @@ echo <hostname>  > hostname.txt
 
 3. Run controller client
 ------------------------
-./controller_client.js
+#cd s_framework/hddls_server_client/hddls_client
+#./controller_client.js
+    --Please chose server by id:
+    --Please type model dictionary:
+      Note: Choose the models directory that will be updated into hddls-server
+            You can type "./models_updated"
 
 Note:
 1. command format:

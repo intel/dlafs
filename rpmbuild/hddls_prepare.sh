@@ -31,7 +31,7 @@ export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/opt/intel/mediasdk/lib64/pkgconfig
 export LD_LIBRARY_PATH=/opt/intel/mediasdk/lib64:/usr/local/lib:/opt/intel/computer_vision_sdk/inference_engine/lib/ubuntu_16.04/intel64:/opt/intel/computer_vision_sdk_2018.5.445/deployment_tools/inference_engine/external/omp/lib:/usr/lib/x86_64-linux-gnu/gstreamer-1.0:$LD_LIBRARY_PATH
 export HDDLS_CVDL_KERNEL_PATH=/usr/lib/x86_64-linux-gnu/libgstcvdl/kernels
 export PATH=$PATH:/opt/intel/mediasdk/bin/
-export OPENCV_OPENCL_BUFFERPOOL_LIMIT=0
+#export OPENCV_OPENCL_BUFFERPOOL_LIMIT=0
 #echo "HDDL-S prepare is done!"
 echo ""
 #export HDDLS_CVDL_MODEL_PATH=/usr/lib/x86_64-linux-gnu/libgstcvdl/models

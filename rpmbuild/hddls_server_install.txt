@@ -141,7 +141,20 @@ note: please run "npm audit fix --force" command to fix package audit issues.
 
 10. Run HDDL-S Server
 
-export HDDLS_CVDL_MODEL_PATH=<hddl-s_server_folder>/models
-chmod a+x *.js
-./hddls-server.js
+#cd s_framework/hddls_server_client/hddls_server
+#export HDDLS_CVDL_MODEL_PATH=`pwd`/models
+#./hddls_server.js
 
+Note:
+  1. How to deploy customer models
+     Step 1: implement libxxxalgo.so as customer guide
+     Step 2: copy model IR files into <HDDLS_CVDL_MODEL_PATH>/<model_name>
+     Step 3: register this customer models
+              command: registeralgo -a <model_name>
+     Step 4: edit create_xxx.json and add <model_name> into algopipeline property
+     Step 5: controller_client send create pipeline command with create_xxx.json
+
+     For an example: see hddls_server/models/example
+            run command: registeralgo -a example
+  2. Dont't remove the files in hddls_server/models
+     The hddlspipe will read models file from this directory.
