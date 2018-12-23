@@ -8,7 +8,7 @@ sudo apt-get install  libdrm-dev libudev-dev libgstreamer-plugins-bad1.0-dev lib
 sudo ln -sf /opt/intel/mediasdk/lib64/libva.so.2 /usr/lib/libva.so
 sudo ln -sf /opt/intel/mediasdk/lib64/libva-drm.so.2 /usr/lib/libva-drm.so
 
-1. Install OpenVINO R3
+1. Install OpenVINO R5
 Install OpenVINO: https://software.intel.com/en-us/articles/OpenVINO-Install-Linux
 
 source /opt/intel/computer_vision_sdk/bin/setupvars.sh
@@ -46,7 +46,7 @@ sh autogen.sh
 ./configure && make && sudo make install
 
 Install HDDL rpm package:
-sudo rpm -ivh --nodeps Intel_Movidius_MyriadX_HDDL-R_Linux-01.02.12.B.36.3.rpm
+sudo rpm -ivh --nodeps Intel_Movidius_MyriadX_HDDL-R_Linux-xxx.rpm
 export HDDL_INSTALL_DIR=/usr/local
 export LD_LIBRARY_PATH=/usr/local/lib
 sudo usermod -a -G users,video $USER
@@ -74,9 +74,8 @@ source /opt/intel/computer_vision_sdk/bin/setupvars.sh
 export HDDL_INSTALL_DIR=/usr/local
 export LD_LIBRARY_PATH=/usr/local/lib
 export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/opt/intel/mediasdk/lib64/pkgconfig
-export LD_LIBRARY_PATH=/opt/intel/mediasdk/lib64:/usr/local/lib:/usr/local/lib/ubuntu_16.04/intel64:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/opt/intel/mediasdk/lib64:/usr/local/lib:/opt/intel/computer_vision_sdk/inference_engine/lib/ubuntu_16.04/intel64:/opt/intel/computer_vision_sdk_2018.5.445/deployment_tools/inference_engine/external/omp/lib:/usr/lib/x86_64-linux-gnu/gstreamer-1.0:$LD_LIBRARY_PATH
 export HDDLS_CVDL_KERNEL_PATH=/usr/lib/x86_64-linux-gnu/libgstcvdl/kernels
-export HDDLS_CVDL_MODEL_PATH=/usr/lib/x86_64-linux-gnu/libgstcvdl/models
 export PATH=$PATH:/opt/intel/mediasdk/bin/
 
 8. Setup HDDL-S Server
@@ -141,6 +140,8 @@ note: please run "npm audit fix --force" command to fix package audit issues.
 
 
 10. Run HDDL-S Server
+
+export HDDLS_CVDL_MODEL_PATH=<hddl-s_server_folder>/models
 chmod a+x *.js
 ./hddls-server.js
 

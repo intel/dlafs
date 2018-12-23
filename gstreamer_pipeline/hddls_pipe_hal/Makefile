@@ -62,3 +62,7 @@ install:
 	@cp src/hddlspipes /usr/local/bin/.
 	@cp tools/registeralgo /usr/local/bin/.
 	@cp test/hddlspipestest /usr/local/bin/.
+uninstall:
+	@rm -rf /usr/local/bin/hddlspipes
+	@rm -rf /usr/local/bin/registeralgo
+	@rm -rf /usr/local/bin/hddlspipestest

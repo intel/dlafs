@@ -41,8 +41,8 @@ install:
 	@cp customer/example/*.bin $(SYS_LIB_DIR)/libgstcvdl/models/example/.
 	@cp customer/example/*.xml $(SYS_LIB_DIR)/libgstcvdl/models/example/.
 	@cp customer/example/*.so $(SYS_LIB_DIR)/libgstcvdl/models/example/.
-	@rm -rf $(SYS_LIB_DIR)/libgstcvdlfilter.so
-	@ln -s $(SYS_LIB_DIR)/gstreamer-1.0/libgstcvdlfilter.so $(SYS_LIB_DIR)/libgstcvdlfilter.so
+	#@rm -rf $(SYS_LIB_DIR)/libgstcvdlfilter.so
+	#@ln -s $(SYS_LIB_DIR)/gstreamer-1.0/libgstcvdlfilter.so $(SYS_LIB_DIR)/libgstcvdlfilter.so
 	@rm -rf $(SYS_INC_DIR)/gstcvdl
 	@mkdir -p $(SYS_INC_DIR)/gstcvdl
 	@cp gst-libs/ocl/oclcommon.h $(SYS_INC_DIR)/gstcvdl/.
@@ -55,3 +55,12 @@ install:
 	@echo ""
 	@echo "Success to install cvdl plugins into "$(SYS_LIB_DIR)/gstreamer-1.0
 	@echo ""
+
+uninstall:
+	@rm -rf $(SYS_LIB_DIR)/libgstcvdl
+	@rm -rf $(SYS_LIB_DIR)/gstreamer-1.0/libgstcvdlfilter.so
+	@rm -rf $(SYS_INC_DIR)/gstcvdl
+	@echo ""
+	@echo "Success to uninstall cvdl plugins from "$(SYS_LIB_DIR)/gstreamer-1.0
+	@echo ""
+

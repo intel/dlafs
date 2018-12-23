@@ -11,3 +11,7 @@ install:
 	@echo ""
 	@echo "Success to install hddlspipes"
 	@echo ""
+uninstall:
+	@make uninstall -C hddls_pipe_hal
+	@echo "Success to uninstall hddlspipes"
+	@echo ""
