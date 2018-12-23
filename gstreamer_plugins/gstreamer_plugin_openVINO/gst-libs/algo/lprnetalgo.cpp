@@ -179,7 +179,7 @@ GstFlowReturn LPRNetAlgo::parse_inference_result(InferenceEngine::Blob::Ptr &res
     //T,N,C = 88,1,71
     ctc_ref_fp16(out, seq, seq_prob, W, H, C,   C, true);
 
-    std::string result;
+    std::string result=std::string("");
     int class_idx = -1;
     float prob_sum = 0;
 
@@ -200,14 +200,14 @@ GstFlowReturn LPRNetAlgo::parse_inference_result(InferenceEngine::Blob::Ptr &res
         class_idx = idx;
     }
 
-   GST_LOG("lp_recognize: prob = %f, label = %s\n", prob_sum, result.c_str());
+   GST_LOG("lprnet: prob = %f, label = %s\n", prob_sum, result.c_str());
    #if 1
    std::size_t pos = result.find("<");      // position of "<" in str
    if(pos>0 && pos<16) {
          std::string substr1 = result.substr (pos);
          std::string substr2 = result.substr (0, pos);
          result = substr1 + substr2;
-          GST_LOG("(correct)lp_recognize: prob = %f, label = %s\n", prob_sum, result.c_str());
+          GST_LOG("(correct)lprnet: prob = %f, label = %s\n", prob_sum, result.c_str());
     }
    #endif
    ObjectData objData = outData->mObjectVecIn[objId];

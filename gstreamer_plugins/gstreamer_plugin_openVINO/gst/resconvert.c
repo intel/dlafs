@@ -289,7 +289,7 @@ res_convert_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         //g_print("current_caps =\n %s\n", gst_caps_to_string(current_caps));
         //if(current_caps) gst_caps_unref(current_caps);
         gchar *log = gst_caps_to_string(caps);
-        g_print("event_caps =\n %s\n", log);
+        GST_LOG("event_caps =\n %s\n", log);
         g_free(log);
         log = NULL;
 

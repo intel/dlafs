@@ -194,7 +194,7 @@ public:
     {
         return NULL;
     }
-    void save_buffer(unsigned char *buf, int w, int h, int p, int id, int bPlannar,char *info);
+    void save_buffer(unsigned char *buf, int w, int h, int p, int id, int bPlannar,const char *info);
     void save_image(unsigned char *buf, int w, int h, int p, int bPlannar, char *info);
     void print_objects(std::vector<ObjectData> &objectVec);
 

@@ -28,7 +28,7 @@
 #define QUEUE_ELEMENT_MAX_NUM 100
 
 // log dump to this directory 
-#define LOG_DIR "/home/hddls_log/"
+#define LOG_DIR "~/hddls_log/"
 
 // Each algo in the algo chain can link to multiple downstream algo
 // Here we set 1 by default

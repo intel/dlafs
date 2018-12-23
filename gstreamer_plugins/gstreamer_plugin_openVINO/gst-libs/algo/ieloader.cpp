@@ -125,7 +125,7 @@ IELoader::~IELoader()
 GstFlowReturn IELoader::set_device(InferenceEngine::TargetDevice dev)
 {
     mTargetDev = dev;
-    std::string pluginPath = std::string("/opt/intel/computer_vision_sdk/inference_engine/lib/ubuntu_16.04/intel64");
+    //std::string pluginPath = std::string("/opt/intel/computer_vision_sdk/inference_engine/lib/ubuntu_16.04/intel64");
     switch (dev) {
     case InferenceEngine::TargetDevice::eCPU:
         mIEPlugin = InferenceEnginePluginPtr("libMKLDNNPlugin.so");
@@ -134,8 +134,8 @@ GstFlowReturn IELoader::set_device(InferenceEngine::TargetDevice dev)
         mIEPlugin = InferenceEnginePluginPtr("libclDNNPlugin.so");
         break;
     case InferenceEngine::TargetDevice::eHDDL:
-        mIEPlugin = InferenceEngine::PluginDispatcher({ pluginPath }).getPluginByDevice("HDDL");
-        //mIEPlugin = InferenceEnginePluginPtr(HDDL_PLUGIN);
+        //mIEPlugin = InferenceEngine::PluginDispatcher({ pluginPath }).getPluginByDevice("HDDL");
+        mIEPlugin = InferenceEnginePluginPtr(HDDL_PLUGIN);
         break;
     default:
         GST_ERROR("Not support device [ %d ]", (int)dev);
@@ -159,14 +159,14 @@ GstFlowReturn IELoader::read_model(std::string strModelXml,
         g_print("read model %s fail", strModelXml.c_str());
         return GST_FLOW_ERROR;
     }
-    g_print("Success to read %s\n", strModelXml.c_str());
+    //g_print("Success to read %s\n", strModelXml.c_str());
 
     netReader.ReadWeights(strModelBin);
     if (!netReader.isParseSuccess()) {
         g_print("read model %s fail", strModelBin.c_str());
         return GST_FLOW_ERROR;
     }
-    g_print("Success to read %s\n", strModelBin.c_str());
+    //g_print("Success to read %s\n", strModelBin.c_str());
 
     InferenceEngine::CNNNetwork cnnNetwork = netReader.getNetwork();
     InferenceEngine::InputsDataMap networkInputs;

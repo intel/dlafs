@@ -128,7 +128,7 @@ static void try_process_algo_data(CvdlAlgoData *algoData)
     //test
     //hddlAlgo->save_buffer(ocl_mem->frame.getMat(0).ptr(), hddlAlgo->mInputWidth,
     //    hddlAlgo->mInputHeight,3,algoData->mFrameId*1000 + objId, 1,
-    //    lgo_pipeline_get_name(hddlAlgo->mAlgoType));
+    //    algo_pipeline_get_name(hddlAlgo->mAlgoType));
 
     // result callback function
     auto onHddlResult = [&objectData](void* data)
@@ -523,6 +523,7 @@ GstFlowReturn CvdlAlgoBase::init_ieloader(const char* modeFileName, guint ieType
     std::string strModelXml(modeFileName);
     std::string tmpFn = strModelXml.substr(0, strModelXml.rfind("."));
     std::string strModelBin = tmpFn + ".bin";
+    g_print("Algo %s(%d): Model bin = %s\n", mName.c_str(), mAlgoType, strModelBin.c_str());
     GST_DEBUG("Algo %d: Model bin = %s\n", mAlgoType, strModelBin.c_str());
     GST_DEBUG("Algo %d: Model xml = %s\n", mAlgoType, strModelXml.c_str());
     ret = mIeLoader.read_model(strModelXml, strModelBin, ieType, network_config);
@@ -565,7 +566,7 @@ void  CvdlAlgoBase::init_dl_caps(GstCaps* incaps)
     gst_caps_unref (mOclCaps);
 }
 
-void CvdlAlgoBase::save_buffer(unsigned char *buf, int w, int h, int p, int id, int bPlannar, char *info)
+void CvdlAlgoBase::save_buffer(unsigned char *buf, int w, int h, int p, int id, int bPlannar, const char *info)
 {
     char filename[128];
     sprintf(filename, "%s/%s-%dx%dx%d-%d.rgb",LOG_DIR, info,w,h,p,id);
