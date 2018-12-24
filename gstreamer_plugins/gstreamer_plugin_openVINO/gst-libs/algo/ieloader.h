@@ -66,6 +66,7 @@ public:
     GstFlowReturn set_device(InferenceEngine::TargetDevice dev);
     GstFlowReturn read_model(std::string strModelXml, std::string strModelBin, int modelType, std::string network_config);
     GstFlowReturn convert_input_to_blob(const cv::UMat& img, InferenceEngine::Blob::Ptr& inputBlobPtr);
+    GstFlowReturn second_input_to_blob(InferenceEngine::Blob::Ptr& inputBlobPtr);
 
     // move to algoBase
     // parse inference result for a frame, which may contain mutiple objects
@@ -83,10 +84,21 @@ public:
         mInputPrecision = in;
         mOutputPrecision = out;
     }
+    void set_second_input(bool enable, void *data, int count, InferenceEngine::Precision precision) {
+        mNeedSecondInputData = enable;
+        mSecDataSrcPtr = data;
+        mSecDataSrcCount = count;
+        mSecDataPrecision = precision;
+    }
     //
     int mModelType;
-
     int mOutputDim[2];
+
+    //Whether need the second input data, it was for LPR models
+    bool mNeedSecondInputData;
+    void *mSecDataSrcPtr;
+    unsigned int mSecDataSrcCount;
+    InferenceEngine::Precision mSecDataPrecision;
 
     InferenceEngine::TargetDevice mTargetDev;
     InferenceEngine::Precision mInputPrecision = InferenceEngine::Precision::U8;
@@ -113,6 +125,7 @@ private:
 
     std::string mFirstInputName;
     std::string mFirstOutputName;
+    std::string mSecondInputName;
 
     std::mutex mRequstMutex;
     std::condition_variable mCondVar;

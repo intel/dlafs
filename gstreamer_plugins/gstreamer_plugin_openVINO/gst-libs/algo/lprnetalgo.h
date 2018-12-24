@@ -20,6 +20,9 @@
 
 #include "algobase.h"
 
+#define LPR_ROWS 71
+#define LPR_COLS 88
+
 class LicencePlateData
 {
 public:
@@ -97,11 +100,13 @@ public:
 
     guint64 mCurPts;
     LicencePlatePool lpPool;
+    float mSecData[LPR_COLS];
 
+#if 0
 private:
     void ctc_ref_fp16(float* probabilities, float* output_sequences, float * output_prob,
                       int T_, int N_, int C_, int in_stride, bool original_layout);
-
+#endif
     // The last algo should have an out queue
     //thread_queue<CvdlAlgoData> mOutQueue;
 };

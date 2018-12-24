@@ -113,7 +113,7 @@ static void data_norm_C(float* pfOut, unsigned char* pcInput,  int data_len,  fl
 #endif
 IELoader::IELoader()
 {
-
+    mNeedSecondInputData = false;
 }
 
 IELoader::~IELoader()
@@ -175,11 +175,26 @@ GstFlowReturn IELoader::read_model(std::string strModelXml,
     // Input data precision
     networkInputs = cnnNetwork.getInputsInfo();
     g_return_val_if_fail(networkInputs.empty()==FALSE, GST_FLOW_ERROR);
-    auto firstInputInfo = networkInputs.begin();
-    g_return_val_if_fail(firstInputInfo != networkInputs.end(), GST_FLOW_ERROR);
-    firstInputInfo->second->setInputPrecision(mInputPrecision);
-    mFirstInputName = firstInputInfo->first;
-    firstInputInfo->second->setLayout(Layout::NCHW);//HW: NCHW, SW: NHWC
+    auto inputInfo = networkInputs.begin();
+    g_return_val_if_fail(inputInfo != networkInputs.end(), GST_FLOW_ERROR);
+    inputInfo->second->setInputPrecision(mInputPrecision);
+    mFirstInputName = inputInfo->first;
+    inputInfo->second->setLayout(Layout::NCHW);//HW: NCHW, SW: NHWC
+
+    if(mNeedSecondInputData) {
+        inputInfo++;
+        g_return_val_if_fail(inputInfo != networkInputs.end(), GST_FLOW_ERROR);
+        inputInfo->second->setInputPrecision(mInputPrecision);
+        mSecondInputName = inputInfo->first;
+        g_print("LPR:  second input name is %s\n", mSecondInputName.c_str());
+
+        //TODO: make it generic!
+        auto secondInputDims = inputInfo->second->getDims();
+        if( secondInputDims.size() != 2 || secondInputDims[0] != 1 || secondInputDims[1] != mSecDataSrcCount){
+            g_print("LPR: Parsing netowrk error (wrong size of second input).\n");
+            return GST_FLOW_ERROR;
+        }
+    }
 
     // Output data precision
     networkOutputs = cnnNetwork.getOutputsInfo();
@@ -317,6 +332,29 @@ GstFlowReturn IELoader::convert_input_to_blob(const cv::UMat& img,
     return GST_FLOW_OK;
 }
 
+GstFlowReturn IELoader::second_input_to_blob(InferenceEngine::Blob::Ptr& inputBlobPtr)
+{
+    //TODO: make it can support any data type, and provide a input data pointer
+    if( (mInputPrecision != InferenceEngine::Precision::FP32) ||
+         (mSecDataPrecision !=  InferenceEngine::Precision::FP32)){
+        g_print("error: second input data is should be FP32!\n");
+        return GST_FLOW_ERROR;
+    }
+
+    InferenceEngine::TBlob<float>::Ptr inputSecondBlobPtr =
+            std::dynamic_pointer_cast<InferenceEngine::TBlob<float> >(inputBlobPtr);
+    float * inputDataPtr = inputSecondBlobPtr->data();
+    float  *src = (float *)mSecDataSrcPtr;
+    std::copy(src, src + mSecDataSrcCount, inputDataPtr);
+    /*
+    inputDataPtr[0] = 0;
+    for(int i = 1; i < 88; i ++){
+        inputDataPtr[i] = 1.0f;
+    }
+   */
+    //g_print("input sencond data!\n");
+    return GST_FLOW_OK;
+}
 int IELoader::get_enable_request()
 {
     std::unique_lock<std::mutex> lk(mRequstMutex);
@@ -390,11 +428,23 @@ GstFlowReturn IELoader::do_inference_async(void *data, uint64_t frmId, int objId
 
         // Load images.
         if (src.empty()) {
-            GST_ERROR("input image empty!!!");
+            g_print("input image empty!!!");
             release_request(reqestId);
             return GST_FLOW_ERROR;
         }
         convert_input_to_blob(src, inputBlobPtr);
+
+        // set data for second input blob
+        if(mNeedSecondInputData) {
+            InferenceEngine::Blob::Ptr inputBlobPtrSecond;
+            IECALLNORET(inferRequestAsyn->GetBlob(mSecondInputName.c_str(), inputBlobPtrSecond, &resp));
+            if (!inputBlobPtrSecond){
+                release_request(reqestId);
+                g_print("inputBlobPtrSecond is null!\n");
+                return GST_FLOW_ERROR;
+            }
+            second_input_to_blob(inputBlobPtrSecond);
+         }
 
         // send a request
         IECALLNORET(inferRequestAsyn->StartAsync(&resp));

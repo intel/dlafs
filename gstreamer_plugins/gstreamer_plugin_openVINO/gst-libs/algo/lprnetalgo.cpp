@@ -96,9 +96,6 @@ const char * NAME_MAPPING[] = {
         "Y",
         "Z"};
 
-#define LPR_ROWS 71
-#define LPR_COLS 88
-
 #define THRESHOLD_PROB 0.2
 #define LP_INPUT_W 94
 #define LP_INPUT_H 24
@@ -123,6 +120,9 @@ static void post_callback(CvdlAlgoData *algoData)
 LPRNetAlgo::LPRNetAlgo() : CvdlAlgoBase(post_callback, CVDL_TYPE_DL)
 {
     mName = std::string(ALGO_LPRNET_NAME);
+    mSecData[0] = 1.0;
+    for(int i=1;i<LPR_COLS;i++)
+        mSecData[i] = 1.0;
 }
 
 LPRNetAlgo::~LPRNetAlgo()
@@ -157,10 +157,57 @@ GstFlowReturn LPRNetAlgo::algo_dl_init(const char* modeFileName)
 
     mIeLoader.set_precision(InferenceEngine::Precision::FP32, InferenceEngine::Precision::FP32);
     mIeLoader.set_mean_and_scale(0.0f,  1.0f);
+    mIeLoader.set_second_input(true,  (void *)mSecData, LPR_COLS, InferenceEngine::Precision::FP32);
     ret = init_ieloader(modeFileName, IE_MODEL_LP_RECOGNIZE);
     return ret;
 }
 
+GstFlowReturn LPRNetAlgo::parse_inference_result(InferenceEngine::Blob::Ptr &resultBlob,
+                                                               int precision, CvdlAlgoData *outData, int objId) {
+    auto resultBlobFp32 = std::dynamic_pointer_cast<InferenceEngine::TBlob<float>>(resultBlob);
+    const float * out = resultBlobFp32->data();
+    std::string result;
+    float prob_sum = 100;
+    GstFlowReturn ret = GST_FLOW_OK;
+
+    for(int col = 0; col < LPR_COLS; col ++){
+        int idx = (int)(out[col]);
+        if(idx >= LPR_ROWS - 1 || idx < 0){
+            continue;
+        }
+
+        std::string info = NAME_MAPPING[idx];
+        if( idx >= 10 && idx <= 43){
+            info = std::string("<") + info + std::string(">");
+        }
+        result += info;
+    }
+
+    GST_LOG("lprnet: prob = %f, label = %s\n", prob_sum, result.c_str());
+#if 1
+    std::size_t pos = result.find("<");      // position of "<" in str
+    if(pos>0 && pos<16) {
+          std::string substr1 = result.substr (pos);
+          std::string substr2 = result.substr (0, pos);
+          result = substr1 + substr2;
+           GST_LOG("(correct)lprnet: prob = %f, label = %s\n", prob_sum, result.c_str());
+     }
+#endif
+    ObjectData objData = outData->mObjectVecIn[objId];
+    if(prob_sum >= 90) {
+             objData.prob = prob_sum/100.0;
+             objData.label = result;
+             objData.objectClass =  0;
+             outData->mObjectVec.push_back(objData);
+     } else {
+         result.clear();
+         ret = GST_FLOW_ERROR;
+     }
+
+    return ret;
+}
+
+#if 0
 GstFlowReturn LPRNetAlgo::parse_inference_result(InferenceEngine::Blob::Ptr &resultBlob,
                                                                int precision, CvdlAlgoData *outData, int objId) {
     GstFlowReturn ret = GST_FLOW_OK;
@@ -200,7 +247,7 @@ GstFlowReturn LPRNetAlgo::parse_inference_result(InferenceEngine::Blob::Ptr &res
         class_idx = idx;
     }
 
-   GST_LOG("lprnet: prob = %f, label = %s\n", prob_sum, result.c_str());
+   g_print("lprnet: prob = %f, label = %s\n", prob_sum, result.c_str());
    #if 1
    std::size_t pos = result.find("<");      // position of "<" in str
    if(pos>0 && pos<16) {
@@ -223,7 +270,7 @@ GstFlowReturn LPRNetAlgo::parse_inference_result(InferenceEngine::Blob::Ptr &res
 
     return ret;
 }
-
+#endif
 
 /**************************************************************************
   *
@@ -231,6 +278,7 @@ GstFlowReturn LPRNetAlgo::parse_inference_result(InferenceEngine::Blob::Ptr &res
   *
   **************************************************************************/
 
+#if 0
 void LPRNetAlgo::ctc_ref_fp16(float* probabilities, float* output_sequences, float * output_prob,
                   int T_, int N_, int C_, int in_stride, bool original_layout) {
 
@@ -298,4 +346,4 @@ void LPRNetAlgo::ctc_ref_fp16(float* probabilities, float* output_sequences, flo
         }
     }
 }
-
+#endif
