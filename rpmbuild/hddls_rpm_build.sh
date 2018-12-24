@@ -54,6 +54,7 @@ cp -raf $PROJECTS_PATH/gstreamer_plugins/gstreamer_plugin_openVINO/libgstcvdlfil
 mkdir -p rpm_src_dir/usr/local/bin
 cp -raf $PROJECTS_PATH/gstreamer_pipeline/hddlspipes rpm_src_dir/usr/local/bin/.
 cp -raf $PROJECTS_PATH/gstreamer_pipeline/registeralgo rpm_src_dir/usr/local/bin/.
+cp -raf $PROJECTS_PATH/gstreamer_pipeline/hddlspipestest rpm_src_dir/usr/local/bin/.
 chmod a+x hddls_prepare.sh
 chmod a+x hddls_pre_install.sh
 cp -raf hddls_prepare.sh rpm_src_dir/usr/local/bin/.

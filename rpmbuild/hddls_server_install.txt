@@ -9,11 +9,48 @@ sudo ln -sf /opt/intel/mediasdk/lib64/libva.so.2 /usr/lib/libva.so
 sudo ln -sf /opt/intel/mediasdk/lib64/libva-drm.so.2 /usr/lib/libva-drm.so
 
 1. Install OpenVINO R5
+----------------------
 Install OpenVINO: https://software.intel.com/en-us/articles/OpenVINO-Install-Linux
 
 source /opt/intel/computer_vision_sdk/bin/setupvars.sh
 
-2. Install OpenCL
+2. Enable HDDL
+--------------
+Additional Installation Steps for the Intel® Vision Accelerator Design with Intel® Movidius VPUs.
+For Intel® Vision Accelerator Design with Intel® Movidius VPUs, the following additional installation steps are required.
+
+Install dependencies:
+sudo apt install libusb-1.0-0 libboost-program-options1.58.0 libboost-thread1.58.0 libboost-filesystem1.58.0 libssl1.0.0 libudev1 libjson-c2
+
+Add the current Linux user to the users group:
+sudo usermod -a -G users "$(whoami)"
+
+Logout and login to make it take into effect
+If your Intel® Vision Accelerator Design with Intel® Movidius VPUs card requires SMBUS connection to PCIe slot (Raw video data card with HW version Fab-B and before), generate rules for SMBUS controller and enable the i2c_i801 driver (Intel® SMBUS controller driver):
+cd ${HDDL_INSTALL_DIR}
+sudo chmod +x ./generate_udev_rules.sh
+sudo ./generate_udev_rules.sh /etc/udev/rules.d/98-hddlbsl.rules
+
+Check if the file /etc/modprobe.d/blacklist.conf contains the line "blacklist i2c_i801" and comment it if so:
+
+sudo sed -i "s/\(.*i2c_i801$\)/#\1/g" /etc/modprobe.d/blacklist.conf
+sudo modprobe i2c_i801 # unblocking will take effect at next reboot. To avoid reboot, this time we still insmod manually 
+
+Before you start installing the drivers, make sure there is no inference application is running. Use the following command to make sure there is no HDDL service is running:
+kill -9 $(pidof hddldaemon autoboot)
+
+Install the drivers:
+cd ${HDDL_INSTALL_DIR}/drivers
+sudo chmod +x ./setup.sh
+sudo ./setup.sh install
+sudo cp -av ${HDDL_INSTALL_DIR}/../97-myriad-usbboot.rules /etc/udev/rules.d/
+sudo cp -av ${HDDL_INSTALL_DIR}/etc /
+sudo udevadm control --reload-rules
+sudo udevadm trigger
+sudo ldconfig
+Now, the drivers are installed.
+
+3. Install OpenCL
 -----------------
 cd /opt/intel/computer_vision_sdk/install_dependencies
 sudo ./install_NEO_OCL_driver.sh
@@ -29,13 +66,13 @@ If you use 8th Generation Intel processor, you will need to add:
    i915.alpha_support=1
    to the 4.14 kernel command line, in order to enable OpenCL functionality for this platform.
 
-3. Install OpenCL SDK
+4. Install OpenCL SDK
 ---------------------
 tar -xvf intel_sdk_for_opencl_2017_7.0.0.2568_x64.gz
 cd intel_sdk_for_opencl_2017_7.0.0.2568_x64
 ./install_GUI.sh
 
-4. Install HDDL-R
+5. Install json-c
 -----------------
 Install json-c
 git clone https://github.com/json-c/json-c.git
@@ -45,19 +82,13 @@ sudo apt-get install autoconf libtool
 sh autogen.sh
 ./configure && make && sudo make install
 
-Install HDDL rpm package:
-sudo rpm -ivh --nodeps Intel_Movidius_MyriadX_HDDL-R_Linux-xxx.rpm
-export HDDL_INSTALL_DIR=/usr/local
-export LD_LIBRARY_PATH=/usr/local/lib
-sudo usermod -a -G users,video $USER
-
-5. Install uWebSocket
+6. Install uWebSocket
 ---------------------
 sudo apt-get install libssl-dev
 git clone https://github.com/uNetworking/uWebSockets.git
 make && sudo make install
 
-6. Install OpenCV
+7. Install OpenCV
 -----------------
 export CPLUS_INCLUDE_PATH=/opt/intel/mediasdk/include:$CPLUS_INCLUDE_PATH
 git clone https://github.com/opencv/opencv.git
@@ -68,17 +99,16 @@ make -j8
 sudo make install
 Note: OpenVINO has provided OpenCV libraries, but HDDL-S need VA support in OpenCV, so we must rebuild it. 
 
-7. Set enviroment variables
+8. Set enviroment variables
 ---------------------------
 source /opt/intel/computer_vision_sdk/bin/setupvars.sh
-export HDDL_INSTALL_DIR=/usr/local
-export LD_LIBRARY_PATH=/usr/local/lib
+export LD_LIBRARY_PATH=/usr/local/lib:/opt/intel/computer_vision_sdk_2018.5.445/deployment_tools/inference_engine/external/hddl/lib:$LD_LIBRARY_PATH
 export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/opt/intel/mediasdk/lib64/pkgconfig
 export LD_LIBRARY_PATH=/opt/intel/mediasdk/lib64:/usr/local/lib:/opt/intel/computer_vision_sdk/inference_engine/lib/ubuntu_16.04/intel64:/opt/intel/computer_vision_sdk_2018.5.445/deployment_tools/inference_engine/external/omp/lib:/usr/lib/x86_64-linux-gnu/gstreamer-1.0:$LD_LIBRARY_PATH
 export HDDLS_CVDL_KERNEL_PATH=/usr/lib/x86_64-linux-gnu/libgstcvdl/kernels
 export PATH=$PATH:/opt/intel/mediasdk/bin/
 
-8. Setup HDDL-S Server
+9. Setup HDDL-S Server
 ----------------------
 rpm -ivh --nodeps <HDDL-S rpm package>
 sudo apt-get install nodejs-legacy npm
@@ -91,7 +121,8 @@ npm install child_process arraybuffer-to-string commander tree-kill colors fs pa
 note: please run "npm audit fix --force" command to fix package audit issues.
       Need fixing packages: jsonwebtoken async-limiter buffer-equal-constant-time
 
-9. generate certifiate files
+10. generate certifiate files
+-----------------------------
     Please generate all these certificates in one pc!!!
 
 (1) Prepare certificates
@@ -139,7 +170,8 @@ note: please run "npm audit fix --force" command to fix package audit issues.
 (8) After generated, please copy all file start with 'ca' and 'client' into 'cert_client_8126_8124', and copy all file start with 'ca' and 'server' into 'cert_server_8126_8124'.
 
 
-10. Run HDDL-S Server
+11. Run HDDL-S Server
+---------------------
 
 #cd s_framework/hddls_server_client/hddls_server
 #export HDDLS_CVDL_MODEL_PATH=`pwd`/models
