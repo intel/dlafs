@@ -471,14 +471,18 @@ function set_websocket() {
               }
             });
             ws.send("file numbers are:" + file_count);
+            console.log("file numbers are:" + file_count);
+            console.log("flag:" + flag);
             if (flag === true) {
               ws.send("file MD5 are:" + JSON.stringify(created_json_string));
-            } else {
+            }
+            else {
               prompt();
+            }
               rl.on('line', function (cmd) {
                 exec(cmd.trim());
               });
-            }
+            //}
             file_number = file_count;
             //console.log(created_json_string);
           } else {
