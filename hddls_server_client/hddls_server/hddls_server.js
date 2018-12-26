@@ -114,6 +114,7 @@ const controller_server = https.createServer({
   key: fs.readFileSync('./cert_server_8126_8124/server-key.pem'),
   cert: fs.readFileSync('./cert_server_8126_8124/server-crt.pem'),
   ca: fs.readFileSync('./cert_server_8126_8124/ca-crt.pem'),
+  crl: fs.readFileSync('./cert_client_8126_8124/client.crl'),
   requestCert: true,
   rejectUnauthorized: true
 });
@@ -558,6 +559,7 @@ const receiver_server = https.createServer({
   key: fs.readFileSync('./cert_server_8126_8124/server-key.pem'),
   cert: fs.readFileSync('./cert_server_8126_8124/server-crt.pem'),
   ca: fs.readFileSync('./cert_server_8126_8124/ca-crt.pem'),
+  crl: fs.readFileSync('./cert_client_8126_8124/client.crl'),
   requestCert: true,
   rejectUnauthorized: true
 });

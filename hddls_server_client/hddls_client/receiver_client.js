@@ -69,6 +69,7 @@ function set_websocket() {
         ca: fs.readFileSync('./cert_client_8126_8124/ca-crt.pem'),
         key: fs.readFileSync('./cert_client_8126_8124/client1-key.pem'),
         cert: fs.readFileSync('./cert_client_8126_8124/client1-crt.pem'),
+        crl: fs.readFileSync('./cert_client_8126_8124/server.crl'),
         rejectUnauthorized: true,
         requestCert: true
     });
