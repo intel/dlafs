@@ -24,6 +24,8 @@ Please Refer to certificate_create_explanation.md.
 
 ### After generated, please copy demoCA into hddl_server and hddl_client, copy all file start with 'ca' and 'client' into 'cert_client_8216_8124', and copy all file start with 'ca' and 'server' into 'cert_server_8216_8124'.
 
+<span style="color:red">ATTENTION: please copy 'client1.crl' into 'cert_server_8216_8124', copy  'server.crl' into 'cert_client_8216_8124'!!!</span>
+
 
 # 4. run websocket server and client:
 
