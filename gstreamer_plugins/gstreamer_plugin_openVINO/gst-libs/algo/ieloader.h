@@ -21,7 +21,6 @@
   * Date: 2018.10
   */
 
-
 #ifndef __IE_LOADER_H__
 #define __IE_LOADER_H__
 
@@ -34,7 +33,7 @@
 #include <condition_variable>
 #include <opencv2/opencv.hpp>
 #include <inference_engine.hpp>
-//#include "algobase.h"
+
 
 #ifndef CVDL_MODEL_DIR_DEFAULT
 // model directory, alt it can be passed from app
@@ -67,11 +66,6 @@ public:
     GstFlowReturn read_model(std::string strModelXml, std::string strModelBin, int modelType, std::string network_config);
     GstFlowReturn convert_input_to_blob(const cv::UMat& img, InferenceEngine::Blob::Ptr& inputBlobPtr);
     GstFlowReturn second_input_to_blob(InferenceEngine::Blob::Ptr& inputBlobPtr);
-
-    // move to algoBase
-    // parse inference result for a frame, which may contain mutiple objects
-    //virtual GstFlowReturn parse_inference_result(InferenceEngine::Blob::Ptr &resultBlobPtr, int precision,
-    //                                                    CvdlAlgoData *outData, int objId);
     GstFlowReturn do_inference_async(void *algoData, uint64_t frmId, int objId,
                                             cv::UMat &src, AsyncCallback cb);
     GstFlowReturn do_inference_sync(void *data, uint64_t frmId, int objId,

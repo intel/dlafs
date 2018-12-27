@@ -90,9 +90,6 @@ public:
     std::vector<cv::Rect> vecPos;/* Every frame vehicle position based on tracking size */
     bool bBottom;// Had arrived at image bottom; default = false;
 
-    /**
-    * @brief Get current last vehicle for NVR show.
-    */
     cv::Rect getLastPos()
     {
         if (vecPos.size() > 0){

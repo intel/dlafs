@@ -167,9 +167,9 @@ void OpticalflowTrackAlgo::verify_detection_result(std::vector<ObjectData> &obje
     }
 
     /**
-       *  The same object, may be give out 2 rectangle, we need merge them.
-       *  After merge, we choose the later object as last object.
-       */
+    *  The same object, may be give out 2 rectangle, we need merge them.
+    *  After merge, we choose the later object as last object.
+    */
     vecObjectCp = objectVec;
     objectVec.clear();
     int rtNum = vecObjectCp.size();

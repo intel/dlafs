@@ -91,10 +91,15 @@ make && sudo make install
 7. Install OpenCV
 -----------------
 export CPLUS_INCLUDE_PATH=/opt/intel/mediasdk/include:$CPLUS_INCLUDE_PATH
+sudo ln -sf /opt/intel/opencl/SDK/include /opt/intel/opencl/include
 git clone https://github.com/opencv/opencv.git
 cd opencv && git checkout 6ffc48769ac60d53c4bd1913eac15117c9b1c9f7
 mkdir build && cd build
 cmake -DWITH_VA_INTEL=ON -DWITH_CUDA=OFF ..
+#note: make sure:
+--     VA:                          YES
+--     Intel VA-API/OpenCL:         YES (OpenCL: /opt/intel/opencl)
+
 make -j8
 sudo make install
 Note: OpenVINO has provided OpenCV libraries, but HDDL-S need VA support in OpenCV, so we must rebuild it. 

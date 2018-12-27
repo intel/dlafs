@@ -31,7 +31,7 @@
 #define LOG_DIR "~/hddls_log/"
 
 // Each algo in the algo chain can link to multiple downstream algo
-// Here we set 1 by default
+// Here we set 2 by default
 #define MAX_DOWN_STREAM_ALGO_NUM 2
 
 // PIPELINE can output multiple output,  one output with one buffer_queue

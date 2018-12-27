@@ -47,19 +47,19 @@ public:
     ~ImageProcessor();
 
     /* parse input caps and create ocl buffer pool based on ocl caps
-       *
-       *  vppType: CRC or Blender
-       *  vppSubType: only for CRC  - BRG, BGR_PLANNER, GRAY
-       */
+    *
+    *  vppType: CRC or Blender
+    *  vppSubType: only for CRC  - BRG, BGR_PLANNER, GRAY
+    */
     GstFlowReturn ocl_init(GstCaps *incaps, GstCaps *oclcaps, int vppType, int vppSubType);
     /*Process image: CRC
-       *   Note: oclcontext will be setup when first call this function
-       */
+    *   Note: oclcontext will be setup when first call this function
+    */
     GstFlowReturn process_image(GstBuffer* inbuf, GstBuffer* inbuf2, GstBuffer** outbuf, VideoRect *crop);
     /*
-       *  Interface API: set ocl format for output surface
-       *      This format will be passed into OclVppCrc to load the right kernel
-       */
+    *  Interface API: set ocl format for output surface
+    *      This format will be passed into OclVppCrc to load the right kernel
+    */
     //void set_ocl_kernel_name(int oclFormat) {mOclFormat = oclFormat;};
 
     void get_input_video_size(int *w, int *h)

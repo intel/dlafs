@@ -69,7 +69,6 @@ public:
     bool is_at_buttom(TrackLpObjAttribute& curObj);
     void remove_invalid_object(std::vector<ObjectData> &objectVec);
     void update_track_object(std::vector<ObjectData> &objectVec);
-    //void push_track_object(CvdlAlgoData* &algoData);
 
     guint64 mCurPts;
     std::vector<TrackLpObjAttribute> mTrackObjVec; /* keep for tracking */

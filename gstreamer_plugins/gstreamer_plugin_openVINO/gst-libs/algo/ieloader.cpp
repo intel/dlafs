@@ -226,20 +226,13 @@ GstFlowReturn IELoader::read_model(std::string strModelXml,
                // Get moblienet_ssd_config_xml file name based on strModelXml
               config_xml = strModelXml.substr(0, strModelXml.rfind(".")) + std::string(".conf.xml");
               networkConfig[VPU_CONFIG_KEY(NETWORK_CONFIG)] = "file=" + config_xml;
-              //networkConfig[VPU_CONFIG_KEY(HW_STAGES_OPTIMIZATION)] = CONFIG_VALUE(YES);
               break;
         case IE_MODEL_LP_RECOGNIZE:
-              //networkConfig[VPU_CONFIG_KEY(HW_STAGES_OPTIMIZATION)] = CONFIG_VALUE(YES);
               break;
         case IE_MODEL_YOLOTINYV2:
              networkConfig[VPU_CONFIG_KEY(NETWORK_CONFIG)] = "data=input,scale=128";
              break;
         case IE_MODEL_GENERIC:
-             //TODO: here only put ssd as an example
-             /*
-          config_xml = strModelXml.substr(0, strModelXml.rfind(".")) + std::string(".conf.xml");
-          networkConfig[VPU_CONFIG_KEY(NETWORK_CONFIG)] = "file=" + config_xml;
-          */
             if(network_config.compare("null"))
                 networkConfig[VPU_CONFIG_KEY(NETWORK_CONFIG)] = network_config.c_str();
             break;
@@ -297,17 +290,18 @@ GstFlowReturn IELoader::convert_input_to_blob(const cv::UMat& img,
     if (InferenceEngine::Precision::U8 == mInputPrecision) {
         InferenceEngine::TBlob<unsigned char>::Ptr inputBlobDataPtr = 
             std::dynamic_pointer_cast<InferenceEngine::TBlob<unsigned char> >(inputBlobPtr);
-
         if (inputBlobDataPtr != nullptr) {
             unsigned char *inputDataPtr = inputBlobDataPtr->data();
-
             // Src data has been converted to be BGR planar format
             int nPixels = w * h * numBlobChannels;
             //for (int i = 0; i < nPixels; i++)
             //    inputDataPtr[i] = src.data[i];
-            //memcpy(inputDataPtr, src.data, nPixels*sizeof(char));
+            #if 0
+            memcpy(inputDataPtr, src.data, nPixels*sizeof(char));
+            #else
             unsigned char *src_buf = src.data;
             std::copy(src_buf, src_buf + nPixels, inputDataPtr);
+            #endif
         }
     }else if(InferenceEngine::Precision::FP32 == mInputPrecision){
         InferenceEngine::TBlob<float>::Ptr inputBlobDataPtr = 
@@ -346,12 +340,6 @@ GstFlowReturn IELoader::second_input_to_blob(InferenceEngine::Blob::Ptr& inputBl
     float * inputDataPtr = inputSecondBlobPtr->data();
     float  *src = (float *)mSecDataSrcPtr;
     std::copy(src, src + mSecDataSrcCount, inputDataPtr);
-    /*
-    inputDataPtr[0] = 0;
-    for(int i = 1; i < 88; i ++){
-        inputDataPtr[i] = 1.0f;
-    }
-   */
     //g_print("input sencond data!\n");
     return GST_FLOW_OK;
 }
@@ -407,8 +395,8 @@ GstFlowReturn IELoader::get_input_size(int *w, int *h, int *c)
 
 GstFlowReturn IELoader::get_out_size(int *outDim0, int *outDim1)
 {
-    *outDim1 = (int)mOutputDim[1]; //ssdMaxProposalCount
-    *outDim0 = (int)mOutputDim[0]; //ssdObjectSize
+    *outDim1 = (int)mOutputDim[1]; 
+    *outDim0 = (int)mOutputDim[0]; 
     return GST_FLOW_ERROR;
 }
 
@@ -463,7 +451,6 @@ GstFlowReturn IELoader::do_inference_async(void *data, uint64_t frmId, int objId
                 CvdlAlgoBase *algo = algoData->algoBase;
                 GST_LOG("WaitAsync - do_inference_async begin: algo = %p(%p), algoData = %p\n",
                     algo, algoData->algoBase, algoData);
-                //g_usleep(10);
                 //avoid race condition when push object
                 algo->mAlgoDataMutex.lock();
                 algo->parse_inference_result(resultBlobPtr, sizeof(float), algoData, objId);
@@ -511,6 +498,17 @@ GstFlowReturn IELoader::do_inference_sync(void *data, uint64_t frmId, int objId,
             return GST_FLOW_ERROR;
         }
         convert_input_to_blob(src, inputBlobPtr);
+         // set data for second input blob
+        if(mNeedSecondInputData) {
+            InferenceEngine::Blob::Ptr inputBlobPtrSecond;
+            IECALLNORET(inferRequestSync->GetBlob(mSecondInputName.c_str(), inputBlobPtrSecond, &resp));
+            if (!inputBlobPtrSecond){
+                release_request(reqestId);
+                g_print("inputBlobPtrSecond is null!\n");
+                return GST_FLOW_ERROR;
+            }
+            second_input_to_blob(inputBlobPtrSecond);
+         }
          ret = inferRequestSync->Infer(&resp);
          if (ret == InferenceEngine::StatusCode::OK){
                 InferenceEngine::Blob::Ptr resultBlobPtr;

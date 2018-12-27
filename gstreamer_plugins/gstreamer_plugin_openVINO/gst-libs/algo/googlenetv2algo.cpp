@@ -59,23 +59,6 @@ GoogleNetv2Algo::~GoogleNetv2Algo()
            1000000.0*mFrameDoneNum/mInferCost);
 }
 
-#if 0
-void GoogleNetv2Algo::set_data_caps(GstCaps *incaps)
-{
-    std::string filenameXML;
-    const gchar *env = g_getenv("HDDLS_CVDL_MODEL_PATH");
-    if(env) {
-        //($HDDLS_CVDL_MODEL_PATH)/<model_name>/<model_name>.xml
-        filenameXML = std::string(env) + std::string("/") + mName + std::string("/") + mName + std::string(".xml");
-    }else{
-        g_print("Error: cannot find %s model files: %s\n", mName.c_str(), filenameXML.c_str());
-        exit(1);
-    }
-    algo_dl_init(filenameXML.c_str());
-    init_dl_caps(incaps);
-}
-#endif
-
 GstFlowReturn GoogleNetv2Algo::algo_dl_init(const char* modeFileName)
 {
     GstFlowReturn ret = GST_FLOW_OK;

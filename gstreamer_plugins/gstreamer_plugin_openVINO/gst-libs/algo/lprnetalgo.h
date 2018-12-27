@@ -54,7 +54,6 @@ class LicencePlatePool
               int num = mLPVec.size();
               for(int i=0; i<num; i++) {
                   LicencePlateData &item =mLPVec[i];
-                  //if(!strncmp(lp.label.c_str(), item.label.c_str(), lp.label.size())) {
                   if(!lp.label.compare(item.label)) {
                         //hit it
                         item.life=0;
@@ -101,14 +100,6 @@ public:
     guint64 mCurPts;
     LicencePlatePool lpPool;
     float mSecData[LPR_COLS];
-
-#if 0
-private:
-    void ctc_ref_fp16(float* probabilities, float* output_sequences, float * output_prob,
-                      int T_, int N_, int C_, int in_stride, bool original_layout);
-#endif
-    // The last algo should have an out queue
-    //thread_queue<CvdlAlgoData> mOutQueue;
 };
 
 #endif

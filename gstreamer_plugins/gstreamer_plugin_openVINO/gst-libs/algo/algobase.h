@@ -46,9 +46,6 @@ public:
     ~ObjectData()
    {
         trajectoryPoints.clear();
-        //if(mAuxData)
-        //    g_free(mAuxData);
-        //mAuxData=NULL;
     };
     int id;
     int objectClass;
@@ -114,7 +111,6 @@ public:
         mObjectVecIn.clear();
      }
     ~CvdlAlgoData() {
-        // Dont unref it, which will cause unref when copy this data structure into Queue
         if(mGstBuffer){
             //gst_buffer_unref(mGstBuffer);
         }

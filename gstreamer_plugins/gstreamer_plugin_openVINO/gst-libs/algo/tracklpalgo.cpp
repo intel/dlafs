@@ -100,10 +100,6 @@ static void post_tracklp_process(CvdlAlgoData *algoData)
        for(guint i=0; i<algoData->mObjectVec.size();i++) {
              ObjectData &objectData = algoData->mObjectVec[i];
              objectData.flags = 0;
-             //if(strncmp(objectData.label.c_str(), "car", 3) &&
-             //    strncmp(objectData.label.c_str(), "bus", 3) ) {
-             //       continue;
-             //}
              if(objectData.label.compare("car")  &&
                  objectData.label.compare("bus")) {
                  continue;
@@ -116,8 +112,6 @@ static void post_tracklp_process(CvdlAlgoData *algoData)
              if(iter == boxIDToObjectID.end()){
                     continue;
               }
-              //int objectId = (int)(iter->second);
-    
               // choose a better object
           #if 0
               float score = objectData.figure_score(trackLpAlgo->mImageProcessorInVideoWidth,
@@ -151,7 +145,6 @@ static void post_tracklp_process(CvdlAlgoData *algoData)
                if(lpDetResult.x < 0){
                     continue;
                }
-    
                 //test
                 /*
                 int test_idx = algoData->mFrameId+i;
@@ -159,28 +152,6 @@ static void post_tracklp_process(CvdlAlgoData *algoData)
                     trackLpAlgo->mInputHeight,3,test_idx,0, "track_lp"); 
                 g_print("idx=%d, LP=(%d,%d)@%dx%d\n",test_idx, lpDetResult.x, lpDetResult.y, lpDetResult.width, lpDetResult.height);
            */
-    
-            #if 0
-                int adjustX  =  (lpDetResult.x>2) ? lpDetResult.x -2 : lpDetResult.x;
-                lpDetResult.width = lpDetResult.width + (lpDetResult.x - adjustX);
-                lpDetResult.x = adjustX;
-            #endif
-    
-            #if 0
-                // expand LP scope by the trick - LP w/h=4;
-                 int adjustW =  lpDetResult.height * 4;// trick- LP w/h=4
-                 int adjustX = lpDetResult.x + lpDetResult.width/2 - adjustW/2;
-                 if(adjustX<0) {
-                      adjustW = adjustW + adjustX;
-                      adjustX=0;
-                 }
-                 if(adjustX+adjustW>trackLpAlgo->mInputWidth) {
-                       adjustW = trackLpAlgo->mInputWidth - adjustX - 1;
-                 }
-                 lpDetResult.x = adjustX;
-                 lpDetResult.width = adjustW;
-             #endif
-    
              #if 1
                  // expand LP scope 10%
                   int adjustW =  lpDetResult.width * 1.16;
@@ -279,12 +250,6 @@ void TrackLpAlgo::set_data_caps(GstCaps *incaps)
     gst_caps_unref (mOclCaps);
 }
 
-/**
- * @Brief HDDL detect results could have some errors.
- * eg.x, y, width or height may be < 0, or is too small
- * We will remove the exception results
- * @param vecDetectRt: HDDL detect results
- */
 void TrackLpAlgo::verify_detection_result(std::vector<ObjectData> &objectVec)
 {
     std::vector<ObjectData> vecObjectCp = objectVec;
@@ -889,9 +854,6 @@ cv::Mat  LicencePlateDetect::calcFeatures(const cv::Mat & plateImage)
 
    return features;
 }
-
-
-
 
 //-------------------------------------------------------------------------
 //

@@ -383,7 +383,6 @@ gst_buffer_set_cvdl_meta (GstBuffer * buffer, CvdlMeta* meta)
   if(count == 1) {
     buffer = gst_buffer_ref(buffer);
   }
-  //g_print("================== gst_buffer_set_cvdl_meta: meta = %p, buffer = %p\n", meta, buffer);
   ((CvdlMetaHolder *)m)->meta = meta;
   ((CvdlMetaHolder *)m)->buffer = buffer;
 }

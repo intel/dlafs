@@ -38,8 +38,6 @@
 #include "genericalgo.h"
 #include "sinkalgo.h"
 #include "algopipeline.h"
-#include <safe_mem_lib.h>
-#include <safe_str_lib.h>
 
 using namespace std;
 

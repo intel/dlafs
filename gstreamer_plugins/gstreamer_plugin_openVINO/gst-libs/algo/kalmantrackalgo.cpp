@@ -155,12 +155,6 @@ void KalmanTrackAlgo::set_data_caps(GstCaps *incaps)
     gst_caps_unref (mOclCaps);
 }
 
-/**
- * @Brief HDDL detect results could have some errors.
- * eg.x, y, width or height may be < 0, or is too small
- * We will remove the exception results
- * @param vecDetectRt: HDDL detect results
- */
 void KalmanTrackAlgo::verify_detection_result(std::vector<ObjectData> &objectVec)
 {
     std::vector<ObjectData> vecObjectCp = objectVec;

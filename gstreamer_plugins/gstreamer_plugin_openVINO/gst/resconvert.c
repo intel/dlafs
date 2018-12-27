@@ -120,7 +120,7 @@ res_convert_fill_txt_data(ResMemory *res_mem, CvdlMeta *cvdl_meta)
     InferenceData *dst ;
     InferenceMeta *src = cvdl_meta->inference_result;
     int count = cvdl_meta->meta_count;
-    rsize_t size = 0;
+    size_t size = 0;
 
     if(!src || !count)
         return GST_FLOW_OK;
@@ -284,10 +284,6 @@ res_convert_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     case GST_EVENT_CAPS:
         gst_event_parse_caps (event, &caps);
 
-        //test
-        //GstCaps *current_caps = gst_pad_get_current_caps (pad);
-        //g_print("current_caps =\n %s\n", gst_caps_to_string(current_caps));
-        //if(current_caps) gst_caps_unref(current_caps);
         gchar *log = gst_caps_to_string(caps);
         GST_LOG("event_caps =\n %s\n", log);
         g_free(log);

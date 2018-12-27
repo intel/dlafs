@@ -31,15 +31,13 @@
 #include <pthread.h>
 #include "algoregister.h"
 
-using namespace HDDLStreamFilter;
+//using namespace HDDLStreamFilter;
 using namespace std;
 
 static void post_callback(CvdlAlgoData *algoData)
 {
         // post process algoData
         ReidAlgo *reidAlgo = static_cast<ReidAlgo*> (algoData->algoBase);
-        //int objNum = algoData->mObjectVec.size();
-
         float *descriptor = NULL;
         int matchedID = -1;
         PersonSet &personSet = reidAlgo->mPersonSet;
@@ -137,25 +135,6 @@ void ReidAlgo::set_default_label_name()
 {
      //set default label name
 }
-
-#if 0
-void ReidAlgo::set_data_caps(GstCaps *incaps)
-{
-    std::string filenameXML;
-    const gchar *env = g_getenv("HDDLS_CVDL_MODEL_PATH");
-    if(env) {
-        //($HDDLS_CVDL_MODEL_PATH)/<model_name>/<model_name>.xml
-        filenameXML = std::string(env) + std::string("/") + mName + std::string("/") + mName + std::string(".xml");
-    }else{
-        filenameXML = std::string("HDDLS_CVDL_MODEL_PATH") + std::string("/") + mName
-                                  + std::string("/") + mName + std::string(".xml");
-        g_print("Error: cannot find %s model files: %s\n", mName.c_str(), filenameXML.c_str());
-        exit(1);
-    }
-    algo_dl_init(filenameXML.c_str());
-    init_dl_caps(incaps);
-}
-#endif
 
 GstFlowReturn ReidAlgo::algo_dl_init(const char* modeFileName)
 {

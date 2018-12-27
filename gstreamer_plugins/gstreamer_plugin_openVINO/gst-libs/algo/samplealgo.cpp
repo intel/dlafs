@@ -55,27 +55,6 @@ void SampleAlgo::set_default_label_name()
      //set default label name
 }
 
-#if 0
-void SampleAlgo::set_data_caps(GstCaps *incaps)
-{
-    std::string filenameXML;
-    const gchar *env = g_getenv("HDDLS_CVDL_MODEL_PATH");
-    if(env) {
-        //($HDDLS_CVDL_MODEL_PATH)/<model_name>/<model_name>.xml
-        filenameXML = std::string(env) + std::string("/") + mName + std::string("/") + mName + std::string(".xml");
-    }else{
-        filenameXML = std::string("HDDLS_CVDL_MODEL_PATH") + std::string("/") + mName
-                                  + std::string("/") + mName + std::string(".xml");
-        g_print("Error: cannot find %s model files: %s\n", mName.c_str(), filenameXML.c_str());
-        mLoaded = false;
-        exit(1);
-    }
-    algo_dl_init(filenameXML.c_str());
-    init_dl_caps(incaps);
-}
-#endif
-
-
 GstFlowReturn SampleAlgo::algo_dl_init(const char* modeFileName)
 {
     GstFlowReturn ret = GST_FLOW_OK;
