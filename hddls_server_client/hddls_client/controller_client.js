@@ -37,6 +37,7 @@ let pipe_constuctor_to_number = "";
 let client_id = 0;
 let receive_model_file_info = "";
 let show_file = 0;
+let show_interface = 0;
 let bin_md5 = "";
 let xml_md5 = "";
 let conf_md5 = "";
@@ -471,6 +472,7 @@ function set_websocket() {
               }
             });
             ws.send("file numbers are:" + file_count);
+            //console.log(file_count);
             if (flag === true) {
               ws.send("file MD5 are:" + JSON.stringify(created_json_string));
             } else {
@@ -511,16 +513,17 @@ function set_websocket() {
           show_file++;
           read_model_file();
         }
-        else {
-          console.log("Server has updated its model, use -model to check".blue);
-          //console.log(JSON.stringify(JSON.parse(receive_model_file_info)));
-          prompt();
-          rl.on('line', function (cmd) {
-            exec(cmd.trim());
-          });
-        }
-      
-    } else if (data.indexOf("has finished and exit!") > -1) {
+      }else if(data.indexOf("models update finished")>-1){       
+       if(show_interface ===0){ 
+        console.log("Server has updated its model, use -model to check".blue);       
+        show_interface++;
+        //console.log(JSON.stringify(JSON.parse(receive_model_file_info)));
+        prompt();
+        rl.on('line', function (cmd) {
+          exec(cmd.trim());
+        });   
+    } 
+  }else if (data.indexOf("has finished and exit!") > -1) {
       console.log(`${data} `.blue);
       prompt();
       //compare_MD5(JSON.parse(receive_model_file_info));

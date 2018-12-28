@@ -106,6 +106,7 @@ controller_wss.on('connection', function (ws) {
 
   console.log('controller connected !'.bgYellow);
   client_id++;
+  file_count =0;
   ws.send(client_id);
   controller_map.set(client_id, ws);
   model_file = fs.readFileSync('./models/model_info.json', 'utf8');
@@ -116,6 +117,8 @@ controller_wss.on('connection', function (ws) {
     controller_wss.clients.forEach(function each(client) {
       if (client.readyState === WebSocket.OPEN) {
         client.send(msg);
+        client.send("models update finished");
+        console.log("send updated to one of your client".bgGreen);
       }
     });
   };
@@ -125,7 +128,7 @@ controller_wss.on('connection', function (ws) {
     console.log("models updating...");
     let model_update = JSON.parse(fs.readFileSync('./models/model_info.json', 'utf8'));
     //console.log(model_update);
-
+    count = 0;
     for (let key in received_md5) {
       let cou = 0;
       let temp = "";
@@ -148,10 +151,11 @@ controller_wss.on('connection', function (ws) {
                   }
                   console.log("Bin file updated successfully!!!".green);
                   fs.writeFileSync('./models/model_info.json', JSON.stringify(model_update));
-                  //console.log("count:" + count + "    " + "file_number:" + file_number);
+                  console.log("count:" + count + "    " + "file_number:" + file_number);
                   if (count === file_number) {
                     model_file = fs.readFileSync('./models/model_info.json', 'utf8');
                     controller_wss.broadcast(model_file);
+                    //controller_wss.broadcast("models update finished");
                     console.log("send json file!!!".red);
                   }
                 } else {
@@ -180,7 +184,7 @@ controller_wss.on('connection', function (ws) {
                   }
                   console.log("Xml file updated successfully!!!".green);
                   fs.writeFileSync('./models/model_info.json', JSON.stringify(model_update));
-                  //console.log("count:" + count + "    " + "file_number:" + file_number);
+                  console.log("count:" + count + "    " + "file_number:" + file_number);
                   if (count === file_number) {
                     model_file = fs.readFileSync('./models/model_info.json', 'utf8');
                     controller_wss.broadcast(model_file);
@@ -390,7 +394,7 @@ controller_wss.on('connection', function (ws) {
           fs.close(fd, function (errs) {
             console.log('file written');
             file_count++;
-            // console.log(file_count);
+            console.log(file_count);
             if (file_count === parseInt(file_number)) {
               update_model_info();
             }
