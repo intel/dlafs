@@ -162,8 +162,9 @@ controller_wss.on('connection', function (ws) {
           switch (innerkey) {
             case "bin_file":
               fs.readFile('./models/' + key + '/' + received_md5[key].bin_file.name, function (err) {
+                let data = fs.readFileSync('./models/' + key + '/' + received_md5[key].bin_file.name);
                 temp = received_md5[key].bin_file.name;
-                model_update[key].model_file.bin_file.MD5 = crypto.createHash("md5").update(temp).digest("hex");
+                model_update[key].model_file.bin_file.MD5 = crypto.createHash("md5").update(data).digest("hex");
                 if (model_update[key].model_file.bin_file.MD5 === received_md5[key].bin_file.MD5) {
                   model_update[key].model_file.bin_file.name = temp;
                   cou++;
@@ -195,8 +196,9 @@ controller_wss.on('connection', function (ws) {
 
             case "xml_file":
               fs.readFile('./models/' + key + '/' + received_md5[key].xml_file.name, function (err) {
+                let data = fs.readFileSync('./models/' + key + '/' + received_md5[key].xml_file.name);
                 temp = received_md5[key].xml_file.name;
-                model_update[key].model_file.xml_file.MD5 = crypto.createHash("md5").update(temp).digest("hex");
+                model_update[key].model_file.xml_file.MD5 = crypto.createHash("md5").update(data).digest("hex");
                 if (model_update[key].model_file.xml_file.MD5 === received_md5[key].xml_file.MD5) {
                   model_update[key].model_file.xml_file.name = temp;
                   cou++;
@@ -227,8 +229,9 @@ controller_wss.on('connection', function (ws) {
 
             case "conf_file":
               fs.readFile('./models/' + key + '/' + received_md5[key].conf_file.name, function (err) {
+                let data = fs.readFileSync('./models/' + key + '/' + received_md5[key].conf_file.name);
                 temp = received_md5[key].conf_file.name;
-                model_update[key].model_file.conf_file.MD5 = crypto.createHash("md5").update(temp).digest("hex");
+                model_update[key].model_file.conf_file.MD5 = crypto.createHash("md5").update(data).digest("hex");
                 if (model_update[key].model_file.conf_file.MD5 === received_md5[key].conf_file.MD5) {
                   model_update[key].model_file.conf_file.name = temp;
                   count++;

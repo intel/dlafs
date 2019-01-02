@@ -393,12 +393,12 @@ function set_websocket() {
                     //console.log(crypto.createHash("md5").update(file).digest("hex"));
                     //console.log(model_file_json[send_file_name].model_file.bin_file.MD5);
                     if (file.indexOf("bin") > -1) {
-                      bin_md5 = crypto.createHash("md5").update(file).digest("hex");
+                      let data = fs.readFileSync(answer + '/' + subdirs + "/" + file);
+                      bin_md5 = crypto.createHash("md5").update(data).digest("hex");
                       if (bin_md5 === (model_file_json[send_file_name].model_file.bin_file.MD5)) {
                         console.log("server already has this model file".red);
                       } else {
                         console.log("updating this file in server".green);
-                        let data = fs.readFileSync(answer + '/' + subdirs + "/" + file);
                         let buf = Buffer.from(data);
                         ws.send("m" + send_file_name + "/" + file);
                         ws.send(buf);
@@ -408,13 +408,13 @@ function set_websocket() {
                       }
                     } else if (file.indexOf("xml") > -1) {
                       if (file.indexOf("conf") > -1) {
-                        conf_md5 = crypto.createHash("md5").update(file).digest("hex");
+                        let data = fs.readFileSync(answer + '/' + subdirs + "/" + file);
+                        conf_md5 = crypto.createHash("md5").update(data).digest("hex");
                         if (conf_md5 === (model_file_json[send_file_name].model_file.conf_file.MD5)) {
                           console.log("server already has this model file".red);
 
                         } else {
                           console.log("updating this file in server".green);
-                          let data = fs.readFileSync(answer + '/' + subdirs + "/" + file);
                           let buf = Buffer.from(data);
                           ws.send("m" + send_file_name + "/" + file);
                           ws.send(buf);
@@ -424,13 +424,13 @@ function set_websocket() {
                         }
 
                       } else {
-                        xml_md5 = crypto.createHash("md5").update(file).digest("hex");
+                        let data = fs.readFileSync(answer + '/' + subdirs + "/" + file);
+                        xml_md5 = crypto.createHash("md5").update(data).digest("hex");
                         if (xml_md5 === (model_file_json[send_file_name].model_file.xml_file.MD5)) {
                           console.log("server already has this model file".red);
 
                         } else {
                           console.log("updating this file in server".green);
-                          let data = fs.readFileSync(answer + '/' + subdirs + "/" + file);
                           let buf = Buffer.from(data);
                           ws.send("m" + send_file_name + "/" + file);
                           ws.send(buf);
@@ -447,7 +447,7 @@ function set_websocket() {
                   } else {
                     let data = fs.readFileSync(answer + '/' + subdirs + "/" + file);
                     if (file.indexOf("bin") > -1) {
-                      bin_md5 = crypto.createHash("md5").update(file).digest("hex");
+                      bin_md5 = crypto.createHash("md5").update(data).digest("hex");
                       file_count++;
                       let buf = Buffer.from(data);
                       ws.send("m" + send_file_name + "/" + file);
@@ -456,7 +456,7 @@ function set_websocket() {
                       create_json_object(subdirs, file, 'bin', bin_md5);
                     } else if (file.indexOf("xml") > -1) {
                       if (file.indexOf("conf") > -1) {
-                        conf_md5 = crypto.createHash("md5").update(file).digest("hex");
+                        conf_md5 = crypto.createHash("md5").update(data).digest("hex");
                         file_count++;
                         let buf = Buffer.from(data);
                         ws.send("m" + send_file_name + "/" + file);
@@ -464,7 +464,7 @@ function set_websocket() {
                         flag = true;
                         create_json_object(subdirs, file, 'conf', conf_md5);
                       } else {
-                        xml_md5 = crypto.createHash("md5").update(file).digest("hex");
+                        xml_md5 = crypto.createHash("md5").update(data).digest("hex");
                         file_count++;
                         let buf = Buffer.from(data);
                         ws.send("m" + send_file_name + "/" + file);
