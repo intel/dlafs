@@ -149,42 +149,61 @@ function set_websocket() {
     requestCert: true
   });
 
+  function isEmpty(obj) {
+    for (var key in obj) {
+      if (obj.hasOwnProperty(key))
+        return false;
+    }
+    return true;
+  }
+
   function check_json_file(jsonfile, id) {
     let vali = true;
+    if (isEmpty(jsonfile)) {
+      vali = false;
+      // console.log("Empty object existed in json file".red);
+    } else {
+      switch (id) {
+        case 0:
+          if (jsonfile.command_create.pipe_number < 1) {
+            vali = false;
+            console.log("Please check pipe number in json file".red);
+          } else if (jsonfile.command_create.stream_source === "") {
+            vali = false;
+            console.log("Please check stream source in json file".red);
 
-    switch (id) {
-      case 0:
-        if (jsonfile.command_create.pipe_number < 1) {
-          vali = false;
-          console.log("Please check pipe number in json file".red);
-        } else if (jsonfile.command_create.stream_source === "") {
-          vali = false;
-          console.log("Please check stream source in json file".red);
+          } else if (jsonfile.command_create.loop_times < 1) {
+            vali = false;
+            console.log("Please check loop times in json file".red);
+          }
+          break;
 
-        } else if (jsonfile.command_create.loop_times < 1) {
-          vali = false;
-          console.log("Please check loop times in json file".red);
-        }
-        break;
+        case 1:
+          vali = true;
+          break;
 
-      case 1:
-        vali = true;
-        break;
-
-      case 2:
-        if (jsonfile.command_set_property.cvdlfilter0.algopipeline === "") {
-          vali = false;
-          console.log("Please check algopipeline in json file".red);
-        }
-        break;
+        case 2:
+          if (jsonfile.command_set_property.cvdlfilter0.algopipeline === "") {
+            vali = false;
+            console.log("Please check algopipeline in json file".red);
+          }
+          break;
+      }
     }
     return vali;
+
   }
 
   function read_file_sync(path, jfile, type, clientid, pipeid) {
     fs.exists(path, function (exists) {
       if (exists) {
-        jfile = JSON.parse(fs.readFileSync(path, 'utf8'));
+        try {
+          jfile = JSON.parse(fs.readFileSync(path, 'utf8'));
+        } catch (e) {
+          console.log("Json file error!!! Please fill empty object".red);
+          //return console.error(e);
+          prompt();
+        }
         //console.log(create_json); 
         if (check_json_file(jfile, type)) {
           if (jfile.command_type === type) {
