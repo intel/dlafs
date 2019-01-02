@@ -37,8 +37,8 @@ int  main(int argc, char **argv)
 
     pipe = hddlspipe_create( );
     if(!pipe) {
-        g_print("Error: failed to create pipel ine!\n");
-        return 1;
+        g_print("Error: failed to create pipeline!\n");
+        return eErrorInvalidPipeline;
     }
 
    // blocked until hddpspipe_stop.
@@ -47,6 +47,6 @@ int  main(int argc, char **argv)
    hddlspipes_replay_if_need(pipe);
    hddlspipe_destroy (pipe);
 
-   return 0;
+   return eErrorNone;
 }
 

@@ -32,7 +32,7 @@ all: $(TARGETS)
 $(TARGETS): $(OBJECTS)
 	@$(CXX) $^ -o $@ $(LDFLAGS) -Wl,-rpath-link
 $(OBJECTS): %.o: %.c
-	@$(CXX) $< -o $@ -c $(CXXFLAGS) $(DEFINES)
+	@$(CXX) $< -o $@ -c $(CXXFLAGS) $(DEFINES)  -std=c++11
 	
 clean:
 	@$(RM) *.o  $(TARGETS)

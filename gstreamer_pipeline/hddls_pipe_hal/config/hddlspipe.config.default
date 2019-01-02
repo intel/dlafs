@@ -6,6 +6,8 @@
          "pipe_num": <int>,          // how many pipes to be created
          "stream_source": "<string>",
          "codec_type": "<string>",     //H.264 or H.265
+         "srtp_port":<int>,  // only for srtp stream
+         "srtp_caps": "<string>",  //only for srtp stream
          "cvdlfilter0":
         {
              "algopipeline: "<string>"

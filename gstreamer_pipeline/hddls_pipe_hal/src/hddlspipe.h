@@ -38,6 +38,14 @@
 #include <stdlib.h>
 #include <getopt.h>
 
+
+enum E_ERROR_CODE{
+    eErrorNone=0,
+    eErrorInvalidPipeline=1,
+    eErrorInvalideJsonObject = 2,
+};
+
+
 enum E_PIPE_STATE {
     ePipeState_Null = 0,
     ePipeState_Ready = 1,

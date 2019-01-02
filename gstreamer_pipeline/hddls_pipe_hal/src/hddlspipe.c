@@ -42,6 +42,8 @@ static std::string g_str_pipe_desc = std::string("null");
 static std::string g_str_server_uri = std::string("null");
 static std::string g_str_algopipeline = std::string("null");
 static std::string g_str_default_server_uri = std::string("wss://localhost:8123/binaryEchoWithSize?id=3");
+static std::string g_str_srtp_desc = std::string("null");
+static std::string g_str_helper_desc = std::string("null");
 
 static gint g_pipe_id = 0;
 static gint g_loop_times = 1;
@@ -125,8 +127,6 @@ static int set_property(struct json_object *parent, HddlsPipe *hp, const char *f
         int property_int = 0;
         double property_double = 0.0;
         int ret = 0;
-        //size_t property_len = 0;
-        //int indicator=0;
         
         if( !json_get_object_d2(parent, "command_set_property", filter_name, &element) ) {
                g_print("It didn't find new property for %s\n", filter_name);
@@ -139,7 +139,6 @@ static int set_property(struct json_object *parent, HddlsPipe *hp, const char *f
                     property_name = json_object_iter_peek_name (&iter);
                     property = json_object_iter_peek_value (&iter);
                     str_property_name = std::string(property_name);
-                    //if(!strcmp_s(property_name, 12, "algopipeline", &indicator)) {
                     if(!str_property_name.compare(0, 12, "algopipeline")) {
                         property_string = json_object_get_string (property);
                         g_str_algopipeline =  std::string(property_string);
@@ -259,8 +258,10 @@ static const gchar* parse_create_command(char *desc,  gint pipe_id )
       const char *stream_source = NULL;
       const char *stream_codec_type = NULL;
       const char *algo_pipeline_desc = NULL;
-      char helper_desc[256];
+      const char *srtp_caps = NULL;
+      //char helper_desc[256];
       E_CODEC_TYPE codec_type = eCodecTypeNone;
+      int srtp_port = 5000;
 
      root = json_create(desc);
      if(!root) {
@@ -275,28 +276,40 @@ static const gchar* parse_create_command(char *desc,  gint pipe_id )
      }
 
     // 1. parse command_create
-    if (json_object_object_get_ex (root, "command_create", &object) &&
+   if (json_object_object_get_ex (root, "command_create", &object) &&
         json_object_is_type (object, json_type_object)) {
             //1.1 parse input stream source
             if(json_get_string(object, "stream_source", &stream_source)) {
-                    g_print("input source = %s\n",stream_source);
+                g_print("input source = %s\n",stream_source);
             }
-           // 1.2 codec_type
-           if(json_get_string(object, "codec_type", &stream_codec_type)) {
-                    g_print("stream codec type = %s\n",stream_codec_type);
+            // 1.2 codec_type
+            if(json_get_string(object, "codec_type", &stream_codec_type)) {
+                g_print("stream codec type = %s\n",stream_codec_type);
             }
-            // 1.3 parse property
+            // 1.3 srtp parameter if need
+            if(json_get_string(object, "srtp_caps", &srtp_caps)) {
+                g_print("srtp_caps = %s\n",srtp_caps);
+           }
+           if(json_get_int(object, "srtp_port", &srtp_port)) {
+                g_print("srtp_caps = %d\n",srtp_port);
+           }
+            // 1.4 parse property
             if(json_get_string_d2(object, CVDLFILTER_NAME, "algopipeline", &algo_pipeline_desc)) {
-                     g_print("property - algopipeline = %s\n",algo_pipeline_desc);
-                     std::string str_algo_pipeline_desc = std::string(algo_pipeline_desc);
-                     if(str_algo_pipeline_desc.size()<2)
+                    g_print("property - algopipeline = %s\n",algo_pipeline_desc);
+                    std::string str_algo_pipeline_desc = std::string(algo_pipeline_desc);
+                    if(str_algo_pipeline_desc.size()<4) {
                          algo_pipeline_desc = DEFAULT_ALGO_PIPELINE;
+                         g_print("warning - get invalid algopipeline:%s , it will use default value: %s!\n",
+                            str_algo_pipeline_desc.c_str(),  algo_pipeline_desc);
+                     }
              } else { //default
                     algo_pipeline_desc = DEFAULT_ALGO_PIPELINE;
+                    g_print("warning - failed to get algopipeline, use default value: %s!\n", algo_pipeline_desc);
              }
     }
     if(!stream_source || !stream_codec_type) {
-            g_print("%s() - failed to get input stream source!\n", __func__);
+            g_print("error - failed to get input stream source:%s,  stream_codec_type=%s\n",
+                stream_source, stream_codec_type);
             json_destroy(&root);
             return NULL;
      }
@@ -312,45 +325,54 @@ static const gchar* parse_create_command(char *desc,  gint pipe_id )
           // H.265
           codec_type = eCodecTypeH265;
      } else {
-            g_print("%s() - failed to get valid codec type : %s\n", __func__,stream_codec_type );
+            g_print("error- failed to get valid codec type : %s\n", stream_codec_type );
             json_destroy(&root);
             return NULL;
      }
+      g_str_helper_desc = std::string(" ! cvdlfilter name=cvdlfilter0 algopipeline=\"") + std::string(algo_pipeline_desc) + std::string("\" ") +
+                                            std::string(" ! resconvert name=resconvert0   resconvert0.src_pic ! mfxjpegenc ! wssink name=wssink0 wsclientid=") +
+                                            std::to_string(pipe_id)  + std::string("  resconvert0.src_txt ! wssink0.");
 
-    g_snprintf(helper_desc, 256, 
-         " ! cvdlfilter name=cvdlfilter0 algopipeline=\"%s\"  ! resconvert name=resconvert0 "
-         " resconvert0.src_pic ! mfxjpegenc ! wssink name=wssink0 wsclientid=%d  "
-         " resconvert0.src_txt ! wssink0.",  algo_pipeline_desc,  pipe_id);
+    if( ((std::string(stream_source).compare("srtp")) || (std::string(stream_source).compare("SRTP"))) && srtp_caps) {
+        g_str_srtp_desc = std::string("udpsrc") + std::string(" port=") + std::to_string(srtp_port) +
+                                         std::string(" caps=\"") + std::string(srtp_caps) + std::string("\" ") +  std::string(" ! srtpdec ! ");
+
+        if(codec_type == eCodecTypeH264) {
+             g_str_pipe_desc = g_str_srtp_desc +
+                                               std::string(" rtph264depay  ! h264parse ! mfxh264dec ") + g_str_helper_desc;
+        } else if(codec_type == eCodecTypeH265) {
+             g_str_pipe_desc =g_str_srtp_desc +
+                                             std::string("  rtph265depay  ! h265parse ! mfxhevcdec ") +  g_str_helper_desc;
+         }
+
+        g_print("pipeline: %s\n",g_str_pipe_desc.c_str() );
+        json_destroy(&root);
+
+        return g_str_pipe_desc.c_str();
+    }
+
      // 2.2 get source type: rtsp or local file
      if( g_strrstr_len(stream_source, 256, "rtsp")  || g_strrstr_len(stream_source, 256, "RTSP")) {
            // rtsp
            if(codec_type == eCodecTypeH264) {
-                //g_snprintf (g_pipe_desc, 1024, "rtspsrc location=%s udp-buff-size=800000 ! rtph264depay "
-                //                      " ! h264parse ! mfxh264dec %s ",  stream_source,  helper_desc );
                 g_str_pipe_desc = std::string("rtspsrc location=") + std::string(stream_source)
                                                 +std::string(" udp-buff-size=800000 ! rtph264depay  ! h264parse ! mfxh264dec ")
-                                                +std::string(helper_desc);
+                                                +g_str_helper_desc;
            } else if(codec_type == eCodecTypeH265) {
-                //g_snprintf (g_pipe_desc, 1024, "rtspsrc location=%s udp-buff-size=800000 ! rtph265depay "
-                //                     " ! h265parse ! mfxhevcdec  %s ", stream_source,  helper_desc );
                 g_str_pipe_desc = std::string("rtspsrc location=") + std::string(stream_source)
                                                 +std::string(" udp-buff-size=800000 ! rtph265depay  ! h265parse ! mfxhevcdec ")
-                                                +std::string(helper_desc);
+                                                +g_str_helper_desc;
             }
      } else {
           // local files
            if(codec_type == eCodecTypeH264) {
-                //g_snprintf (g_pipe_desc, 1024,
-                //     "filesrc location=%s  ! qtdemux  ! h264parse ! mfxh264dec %s",  stream_source,  helper_desc );
                 g_str_pipe_desc = std::string("filesrc location=") + std::string(stream_source)
                                                 +std::string("  ! qtdemux  ! h264parse ! mfxh264dec ")
-                                                +std::string(helper_desc);
+                                                +g_str_helper_desc;
            } else if(codec_type == eCodecTypeH265) {
-                 //g_snprintf (g_pipe_desc, 1024,
-                 //    "filesrc location=%s ! qtdemux  ! h265parse ! mfxhevcdec  %s",  stream_source,  helper_desc );
                  g_str_pipe_desc = std::string("filesrc location=") + std::string(stream_source)
                                                 +std::string("  ! qtdemux  ! h265parse ! mfxhevcdec ")
-                                                +std::string(helper_desc);
+                                                +g_str_helper_desc;
             }
     }
     g_print("pipeline: %s\n",g_str_pipe_desc.c_str() );
@@ -440,7 +462,7 @@ void hddlspipe_prepare(int argc, char **argv)
     //create pipeline
     hp->pipeline = gst_parse_launch (pipeline_desc, &error);
    if (error || ! hp->pipeline) {
-       g_print ("failed to build pipeline: error message: %s\n",(error) ? error->message : NULL);
+       g_print ("failed to build pipeline, error message: %s\n",(error) ? error->message : NULL);
        return NULL;
    }
     HDDLSPIPE_SET_PROPERTY( hp, WSSINK_NAME, "wsclientproxy", hp->ws, NULL);
