@@ -513,26 +513,31 @@ function set_websocket() {
           show_file++;
           read_model_file();
         }
-      }else if(data.indexOf("models update finished")>-1){       
-       if(show_interface ===0){ 
-        console.log("Server has updated its model, use -model to check".blue);       
-        show_interface++;
+        //TODO: Parse client ID to decide whether start intherface or not, server also need !!!!!
+      } else if (data.indexOf("models update finished") > -1) {
+        //console.log("show_interface is " +show_interface);  
+        // if(show_interface ===0){ 
+        console.log("Server has updated its model, use -model to check".blue);
+        // show_interface++;
         //console.log(JSON.stringify(JSON.parse(receive_model_file_info)));
         prompt();
         rl.on('line', function (cmd) {
           exec(cmd.trim());
-        });   
-    } 
-  }else if (data.indexOf("has finished and exit!") > -1) {
-      console.log(`${data} `.blue);
-      prompt();
-      //compare_MD5(JSON.parse(receive_model_file_info));
-    } else {
-      pipe_constuctor = data;
-      prompt();
-    }
+        });
+        //}
+      } else if (data.indexOf("Server models updated") > -1) {
+        console.log("Server has updated its model, use -model to check".blue);
+        prompt();
+      } else if (data.indexOf("has finished and exit!") > -1) {
+        console.log(`${data} `.blue);
+        prompt();
+        //compare_MD5(JSON.parse(receive_model_file_info));
+      } else {
+        pipe_constuctor = data;
+        prompt();
+      }
 
-  } else {
+    } else {
       count++;
       client_id = parseInt(data);
       console.log(('client id is ' + `${data} `).blue);
@@ -541,14 +546,14 @@ function set_websocket() {
 
 
 
-ws.on('error', function (err) {
-  console.log(`connect wrong!`.red);
-  console.log(err);
-});
+  ws.on('error', function (err) {
+    console.log(`connect wrong!`.red);
+    console.log(err);
+  });
 
-ws.on('close', function () {
-  console.log(`Right now I'll clear all pipes!`.yellow);
-});
+  ws.on('close', function () {
+    console.log(`Right now I'll clear all pipes!`.yellow);
+  });
 }
 
 read_server_ip();

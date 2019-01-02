@@ -49,7 +49,7 @@ let file_number = 0;
 let receiver_count = 0;
 let file_count = 0;
 let count = 0;
-let controller_client = "";
+let model_updateing_controller_client = "";
 let received_md5 = "";
 
 
@@ -92,6 +92,24 @@ function checksum(str, algorithm, encoding) {
     .digest(encoding || 'hex')
 }
 
+function create_directionary() {
+  let dire_name = ['yolov1tiny', 'googlenetv2', 'mobilenetssd', 'lprnet', 'yolov2tiny', 'reid'];
+  for (let i = 0; i < dire_name.length; i++) {
+    try {
+      fs.accessSync('./models/' + dire_name[i], fs.constants.F_OK);
+    } catch (ex) {
+      if (ex) {
+        fs.mkdir('./models/' + dire_name[i], function (err) {
+          if (err) {
+            throw err;
+          }
+        });
+      }
+    }
+  }
+}
+
+
 const controller_server = https.createServer({
   key: fs.readFileSync('./cert_server_8126_8124/server-key.pem'),
   cert: fs.readFileSync('./cert_server_8126_8124/server-crt.pem'),
@@ -105,26 +123,32 @@ const controller_wss = new WebSocketServer({ server: controller_server, path: '/
 controller_wss.on('connection', function (ws) {
 
   console.log('controller connected !'.bgYellow);
+  create_directionary();
   client_id++;
-  file_count =0;
+  file_count = 0;
   ws.send(client_id);
   controller_map.set(client_id, ws);
   model_file = fs.readFileSync('./models/model_info.json', 'utf8');
   ws.send(model_file);
 
   // Broadcast to all.
-  controller_wss.broadcast = function broadcast(msg) {
+  //TODO: Add client ID to broadcast
+  controller_wss.broadcast = function broadcast(msg, updating_client) {
     controller_wss.clients.forEach(function each(client) {
       if (client.readyState === WebSocket.OPEN) {
         client.send(msg);
-        client.send("models update finished");
+        if (client === updating_client) {
+          client.send("models update finished");
+        } else {
+          client.send("Server models updated");
+        }
         console.log("send updated to one of your client".bgGreen);
       }
     });
   };
 
 
-  function update_model_info() {
+  function update_model_info(model_updating_client) {
     console.log("models updating...");
     let model_update = JSON.parse(fs.readFileSync('./models/model_info.json', 'utf8'));
     //console.log(model_update);
@@ -154,7 +178,7 @@ controller_wss.on('connection', function (ws) {
                   console.log("count:" + count + "    " + "file_number:" + file_number);
                   if (count === file_number) {
                     model_file = fs.readFileSync('./models/model_info.json', 'utf8');
-                    controller_wss.broadcast(model_file);
+                    controller_wss.broadcast(model_file, model_updating_client);
                     //controller_wss.broadcast("models update finished");
                     console.log("send json file!!!".red);
                   }
@@ -187,7 +211,7 @@ controller_wss.on('connection', function (ws) {
                   console.log("count:" + count + "    " + "file_number:" + file_number);
                   if (count === file_number) {
                     model_file = fs.readFileSync('./models/model_info.json', 'utf8');
-                    controller_wss.broadcast(model_file);
+                    controller_wss.broadcast(model_file, model_updating_client);
                     console.log("send json file!!!".red);
                   }
                 } else {
@@ -214,7 +238,7 @@ controller_wss.on('connection', function (ws) {
                   //console.log("count:" + count + "    " + "file_number:" + file_number);
                   if (count === file_number) {
                     model_file = fs.readFileSync('./models/model_info.json', 'utf8');
-                    controller_wss.broadcast(model_file);
+                    controller_wss.broadcast(model_file, model_updating_client);
                     console.log("send json file!!!".red);
                   }
                 } else {
@@ -396,7 +420,8 @@ controller_wss.on('connection', function (ws) {
             file_count++;
             console.log(file_count);
             if (file_count === parseInt(file_number)) {
-              update_model_info();
+              model_updateing_controller_client = ws;
+              update_model_info(model_updateing_controller_client);
             }
           })
           if (err) {
