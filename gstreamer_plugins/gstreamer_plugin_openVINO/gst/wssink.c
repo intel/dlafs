@@ -138,20 +138,41 @@ static gboolean get_buffers_with_same_ts(GstWsSink * basesink, GstBuffer **bit_b
         return TRUE;
     }
 
-    GST_WS_SINK_BIT_LOCK(basesink);
-    gst_buffer_list_remove(basesink->bit_list, 0, 1);
-    GST_WS_SINK_BIT_UNLOCK(basesink);
-    priv->bit_processed_num++;
+    if(bit_buf_temp) {
+        GST_WS_SINK_BIT_LOCK(basesink);
+        gst_buffer_list_remove(basesink->bit_list, 0, 1);
+        GST_WS_SINK_BIT_UNLOCK(basesink);
+        priv->bit_processed_num++;
+    }
 
-    GST_WS_SINK_TXT_LOCK(basesink);
-    gst_buffer_list_remove(basesink->txt_list, 0, 1);
-    GST_WS_SINK_TXT_UNLOCK(basesink);
-    priv->txt_processed_num++;
+    if(txt_buf_temp) {
+        GST_WS_SINK_TXT_LOCK(basesink);
+        gst_buffer_list_remove(basesink->txt_list, 0, 1);
+        GST_WS_SINK_TXT_UNLOCK(basesink);
+        priv->txt_processed_num++;
+    }
 
     *txt_buf = txt_buf_temp;
     *bit_buf = bit_buf_temp;
 
     return TRUE;
+}
+
+
+static gboolean data_list_is_empty(GstWsSink * basesink)
+{
+    int num = 0;
+    // try to get a buffer of bitstream
+    GST_WS_SINK_BIT_LOCK(basesink);
+    num = gst_buffer_list_length(basesink->bit_list);
+    GST_WS_SINK_BIT_UNLOCK(basesink);
+
+    // try to get a buffer of txt data
+    GST_WS_SINK_TXT_LOCK(basesink);
+    num += gst_buffer_list_length(basesink->txt_list);
+    GST_WS_SINK_TXT_UNLOCK(basesink);
+
+    return num<=0;
 }
 // Main function to processed buffer into next filter
 //      1. package jpeg bitstream and inference result data
@@ -571,6 +592,15 @@ gst_ws_sink_change_state (GstElement * element, GstStateChange transition)
             break;
          case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
             GST_DEBUG_OBJECT (basesink, "PAUSED to PLAYING, don't need preroll");
+
+             // create task for push data to next filter/element
+            basesink->task = gst_task_new (process_sink_buffers, (gpointer)basesink, NULL);
+            gst_task_set_lock (basesink->task, &basesink->task_lock);
+            gst_task_set_enter_callback (basesink->task, NULL, NULL, NULL);
+            gst_task_set_leave_callback (basesink->task, NULL, NULL, NULL);
+
+            // start task
+            gst_task_start(basesink->task);
             break;
         default:
             break;
@@ -587,6 +617,15 @@ gst_ws_sink_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
         case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
             GST_DEBUG_OBJECT (basesink, "PLAYING to PAUSED");
+            g_print("WSSink: PLAYING to PAUSED\n");
+            int times = 20;
+            while(!data_list_is_empty(basesink) && times-->0) {
+                g_usleep(10000);
+            }
+            // stop task
+            gst_task_stop(basesink->task);
+            gst_task_join(basesink->task);
+            gst_object_unref(basesink->task);
             break;
         case GST_STATE_CHANGE_PAUSED_TO_READY:
             GST_DEBUG_OBJECT (basesink, "PAUSED to READY");
@@ -722,16 +761,7 @@ gst_ws_sink_init (GstWsSink * basesink, gpointer g_class)
     basesink->bit_list = gst_buffer_list_new ();
     basesink->txt_list = gst_buffer_list_new ();
 
-    // create task for push data to next filter/element
     g_rec_mutex_init (&basesink->task_lock);
-    basesink->task = gst_task_new (process_sink_buffers, (gpointer)basesink, NULL);
-    gst_task_set_lock (basesink->task, &basesink->task_lock);
-    gst_task_set_enter_callback (basesink->task, NULL, NULL, NULL);
-    gst_task_set_leave_callback (basesink->task, NULL, NULL, NULL);
-
-    // start task
-    gst_task_start(basesink->task);
-    
 }
 
 static void
@@ -745,10 +775,6 @@ gst_ws_sink_finalize (GObject * object)
         wsclient_destroy(basesink->wsclient_handle);
         basesink->wsclient_handle = NULL;
     }
-
-    gst_task_stop(basesink->task);
-    gst_task_join(basesink->task);
-    gst_object_unref(basesink->task);
 
     g_mutex_clear (&basesink->lock);
     g_cond_clear (&basesink->cond);
