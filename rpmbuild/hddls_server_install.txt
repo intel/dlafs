@@ -113,6 +113,7 @@ export LD_LIBRARY_PATH=/opt/intel/mediasdk/lib64:/usr/local/lib:/opt/intel/compu
 export HDDLS_CVDL_KERNEL_PATH=/usr/lib/x86_64-linux-gnu/libgstcvdl/kernels
 export PATH=$PATH:/opt/intel/mediasdk/bin/
 
+
 9. Setup HDDL-S Server
 ----------------------
 rpm -ivh --nodeps <HDDL-S rpm package>
@@ -195,3 +196,9 @@ Note:
             run command: registeralgo -a example
   2. Dont't remove the files in hddls_server/models
      The hddlspipe will read models file from this directory.
+
+  3. Maybe it will fail to run h265 video stream, it was caused by cannot find libmfx_hevcd_hw64.so in /opt/intel/mediasdk/lib64/mfx/
+     It was mediasdk driver cfg issues.
+     There is a WA:
+            #cd /opt/intel/mediasdk/lib64
+            #sudo ln -sf ../plugins mfx
