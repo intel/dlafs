@@ -43,6 +43,7 @@ enum E_ERROR_CODE{
     eErrorNone=0,
     eErrorInvalidPipeline=1,
     eErrorInvalideJsonObject = 2,
+    eErrorInvalideAlgopipeline = 3,
 };
 
 

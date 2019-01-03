@@ -96,13 +96,19 @@ static CvdlAlgoBase* algo_create(int type)
             if(algoName) {
                 algo = new GenericAlgo(algoName);
             } else {
+                register_dump();
                 g_print("Error: cannot find algo in algolist, algo_id = %d\n", type);
                 exit(1);
             }
    }
 
-    if(algo)
+    if(algo) {
         algo->mAlgoType = type;
+    }else {
+        register_dump();
+        g_print("Error: cannot create this algo = %d\n", type );
+        exit(1);
+   }
 
    return algo;
 }
@@ -297,8 +303,11 @@ AlgoPipelineConfig *algo_pipeline_config_create(gchar *desc, int *num)
         // get algo type
  #if 1
         config[i].curType = register_get_algo_id(p);
-        if(config[i].curType==-1)
+        if(config[i].curType==-1) {
+            g_print("error: not support this algo = %s\n", p);
+            register_dump();
             exit(1);
+       }
 #else
         for(n=0;n<ALGO_MAX_DEFAULT_NUM-1;n++) {
             if(strlen(p) != strlen(g_algo_name_str[n]))

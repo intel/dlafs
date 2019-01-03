@@ -297,14 +297,17 @@ static const gchar* parse_create_command(char *desc,  gint pipe_id )
             if(json_get_string_d2(object, CVDLFILTER_NAME, "algopipeline", &algo_pipeline_desc)) {
                     g_print("property - algopipeline = %s\n",algo_pipeline_desc);
                     std::string str_algo_pipeline_desc = std::string(algo_pipeline_desc);
-                    if(str_algo_pipeline_desc.size()<4) {
+                    if(str_algo_pipeline_desc.size()<1) {
                          algo_pipeline_desc = DEFAULT_ALGO_PIPELINE;
-                         g_print("warning - get invalid algopipeline:%s , it will use default value: %s!\n",
-                            str_algo_pipeline_desc.c_str(),  algo_pipeline_desc);
+                         //g_print("warning - get invalid algopipeline:%s , it will use default value: %s!\n",
+                         //   str_algo_pipeline_desc.c_str(),  algo_pipeline_desc);
+                         g_print("warning - get empty algopipeline, exit!\n");
+                         exit(eErrorInvalideAlgopipeline);
                      }
              } else { //default
                     algo_pipeline_desc = DEFAULT_ALGO_PIPELINE;
-                    g_print("warning - failed to get algopipeline, use default value: %s!\n", algo_pipeline_desc);
+                    g_print("warning - failed to get algopipeline, exit!\n");
+                    exit(eErrorInvalideAlgopipeline);
              }
     }
     if(!stream_source || !stream_codec_type) {
