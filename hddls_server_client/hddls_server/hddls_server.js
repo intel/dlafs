@@ -585,9 +585,17 @@ receiver_wss.on('connection', function connection(ws) {
 
 });
 
+
 controller_server.listen(8126);
 hddlpipe_server.listen(8123);
 receiver_server.listen(8124);
+process.on('uncaughtException', function (err) {
+  if (err.errno === 'EADDRINUSE')
+    console.log("Address already in use!!! Please check if server is already running".red);
+  else
+    console.log(err);
+  process.exit(1);
+});
 console.log('Listening on port 8126, 8124 and 8213...'.rainbow);
 
 const exec = require('child_process').exec;
