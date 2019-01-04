@@ -142,8 +142,6 @@ static void item_free_func(gpointer data)
      //fill tMsg.sPayload with data
      tMsg.sPayload =  std::string(data, len);
      AppProtocol::format(tMsg, sBuff);
-     //g_print(" Send data: size = %ld, type = %d, sPayload = %s\n",
-     //            sBuff.size(), tMsg.iType,  tMsg.sPayload.substr(0,10).c_str());
      ipcclient->pTrans->writeToSendBuffer(sBuff);
      ipcclient->pLooper->notify(ipcclient->pTrans);
  }

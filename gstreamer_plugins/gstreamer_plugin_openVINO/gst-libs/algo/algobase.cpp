@@ -208,6 +208,11 @@ static void base_hddl_algo_func(gpointer userData)
             GST_MINI_OBJECT_REFCOUNT (algoData->mGstBuffer),
         hddlAlgo->mInQueue.size(), algoData, algoData->algoBase);
 
+    if(algoData->mObjectVec.size()>20) {
+        g_print("Error: algoData->mObjectVec.size() = %ld\n", algoData->mObjectVec.size());
+        while(1);
+    }
+
     // get input data and process it here, put the result into algoData
     // NV12-->BGR_Plannar
     algoData->mObjectVecIn = algoData->mObjectVec;
@@ -215,6 +220,10 @@ static void base_hddl_algo_func(gpointer userData)
     algoData->mAllObjectDone = false;
     for(unsigned int i=0; i< algoData->mObjectVecIn.size(); i++) {
         algoData->mObjectVecIn[i].flags =0;
+    }
+
+    //process all object
+    for(unsigned int i=0; i< algoData->mObjectVecIn.size(); i++) {
         process_one_object(algoData, algoData->mObjectVecIn[i], i);
     }
 
