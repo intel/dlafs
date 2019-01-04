@@ -86,7 +86,6 @@ function set_websocket() {
                 return;
         }
 
-
         pipe_id = data[0];
         con = 'pipe_' + pipe_id.toString();
         let path = './' + con;
@@ -94,6 +93,30 @@ function set_websocket() {
 
         try {
             fs.accessSync(path, fs.constants.F_OK);
+            if (data.byteLength > 1024) {
+                let temp = m.get(pipe_id);
+                let buff = new Buffer(data);
+                let image_name = 'image_' + temp + '.jpg';
+                let path = './' + con + '/' + image_name;
+                let fd = fs.openSync(path, 'w');
+                fs.write(fd, buff, 4, buff.length - 4, 0, function (err, written) {
+                    console.log('err', err);
+                    console.log('written', written);
+                });
+                temp++;
+                m.set(pipe_id, temp);
+            } else {
+                let buff = new Buffer(data);
+                let path = './' + con + '/output.txt';
+                fs.appendFile(path, buff.toString('utf8', 4, buff.length) + "\n", function (err) {
+                    if (err) {
+                        console.log("append failed: ", err);
+                    } else {
+                        // done
+                        console.log("done".green);
+                    }
+                })
+            }
         } catch (ex) {
             console.log(("access error for ", con).red);
             if (ex) {
@@ -102,6 +125,30 @@ function set_websocket() {
                     if (err) {
                         console.log(("Failed to create dir, err =  ", err).red);
                     }
+                    if (data.byteLength > 1024) {
+                        let temp = m.get(pipe_id);
+                        let buff = new Buffer(data);
+                        let image_name = 'image_' + temp + '.jpg';
+                        let path = './' + con + '/' + image_name;
+                        let fd = fs.openSync(path, 'w');
+                        fs.write(fd, buff, 4, buff.length - 4, 0, function (err, written) {
+                            console.log('err', err);
+                            console.log('written', written);
+                        });
+                        temp++;
+                        m.set(pipe_id, temp);
+                    } else {
+                        let buff = new Buffer(data);
+                        let path = './' + con + '/output.txt';
+                        fs.appendFile(path, buff.toString('utf8', 4, buff.length) + "\n", function (err) {
+                            if (err) {
+                                console.log("append failed: ", err);
+                            } else {
+                                // done
+                                console.log("done".green);
+                            }
+                        })
+                    }
                 });
             } else {
                 console.log(("output data will be put into ", path).green);
@@ -109,7 +156,7 @@ function set_websocket() {
             }
         };
 
-        if (data.byteLength > 1024) {
+        /*if (data.byteLength > 1024) {
             let temp = m.get(pipe_id);
             let buff = new Buffer(data);
             let image_name = 'image_' + temp + '.jpg';
@@ -132,7 +179,7 @@ function set_websocket() {
                     console.log("done".green);
                 }
             })
-        }
+        }*/
     });
 
     ws.on('error', function () {

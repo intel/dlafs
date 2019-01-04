@@ -470,6 +470,7 @@ const hddlpipe_wss = new WebSocketServer({ server: hddlpipe_server, path: '/bina
 
 hddlpipe_wss.on('connection', function connection(ws) {
 
+  console.log("Local socket connected!!!".bgGreen);
   fs.readFile(temp_json_path, 'utf8', function (err, data) {
     if (err) throw err;
     console.log("read create.config: ", data);
@@ -481,7 +482,7 @@ hddlpipe_wss.on('connection', function connection(ws) {
 
 
   function update_pipe_info() {
-    //console.log("I know you have closed!!!" .red);
+   // console.log("I know you have closed!!!" .red);
     // console.log(pipe_map);
     //console.log(pipe_map.length());
     //let temp = pipe_map.get(i);
@@ -489,9 +490,9 @@ hddlpipe_wss.on('connection', function connection(ws) {
     for (let i = 0; i < 100; i++) {
       if (pipe_map.get(i) !== 0 && pipe_map.get(i) !== -1 && pipe_map.get(i).readyState === WebSocket.CLOSED) {
         pipe_map.set(i, -1);
-        //console.log("I know you have closed!!!" .blue);
+       // console.log("I know you have closed!!!" .blue);
         //console.log(client_map);
-        //console.log("i is" + i);
+      //  console.log("i is" + i);
         for (let j = 0; j < 100; j++) {
           if (client_map.get(j) !== "" && client_map.get(j).indexOf(i.toString()) > -1) {
             //console.log(client_map.get(j).indexOf(i.toString()));
@@ -503,13 +504,9 @@ hddlpipe_wss.on('connection', function connection(ws) {
               controller_map.get(j).send("pipe " + i + " has finished and exit!");
               controller_map.get(j).send(temple);
             }
-
           }
-
         }
       }
-
-
     }
   }
 
@@ -540,10 +537,10 @@ hddlpipe_wss.on('connection', function connection(ws) {
   });
 
   ws.on('close', function () {
+   // console.log("Why you are still here!!!!".bgRed);
     console.log("pipeline closed!".bgMagenta);
     update_pipe_info();
   });
-
 
 });
 
