@@ -52,8 +52,14 @@ DYNAMIC_LIB := $(LIB_OCL_PATH)/$(LIB_NAME).a
 
 INC := -I$(DIR_INC) -I$(GST_LIBS_DIR) -I$(GST_LIBS_DIR)/interface/ -I$(SYS_INC_DIR)
 OBJS := $(patsubst %.c, %.o, $(SRCS))
-GST_LIBS := $(GST_LIBS_DIR)/ocl/libocl_vpp.a $(GST_LIBS_DIR)/algo/libcvdl_algo.a $(GST_LIBS_DIR)/ws/libws_client.a
+GST_LIBS := $(GST_LIBS_DIR)/ocl/libocl_vpp.a $(GST_LIBS_DIR)/algo/libcvdl_algo.a 
 GST_LIBS += $(GST_LIBS_DIR)/safestringlib/libsafestring.a
+
+ifdef IPCCLIENT
+	GST_LIBS +=$(GST_LIBS_DIR)/ipcclient/libipc_client.a
+else
+	GST_LIBS +=$(GST_LIBS_DIR)/ws/libws_client.a
+endif
 
 all: $(OBJS)
 	$(LD) $(LDFLAGS) -o $(SHARE_LIB) -Wl,--whole-archive $(GST_LIBS) $(OBJS) -Wl,--no-whole-archive $(LIBS)

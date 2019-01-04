@@ -106,15 +106,18 @@ static void item_free_func(gpointer data)
      g_print("Connect to %s, pipe_id = %d\n",  serverUri , client_id);
      ipcclient->pTrans = make_shared<Transceiver>(ipcclient->sockfd);
      ipcclient->pLooper = new Looper(ipcclient->sockfd, ipcclient->pTrans, ipcclient->message_queue);
-      ipcclient->pLooper->start();
+     ipcclient->pLooper->start();
      std::string sPipeID;
      ipcProtocol tInitMsg;
      tInitMsg.iType = ePipeID;
      //tInitMsg.sPayload = "{ \"type\": 1 \"payload\": " + string(argv[2]) + "}";
-     tInitMsg.sPayload = std::string("pipe_id=") + std::to_string(client_id);
+     //tInitMsg.sPayload = std::string("pipe_id=") + std::to_string(client_id);
+     //char  id_info[4];
+     //*((int *)id_info)= ipcclient->id;
+     tInitMsg.sPayload = std::to_string( ipcclient->id);
      std::string sBuff = "";
      AppProtocol::format(tInitMsg, sBuff);
-     g_print(" Send data: size = %ld, type = %d, sPayload = %s\n",  sBuff.size(), tInitMsg.iType,  tInitMsg.sPayload.c_str());
+     g_print(" Send 1st data: size = %ld, type = %d, sPayload = %s\n",  sBuff.size(), tInitMsg.iType,  tInitMsg.sPayload.c_str());
      ipcclient->pTrans->writeToSendBuffer(sBuff);
      ipcclient->pLooper->notify(ipcclient->pTrans);
 
@@ -129,9 +132,6 @@ static void item_free_func(gpointer data)
          g_print("Invalid IPCClientHandle!!!\n");
          return;
      }
-     char  id_info[4];
-     *((int *)id_info)= ipcclient->id;
-
      std::string sBuff = "";
      std::string message;
      ipcProtocol tMsg;
@@ -140,9 +140,10 @@ static void item_free_func(gpointer data)
      else
          tMsg.iType = eMetaText;
      //fill tMsg.sPayload with data
-     tMsg.sPayload = std::string(id_info, 4) + std::string(data, len);
+     tMsg.sPayload =  std::string(data, len);
      AppProtocol::format(tMsg, sBuff);
-     //g_print(" Send data: size = %ld, type = %d, sPayload = %s\n",  sBuff.size(), tMsg.iType,  tMsg.sPayload.substr(0,10).c_str());
+     //g_print(" Send data: size = %ld, type = %d, sPayload = %s\n",
+     //            sBuff.size(), tMsg.iType,  tMsg.sPayload.substr(0,10).c_str());
      ipcclient->pTrans->writeToSendBuffer(sBuff);
      ipcclient->pLooper->notify(ipcclient->pTrans);
  }

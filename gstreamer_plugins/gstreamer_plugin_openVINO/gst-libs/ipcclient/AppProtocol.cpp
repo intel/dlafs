@@ -61,10 +61,7 @@ int AppProtocol::parse(const char* pBuff, size_t iLength, list<ipcProtocol>& lMs
         }
 
     }
-
     return pos;
-
-
 }
 
 void AppProtocol::format(ipcProtocol &tMsg, string& sBuf)
