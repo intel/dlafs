@@ -67,7 +67,7 @@ int Transceiver::handleResponse() {
             size_t length = _sSendBuf.length();
             iBytesSent = this->send(_sSendBuf.c_str(), _sSendBuf.length(), 0);
             if (iBytesSent > 0) {
-                if (iBytesSent == length) {
+                if (iBytesSent == (int)length) {
                     _sSendBuf.clear();
                 } else {
                     _sSendBuf.erase(_sSendBuf.begin(), _sSendBuf.begin() + min((size_t) iBytesSent, length));

@@ -34,9 +34,6 @@
 #include "../ws/wsclient.h"
 #include <string.h>
 
-#include "../safestringlib/include/safe_mem_lib.h"
-#include "../safestringlib/include/safe_str_lib.h"
-
 using namespace std;
 #include <thread>
 #include <string>
@@ -44,7 +41,17 @@ using namespace std;
 #ifdef __cplusplus
  extern "C" {
 #endif
- 
+
+
+enum ePlayloadType{
+    ePipeID = 0,
+    ePipeCreate = 1,
+    ePipeProperty = 2,
+    ePipeDestroy = 3,
+    eMetaJPG = 4,
+    eMetaText = 5,
+};
+
  struct _ipcclient{
       shared_ptr<Transceiver> pTrans;
       Looper* pLooper;
@@ -72,6 +79,8 @@ static void item_free_func(gpointer data)
          return 0;
      }
 
+    g_print("%s() - serverUri = %s, client_id = %d\n",__func__, serverUri, client_id);
+
     if(!serverUri) {
         g_print("Error: invalid uri of socket server!\n");
         return 0;
@@ -83,11 +92,11 @@ static void item_free_func(gpointer data)
     }
 
      ipcclient->server.sun_family = AF_UNIX;
-     strcpy_s(ipcclient->server.sun_path, strlen(serverUri), serverUri);
+     g_stpcpy (ipcclient->server.sun_path, serverUri);
      
      if (connect( ipcclient->sockfd, (struct sockaddr *) & ipcclient->server, sizeof(struct sockaddr_un)) < 0) {
          close( ipcclient->sockfd);
-         g_print("Error: failed to connect with stream socket");
+         g_print("Error: failed to connect with stream socket\n");
          return 0;
      }
 
@@ -100,12 +109,12 @@ static void item_free_func(gpointer data)
       ipcclient->pLooper->start();
      std::string sPipeID;
      ipcProtocol tInitMsg;
-     tInitMsg.iType = 1;
+     tInitMsg.iType = ePipeID;
      //tInitMsg.sPayload = "{ \"type\": 1 \"payload\": " + string(argv[2]) + "}";
      tInitMsg.sPayload = std::string("pipe_id=") + std::to_string(client_id);
      std::string sBuff = "";
-
      AppProtocol::format(tInitMsg, sBuff);
+     g_print(" Send data: size = %ld, type = %d, sPayload = %s\n",  sBuff.size(), tInitMsg.iType,  tInitMsg.sPayload.c_str());
      ipcclient->pTrans->writeToSendBuffer(sBuff);
      ipcclient->pLooper->notify(ipcclient->pTrans);
 
@@ -120,15 +129,20 @@ static void item_free_func(gpointer data)
          g_print("Invalid IPCClientHandle!!!\n");
          return;
      }
-     char id_info[4];
-     g_snprintf(id_info, 4, "%4d",  ipcclient->id);
+     char  id_info[4];
+     *((int *)id_info)= ipcclient->id;
+
      std::string sBuff = "";
      std::string message;
      ipcProtocol tMsg;
-     tMsg.iType = 0;
+     if(len>1024)
+        tMsg.iType = eMetaJPG;
+     else
+         tMsg.iType = eMetaText;
      //fill tMsg.sPayload with data
-     tMsg.sPayload = std::string(id_info,4) + std::string(data, len);
+     tMsg.sPayload = std::string(id_info, 4) + std::string(data, len);
      AppProtocol::format(tMsg, sBuff);
+     //g_print(" Send data: size = %ld, type = %d, sPayload = %s\n",  sBuff.size(), tMsg.iType,  tMsg.sPayload.substr(0,10).c_str());
      ipcclient->pTrans->writeToSendBuffer(sBuff);
      ipcclient->pLooper->notify(ipcclient->pTrans);
  }

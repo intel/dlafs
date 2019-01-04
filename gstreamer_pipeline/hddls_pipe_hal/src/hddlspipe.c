@@ -90,7 +90,7 @@ static gboolean  parse_cmdline (int argc, char *argv[])
         switch (opt) {
             case 'u':
                 //g_snprintf(g_server_uri, 128, "%s", optarg);
-                g_str_pipe_desc = std::string(optarg);
+                g_str_server_uri = std::string(optarg);
                 break;
             case 'i':
                  g_pipe_id  = atoi(optarg);

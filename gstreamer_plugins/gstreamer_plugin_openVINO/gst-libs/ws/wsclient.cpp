@@ -132,6 +132,7 @@ static void item_free_func(gpointer data)
          g_print("Invalid WsClientHandle!!!\n");
          return;
      }
+     #if 0
      if(!wsclient->data) {
         wsclient->data_len = len + 4;
         wsclient->data = g_new0(char, wsclient->data_len);
@@ -142,6 +143,13 @@ static void item_free_func(gpointer data)
      *(int *)wsclient->data = wsclient->id;
      g_memmove(wsclient->data+4, data, len);
      wsclient->client->send(wsclient->data, len+4, uWS::OpCode::BINARY);
+    #else
+    char  id_info[4];
+    *((int *)id_info)= wsclient->id;
+    std::string sBuff = std::string(id_info, 4) + std::string(data, len);
+    //g_print("SendData: size = %ld, buf=%d\n", sBuff.size(),  *((int *)sBuff.c_str()));
+    wsclient->client->send(sBuff.c_str(), len+4, uWS::OpCode::BINARY);
+    #endif
  }
 
 void wsclient_set_id(WsClientHandle handle,  int id)
