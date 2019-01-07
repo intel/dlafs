@@ -90,14 +90,14 @@ function display_json(data) {
 }
 
 const rl = readline.createInterface(process.stdin, process.stdout, completer);
-const help = [('-help                          ' + 'commanders that you can use.').magenta
+const help = [('-help                          ' + 'commands that you can use').magenta
   , ('-c <create.json>                  ' + 'create pipeslines').magenta
-  , ('-p <property.json> <pipe_id>      ' + 'set pipeslines property').magenta
+  , ('-p <property.json> <pipe_id>      ' + 'set pipesline property').magenta
   , ('-d <destroy.json>  <pipe_id>      ' + 'destroy pipeslines').magenta
-  , ('-pipe                             ' + 'display pipes belonging to the very client').magenta
+  , ('-pipe                             ' + 'display pipes ID belongs to this client').magenta
   , ('-client                           ' + 'display client ID').magenta
-  , ('-model                            ' + 'display model info').magenta
-  , ('-q                                ' + 'exit client.').magenta
+  , ('-model                            ' + 'display models information').magenta
+  , ('-q                                ' + 'exit client').magenta
 ].join('\n');
 
 function completer(line) {
@@ -295,7 +295,7 @@ function set_websocket() {
           break;
 
         case 'client':
-          console.log(('client id is ' + client_id).blue);
+          console.log(('client ID is ' + client_id).blue);
           prompt();
           break;
 
@@ -311,12 +311,18 @@ function set_websocket() {
         case 'q':
           process.exit(0);
           break;
+
+        default:
+          console.log(('\'' + command + '\' is not a command').red);
+          prompt();
+          break;
       }
     } else {
       // only print if they typed something
       if (command !== '') {
         console.log(('\'' + command
           + '\' is not a command').red);
+          prompt();
       }
     }
     //prompt();
@@ -576,4 +582,5 @@ function set_websocket() {
 }
 
 read_server_ip();
+
 
