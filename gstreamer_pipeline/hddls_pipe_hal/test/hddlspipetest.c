@@ -161,7 +161,7 @@ static gchar* parse_create_command(char *desc,  gint pipe_id )
 
     g_snprintf(helper_desc, 256, 
          " ! cvdlfilter name=cvdlfilter0 algopipeline=\"%s\"  ! resconvert name=resconvert0 "
-         " resconvert0.src_pic ! mfxjpegenc ! filesink location=/home/lijunjie/temp/hddls.jpeg",  algo_pipeline_desc);
+         " resconvert0.src_pic ! mfxjpegenc ! filesink location=./temp/hddls.jpeg",  algo_pipeline_desc);
      // 2.2 get source type: rtsp or local file
      if( g_strrstr_len(stream_source, 256, "rtsp")  || g_strrstr_len(stream_source, 256, "RTSP")) {
            // rtsp

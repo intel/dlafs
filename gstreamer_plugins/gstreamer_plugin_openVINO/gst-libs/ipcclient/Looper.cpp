@@ -81,7 +81,8 @@ void Looper::run() {
                 const epoll_event &ev = _tEpoller.get(n);
                 if (ev.events & EPOLLIN) {
                     handleRead();
-                } else if(ev.events & EPOLLOUT){
+                }
+                if(ev.events & EPOLLOUT){
                     handleSend();
                 }
             }

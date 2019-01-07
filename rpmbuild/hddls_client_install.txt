@@ -12,8 +12,6 @@ note: please run "npm audit fix --force" command to fix package audit issues.
 
 chmod a+x *.js
 
-echo <server_ip>  > path.txt
-
 write hostname into hostname.txt:
 echo <hostname>  > hostname.txt
 
