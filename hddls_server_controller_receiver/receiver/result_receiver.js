@@ -42,7 +42,7 @@ for (let i = 0; i < 100; i++) {
   pipe2file.set(i, 0);
 }
 
-ws = new SecureWebsocket(options);
+var ws = new SecureWebsocket(options);
 
 function incoming(data) {
   var metaData = Buffer.from(data.payload);
