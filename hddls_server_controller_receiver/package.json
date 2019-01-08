@@ -1,0 +1,17 @@
+{
+  "name": "secure_talk",
+  "version": "1.0.0",
+  "description": "a wrapper contains http & ws",
+  "scripts": {
+    "test": "mocha test/*.test.js"
+  },
+  "dependencies": {
+    "jsonwebtoken": "~8.4.0",
+    "ws": "~6.0.0",
+    "mocha": "~5.2.0"
+  },
+  "keywords": [
+    "server"
+  ],
+  "license": "MIT"
+}

@@ -1,0 +1,16 @@
+{
+    "client_id": 1,     
+    "command_type": 0 ,
+    "command_create":    
+    {
+         "pipe_num": 1,
+         "stream_source": "rtsp://10.239.85.88:8554//video0",
+         "codec_type": "H.264",    
+         "cvdlfilter0":
+        {
+             "algopipeline": "yolov1tiny ! opticalflowtrack ! googlenetv2"
+        },
+        "loop_times":1
+
+    }
+ }

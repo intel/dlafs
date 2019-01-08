@@ -1,0 +1,13 @@
+{
+    "client_id": 1,     
+    "command_type": 2,
+
+    "command_set_property": 
+   {
+        "pipe_id": 0,
+        "cvdlfilter0":    
+        {
+            "algopipeline":  "yolov1tiny ! opticalflowtrack ! googlenetv2"
+        }
+   }
+ }

@@ -1,0 +1,16 @@
+testclients
+token.txt
+node_modules
+secureClient
+secureServer
+test/token.txt
+test/clean.js
+test/gstreamer_plugin_openVINO_gst-libs_ws_wsclient.h
+mockfolder
+server_mockfolder
+test/demo.js
+controller/client_cert
+controller/model
+server/model
+server/server_cert
+.vscode
