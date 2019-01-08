@@ -364,7 +364,7 @@ OclDevice::InitPlatform ()
 
         if(strstr (platform, "Intel")) // Use only Intel platfroms
         {
-            g_print ("OpenCL platform %s is used\n", platform);
+            GST_INFO ("OpenCL platform %s is used\n", platform);
             m_platform = platforms[index];
             break;
         }
@@ -392,7 +392,7 @@ OclDevice::init ()
     cl_int status = CL_SUCCESS;
     char platform[MAX_STRING_LEN];
     status = clGetPlatformInfo (m_platform, CL_PLATFORM_VERSION, MAX_STRING_LEN, platform, NULL);
-    g_print ("OpenCL platform %s is used, status = %d\n", platform, status);
+    GST_INFO ("OpenCL platform %s is used, status = %d\n", platform, status);
     //debug end
 
     clGetDeviceIDsFromVA_APIMediaAdapterINTEL = (clGetDeviceIDsFromVA_APIMediaAdapterINTEL_fn)
@@ -748,7 +748,7 @@ OclDevice::loadKernelCV (const char* name, const char* file)
     cv::String buildOptions("-I. -cl-fast-relaxed-math -cl-kernel-arg-info");
     cv::String buildError;
     program = cv::ocl::Program(programSource, buildOptions, buildError);
-    g_print("Build program: %s\n", buildError.c_str());
+    GST_INFO("Build program: %s\n", buildError.c_str());
     g_free (data);
     //if(program.empty()) {
     //    g_print("Error in build program...\n");
@@ -872,7 +872,7 @@ OclDevice::getContext ()
     cl_context context = (cl_context)Context::getDefault().ptr();
 
     if(context != m_context) {
-        g_print("Warning - m_context is changed!!!\n");
+        GST_ERROR("Warning - m_context is changed!!!\n");
     }
 
     return m_context;

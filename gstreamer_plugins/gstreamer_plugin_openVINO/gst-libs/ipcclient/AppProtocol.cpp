@@ -21,7 +21,8 @@
   * Date: 2018.12.16
   */
 #include "AppProtocol.h"
-
+ #include <glib.h>
+#include <gst/gst.h>
 #include <arpa/inet.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -43,10 +44,10 @@ int AppProtocol::parse(const char* pBuff, size_t iLength, list<ipcProtocol>& lMs
         }
         uint32_t iHeaderLen;
         iHeaderLen = ntohl(*(uint32_t*)(pBuff + pos));
-        cout << "\niHeaderLen" << iHeaderLen << endl;
+        GST_LOG("iHeaderLen = %d\n", iHeaderLen);
         if(iLen < iHeaderLen)
         {
-            cout << "not enough payload, \nRemaining Buffer to parse " << iLen << "\ncurrent pos" << pos  << "\n current buffer size" << iLength << endl;
+            GST_INFO("not enough payload, \nRemaining Buffer to parse: %d \ncurrent pos:%ld\n current buffer size=%ld\n",iLen, pos, iLength);
             break;
         }
         else

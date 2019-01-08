@@ -288,7 +288,7 @@ res_convert_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         gst_event_parse_caps (event, &caps);
 
         gchar *log = gst_caps_to_string(caps);
-        GST_LOG("event_caps =\n %s\n", log);
+        GST_INFO("event_caps =\n %s\n", log);
         g_free(log);
         log = NULL;
 
@@ -325,11 +325,11 @@ res_convert_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
         // set pic_src pad
         prev_incaps = gst_pad_get_current_caps (otherpad);
-        GST_LOG("caps = %s\n", gst_caps_to_string(caps));
-        GST_LOG("1.prev_incaps = %s\n", gst_caps_to_string(prev_incaps));
+        GST_DEBUG("caps = %s\n", gst_caps_to_string(caps));
+        GST_DEBUG("1.prev_incaps = %s\n", gst_caps_to_string(prev_incaps));
         if(!prev_incaps)
             prev_incaps = gst_pad_get_pad_template_caps(otherpad);
-        GST_LOG("2.prev_incaps = %s\n", gst_caps_to_string(prev_incaps));
+        GST_DEBUG("2.prev_incaps = %s\n", gst_caps_to_string(prev_incaps));
 
         // create a new caps based on input caps of event
         GstStructure *structure;
@@ -340,18 +340,18 @@ res_convert_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
         structure  = gst_structure_copy(gst_caps_get_structure(caps, 0));
         //features = gst_caps_features_copy(gst_caps_get_features(caps, 0));
-        GST_LOG("structure:\n%s\n",gst_structure_to_string(structure));
+        GST_DEBUG("structure:\n%s\n",gst_structure_to_string(structure));
         //g_printf("features:\n%s\n",gst_caps_features_to_string(features));
 
         gst_structure_set_name(structure, "video/x-raw");
         gst_structure_remove_field(structure, "format=(string)NV12");
         gst_structure_set(structure,"format",G_TYPE_STRING, "BGRA", NULL);
-        GST_LOG("structure:\n%s\n",gst_structure_to_string(structure));
+        GST_DEBUG("structure:\n%s\n",gst_structure_to_string(structure));
         features = gst_caps_features_new_empty();
 
         gst_caps_append_structure_full(newcaps, structure, features);
-        GST_LOG("caps =\n %s\n", gst_caps_to_string(caps));
-        GST_LOG("newcaps =\n %s\n", gst_caps_to_string(newcaps));
+        GST_DEBUG("caps =\n %s\n", gst_caps_to_string(caps));
+        GST_DEBUG("newcaps =\n %s\n", gst_caps_to_string(newcaps));
         newcaps = gst_caps_intersect_full (newcaps, prev_incaps, GST_CAPS_INTERSECT_FIRST);
         //g_print("intersect newcaps =\n %s\n", gst_caps_to_string(newcaps));
 
@@ -411,27 +411,27 @@ res_convert_query (GstPad * pad, GstObject * parent, GstQuery * query)
     GST_LOG_OBJECT (convertor, "Have query of type %d on pad %" GST_PTR_FORMAT,
         GST_QUERY_TYPE (query), pad);
 
-    GST_LOG("%s() - name = %s, query = %s\n",__func__, gst_pad_get_name(pad),
+    GST_DEBUG("%s() - name = %s, query = %s\n",__func__, gst_pad_get_name(pad),
         GST_QUERY_TYPE_NAME (query));
 
     ret = gst_pad_query_default (pad, parent, query);
 
     switch (GST_QUERY_TYPE (query)) {
         case GST_QUERY_ALLOCATION:
-            GST_LOG("%s() - query GST_QUERY_ALLOCATION...",__func__);
+            GST_DEBUG("%s() - query GST_QUERY_ALLOCATION...",__func__);
             break;
         case GST_QUERY_ACCEPT_CAPS:
         {
             GstCaps *caps;
             gst_query_parse_accept_caps (query, &caps);
-            GST_LOG("%s() - accept caps = %s\n", __func__, gst_caps_to_string(caps));
+            GST_DEBUG("%s() - accept caps = %s\n", __func__, gst_caps_to_string(caps));
         break;
         }
         case GST_QUERY_CAPS:
         {
             GstCaps *caps;
             gst_query_parse_caps (query, &caps);
-            GST_LOG("%s() - caps = %s\n", __func__, gst_caps_to_string(caps));
+            GST_DEBUG("%s() - caps = %s\n", __func__, gst_caps_to_string(caps));
             break;
         }
         default:

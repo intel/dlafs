@@ -21,7 +21,7 @@
   * Date: 2018.10
   */
 
- #include <glib.h>
+#include <glib.h>
 #include <gst/gst.h>
 #include "wsclient.h"
 #include <uWS/uWS.h>
@@ -60,7 +60,7 @@ static void item_free_func(gpointer data)
  {
      WsClient *wsclient = (WsClient *)g_new0 (WsClient, 1);
      if(!wsclient) {
-         g_print("Failed to calloc WsClient!\n");
+         GST_ERROR("Failed to calloc WsClient!\n");
          return 0;
      }
      wsclient->client = NULL;
@@ -80,12 +80,12 @@ static void item_free_func(gpointer data)
              ss >> s;
              std::string msg = std::string("pipe_id=") + s;
              ws->send(msg.c_str(), msg.size(), uWS::OpCode::TEXT);
-             g_print("Success to connect with %s!\n", serverUri);
+             GST_INFO("Success to connect with %s!\n", serverUri);
          });
 
         // If receive message, put it to queue
         hub.onMessage([wsclient ](uWS::WebSocket<uWS::CLIENT> *ws, char *message, size_t length, uWS::OpCode opCode){
-            g_print("Receive receive message = %s!\n", message);
+            GST_INFO("Receive receive message = %s!\n", message);
             if(opCode ==  uWS::OpCode::TEXT) {
                 MessageItem *item = g_new0(MessageItem, 1);
                 item->data = g_new0(char, length);
@@ -93,25 +93,25 @@ static void item_free_func(gpointer data)
                 g_memmove(item->data, message, length);
                 g_async_queue_push ( wsclient->message_queue, item);
              }else{
-                g_print("Receive message that not need to be process: size = %ld\n", length);
+                GST_INFO("Receive message that not need to be process: size = %ld\n", length);
              }
          });
 
          hub.onError([](void *user) {
-             g_print("FAILURE: Connection failed! Timeout?\n");
+             GST_ERROR("FAILURE: Connection failed! Timeout?\n");
              exit(-1);
          });
  
          hub.onDisconnection([](uWS::WebSocket<uWS::CLIENT> *ws, int code, char *message, size_t length) {
-             g_print("CLIENT CLOSE: %d: %s\n", code, message);
+             GST_INFO("CLIENT CLOSE: %d: %s\n", code, message);
          });
  
          if(!serverUri){
              hub.connect(DEFAULT_WSS_URI, nullptr);
-             g_print("Try to default websocket server: %s\n", DEFAULT_WSS_URI);
+             GST_INFO("Try to default websocket server: %s\n", DEFAULT_WSS_URI);
          }else{
              hub.connect(serverUri, nullptr);
-             g_print("Try to connect websocket server: %s\n", serverUri);
+             GST_INFO("Try to connect websocket server: %s\n", serverUri);
          }
          hub.run();
      });
@@ -129,7 +129,7 @@ static void item_free_func(gpointer data)
      WsClient *wsclient = (WsClient *)handle;
  
      if(!handle) {
-         g_print("Invalid WsClientHandle!!!\n");
+         GST_ERROR("Invalid WsClientHandle!!!\n");
          return;
      }
      #if 0
@@ -157,7 +157,7 @@ void wsclient_set_id(WsClientHandle handle,  int id)
     WsClient *wsclient = (WsClient *)handle;
 
     if(!handle) {
-        g_print("%s(): Invalid WsClientHandle!!!\n",__func__);
+        GST_ERROR("%s(): Invalid WsClientHandle!!!\n",__func__);
         return;
     }
     wsclient->id = id;
@@ -169,7 +169,7 @@ int wsclient_get_id(WsClientHandle handle)
     WsClient *wsclient = (WsClient *)handle;
 
     if(!handle) {
-        g_print("%s(): Invalid WsClientHandle!!!\n",__func__);
+        GST_ERROR("%s(): Invalid WsClientHandle!!!\n",__func__);
         return -1;
     }
     return wsclient->id;
@@ -183,7 +183,7 @@ MessageItem *wsclient_get_data(WsClientHandle handle)
 {
     WsClient *wsclient = (WsClient *)handle;
     if(!handle) {
-        g_print("%s(): Invalid WsClientHandle!!!\n",__func__);
+        GST_ERROR("%s(): Invalid WsClientHandle!!!\n",__func__);
         return NULL;
     }
     MessageItem *item =(MessageItem *)g_async_queue_pop(wsclient->message_queue);
@@ -201,7 +201,7 @@ MessageItem *wsclient_get_data(WsClientHandle handle)
      MessageItem *item = NULL;
      gint64 timeout_microsec = 400000; //400ms
      if(!handle) {
-        g_print("%s(): Invalid WsClientHandle!!!\n",__func__);
+        GST_ERROR("%s(): Invalid WsClientHandle!!!\n",__func__);
         return NULL;
     }
      item = (MessageItem *)g_async_queue_timeout_pop(wsclient->message_queue, timeout_microsec);

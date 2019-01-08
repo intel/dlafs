@@ -78,7 +78,7 @@ void AlgoRegister::add_algo(int id, const char* name)
     for(unsigned int i=0; i<algo_vec.size();i++) {
         AlgoListItem &item = algo_vec[i];
         if(!item.name_str.compare(name) || item.id==id) {
-            g_print("Algo(id=%d, name=%s) has existed!\n",id, name);
+            GST_ERROR("Algo(id=%d, name=%s) has existed!\n",id, name);
             return;
         }
     }
@@ -104,7 +104,7 @@ const char *AlgoRegister::get_algo_name(int id)
         }
     }
 
-    g_print("Failed to get algo name, id = %d\n",id);
+    GST_ERROR("Failed to get algo name, id = %d\n",id);
     return NULL;
 }
 
@@ -116,7 +116,7 @@ int AlgoRegister::get_algo_id(const char *name)
             return item.id;
         }
     }
-    g_print("Failed to get algo id, algo name = %s\n",name);
+    GST_ERROR("Failed to get algo id, algo name = %s\n",name);
     return -1;
 }
 
@@ -147,7 +147,7 @@ void AlgoRegister::register_write()
         ofs.close();
      }
      catch (std::ifstream::failure e) {
-       std::cerr << "Exception opening/writing/closing file\n";
+        GST_ERROR("Exception opening/writing/closing file\n");
      }
 }
 
@@ -216,9 +216,9 @@ void AlgoRegister::register_reset()
     generic_algo_num = 0;
     inited = false;
     if(remove(ALGO_REGISTER_FILE_NAME))
-        g_print("Success to remove %s\n", ALGO_REGISTER_FILE_NAME);
+        GST_INFO("Success to remove %s\n", ALGO_REGISTER_FILE_NAME);
     else
-        g_print("Failed to remove %s\n", ALGO_REGISTER_FILE_NAME);
+        GST_INFO("Failed to remove %s\n", ALGO_REGISTER_FILE_NAME);
 }
 
 static AlgoRegister g_algoRegister;

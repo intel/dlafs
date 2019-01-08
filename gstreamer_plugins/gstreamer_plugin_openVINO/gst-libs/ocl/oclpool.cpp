@@ -85,7 +85,7 @@ ocl_pool_set_config (GstBufferPool* pool, GstStructure* config)
         (info.finfo->format != GST_VIDEO_FORMAT_BGRA) &&
         (info.finfo->format != GST_VIDEO_FORMAT_BGR) ) {
         GST_WARNING_OBJECT (pool, "Got invalid format when config pool!");
-        g_print("%s() - got invalid format when config pool, format=%d\n",__func__, info.finfo->format);
+        GST_ERROR("%s() - got invalid format when config pool, format=%d\n",__func__, info.finfo->format);
         return FALSE;
     }
 
@@ -155,7 +155,7 @@ ocl_memory_alloc (OclPool* oclpool)
             ocl_mem->mem_size = OCL_MEMORY_WIDTH (ocl_mem) * OCL_MEMORY_HEIGHT (ocl_mem) * 4;
             break;
         default:
-            g_print("Not support format = %d\n", priv->info.finfo->format);
+            GST_ERROR("Not support format = %d\n", priv->info.finfo->format);
             ocl_mem->frame =  cv::UMat();
             ocl_mem->mem_size = 0;
             break;

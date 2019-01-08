@@ -186,12 +186,12 @@ GstFlowReturn IELoader::read_model(std::string strModelXml,
         g_return_val_if_fail(inputInfo != networkInputs.end(), GST_FLOW_ERROR);
         inputInfo->second->setInputPrecision(mInputPrecision);
         mSecondInputName = inputInfo->first;
-        g_print("LPR:  second input name is %s\n", mSecondInputName.c_str());
+        GST_INFO("IE blobs second input name is %s\n", mSecondInputName.c_str());
 
         //TODO: make it generic!
         auto secondInputDims = inputInfo->second->getDims();
         if( secondInputDims.size() != 2 || secondInputDims[0] != 1 || secondInputDims[1] != mSecDataSrcCount){
-            g_print("LPR: Parsing netowrk error (wrong size of second input).\n");
+            g_print("Parsing netowrk error (wrong size of second input).\n");
             return GST_FLOW_ERROR;
         }
     }
@@ -331,7 +331,7 @@ GstFlowReturn IELoader::second_input_to_blob(InferenceEngine::Blob::Ptr& inputBl
     //TODO: make it can support any data type, and provide a input data pointer
     if( (mInputPrecision != InferenceEngine::Precision::FP32) ||
          (mSecDataPrecision !=  InferenceEngine::Precision::FP32)){
-        g_print("error: second input data is should be FP32!\n");
+        GST_ERROR("error: second input data is should be FP32!\n");
         return GST_FLOW_ERROR;
     }
 
@@ -387,7 +387,7 @@ GstFlowReturn IELoader::get_input_size(int *w, int *h, int *c)
         ret = GST_FLOW_OK;
         release_request(reqestId);
     } else {
-        g_print("Cannot get valid requestid!!!\n");
+        GST_ERROR("Cannot get valid requestid!!!\n");
     }
 
     return ret;

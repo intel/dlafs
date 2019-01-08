@@ -55,7 +55,7 @@ static gint g_loop_times = 1;
         GstElement *element = gst_bin_get_by_name (GST_BIN((hp)->pipeline), (element_name)); \
         if (NULL != element) { \
             g_object_set (element, __VA_ARGS__); \
-            g_print ("Success to set property - element=%s\n", element_name); \
+            GST_INFO ("Success to set property - element=%s\n", element_name); \
             gst_object_unref (element); \
         } else { \
             g_print ("### Can not find element '%s' ###\n", element_name); \
@@ -142,7 +142,7 @@ static int set_property(struct json_object *parent, HddlsPipe *hp, const char *f
                     if(!str_property_name.compare(0, 12, "algopipeline")) {
                         property_string = json_object_get_string (property);
                         g_str_algopipeline =  std::string(property_string);
-                        g_print("g_algopipeline = %s\n ",g_str_algopipeline.c_str());
+                        GST_INFO("g_algopipeline = %s\n ",g_str_algopipeline.c_str());
                         ret = 1;
                         json_object_iter_next (&iter);
                         continue;
@@ -182,19 +182,19 @@ static void process_commands(HddlsPipe *hp, char *desc)
             return;
      }
 
-     g_print("pipe %d(%d) has got message: %s\n", hp->pipe_id, wsclient_get_id(hp->ws),  desc);
+     GST_INFO("pipe %d(%d) has got message: %s\n", hp->pipe_id, wsclient_get_id(hp->ws),  desc);
      command_type = json_get_command_type(root);
      switch(command_type){
         case eCommand_PipeCreate:
-                 g_print("Error: this command should not be here!!!\n");
+                 GST_WARNING("Error: this command should not be here!!!\n");
                  break;
         case eCommand_PipeDestroy:
-                g_print("Receive command: destroy pipeline....\n");
+                GST_INFO("Receive command: destroy pipeline....\n");
                 hddlspipe_stop (hp);
                  hp->state = ePipeState_Null;
                 break;
         case eCommand_SetProperty:
-                g_print("Receive command: set pipeline....\n");
+                GST_INFO("Receive command: set pipeline....\n");
                 hddlspipe_pause( hp);
                 // set property
                 ret = set_property(root, hp, CVDLFILTER_NAME);
@@ -223,9 +223,9 @@ static void process_commands(HddlsPipe *hp, char *desc)
                     secA = g_strndup(g_str_pipe_desc.c_str(), begin - g_str_pipe_desc.c_str());
                     secC = end;//g_strndup(end, strnlen_s(end, 1024));
                     // replace g_pipe_desc
-                    g_print("old g_pipe_desc = %s\n", g_str_pipe_desc.c_str());
+                    GST_INFO("old g_pipe_desc = %s\n", g_str_pipe_desc.c_str());
                    g_str_pipe_desc = std::string(secA) + g_str_algopipeline + std::string(secC);
-                   g_print("new g_pipe_desc = %s\n", g_str_pipe_desc.c_str());
+                   GST_INFO("new g_pipe_desc = %s\n", g_str_pipe_desc.c_str());
                    if(secA && secC)
                         hddlspipe_stop (hp);
                    if(secA) g_free(secA);
@@ -280,22 +280,22 @@ static const gchar* parse_create_command(char *desc,  gint pipe_id )
         json_object_is_type (object, json_type_object)) {
             //1.1 parse input stream source
             if(json_get_string(object, "stream_source", &stream_source)) {
-                g_print("input source = %s\n",stream_source);
+                GST_INFO("input source = %s\n",stream_source);
             }
             // 1.2 codec_type
             if(json_get_string(object, "codec_type", &stream_codec_type)) {
-                g_print("stream codec type = %s\n",stream_codec_type);
+                GST_INFO("stream codec type = %s\n",stream_codec_type);
             }
             // 1.3 srtp parameter if need
             if(json_get_string(object, "srtp_caps", &srtp_caps)) {
-                g_print("srtp_caps = %s\n",srtp_caps);
+                GST_INFO("srtp_caps = %s\n",srtp_caps);
            }
            if(json_get_int(object, "srtp_port", &srtp_port)) {
-                g_print("srtp_caps = %d\n",srtp_port);
+                GST_INFO("srtp_caps = %d\n",srtp_port);
            }
             // 1.4 parse property
             if(json_get_string_d2(object, CVDLFILTER_NAME, "algopipeline", &algo_pipeline_desc)) {
-                    g_print("property - algopipeline = %s\n",algo_pipeline_desc);
+                    GST_INFO("property - algopipeline = %s\n",algo_pipeline_desc);
                     std::string str_algo_pipeline_desc = std::string(algo_pipeline_desc);
                     if(str_algo_pipeline_desc.size()<1) {
                          algo_pipeline_desc = DEFAULT_ALGO_PIPELINE;
@@ -348,7 +348,7 @@ static const gchar* parse_create_command(char *desc,  gint pipe_id )
                                              std::string("  rtph265depay  ! h265parse ! mfxhevcdec ") +  g_str_helper_desc;
          }
 
-        g_print("pipeline: %s\n",g_str_pipe_desc.c_str() );
+        GST_INFO("pipeline: %s\n",g_str_pipe_desc.c_str() );
         json_destroy(&root);
 
         return g_str_pipe_desc.c_str();
@@ -378,7 +378,7 @@ static const gchar* parse_create_command(char *desc,  gint pipe_id )
                                                 +g_str_helper_desc;
             }
     }
-    g_print("pipeline: %s\n",g_str_pipe_desc.c_str() );
+    GST_INFO("pipeline: %s\n",g_str_pipe_desc.c_str() );
     json_destroy(&root);
 
     return g_str_pipe_desc.c_str();
@@ -399,7 +399,7 @@ static gboolean bus_callback (GstBus* bus, GstMessage* msg, gpointer data)
             g_error_free (err);
         }
         if (dbg) {
-            g_print ("[Debug details: %s]\n", dbg);
+            GST_INFO ("[Debug details: %s]\n", dbg);
             g_free (dbg);
         }
         hddlspipe_stop (hp);
@@ -407,7 +407,7 @@ static gboolean bus_callback (GstBus* bus, GstMessage* msg, gpointer data)
     }
     case GST_MESSAGE_EOS:
         /* end-of-stream */
-        g_print ("EOS\n");
+        GST_INFO ("EOS\n");
         hddlspipe_stop (hp);
         break;
     default:
@@ -452,7 +452,7 @@ void hddlspipe_prepare(int argc, char **argv)
 
    // Block wait until get desc data from ws server
     item = (MessageItem *)wsclient_get_data(hp->ws);
-    g_print("%s() -pipe %d  received message: %s\n", __func__, hp->pipe_id, item->data);
+    GST_INFO("%s() -pipe %d  received message: %s\n", __func__, hp->pipe_id, item->data);
     hp->state = ePipeState_Null;
 
     // parse pipeline_create command

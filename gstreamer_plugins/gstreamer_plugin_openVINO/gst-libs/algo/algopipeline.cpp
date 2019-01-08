@@ -118,7 +118,7 @@ static void algo_item_link(AlgoItem* from, AlgoItem* to, int index)
 {
     CvdlAlgoBase *algoFrom, *algoTo;
     if(!from || !to || !from->algo || !to->algo) {
-        GST_ERROR("algo link failed!\n");
+        g_print("algo link failed!\n");
         return;
     }
     algoFrom = static_cast<CvdlAlgoBase *>(from->algo);
@@ -132,7 +132,7 @@ static void algo_item_link_sink(AlgoItem *preItem[], int num, AlgoItem *sinkItem
     SinkAlgo *sink;
     int i = 0;
     if(!preItem || !sinkItem || num==0) {
-        GST_ERROR("algo link sink failed!\n");
+        g_print("algo link sink failed!\n");
         return;
     }
     algoSink = static_cast<CvdlAlgoBase*>(sinkItem->algo);
@@ -210,7 +210,7 @@ AlgoPipelineConfig *algo_pipeline_config_create(gchar *desc, int *num)
 
     //TODO: need to support case 2 better
 
-    g_print("algo pipeline congig description: %s\n", desc);
+    GST_INFO("algo pipeline congig description: %s\n", desc);
     // delete the blank char
     descStrip = g_strstrip(desc);
     p = descStrip;
@@ -542,13 +542,13 @@ void algo_pipeline_put_buffer(AlgoPipelineHandle handle, GstBuffer *buf,  guint 
 
     if(pipeline==NULL) {
         gst_buffer_unref(buf);
-        g_print("algo pipeline handle is NULL!\n");
+        GST_ERROR("algo pipeline handle is NULL!\n");
         return;
     }
     algo = static_cast<CvdlAlgoBase *>(pipeline->first);
     if(!algo){
         gst_buffer_unref(buf);
-        g_print("failed to put_buffer: algo is NULL");
+        GST_ERROR("failed to put_buffer: algo is NULL");
         return;
     }
     //g_print("%s() - GstBuffer = %p\n",__func__,  buf);
@@ -626,7 +626,7 @@ void algo_pipeline_flush_buffer(AlgoPipelineHandle handle)
     //TODO: need support multiple output buffer
     if(pipeline) {
         algo = static_cast<CvdlAlgoBase *>(pipeline->last);
-        g_print("%s() - put EOS buffer!\n",__func__);
+        GST_INFO("%s() - put EOS buffer!\n",__func__);
         // send a empty buffer to make this get_buffer_task exit 
         algo->queue_out_buffer(NULL);
     }

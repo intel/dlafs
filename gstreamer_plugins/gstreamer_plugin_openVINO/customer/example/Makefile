@@ -24,7 +24,7 @@ LIB_PATH := -L$(SYS_LIB_DIR)
 ##LDFLAGS := --sysroot=$(PREFIX) -shared -fPIC -Wl,-no-as-needed $(LIB_PATH)
 LDFLAGS := --sysroot=$(PREFIX) -shared -fPIC
 
-CFLAGS  := -g -Wall -fpic -std=c++11 -pthread
+CFLAGS  := -g -Wall -fPIC -std=c++11 -pthread
 LIBS    := 
 
 DIR_INC := .

@@ -23,7 +23,8 @@
 
 #include <iostream>
 #include "Epoller.h"
-
+#include <glib.h>
+#include <gst/gst.h>
 
 Epoller::Epoller(bool bET) : _iEpollFD(-1), _iMaxConn(1024),_pPrevs(NULL), _bET(bET)
 {}
@@ -61,7 +62,7 @@ void Epoller::create(int iMaxConn) {
   }
   catch (...)
   {
-    std::cout << "EPOLL CREATE FAIL" << std::endl;
+    GST_ERROR( "EPOLL CREATE FAIL\n");
   }
 
 

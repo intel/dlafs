@@ -79,7 +79,7 @@ static void item_free_func(gpointer data)
          return 0;
      }
 
-    g_print("%s() - serverUri = %s, client_id = %d\n",__func__, serverUri, client_id);
+    GST_INFO("%s() - serverUri = %s, client_id = %d\n",__func__, serverUri, client_id);
 
     if(!serverUri) {
         g_print("Error: invalid uri of socket server!\n");
@@ -103,7 +103,7 @@ static void item_free_func(gpointer data)
      ipcclient->id = client_id;
      ipcclient->message_queue = g_async_queue_new_full (item_free_func);
 
-     g_print("Connect to %s, pipe_id = %d\n",  serverUri , client_id);
+     GST_INFO("Connect to %s, pipe_id = %d\n",  serverUri , client_id);
      ipcclient->pTrans = make_shared<Transceiver>(ipcclient->sockfd);
      ipcclient->pLooper = new Looper(ipcclient->sockfd, ipcclient->pTrans, ipcclient->message_queue);
      ipcclient->pLooper->start();
@@ -117,7 +117,7 @@ static void item_free_func(gpointer data)
      tInitMsg.sPayload = std::to_string( ipcclient->id);
      std::string sBuff = "";
      AppProtocol::format(tInitMsg, sBuff);
-     g_print(" Send 1st data: size = %ld, type = %d, sPayload = %s\n",  sBuff.size(), tInitMsg.iType,  tInitMsg.sPayload.c_str());
+     GST_INFO(" Send 1st data: size = %ld, type = %d, sPayload = %s\n",  sBuff.size(), tInitMsg.iType,  tInitMsg.sPayload.c_str());
      ipcclient->pTrans->writeToSendBuffer(sBuff);
      ipcclient->pLooper->notify(ipcclient->pTrans);
 

@@ -40,9 +40,10 @@ typedef struct _ResPoolPrivate ResPoolPrivate;
 #define RES_POOL_CAST(obj)     ((ResPool*)(obj))
 
 #define RES_POOL_NAME "respool"
+/*
 #define IS_RES_POOL(pool)\
     (!strncmp (((GstObject *) pool)->name, RES_POOL_NAME, strlen (RES_POOL_NAME)))
-
+*/
 #define RES_POOL_GET_PRIVATE(obj)  \
    (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_RES_POOL, ResPoolPrivate))
 

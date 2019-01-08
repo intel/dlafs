@@ -268,7 +268,7 @@ gst_ws_sink_query_caps (GstWsSink * bsink, GstPad * pad, GstCaps * filter)
     GstPadDirection direction = GST_PAD_DIRECTION (pad);
 
     if(direction==GST_PAD_SRC) {
-        g_print("It has no src pad!!!\n");
+        GST_ERROR("It has no src pad!!!\n");
         return NULL;
     }
 

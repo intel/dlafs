@@ -21,7 +21,6 @@
   * Date: 2018.10
   */
 
-
 #include <string>
 #include <vector>
 #include <algorithm>
@@ -35,24 +34,23 @@ using namespace std;
 extern "C" {
 #endif
 
-const static int mSSDMaxProposalCount = 100;
-const static int mSSDObjectSize=7;
-
 // parser the inference data for one object
 ExInferData* parse_inference_result(void *in_data, int data_type, int data_len, int image_width, int image_height)
 {
         ExInferData *exInferData = new ExInferData;
         float *box = (float *)in_data;
 
-         static const char* VOC_LABEL_MAPPING[] = {
+        static const char* VOC_LABEL_MAPPING[] = {
                  "background",    "aeroplane",    "bicycle",    "bird",    "boat",    "bottle",
                  "bus",    "car",    "cat",    "chair",    "cow",    "diningtable",    "dog",    "horse",
                  "motorbike",    "person",    "pottedplant",    "sheep",    "sofa",    "train",
                  "tvmonitor"
-             };
-         static const char *TRACKING_CLASSES[] = {
-             "person",    "bus",    "car"
          };
+        const static int mSSDMaxProposalCount = 100;
+        const static int mSSDObjectSize=7;
+        //static const std::vector<std::string> TRACKING_CLASSES = {
+        //    "person",    "bus",    "car"
+        //};
 
          int objectNum = 0;
         for (int i = 0; i < mSSDMaxProposalCount; i++) {
@@ -70,11 +68,11 @@ ExInferData* parse_inference_result(void *in_data, int data_type, int data_len, 
             }
     
            const char * labelName = VOC_LABEL_MAPPING[label];
-            if(strncmp(labelName, TRACKING_CLASSES[0],strlen(labelName))  &&
-                strncmp(labelName, TRACKING_CLASSES[1],strlen(labelName))  &&
-                strncmp(labelName, TRACKING_CLASSES[2],strlen(labelName)) ) {
+           //if(std::find(TRACKING_CLASSES.begin(), TRACKING_CLASSES.end(), labelName) == TRACKING_CLASSES.end()){
+           //      continue;
+           //}
+           if((label != 6) &&(label!=7) &&(label!=15))
                 continue;
-            }
 
             auto xmin = (int)(box[i * mSSDObjectSize + 3] * (float)image_width);
             auto ymin = (int)(box[i * mSSDObjectSize + 4] * (float)image_height);

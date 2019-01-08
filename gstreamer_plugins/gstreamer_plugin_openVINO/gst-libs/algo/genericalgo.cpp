@@ -87,7 +87,7 @@ GenericAlgo::GenericAlgo(const char *name) : CvdlAlgoBase(post_callback, CVDL_TY
 {
     mName = std::string(name);
     const gchar *env = g_getenv("HDDLS_CVDL_MODEL_PATH");
-    g_print("Create generic algo name = %s\n", name);
+    GST_INFO("Create generic algo name = %s\n", name);
     if(env) {
          // $(CVDL_MODEL_FULL_PATH)/<algoname>/libalgo<algoname>.so
         mLibName = std::string(env) + std::string("/") + std::string(name) + std::string("/") 
@@ -96,7 +96,7 @@ GenericAlgo::GenericAlgo(const char *name) : CvdlAlgoBase(post_callback, CVDL_TY
         if(!mHandler)
             g_print("Failed to dlopen %s\n", mLibName.c_str());
     }else {
-        g_print("Cannot get HDDLS_CVDL_MODEL_PATH\n");
+        g_print("Cannot get ${HDDLS_CVDL_MODEL_PATH}\n");
     }
 
     if(mHandler) {

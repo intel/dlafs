@@ -20,7 +20,8 @@
   * Email:  yi3.zhang@intel.com
   * Date: 2018.12.16
   */
-
+#include <glib.h>
+#include <gst/gst.h>
 
 #include <iostream>
 #include <sys/time.h>
@@ -38,7 +39,7 @@ Looper::Looper(int iFD, shared_ptr<Transceiver> pTrans,  GAsyncQueue *receive_qu
     receive_message_queue = receive_queue;
 
     if (_iLooperFD == -1) {
-        std::cout << "Please provide valid FD" << std::endl;
+        g_print("Please provide valid FD\n");
     }
 
     _tEpoller.add(_iLooperFD, _iLooperFD, EPOLLIN | EPOLLOUT);
@@ -61,7 +62,7 @@ void Looper::initialize(int fd, shared_ptr<Transceiver> pTrans) {
     _iLooperFD = fd;
 
     if (_iLooperFD == -1) {
-        std::cout << "Please provide valid FD" << std::endl;
+        g_print("Please provide valid FD\n" );
     }
 
     _tEpoller.add(_iLooperFD, _iLooperFD, EPOLLIN | EPOLLOUT);
@@ -88,7 +89,7 @@ void Looper::run() {
             }
         }
         catch (std::exception &ex) {
-            std::cout << "Event Error" << std::endl;
+            g_print("Event Error\n");
         }
         catch (...) {}
     }
@@ -117,7 +118,7 @@ void Looper::handleRead()
         list<ipcProtocol> lMsg;
         _pTrans->handleRequest(lMsg);
         for(auto tMsg : lMsg) {
-            cout << "\x1b[35mParse Msg from Server " << tMsg.sPayload.substr(0,10) << "\x1b[0m" << endl;
+            GST_LOG("\x1b[35mParse Msg from Server: %s \x1b[0m\n", tMsg.sPayload.substr(0,10).c_str());
             MessageItem *item = g_new0(MessageItem, 1);
             item->len = tMsg.sPayload.size();
             item->data = g_new0(char,  item->len);
@@ -136,5 +137,5 @@ void Looper::notify(shared_ptr<Transceiver> pTrans) {
 
 void Looper::handleRead(std::string buff) {
     std::string output = buff.empty() ? "Empty" : buff;
-    std::cout << "Receive Message " << output << std::endl;
+    GST_LOG("Receive Message: %s\n", output.c_str());
 }

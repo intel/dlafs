@@ -40,8 +40,10 @@ typedef struct _OclPoolPrivate OclPoolPrivate;
 #define OCL_POOL_CAST(obj)     ((OclPool*)(obj))
 
 #define OCL_POOL_NAME "oclpool"
+/*
 #define IS_OCL_POOL(pool)\
     (!strncmp (((GstObject *) pool)->name, OCL_POOL_NAME, strlen (OCL_POOL_NAME)))
+*/
 
 #define OCL_POOL_GET_PRIVATE(obj)  \
    (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_OCL_POOL, OclPoolPrivate))

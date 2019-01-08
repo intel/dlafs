@@ -151,7 +151,7 @@ res_allocator_class_init (ResAllocatorClass* res_class)
     klass->free = res_memory_free;
 
     GST_DEBUG_CATEGORY_INIT (res_memory_debug,
-	      "res_memory", 0, "ResMemory and ResAllocator");
+            "res_memory", 0, "ResMemory and ResAllocator");
 }
 
 static void

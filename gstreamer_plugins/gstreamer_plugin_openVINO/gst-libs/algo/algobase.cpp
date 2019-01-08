@@ -26,17 +26,19 @@
 #include "algobase.h"
 #include "algopipeline.h"
 
+//#define DUMP_BUFFER_ENABLE
+
 using namespace std;
 using namespace cv;
 
 static void algo_enter_thread (GstTask * task, GThread * thread, gpointer user_data)
 {
-    GST_DEBUG("enter algo thread.");
+    GST_LOG("enter algo thread.");
 }
 
 static void algo_leave_thread (GstTask * task, GThread * thread, gpointer user_data)
 {
-    GST_DEBUG("leave algo thread.");
+    GST_LOG("leave algo thread.");
 }
 
 static void try_process_algo_data(CvdlAlgoData *algoData)
@@ -96,7 +98,7 @@ static void try_process_algo_data(CvdlAlgoData *algoData)
                       (uint32_t)objectData.rectROI.height};
 
     if((int)crop.width<=0 || (int)crop.height<=0 || (int)crop.x<0 || (int)crop.y<0) {
-        GST_ERROR("Invalid  crop = (%d,%d) %dx%d", crop.x, crop.y, crop.width, crop.height);
+        GST_WARNING("Invalid  crop = (%d,%d) %dx%d", crop.x, crop.y, crop.width, crop.height);
         objectData.flags |= CVDL_OBJECT_FLAG_DONE;
         try_process_algo_data(algoData);
         return;
@@ -117,7 +119,7 @@ static void try_process_algo_data(CvdlAlgoData *algoData)
     OclMemory *ocl_mem = NULL;
     ocl_mem = ocl_memory_acquire (ocl_buf);
     if(ocl_mem==NULL){
-        GST_ERROR("Failed get ocl_mem after image process!");
+        GST_WARNING("Failed get ocl_mem after image process!");
         if(ocl_buf)
             gst_buffer_unref(ocl_buf);
         objectData.flags |= CVDL_OBJECT_FLAG_DONE;
@@ -126,10 +128,11 @@ static void try_process_algo_data(CvdlAlgoData *algoData)
     }
     objectData.oclBuf = ocl_buf;
     //test
-    //hddlAlgo->save_buffer(ocl_mem->frame.getMat(0).ptr(), hddlAlgo->mInputWidth,
-    //    hddlAlgo->mInputHeight,3,algoData->mFrameId*1000 + objId, 1,
-    //    algo_pipeline_get_name(hddlAlgo->mAlgoType));
-
+    #ifdef  DUMP_BUFFER_ENABLE
+        hddlAlgo->save_buffer(ocl_mem->frame.getMat(0).ptr(), hddlAlgo->mInputWidth,
+                hddlAlgo->mInputHeight,3,algoData->mFrameId*1000 + objId, 1,
+                algo_pipeline_get_name(hddlAlgo->mAlgoType));
+    #endif
     // result callback function
     auto onHddlResult = [&objectData](void* data)
     {
@@ -180,7 +183,7 @@ static void base_hddl_algo_func(gpointer userData)
     GST_LOG("\n%s:%s - new an algoData = %p\n", __func__, algo_name, algoData);
 
     if(!hddlAlgo->mNext[0]) {
-        GST_LOG("The %s algo's next algo is NULL", algo_name);
+        GST_WARNING("The %s algo's next algo is NULL", algo_name);
     }
 
     if(!hddlAlgo->mInQueue.get(algoData)) {
@@ -208,10 +211,12 @@ static void base_hddl_algo_func(gpointer userData)
             GST_MINI_OBJECT_REFCOUNT (algoData->mGstBuffer),
         hddlAlgo->mInQueue.size(), algoData, algoData->algoBase);
 
+    #if 0
     if(algoData->mObjectVec.size()>20) {
         g_print("Error: algoData->mObjectVec.size() = %ld\n", algoData->mObjectVec.size());
         while(1);
     }
+    #endif
 
     // get input data and process it here, put the result into algoData
     // NV12-->BGR_Plannar
@@ -253,7 +258,7 @@ void push_algo_data(CvdlAlgoData* &algoData)
 
     //debug
     for(size_t i=0; i< objectVec.size(); i++) {
-        GST_LOG("%d - cv_output-%ld-%ld: prob = %f, label = %s, rect=(%d,%d)-(%dx%d), score = %f\n",
+        GST_DEBUG("%d - cv_output-%ld-%ld: prob = %f, label = %s, rect=(%d,%d)-(%dx%d), score = %f\n",
             cvAlgo->mFrameDoneNum, algoData->mFrameId, i, objectVec[i].prob, objectVec[i].label.c_str(),
             objectVec[i].rect.x, objectVec[i].rect.y,
             objectVec[i].rect.width, objectVec[i].rect.height, objectVec[i].score);
@@ -331,9 +336,10 @@ static void base_cv_algo_func(gpointer userData)
     algoData->mGstBufferOcl = ocl_buf;
 
     //test
-    //cvAlgo->save_buffer(ocl_mem->frame.getMat(0).ptr(), trackAlgo->mInputWidth,
-    //                   cvAlgo->mInputHeight,1,cvAlgo->mFrameId, 1, algo_name);
-
+    #ifdef  DUMP_BUFFER_ENABLE
+    cvAlgo->save_buffer(ocl_mem->frame.getMat(0).ptr(), cvAlgo->mInputWidth,
+                       cvAlgo->mInputHeight,1,cvAlgo->mFrameId, 1, algo_name);
+    #endif
 
     // Tracking every object, and get predicts.
    if(cvAlgo->postCb)
@@ -442,7 +448,7 @@ void CvdlAlgoBase::algo_connect_with_index(CvdlAlgoBase *algoTo, int index)
     if(index>=0 && index<MAX_DOWN_STREAM_ALGO_NUM) {
         this->mNext[index] = algoTo;
     } else {
-        g_print("Warning: invalid algo nextIndex = %d, default: 0~%d, use index=0 instead!\n",
+        GST_ERROR("Warning: invalid algo nextIndex = %d, default: 0~%d, use index=0 instead!\n",
             index, MAX_DOWN_STREAM_ALGO_NUM);
         this->mNext[0] = algoTo;
     }
@@ -533,8 +539,6 @@ GstFlowReturn CvdlAlgoBase::init_ieloader(const char* modeFileName, guint ieType
     std::string tmpFn = strModelXml.substr(0, strModelXml.rfind("."));
     std::string strModelBin = tmpFn + ".bin";
     g_print("Algo %s(%d): Model bin = %s\n", mName.c_str(), mAlgoType, strModelBin.c_str());
-    GST_DEBUG("Algo %d: Model bin = %s\n", mAlgoType, strModelBin.c_str());
-    GST_DEBUG("Algo %d: Model xml = %s\n", mAlgoType, strModelXml.c_str());
     ret = mIeLoader.read_model(strModelXml, strModelBin, ieType, network_config);
     
     if(ret != GST_FLOW_OK){
@@ -545,7 +549,7 @@ GstFlowReturn CvdlAlgoBase::init_ieloader(const char* modeFileName, guint ieType
     int w, h, c;
     ret = mIeLoader.get_input_size(&w, &h, &c);
     if(ret==GST_FLOW_OK) {
-        g_print("Algo %d: parse out the input size whc= %dx%dx%d\n", mAlgoType, w, h, c);
+        GST_DEBUG("Algo %d: parse out the input size whc= %dx%dx%d\n", mAlgoType, w, h, c);
         mInputWidth = w;
         mInputHeight = h;
     }
@@ -577,8 +581,12 @@ void  CvdlAlgoBase::init_dl_caps(GstCaps* incaps)
 
 void CvdlAlgoBase::save_buffer(unsigned char *buf, int w, int h, int p, int id, int bPlannar, const char *info)
 {
-    char filename[128];
-    sprintf(filename, "%s/%s-%dx%dx%d-%d.rgb",LOG_DIR, info,w,h,p,id);
+#ifdef  DUMP_BUFFER_ENABLE
+    std::ostringstream   path_str; 
+    //sprintf(filename, "%s/%s-%dx%dx%d-%d.rgb",LOG_DIR, info,w,h,p,id);
+    path_str   <<   LOG_DIR   <<   "/"   <<   info   <<  "-"   <<   w   <<   "x"  << h  <<  "x" <<  p  <<  "-" <<  id << ".rgb";
+    std::string str = path_str.str();
+    const char* filename =  str.c_str();
 
     if(bPlannar) {
         int size = w*h;
@@ -600,12 +608,17 @@ void CvdlAlgoBase::save_buffer(unsigned char *buf, int w, int h, int p, int id, 
             fclose (fp);
         }
     }
+    #endif
 }
 void CvdlAlgoBase::save_image(unsigned char *buf, int w, int h, int p, int bPlannar, char *info)
 {
-    char filename[128];
+#ifdef  DUMP_BUFFER_ENABLE
     if(fpOclResult==NULL){
-        sprintf(filename, "%s/%s-%dx%dx%d.rgb",LOG_DIR, info,w,h,p);
+        std::ostringstream   path_str; 
+        //sprintf(filename, "%s/%s-%dx%dx%d.rgb",LOG_DIR, info,w,h,p);
+        path_str   <<   LOG_DIR   <<   "/"   <<   info   <<  "-"   <<   w   <<   "x"  << h  <<  "x" <<  p  <<   ".rgb";
+        std::string str = path_str.str();
+        const char* filename =  str.c_str();
         fpOclResult = fopen (filename, "wb");
     }
      if(fpOclResult==NULL)
@@ -623,6 +636,7 @@ void CvdlAlgoBase::save_image(unsigned char *buf, int w, int h, int p, int bPlan
     } else {
          fwrite (buf, 1, w*h*p, fpOclResult);
     }
+ #endif
 }
 
 
