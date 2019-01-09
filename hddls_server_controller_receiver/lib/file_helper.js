@@ -123,7 +123,7 @@ exports.scanDir = function (folderPath, isRoot=false) {
             for(let index in files) {
               if (isRoot === true) {
                 targetFiles.push(path.join(folderPath, files[index]));
-              } else if(path.extname(files[index]).toLowerCase() === '.bin' || path.extname(files[index]).toLowerCase() === '.xml') {
+              } else {
                 targetFiles.push(path.join(folderPath, files[index]));
               }
             }
