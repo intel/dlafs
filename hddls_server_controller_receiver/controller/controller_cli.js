@@ -169,8 +169,8 @@ function setup(options) {
             console.log(merged);
           }
           fileHelper.uploadFile(merged, ws, {method: 'model'}, ()=> rl.prompt())
-        }, error => rl.emit('hint', 'new Scan dir err ' + error));
-        childPromise.catch(reason=>rl.emit('hint', 'Scan dir err ' + reason.message));
+        }, error => rl.emit('hint', 'Scan child dir err ' + error));
+        childPromise.catch(reason=>rl.emit('hint', 'Scan root dir err ' + reason.message));
       },
       'default': function(ws, rl) {
         rl.emit("hint", `command not support ${args} please check`);
