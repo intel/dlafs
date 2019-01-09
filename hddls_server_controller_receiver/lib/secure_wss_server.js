@@ -125,15 +125,11 @@ class SecureServer extends EventEmitter {
                 verifyClient: verifyClient
         });
 
-        // const dataWS = this._dataWS = new WebSocket.Server({
-        //     noServer: true,
-        //     verifyClient: verifyClient
-        // });
-        // temp solution for 
         const dataWS = this._dataWS = new WebSocket.Server({
-            port: 10086,
-            //verifyClient: verifyClient
+            noServer: true,
+            verifyClient: verifyClient
         });
+
         const ipcServer = this._ipcServer = getUnixSocketServer({socket: options.socket});
         const WSOptions = Object.assign({
             admin: adminWS,
