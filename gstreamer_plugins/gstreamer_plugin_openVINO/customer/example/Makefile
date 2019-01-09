@@ -27,6 +27,10 @@ LDFLAGS := --sysroot=$(PREFIX) -shared -fPIC
 CFLAGS  := -g -Wall -fPIC -std=c++11 -pthread
 LIBS    := 
 
+LDFLAGS += -z noexecstack -z relro -z now
+CFLAGS += -fstack-protector-strong -fPIE -fPIC -O2 -D_FORTIFY_SOURCE=2 -Wformat -Wformat-security
+
+
 DIR_INC := .
 DIR_SRC := .
 DIR_OBJ := .
