@@ -247,7 +247,9 @@ void hddlspipe_prepare(int argc, char **argv)
         g_print("Cannot open %s\n",g_json_file_name );
         exit(1);
    }
-    fread(json_buffer, 1,2048,pfJson);
+    int count = fread(json_buffer, 1,2048,pfJson);
+	if(count<=0)
+		g_print("Error: empty json file data!\n");
     fclose(pfJson);
 
    hp->pipe_id = g_pipe_id;

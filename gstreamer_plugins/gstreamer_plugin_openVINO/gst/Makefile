@@ -20,6 +20,7 @@ SYS_INC_DIR := /usr/include/
 SYS_LIB_DIR := /usr/lib/x86_64-linux-gnu/
 
 GST_CFLAGS  := $(shell pkg-config --cflags glib-2.0) $(shell pkg-config --cflags gstreamer-1.0)
+GST_LIBS    := $(shell pkg-config --libs gstreamer-1.0)
 DRM_CFLAGS  := -I$(SYS_INC_DIR)/drm
 VA_CFLAGS   :=  $(shell pkg-config --cflags libva)
 OPENCL_CFLAGS := -I$(INTELOPENCLSDK)/include/
@@ -32,8 +33,9 @@ IE_LIBS := -L${INTEL_CVSDK_DIR}/inference_engine/lib/ubuntu_16.04/intel64 -linfe
 LIB_PATH := -L$(SYS_LIB_DIR) -L$(INTELOPENCLSDK) $(OPENCV_LIBS) $(IE_LIBS) -L$(SYS_LIB_DIR)
 LDFLAGS := --sysroot=$(PREFIX) -shared -fPIC -Wl,-no-as-needed -lOpenCL -lglib-2.0 -lgstallocators-1.0 -lgstvideo-1.0 $(LIB_PATH)
 
-CFLAGS  := -g -Wall -fpic -pthread $(GLIB_CFLAGS) $(GST_CFLAGS) $(DRM_CFLAGS) $(OPENCL_CFLAGS) $(IE_CFLAGS) $(OPENCV_CFLAGS) $(VA_CFLAGS)
-LIBS    := $(OPENCV_LIBS) $(IE_LIBS) -luWS -lcrypto -lssl -ldlib
+CFLAGS  := -Wall -fpic -pthread $(GLIB_CFLAGS) $(GST_CFLAGS) $(DRM_CFLAGS) $(OPENCL_CFLAGS) $(IE_CFLAGS) $(OPENCV_CFLAGS) $(VA_CFLAGS)
+LIBS    := $(OPENCV_LIBS) $(IE_LIBS) $(GST_LIBS) -luWS -lcrypto -lssl -ldlib
+#LIBS    += -ldl -lpthread -lgstbase-1.0 -lgstreamer-1.0 -lm -lz -lstdc++
 
 DIR_INC := .
 DIR_SRC := .
@@ -43,6 +45,12 @@ LIB_OCL_PATH := ..
 GST_LIBS_DIR := ../gst-libs
 
 CFLAGS += -I$(GST_LIBS_DIR)/safestringlib/include
+
+LDFLAGS += -z noexecstack -z relro -z now
+CFLAGS += -fstack-protector-strong -fPIE -fPIC -O2 -D_FORTIFY_SOURCE=2 -Wformat -Wformat-security
+#PIE for executables only
+#LDFLAGS += -pie
+
 
 SRCS = cvdlfilter.c resconvert.c resmemory.c respool.c wssink.c plugin.c
 

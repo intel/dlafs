@@ -24,7 +24,9 @@ GLIB_CFLAGS := $(shell pkg-config --cflags glib-2.0)
 GST_CFLAGS  := $(shell pkg-config --cflags gstreamer-1.0)
 
 ARFLAGS := -rc
-CFLAGS  := -g -Wall -fpic -std=c++11 $(GLIB_CFLAGS) $(GST_CFLAGS)
+CFLAGS  := -Wall -fpic -std=c++11 $(GLIB_CFLAGS) $(GST_CFLAGS)
+
+CFLAGS += -fstack-protector-strong -fPIE -fPIC -O2 -D_FORTIFY_SOURCE=2 -Wformat -Wformat-security
 
 DIR_INC := .
 DIR_SRC := .

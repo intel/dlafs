@@ -26,6 +26,7 @@
 #include "wsclient.h"
 #include <uWS/uWS.h>
 #include <string.h>
+#include <interface/videodefs.h>
 
 using namespace std;
 #include <thread>
@@ -144,7 +145,8 @@ static void item_free_func(gpointer data)
      wsclient->client->send(wsclient->data, len+4, uWS::OpCode::BINARY);
     #else
     char  id_info[4];
-    *((int *)id_info)= wsclient->id;
+    int *data_info = (int *)id_info;
+    *data_info= wsclient->id;
     std::string sBuff = std::string(id_info, 4) + std::string(data, len);
     //g_print("SendData: size = %ld, buf=%d\n", sBuff.size(),  *((int *)sBuff.c_str()));
     wsclient->client->send(sBuff.c_str(), len+4, uWS::OpCode::BINARY);
@@ -152,8 +154,9 @@ static void item_free_func(gpointer data)
  }
 
 
-int wsclient_send_infer_data(WsClientHandle handle, InferenceData *infer_data, guint64 pts)
+int wsclient_send_infer_data(WsClientHandle handle, void *data, guint64 pts)
 {
+     InferenceData *infer_data = (InferenceData *)data;
     std::ostringstream   data_str; 
     float ts = pts/1000000.0;
     data_str  << "pts="   << ts << "s,";

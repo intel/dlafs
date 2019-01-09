@@ -28,6 +28,7 @@
 #include <arpa/inet.h>
 #include "AppProtocol.h"
 #include <algorithm>
+#include <interface/videodefs.h>
 
  #include <glib.h>
 #include <gst/gst.h>
@@ -147,8 +148,9 @@ static void item_free_func(gpointer data)
      ipcclient->pLooper->notify(ipcclient->pTrans);
  }
 
-int wsclient_send_infer_data(WsClientHandle handle, InferenceData *infer_data, guint64 pts)
+int wsclient_send_infer_data(WsClientHandle handle, void *data, guint64 pts)
 {
+     InferenceData *infer_data = (InferenceData *)data;
     std::ostringstream   data_str; 
     float ts = pts/1000000.0;
     data_str  << "ts="   << ts << "s,";

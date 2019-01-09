@@ -34,7 +34,10 @@ OPENCV_LIBS := $(shell pkg-config --libs opencv)
 IE_LIBS := -L${INTEL_CVSDK_DIR}/inference_engine/lib/ubuntu_16.04/intel64 -linference_engine
 
 ARFLAGS := -rc
-CFLAGS  := -g -Wall -fpic -std=c++11 $(GLIB_CFLAGS) $(GST_CFLAGS) $(DRM_CFLAGS) $(OPENCL_CFLAGS) $(IE_CFLAGS) $(OPENCV_CFLAGS) $(VA_CFLAGS)
+CFLAGS  := -Wall -fpic -std=c++11 $(GLIB_CFLAGS) $(GST_CFLAGS) $(DRM_CFLAGS) $(OPENCL_CFLAGS) $(IE_CFLAGS) $(OPENCV_CFLAGS) $(VA_CFLAGS)
+
+CFLAGS += -fstack-protector-strong -fPIE -fPIC -O2 -D_FORTIFY_SOURCE=2 -Wformat -Wformat-security
+
 
 DIR_SRC := .
 DIR_OBJ := .

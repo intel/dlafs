@@ -27,7 +27,9 @@ OPENCL_CFLAGS := -I$(INTELOPENCLSDK)/include/
 OPENCV_CFLAGS := $(shell pkg-config --cflags opencv)
 
 ARFLAGS := -rc
-CFLAGS  := -g -Wall -fpic $(GLIB_CFLAGS) $(GST_CFLAGS) $(DRM_CFLAGS) $(OPENCL_CFLAGS) $(OPENCV_CFLAGS) $(VA_CFLAGS)
+CFLAGS  := -Wall -fpic -std=c++11 $(GLIB_CFLAGS) $(GST_CFLAGS) $(DRM_CFLAGS) $(OPENCL_CFLAGS) $(OPENCV_CFLAGS) $(VA_CFLAGS)
+
+CFLAGS += -fstack-protector-strong -fPIE -fPIC -O2 -D_FORTIFY_SOURCE=2 -Wformat -Wformat-security
 
 DIR_INC := ../interface
 DIR_SRC := .
