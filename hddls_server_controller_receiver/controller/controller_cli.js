@@ -174,9 +174,6 @@ function setup(options) {
       },
       'default': function(ws, rl) {
         rl.emit("hint", `command not support ${args} please check`);
-      },
-      '': function(ws, rl) {
-        rl.prompt();
       }
     }
 
@@ -191,7 +188,7 @@ function setup(options) {
 
 //The websocket incoming parser && router
 function getInParser() {
-return function incoming(ws, message) {
+return function incoming(ws, message, rl) {
   var method = message.headers.method || 'unknown';
     if(method === 'text') {
       console.log('message %s', message.payload);
@@ -199,9 +196,11 @@ return function incoming(ws, message) {
         console.log("pipe_id from server", message.payload);
         pipe_ids.clear();
         message.payload.forEach(elem=> pipe_ids.add(elem));
+        rl.prompt();
     } else if(method === 'pipe_delete') {
       console.log('pipe delete %s', message.payload);
       message.payload.forEach(elem=> pipe_ids.delete(elem));
+      rl.prompt();
     } else if(method === 'checkSum'){
 		console.log('update model meta')
       	method ==='checkSum' && (modelCheck = fileHelper.safelyJSONParser(message.payload.toString()));
