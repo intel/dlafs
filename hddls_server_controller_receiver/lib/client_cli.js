@@ -52,8 +52,8 @@ class clientCLI {
         this._rl.on('connect', (exec, ws, rl)=> {
             rl.on("line", (line) => {
                 let fn = exec(line);
-                rl.pause();
                 if(!! fn) {
+                    rl.pause();
                     fn.length === 2 && fn(ws, rl);
                 }
             });

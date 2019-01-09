@@ -171,16 +171,13 @@ function setup(options) {
           fileHelper.uploadFile(merged, ws, {method: 'model'}, ()=> rl.prompt())
         }, error => rl.emit('hint', 'Scan child dir err ' + error));
         childPromise.catch(reason=>rl.emit('hint', 'Scan root dir err ' + reason.message));
-      },
-      'default': function(ws, rl) {
-        rl.emit("hint", `command not support ${args} please check`);
       }
     }
 
     if(dispatcher[cmd[0]]) {
       fn = dispatcher[cmd[0]];
     } else {
-      fn = dispatcher['default'];
+      console.log(`command not support ${args} please check`);
     }
     return fn;
     }
