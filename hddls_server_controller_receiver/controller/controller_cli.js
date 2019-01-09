@@ -128,7 +128,7 @@ function setup(options) {
 
       },
       'q': function(ws,rl) {
-	rl.emit('hint', `Bye ${process.pid}`);
+	      rl.emit('hint', `Bye ${process.pid}`);
         process.exit(0);
       },
       'u': function(ws, rl) {
@@ -146,30 +146,34 @@ function setup(options) {
           return;
         }
         var rootPromise = fileHelper.scanDir(cmd[1], true);
-        var basePromise = rootPromise.then(folders => {
-			  var actualFolders = folders.filter(folder => fs.lstatSync(folder).isDirectory());
-		    if(actualFolders.length !== 0) 
-		    {
-		  	  console.log("folders to upload");
-		  	  console.log(actualFolders);
-		    } 
-        return Promise.all(actualFolders.map(folder => fileHelper.scanDir(folder)
-        .then(files=> files.filter(v=> !!v))
-        .then(files => {
+        var childPromise = rootPromise.then((folders, reject) => {
+          if(! folders) throw new Error('folder empty or not exists');
+			    var actualFolders = folders.filter(folder => fs.lstatSync(folder).isDirectory());
+		      if(actualFolders.length !== 0)
+		      {
+		  	    console.log("folders to upload");
+		  	    console.log(actualFolders);
+		      }
+          return Promise.all(actualFolders.map(folder => fileHelper.scanDir(folder)
+          .then(files => {
+            if(!files) return;
           return Promise.all(files.map(file => fileHelper.cmpFile(file, modelCheck)))
           .then((files) => {var tmp = []; files.forEach(ele => !!ele && tmp.push(ele));return tmp})
-        })))},reason=>rl.emit('hint', 'redir ' + reason.message))
-        .then((value) => {var merged = [].concat.apply([], value);
+        })))},(reason)=>{rl.emit('hint', 'empty ' + reason.message)})
+        .then((value) => {
+          if(!value) return;
+          var merged = [].concat.apply([], value);
+          merged = merged.filter(function(el) { return el; });
           if(merged.length !==0) {
             console.log(`models Server need:`);
             console.log(merged);
           }
           fileHelper.uploadFile(merged, ws, {method: 'model'}, ()=> rl.prompt())
-        })
-        basePromise.catch(reason=>rl.emit('hint', 'Scan dir err ' + reason.message));
+        }, error => rl.emit('hint', 'new Scan dir err ' + error));
+        childPromise.catch(reason=>rl.emit('hint', 'Scan dir err ' + reason.message));
       },
       'default': function(ws, rl) {
-        ws.send(JSON.stringify({headers: {method:'text'}, payload: `${args}`, code: 200}));
+        rl.emit("hint", `command not support ${args} please check`);
       },
       '': function(ws, rl) {
         rl.prompt();

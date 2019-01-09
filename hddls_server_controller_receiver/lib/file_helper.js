@@ -59,10 +59,7 @@ exports.uploadDir = function (folderPath, ws, type, cb) {
    }
    var targetFiles = [];
    for(let index in files) {
-     if(path.extname(files[index]).toLowerCase() === '.bin' || path.extname(files[index]).toLowerCase() === '.xml') {
        targetFiles.push(path.join(folderPath, files[index]));
-       console.log(targetFiles[targetFiles.length - 1]);
-     }
    }
    uploadFile(targetFiles, ws, type, cb);
  });
