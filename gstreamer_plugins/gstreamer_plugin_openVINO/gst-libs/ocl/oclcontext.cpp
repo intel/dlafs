@@ -629,9 +629,9 @@ cl_kernel
 OclDevice::loadKernel (const char* name, const char* file)
 {
     cl_kernel kernel = NULL;
-    GString *fullname = g_string_new (NULL);
-
     const gchar *env = g_getenv("HDDLS_CVDL_KERNEL_PATH");
+
+    GString *fullname = g_string_new (NULL);
     if(env) {
         g_string_printf (fullname, "%s/%s.cl.bin", env, (file ? file : name));
     } else {
@@ -723,14 +723,17 @@ OclDevice::loadKernelCV (const char* name, const char* file)
 {
     cv::ocl::Kernel kernel;
     cv::ocl::Program program;
-    GString *fullname = g_string_new (NULL);
     const gchar *env = g_getenv("HDDLS_CVDL_KERNEL_PATH");
 
+#if 0
+   GString *fullname = g_string_new (NULL);
     if(env) {
         g_string_printf (fullname, "%s/%s.cl", env, (file ? file : name));
+
     } else {
         g_string_printf (fullname, "%s/%s.cl", HDDLS_CVDL_KERNEL_PATH_DEFAULT, (file ? file : name));
     }
+    const char *filename = path_str.str().c_str();
 
     guint8 *data = NULL;
     if (!readFile (fullname->str, &data)) {
@@ -738,6 +741,22 @@ OclDevice::loadKernelCV (const char* name, const char* file)
         return cv::ocl::Kernel();
     }
     g_string_free (fullname, TRUE);
+#else
+    std::ostringstream   path_str;
+    if(env) {
+        path_str   <<   env   <<   "/"   <<    (file ? file : name)   <<  ".cl";
+    } else {
+        path_str   <<   HDDLS_CVDL_KERNEL_PATH_DEFAULT   <<   "/"   <<    (file ? file : name)   <<  ".cl";
+    }
+    std::string str =  path_str.str();
+    const char *filename = str.c_str();
+
+    guint8 *data = NULL;
+    if (!readFile (filename, &data)) {
+        g_print("It cannot find kernel source from %s\nplease set HDDLS_CVDL_KERNEL_PATH!\n", filename);
+        return cv::ocl::Kernel();
+    }
+#endif
 
     cv::ocl::ProgramSource programSource((const char*)data);
     //if (programSource.empty()) {

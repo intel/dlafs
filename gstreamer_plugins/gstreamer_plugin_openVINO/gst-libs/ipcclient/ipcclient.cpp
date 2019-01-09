@@ -33,6 +33,7 @@
 #include <gst/gst.h>
 #include "../ws/wsclient.h"
 #include <string.h>
+#include <sstream>
 
 using namespace std;
 #include <thread>
@@ -145,6 +146,25 @@ static void item_free_func(gpointer data)
      ipcclient->pTrans->writeToSendBuffer(sBuff);
      ipcclient->pLooper->notify(ipcclient->pTrans);
  }
+
+int wsclient_send_infer_data(WsClientHandle handle, InferenceData *infer_data, guint64 pts)
+{
+    std::ostringstream   data_str; 
+    float ts = pts/1000000.0;
+    data_str  << "ts="   << ts << "s,";
+    data_str  << "prob="  << infer_data->probility << ",";
+    data_str  << "name=" << infer_data->label << ",";
+    data_str  << "rect=("  << infer_data->rect.x << "," << infer_data->rect.y << ")@" << infer_data->rect.width << "x" << infer_data->rect.height;
+    data_str  << std::endl;
+    std::string str = data_str.str();
+
+    const char*txt_cache = str.c_str();
+    int data_len = str.size();
+    wsclient_send_data(handle, (char *)txt_cache, data_len);
+    g_print("send data size=%d, %s\n",data_len, txt_cache);
+
+   return data_len;
+}
 
 void wsclient_set_id(WsClientHandle handle,  int id)
 {

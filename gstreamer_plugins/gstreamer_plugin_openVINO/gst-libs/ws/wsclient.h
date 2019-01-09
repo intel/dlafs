@@ -23,6 +23,8 @@
 
 #ifndef __GST_WS_CLIENT_H__
 #define __GST_WS_CLIENT_H__
+
+#include <interface/videodefs.h>
  
 #ifdef __cplusplus
  extern "C" {
@@ -36,6 +38,7 @@
  
  WsClientHandle wsclient_setup(const char *serverUri, int client_id);
  void wsclient_send_data(WsClientHandle handle, char *data, int len);
+ int wsclient_send_infer_data(WsClientHandle handle, InferenceData *infer_data, guint64 pts);
  void wsclient_destroy(WsClientHandle handle);
  MessageItem * wsclient_get_data(WsClientHandle handle);
  MessageItem *wsclient_get_data_timed(WsClientHandle handle);

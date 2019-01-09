@@ -184,7 +184,6 @@ static void process_sink_buffers(gpointer userData)
     GstBuffer *bit_buf = NULL, *txt_buf = NULL;
     gboolean ret = FALSE;
     int i = 0;
-    gchar txt_cache[TXT_BUFFER_SIZE_MAX]={0};
     gsize data_len = 0, size = 0;
     //GstWsSinkPrivate *priv = basesink->priv;
 
@@ -215,14 +214,9 @@ static void process_sink_buffers(gpointer userData)
             int count = txt_mem->data_count;
             GST_LOG("object num = %d\n",count);
             for(i=0; i<count; i++) {
-                data_len = g_snprintf(txt_cache, TXT_BUFFER_SIZE_MAX,
-                    "ts=%.3fs, prob=%f,name=%s, rect=(%d,%d)@%dx%d\n",
-                    txt_mem->pts/1000000000.0, infer_data->probility, infer_data->label,
-                    infer_data->rect.x, infer_data->rect.y,
-                    infer_data->rect.width, infer_data->rect.height);
+                g_print("pipe %d: %2d xml_data - ",basesink->wsc_id, basesink->data_index);
+                data_len = wsclient_send_infer_data(basesink->wsclient_handle, infer_data, txt_mem->pts);
                 basesink->data_index++;
-                g_print("pipe %d:  send %2d xml_data: size=%ld, %s",basesink->wsc_id, basesink->data_index, data_len, txt_cache);
-                wsclient_send_data(basesink->wsclient_handle, (char *)txt_cache, data_len);
                 size += data_len;
                 infer_data++;
              }

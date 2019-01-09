@@ -108,7 +108,7 @@ static void try_process_algo_data(CvdlAlgoData *algoData)
     stop = g_get_monotonic_time();
     hddlAlgo->mImageProcCost += stop - start;
     if(ocl_buf==NULL) {
-        GST_ERROR("Failed to do image process!");
+        g_print("Failed to do image process!");
         objectData.flags |= CVDL_OBJECT_FLAG_DONE;
         try_process_algo_data(algoData);
         return;
@@ -164,7 +164,7 @@ static void try_process_algo_data(CvdlAlgoData *algoData)
     hddlAlgo->mInferCntTotal++;
 
     if (ret!=GST_FLOW_OK) {
-        GST_ERROR("IE: detect FAIL");
+        g_print("IE: inference failed, ret = %d\n",ret);
     }
     return;
 }
@@ -531,7 +531,7 @@ GstFlowReturn CvdlAlgoBase::init_ieloader(const char* modeFileName, guint ieType
 
     ret = mIeLoader.set_device(InferenceEngine::TargetDevice::eHDDL);
     if(ret != GST_FLOW_OK){
-        GST_ERROR("IE failed to set device be eHDDL!");
+        g_print("IE failed to set device be eHDDL!");
         return GST_FLOW_ERROR;
     }
     // Load different Model based on different device.
