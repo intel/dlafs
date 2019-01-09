@@ -88,7 +88,6 @@ exports.uploadFile = function uploadFile (files, ws, headers, cb) {
       filePath = fileEntry;
     } else if(fileEntry.length !== 0){
       let fileObj = Object.entries(fileEntry);
-      console.log(fileObj);
       filePath = fileObj[0][0];
       checkSum = fileObj[0][1];
     }
@@ -122,7 +121,6 @@ exports.scanDir = function (folderPath, isRoot=false) {
         fs.readdir(folderPath, (err, files) => {
             if(err || files.length === 0) {
               reject(err || `empty model folder ${folderPath}`);
-              //return;
             }
             var targetFiles = [];
             for(let index in files) {
@@ -130,7 +128,6 @@ exports.scanDir = function (folderPath, isRoot=false) {
                 targetFiles.push(path.join(folderPath, files[index]));
               } else if(path.extname(files[index]).toLowerCase() === '.bin' || path.extname(files[index]).toLowerCase() === '.xml') {
                 targetFiles.push(path.join(folderPath, files[index]));
-                console.log(targetFiles[targetFiles.length - 1]);
               }
             }
             resolve(targetFiles);

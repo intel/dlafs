@@ -39,7 +39,7 @@ var options = {
   cert: certificate,
   requestCert: true,
   ca: [ca],
-  metaPath: __dirname + '/model/model_info.json',
+  metaPath: __dirname + '/models/model_info.json',
   ipcProtocol: "raw"
 };
 

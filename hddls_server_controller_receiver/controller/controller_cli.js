@@ -147,14 +147,26 @@ function setup(options) {
         }
         var rootPromise = fileHelper.scanDir(cmd[1], true);
         var basePromise = rootPromise.then(folders => {
-          console.log(folders);
-          return Promise.all(folders.map(folder => fileHelper.scanDir(folder).then(files => {
-            return Promise.all(files.map(file => fileHelper.cmpFile(file, modelCheck)))
-            .then(files => files.filter(v => !!v))
-            .then(diff=>{fileHelper.uploadFile(diff, ws,{method: 'model'}, ()=> rl.prompt())})
-            })))
-        },reason=>rl.emit('hint', reason.message));
-        basePromise.catch(reason=>rl.emit('hint', reason.message));
+			  var actualFolders = folders.filter(folder => fs.lstatSync(folder).isDirectory());
+		    if(actualFolders.length !== 0) 
+		    {
+		  	  console.log("folders to upload");
+		  	  console.log(actualFolders);
+		    } 
+        return Promise.all(actualFolders.map(folder => fileHelper.scanDir(folder)
+        .then(files=> files.filter(v=> !!v))
+        .then(files => {
+          return Promise.all(files.map(file => fileHelper.cmpFile(file, modelCheck)))
+          .then((files) => {var tmp = []; files.forEach(ele => !!ele && tmp.push(ele));return tmp})
+        })))},reason=>rl.emit('hint', 'redir ' + reason.message))
+        .then((value) => {var merged = [].concat.apply([], value);
+          if(merged.length !==0) {
+            console.log(`models Server need:`);
+            console.log(merged);
+          }
+          fileHelper.uploadFile(merged, ws, {method: 'model'}, ()=> rl.prompt())
+        })
+        basePromise.catch(reason=>rl.emit('hint', 'Scan dir err ' + reason.message));
       },
       'default': function(ws, rl) {
         ws.send(JSON.stringify({headers: {method:'text'}, payload: `${args}`, code: 200}));
@@ -186,9 +198,9 @@ return function incoming(ws, message) {
     } else if(method === 'pipe_delete') {
       console.log('pipe delete %s', message.payload);
       message.payload.forEach(elem=> pipe_ids.delete(elem));
-    }
-    else {
-      method ==='checkSum' && (modelCheck = fileHelper.safelyJSONParser(message.payload.toString()));
+    } else if(method === 'checkSum'){
+		console.log('update model meta')
+      	method ==='checkSum' && (modelCheck = fileHelper.safelyJSONParser(message.payload.toString()));
     }
   };
 }

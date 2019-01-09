@@ -207,6 +207,7 @@ exports.updateModel = function (ws, model, adminCtx){
     saveBuffer(filePath, model.payload);
     var modelMeta = JSON.stringify(fileHelper.updateCheckSum(filePath, model.checkSum));
     fs.writeFileSync(path.join(dir, 'model_info.json'), modelMeta);
+	console.log('sendMeata');
     wsSender.sendProtocol(ws,{method: 'checkSum'}, modelMeta);
   }
   function saveBuffer(filePath, buffer) {
