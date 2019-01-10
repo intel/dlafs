@@ -104,10 +104,18 @@ function setup(options) {
         rl.emit('hint',`\x1b[33m${help}\x1b[0m`);
       },
       'c': function(ws, rl) {
+        if (cmd.length !== 2) {
+          rl.emit('hint', `wrong cmd ${args} please check`);
+          return;
+        }
         var headers = {method: "create"};
         fileHelper.uploadFile([cmd[1]], ws, headers, ()=> rl.prompt());
       },
       'p': (ws, rl) => {
+        if (cmd.length !== 3) {
+          rl.emit('hint', `wrong cmd ${args} please check`);
+          return;
+        }
         var pipe_id = parseInt(cmd[2]);
         var headers = {pipe_id: pipe_id, method: 'property'};
         if(pipe_ids.has(pipe_id)) {
@@ -117,6 +125,10 @@ function setup(options) {
         }
       },
       'd': (ws, rl) => {
+        if (cmd.length !== 2) {
+          rl.emit('hint', `wrong cmd ${args} please check`);
+          return;
+        }
         var headers = {pipe_id: parseInt(cmd[2]), method: 'destroy'};
         fileHelper.uploadFile([cmd[1]], ws, headers, ()=> rl.prompt())
       },
