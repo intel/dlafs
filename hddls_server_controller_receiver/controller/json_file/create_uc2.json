@@ -1,0 +1,15 @@
+{
+    "client_id": 1,     
+    "command_type": 0 ,
+    "command_create":    
+    {
+         "pipe_num": 2, 
+         "stream_source": "/home/lijunjie/1600x1200.mp4",
+         "codec_type": "H.264",    
+         "cvdlfilter0":
+        {
+             "algopipeline": "mobilenetssd ! tracklp ! lprnet"
+        },
+        "loop_times":1
+    }
+ }
