@@ -158,7 +158,7 @@ int wsclient_send_infer_data(WsClientHandle handle, void *data, guint64 pts)
 {
      InferenceData *infer_data = (InferenceData *)data;
     std::ostringstream   data_str; 
-    float ts = pts/1000000.0;
+    float ts = pts/1000000000.0;
     data_str  << "pts="   << ts << "s,";
     data_str  << "prob="  << infer_data->probility << ",";
     data_str  << "name=" << infer_data->label << ",";
