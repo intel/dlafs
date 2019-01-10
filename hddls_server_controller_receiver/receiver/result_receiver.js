@@ -46,8 +46,6 @@ var ws = new SecureWebsocket(options);
 
 function incoming(data) {
   var metaData = Buffer.from(data.payload);
-  console.log("payload type %s", typeof data.payload);
-  console.log("receive type %s payload %s", data.headers.type, Buffer.isBuffer(metaData));
   var pipe_id = data.headers.pipe_id;
   var con = 'pipe_' + pipe_id.toString();
   let path = './' + con;

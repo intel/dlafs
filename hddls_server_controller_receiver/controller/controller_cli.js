@@ -38,7 +38,6 @@ const tips = [ ('help                          ' + 'show all commands')
            ,('p <property.json> <pipe_id>      ' + 'set pipelines property')
            ,('d <destroy.json>  <pipe_id>      ' + 'destroy pipelines')
            ,('pipe                             ' + 'display pipes belonging to the very client')
-           ,('client                           ' + 'display client ID')
            ,('q                                ' + 'exit client.')
            ,('-m <model_path>                   ' + 'upload custom file')
 ].join('\n');
@@ -124,21 +123,9 @@ function setup(options) {
       'pipe': function(ws, rl) {
         rl.emit('hint', pipe_ids)
       },
-      'client': function() {
-
-      },
       'q': function(ws,rl) {
 	      rl.emit('hint', `Bye ${process.pid}`);
         process.exit(0);
-      },
-      'u': function(ws, rl) {
-        if (cmd.length !== 2) {
-          rl.emit('hint', `wrong cmd ${args} please check`);
-          return;
-        }
-        var p = fileHelper.scanDir(cmd[1]);
-        p.then(files=>{fileHelper.uploadFile(files, ws,{method: 'u'}, ()=> rl.prompt())},
-        reason=>rl.emit('hint', reason));
       },
       'm' : function(ws, rl) {
         if (cmd.length !== 2) {
