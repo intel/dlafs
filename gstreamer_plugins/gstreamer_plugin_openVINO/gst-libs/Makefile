@@ -18,16 +18,16 @@
 all:
 	@$(MAKE) -C ocl
 	@$(MAKE) -C algo
-ifdef IPCCLIENT
-	@$(MAKE) -C ipcclient
-else
+ifdef WSCLIENT
 	@$(MAKE) -C ws
+else
+	@$(MAKE) -C ipcclient
 endif
 clean:
 	@$(MAKE) clean -C ocl
 	@$(MAKE) clean -C algo
-ifdef IPCCLIENT
-	@$(MAKE) clean -C ipcclient
-else
+ifdef WSCLIENT
 	@$(MAKE) clean -C ws
+else
+	@$(MAKE) clean -C ipcclient
 endif

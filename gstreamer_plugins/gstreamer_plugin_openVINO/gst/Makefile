@@ -37,6 +37,10 @@ CFLAGS  := -Wall -fpic -pthread $(GLIB_CFLAGS) $(GST_CFLAGS) $(DRM_CFLAGS) $(OPE
 LIBS    := $(OPENCV_LIBS) $(IE_LIBS) $(GST_LIBS) -luWS -lcrypto -lssl -ldlib
 #LIBS    += -ldl -lpthread -lgstbase-1.0 -lgstreamer-1.0 -lm -lz -lstdc++
 
+ifdef DEBUG
+	CFLAGS += -g
+endif
+
 DIR_INC := .
 DIR_SRC := .
 DIR_OBJ := .
@@ -63,10 +67,10 @@ OBJS := $(patsubst %.c, %.o, $(SRCS))
 GST_LIBS := $(GST_LIBS_DIR)/ocl/libocl_vpp.a $(GST_LIBS_DIR)/algo/libcvdl_algo.a 
 GST_LIBS += $(GST_LIBS_DIR)/safestringlib/libsafestring.a
 
-ifdef IPCCLIENT
-	GST_LIBS +=$(GST_LIBS_DIR)/ipcclient/libipc_client.a
-else
+ifdef WSCLIENT
 	GST_LIBS +=$(GST_LIBS_DIR)/ws/libws_client.a
+else
+	GST_LIBS +=$(GST_LIBS_DIR)/ipcclient/libipc_client.a
 endif
 
 all: $(OBJS)

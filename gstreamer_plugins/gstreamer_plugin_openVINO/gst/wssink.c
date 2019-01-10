@@ -238,6 +238,7 @@ static void process_sink_buffers(gpointer userData)
                 data_base = mapInfo[i].data;
                 data_len = mapInfo[i].size;
                 wsclient_send_data(basesink->wsclient_handle, (char *)data_base, data_len);
+                g_print("pipe %d: index = %d,  jpeg size = %ld\n",basesink->wsc_id, basesink->data_index, data_len );
             }
             size += data_len;
             //g_print("ws send bit_data: size=%ld, ts=%.3fs, data=%p\n\n", data_len,
