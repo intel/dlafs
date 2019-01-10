@@ -87,7 +87,7 @@ var clientOptions = {
 };
 
 if(crl != null) {
-  options.crl = crl;
+  clientOptions.crl = crl;
 }
 
 //Get CLI user input parser&&router
