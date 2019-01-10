@@ -125,7 +125,7 @@ function setup(options) {
         }
       },
       'd': (ws, rl) => {
-        if (cmd.length !== 2) {
+        if (cmd.length !== 3) {
           rl.emit('hint', `wrong cmd ${args} please check`);
           return;
         }
