@@ -61,6 +61,7 @@ void Transceiver::close()
 int Transceiver::handleResponse() {
     if (!isValid()) return -1;
     int iBytesSent = 0;
+    std::lock_guard<std::mutex> lock(_mLock);
     do {
         iBytesSent = 0;
         if (!_sSendBuf.empty()) {
@@ -153,5 +154,6 @@ int Transceiver::handleRequest(list<ipcProtocol>& lMsgs)
 
 void Transceiver::writeToSendBuffer(const string& msg)
 {
+    std::lock_guard<std::mutex> lock(_mLock);
     _sSendBuf.append(msg);
 }

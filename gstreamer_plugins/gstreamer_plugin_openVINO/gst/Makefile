@@ -34,8 +34,7 @@ LIB_PATH := -L$(SYS_LIB_DIR) -L$(INTELOPENCLSDK) $(OPENCV_LIBS) $(IE_LIBS) -L$(S
 LDFLAGS := --sysroot=$(PREFIX) -shared -fPIC -Wl,-no-as-needed -lOpenCL -lglib-2.0 -lgstallocators-1.0 -lgstvideo-1.0 $(LIB_PATH)
 
 CFLAGS  := -Wall -fpic -pthread $(GLIB_CFLAGS) $(GST_CFLAGS) $(DRM_CFLAGS) $(OPENCL_CFLAGS) $(IE_CFLAGS) $(OPENCV_CFLAGS) $(VA_CFLAGS)
-LIBS    := $(OPENCV_LIBS) $(IE_LIBS) $(GST_LIBS) -luWS -lcrypto -lssl -ldlib
-#LIBS    += -ldl -lpthread -lgstbase-1.0 -lgstreamer-1.0 -lm -lz -lstdc++
+LIBS    := $(OPENCV_LIBS) $(IE_LIBS) $(GST_LIBS) -lcrypto -lssl -ldlib
 
 ifdef DEBUG
 	CFLAGS += -g
@@ -69,6 +68,7 @@ GST_LIBS += $(GST_LIBS_DIR)/safestringlib/libsafestring.a
 
 ifdef WSCLIENT
 	GST_LIBS +=$(GST_LIBS_DIR)/ws/libws_client.a
+	LIBS += -luWS
 else
 	GST_LIBS +=$(GST_LIBS_DIR)/ipcclient/libipc_client.a
 endif

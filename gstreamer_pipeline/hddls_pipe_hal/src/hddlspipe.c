@@ -123,7 +123,7 @@ static int set_property(struct json_object *parent, HddlsPipe *hp, const char *f
         const char *property_name = NULL;
         std::string  str_property_name;
         enum json_type property_type;
-       const char *property_string = NULL;
+        const char *property_string = NULL;
         int property_int = 0;
         double property_double = 0.0;
         int ret = 0;
@@ -182,14 +182,14 @@ static void process_commands(HddlsPipe *hp, char *desc)
             return;
      }
 
-     GST_INFO("pipe %d(%d) has got message: %s\n", hp->pipe_id, wsclient_get_id(hp->ws),  desc);
+     g_print("pipe %d(%d) has got message: %s\n", hp->pipe_id, wsclient_get_id(hp->ws),  desc);
      command_type = json_get_command_type(root);
      switch(command_type){
         case eCommand_PipeCreate:
                  GST_WARNING("Error: this command should not be here!!!\n");
                  break;
         case eCommand_PipeDestroy:
-                GST_INFO("Receive command: destroy pipeline....\n");
+                g_print("Receive command: destroy pipeline....\n");
                 hddlspipe_stop (hp);
                  hp->state = ePipeState_Null;
                 break;

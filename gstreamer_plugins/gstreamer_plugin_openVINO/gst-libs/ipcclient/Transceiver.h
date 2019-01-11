@@ -26,6 +26,7 @@
 
 #include <cstdint>
 #include <string>
+#include <mutex>
 #include "AppProtocol.h"
 using namespace std;
 
@@ -44,6 +45,7 @@ class Transceiver {
   void writeToSendBuffer(const string& msg);
  private:
   int _iFD;
+  std::mutex  _mLock;
   string _sSendBuf;
   string _sRecvBuf;
 

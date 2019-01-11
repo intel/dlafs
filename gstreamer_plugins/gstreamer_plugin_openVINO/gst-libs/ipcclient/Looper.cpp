@@ -118,7 +118,7 @@ void Looper::handleRead()
         list<ipcProtocol> lMsg;
         _pTrans->handleRequest(lMsg);
         for(auto tMsg : lMsg) {
-            GST_LOG("\x1b[35mParse Msg from Server: %s \x1b[0m\n", tMsg.sPayload.substr(0,10).c_str());
+            GST_INFO("\x1b[35mParse Msg from Server: %s \x1b[0m\n", tMsg.sPayload.substr(0,10).c_str());
             MessageItem *item = g_new0(MessageItem, 1);
             item->len = tMsg.sPayload.size();
             item->data = g_new0(char,  item->len);
