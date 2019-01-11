@@ -1,3 +1,28 @@
+#  Some Q&A about CA and crl
+### Can client and server use different CA?
+
+* Websockets support different CA for client and server. Howerver, if CA is self-signed, TLS wouldn't connect successfully. Here are two ways to use different CA:
+
+1. use different <span style="color:yellow"> public CA </span> for server and client
+
+2. if suing <span style="color:yellow"> self-signed CA </span>, set <span style="color:green"> rejectUnauthorized: true </span> to  <span style="color:green"> rejectUnauthorized:false </span> when set websocket
+
+### How to use different CA to certificate client and server?
+
+* Here are two ways:
+
+1. if using public CA, just generate server and client certificate separately
+
+2. if using self-signed CA, all steps below should be handled separately in server and client side.
+
+### How to verify crl?
+
+* Here are two ways to verify crl:
+
+1. if using public CA, just follow steps from <span style="color:yellow">enviroment prepration </span> to <span style="color:yellow">generate crl</span>. 
+
+2. if using self-signed CA, please make sure that server and client are using <span style="color:yellow"> the same CA </span>. Different self-signed CA would cause problems.
+
 # 1. Environment prepration
 
 find
@@ -9,9 +34,7 @@ root@root:~$ mkdir ./demoCA  ./demoCA/newcerts   ./demoCA/private
 root@root:~$ chmod 777./demoCA/private
 root@root:~$ echo '01'>./demoCA/serial
 root@root:~$ touch./demoCA/index.txt
-root@root:~$ sudo vim openssl.cnf
 ```
-find <span style="color:yellow"> dir     = ./demoCA  </span>, and change into <span style="color:yellow"> dir     = /s_framework/hddls_server_client/demoCA   </span>, which is the absolute path of demoCA.
 
 # 2. Generate CA
 

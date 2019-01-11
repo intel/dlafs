@@ -1,7 +1,7 @@
 
 #1. install nodejs packages
-npm config set proxy <proxy>
-npm install
+	npm config set proxy <proxy>
+	npm install
 
 #2. setup certificates
 Refer to certificate_create_explanation.md

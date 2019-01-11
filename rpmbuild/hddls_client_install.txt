@@ -1,50 +1,48 @@
 
 1. Setup HDDL-S client in host machine
-----------------------------
-sudo apt-get install nodejs-legacy npm
-npm config set proxy <proxy>
-sudo npm install -g n
-sudo n stable
-npm install ws@6.0.0
-npm install child_process arraybuffer-to-string commander tree-kill crypto
-note: please run "npm audit fix --force" command to fix package audit issues.
-      Need fixing packages: jsonwebtoken async-limiter buffer-equal-constant-time
+--------------------------------------
+	sudo apt-get install nodejs-legacy npm
+	npm config set proxy <proxy>
+	sudo npm install -g n
+	sudo n stable
+	npm install
 
-chmod a+x *.js
 
-write hostname into hostname.txt:
-echo <hostname>  > hostname.txt
+	Install certificate files, which is from server install guide:
+  		Copy "ca-crt.pem client1-crt.pem client1-key.pem" into 'controller/cert_client_8216_8124'
+  		Copy "ca-crt.pem client1-crt.pem client1-key.pem" into 'receiver/cert_client_8216_8124'
+  		Copy 'client1.crl' into 'cert_server_8216_8124'
 
 2. Run receiver client
 ----------------------
-./receiver_client.js
-
+	cd receiver
+  	node result_receiver.js
 
 
 3. Run controller client
 ------------------------
-#cd s_framework/hddls_server_client/hddls_client
-#./controller_client.js
-    --Please chose server by id:
-    --Please type model dictionary:
+Open a new terminal, and run below command:
+  	cd hddls_server_controller_receiver/controller
+   	node controller_cli.js
+    	--Please choose server by ip: <server IP>:8445
+    	--Please type model update command:
+			m <models directory>
       Note: Choose the models directory that will be updated into hddls-server
-            You can type "./models_updated"
+            You can type "models", which is the same with: HDDLS_CVDL_MODEL_PATH
 
 Note:
 1. command format:
-    -help                          commanders that you can use.
-    -c <create.json>               create pipeslines
-    -p <property.json> <pipe_id>   set pipeslines property
-    -d <destroy.json>  <pipe_id>   destroy pipeslines
-    -pipe                          display pipes belonging to the very client
-    -client                        display client ID
-    -model                         display model info
-    -q                             exit client.
+    help                          commanders that you can use.
+    c <create.json>               create pipeslines
+    p <property.json> <pipe_id>   set pipeslines property
+    d <destroy.json>  <pipe_id>   destroy pipeslines
+    pipe                          display pipes belonging to the very client
+    m <models directory>          display model info
+    q                             exit client.
 
-2. We need put the to be updated models file into a specified directory,
-   and put the subdirectory the same name with model:
+2. We need put the model files into a specified directory, and put the subdirectory the same name with model:
 
-models_update/
+models/
 ├── googlenetv2
 │   ├── googlenetv2.bin
 │   └── googlenetv2.xml

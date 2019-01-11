@@ -65,3 +65,18 @@ Revoke Client Certificate
 Generate Client CRL
 	~$ openssl ca -gencrl  -out client1.crl  -config openssl.cnf
 
+
+# 6. Some Q&A about CA and CRL
+  1) Can client and server use different CA?
+     Websockets support different CA for client and server. Howerver, if CA is self-signed, TLS wouldn't connect successfully. Here are two ways to use different CA:
+        a). Use different public CA for server and client
+        b). Use self-signed CA, should set rejectUnauthorized:true to rejectUnauthorized:false when set websocket
+  2) How to use different CA to certificate client and server?
+     Here are two ways:
+        a). Use public CA, just generate server and client certificate separately
+        b). Use self-signed CA, all steps below should be handled separately in server and client side.
+ 3) How to verify CRL?
+    Here are two ways to verify crl:
+        a). If using public CA, just above process 1~5 
+        b). If using self-signed CA, please make sure that server and client are using the same CA. Different self-signed CA would cause problems.
+

@@ -37,7 +37,10 @@ JSON_CFLAGS :=  $(shell pkg-config --cflags glib-2.0)
 LOCAL_CFLAGS  =  -I$(ROOT_DIR)/src -I$(SYS_INC_DIR)/gstcvdl
 GST_CFLAGS  := $(shell pkg-config --cflags glib-2.0) $(shell pkg-config --cflags gstreamer-1.0)
 export CXXFLAGS = -pthread -Wall -Wno-deprecated-declarations $(JSON_CFLAGS)  $(GST_CFLAGS)  $(LOCAL_CFLAGS)
+
+ifdef DEBUG
 CXXFLAGS += -g -O0
+endif
 
 JSON_C_LIBS := $(shell pkg-config --libs json-c)
 GST_LIBS :=  $(shell pkg-config --libs gstreamer-1.0)
