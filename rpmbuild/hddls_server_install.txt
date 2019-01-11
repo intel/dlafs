@@ -111,7 +111,7 @@ Step 2:
 
 9. Run HDDL-S Server
 ---------------------
-	cd hddls_server_controller_receiver/hddls_server
+	cd hddls_server_controller_receiver/server
 	export HDDLS_CVDL_MODEL_PATH=`pwd`/models
 	node hddls-server.js
 

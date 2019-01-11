@@ -128,9 +128,10 @@ exports.destroyHandler = function destroyHandler(ws, message, adminCtx) {
         if(!!socket) {
             console.log('delete pipe %s', pipe_id);
             //socket.send(message.payload, 3);
-	    destroy_json.command_destroy.client_id = ws.id;
+	    	destroy_json.command_destroy.client_id = ws.id;
             destroy_json.command_destroy.pipe_id = message.headers.pipe_id;
             socket.send(JSON.stringify(destroy_json));
+			adminCtx.pipe2pid.get(pipe_id).child.kill();
         } else {
             console.log("Cannot find pipe socket %s",pipe_id);
         }

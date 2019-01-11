@@ -33,13 +33,13 @@ if(fs.existsSync('./cert_client_8126_8124/server.crl')) {
   crl = fs.readFileSync('./cert_client_8126_8124/server.crl')
 }
 // CLI help tips
-const tips = [ ('help                          ' + 'show all commands')
+const tips = [ ('help                             ' + 'show all commands')
            ,('c <create.json>                  ' + 'create pipelines')
            ,('p <property.json> <pipe_id>      ' + 'set pipelines property')
            ,('d <destroy.json>  <pipe_id>      ' + 'destroy pipelines')
            ,('pipe                             ' + 'display pipes belonging to the very client')
            ,('q                                ' + 'exit client.')
-           ,('-m <model_path>                   ' + 'upload custom file')
+           ,('m <model_path>                   ' + 'upload custom file')
 ].join('\n');
 
 
