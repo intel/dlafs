@@ -43,7 +43,7 @@ LIB_NAME    := libalgoexample
 SHARE_LIB   := $(LIB_OCL_PATH)/$(LIB_NAME).so
 DYNAMIC_LIB := $(LIB_OCL_PATH)/$(LIB_NAME).a
 
-INC := -I$(DIR_INC)  -I$(SYS_INC_DIR)/gstcvdl
+INC := -I$(DIR_INC)  -I$(SYS_INC_DIR)/gstcvdl -I../../gst-libs/algo
 OBJS := $(patsubst %.cpp, %.o, $(SRCS))
 
 all: $(OBJS)
