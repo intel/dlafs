@@ -38,6 +38,7 @@ LOCAL_CFLAGS  =  -I$(ROOT_DIR)/src -I$(SYS_INC_DIR)/gstcvdl
 GST_CFLAGS  := $(shell pkg-config --cflags glib-2.0) $(shell pkg-config --cflags gstreamer-1.0)
 export CXXFLAGS = -pthread -Wall -Wno-deprecated-declarations $(JSON_CFLAGS)  $(GST_CFLAGS)  $(LOCAL_CFLAGS)
 
+CXXFLAGS += -std=c++11 -pthread
 ifdef DEBUG
 CXXFLAGS += -g -O0
 endif
@@ -46,6 +47,8 @@ JSON_C_LIBS := $(shell pkg-config --libs json-c)
 GST_LIBS :=  $(shell pkg-config --libs gstreamer-1.0)
 LIB_PATH = -L$(SYS_LIB_DIR)  -L$(SYS_LIB_DIR)/gstreamer-1.0 $(JSON_C_LIBS) $(GST_LIBS)
 export LDFLAGS = $(LIB_PATH) -lgstvideo-1.0  -lgstbase-1.0 -lgstreamer-1.0 -lgobject-2.0 -lglib-2.0  -lgstapp-1.0 -ljson-c -lgstcvdlfilter -lstdc++
+LDFLAGS += -std=c++11 -pthread
+
 
 LDFLAGS += -z noexecstack -z relro -z now -pie
 CXXFLAGS += -fstack-protector-strong -fPIE -fPIC -O2 -D_FORTIFY_SOURCE=2 -Wformat -Wformat-security

@@ -29,16 +29,18 @@
 
 
 #include "hddlspipetest.h"
+#include <thread>
+#include <vector>
+#include <iostream>
 
-int  main(int argc, char **argv)
+void  pipe_run(int argc, char **argv, int id)
 {
     HddlsPipe*   pipe = NULL;
     hddlspipe_prepare(argc, argv);
 
-    pipe = hddlspipe_create( );
+    pipe = hddlspipe_create( id );
     if(!pipe) {
         g_print("Error: failed to create pipel ine!\n");
-        return 1;
     }
 
    // blocked until hddpspipe_stop.
@@ -47,6 +49,25 @@ int  main(int argc, char **argv)
    hddlspipes_replay_if_need(pipe);
    hddlspipe_destroy (pipe);
 
-   return 0;
+   g_print("Pipe is destroyed!\n");
+   //return 0;
 }
 
+int main(int argc, char **argv)
+{
+	unsigned int pipe_num = 2;
+	unsigned int i;
+	std::vector<std::thread> thr_pool;
+
+	for(i=0;i<pipe_num;i++){
+	   std::cout << "Create thread: " << i << std::endl;
+	   thr_pool.push_back(std::thread(pipe_run, argc, argv, i));
+	}
+
+	for(i=0;i<thr_pool.size();i++) {
+		thr_pool[i].join();
+		std::cout << "Thread "<< i<< " is done" << std::endl;
+    }
+	thr_pool.clear();
+	return 0;
+}

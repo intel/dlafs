@@ -29,7 +29,7 @@ TARGETS := hddlspipestest
 all: $(TARGETS)
 
 $(TARGETS): $(OBJECTS)
-	@$(CXX) $^ -o $@ $(LDFLAGS) -Wl,-rpath-link
+	@$(CXX) $^ -o $@ $(LDFLAGS) -Wl,-rpath-link -lpthread
 $(OBJECTS): %.o: %.c
 	@$(CXX) $< -o $@ -c $(CXXFLAGS) $(DEFINES)
 	

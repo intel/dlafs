@@ -59,7 +59,7 @@ static gboolean  parse_cmdline (int argc, char *argv[])
      const char* const brief = "hj:i:l:";
       const struct option details[] = {
                 { "jsonfile", 1, NULL, 'j'},
-                { "clientid", 1, NULL, 'i',},
+                { "pipeid", 1, NULL, 'i',},
                 { "looptimes", 1, NULL, 'l'},
                 { "help", 0, NULL, 'h'},
                 { NULL, 0, NULL, 0 }
@@ -161,7 +161,7 @@ static gchar* parse_create_command(char *desc,  gint pipe_id )
 
     g_snprintf(helper_desc, 256, 
          " ! cvdlfilter name=cvdlfilter0 algopipeline=\"%s\"  ! resconvert name=resconvert0 "
-         " resconvert0.src_pic ! mfxjpegenc ! filesink location=./temp/hddls.jpeg",  algo_pipeline_desc);
+         " resconvert0.src_pic ! mfxjpegenc ! filesink location=./temp/hddls_pipe_%d.data",  algo_pipeline_desc, pipe_id);
      // 2.2 get source type: rtsp or local file
      if( g_strrstr_len(stream_source, 256, "rtsp")  || g_strrstr_len(stream_source, 256, "RTSP")) {
            // rtsp
@@ -235,7 +235,7 @@ void hddlspipe_prepare(int argc, char **argv)
   *   1. create hddls-pipe, connet to ws server
   *   2. wait to receive pipe desc from server, and setup pipe based on desc
   **/
- HddlsPipe*   hddlspipe_create( )
+ HddlsPipe*   hddlspipe_create( int id)
 {
     HddlsPipe *hp = g_new0(HddlsPipe, 1);
     gchar* pipeline_desc = NULL;
@@ -252,7 +252,7 @@ void hddlspipe_prepare(int argc, char **argv)
 		g_print("Error: empty json file data!\n");
     fclose(pfJson);
 
-   hp->pipe_id = g_pipe_id;
+   hp->pipe_id = id;//g_pipe_id;
    hp->state = ePipeState_Null;
 
     // parse pipeline_create command

@@ -61,7 +61,7 @@ typedef struct _HddlsPipe {
 }HddlsPipe;
 
 void hddlspipe_prepare(int argc, char **argv);
-HddlsPipe*   hddlspipe_create( );
+HddlsPipe*   hddlspipe_create(int id );
 void  hddlspipe_start(HddlsPipe * hp);
 void  hddlspipe_stop(HddlsPipe * hp);
 void hddlspipe_resume(HddlsPipe *pipe);
