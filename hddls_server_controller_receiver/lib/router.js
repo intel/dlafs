@@ -60,9 +60,9 @@ exports.createHandler = function createHandler(ws, message, adminCtx) {
             shell: true
         });
 
-        // child.stderr.on('data', function (data) {
-        //     console.error("STDERR:", data.toString());
-        // });
+        child.stderr.on('data', function (data) {
+             console.error("STDERR:", data.toString());
+        });
 
         child.stdout.on('data', function (data) {
            console.log("STDOUT:", data.toString());
