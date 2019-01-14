@@ -60,13 +60,7 @@ function incoming(data) {
   } else if(data.headers.type == constants.msgType.eMetaText) {
       console.log('save txt');
       let path = './' + con + '/output.txt';
-      fs.appendFile(path, metaData, function (err) {
-          if (err) {
-              console.log("append failed: ", err);
-          } else {
-              console.log("done".green);
-          }
-      })
+      fs.appendFileSync(path, metaData);
     }
 }
 
