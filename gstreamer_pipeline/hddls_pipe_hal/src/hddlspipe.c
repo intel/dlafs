@@ -280,18 +280,18 @@ static const gchar* parse_create_command(char *desc,  gint pipe_id )
         json_object_is_type (object, json_type_object)) {
             //1.1 parse input stream source
             if(json_get_string(object, "stream_source", &stream_source)) {
-                GST_INFO("input source = %s\n",stream_source);
+                g_print("input source = %s\n",stream_source);
             }
             // 1.2 codec_type
             if(json_get_string(object, "codec_type", &stream_codec_type)) {
-                GST_INFO("stream codec type = %s\n",stream_codec_type);
+                g_print("stream codec type = %s\n",stream_codec_type);
             }
             // 1.3 srtp parameter if need
             if(json_get_string(object, "srtp_caps", &srtp_caps)) {
-                GST_INFO("srtp_caps = %s\n",srtp_caps);
+                g_print("srtp_caps = %s\n",srtp_caps);
            }
            if(json_get_int(object, "srtp_port", &srtp_port)) {
-                GST_INFO("srtp_caps = %d\n",srtp_port);
+                g_print("srtp_caps = %d\n",srtp_port);
            }
             // 1.4 parse property
             if(json_get_string_d2(object, CVDLFILTER_NAME, "algopipeline", &algo_pipeline_desc)) {
@@ -348,7 +348,7 @@ static const gchar* parse_create_command(char *desc,  gint pipe_id )
                                              std::string("  rtph265depay  ! h265parse ! mfxhevcdec ") +  g_str_helper_desc;
          }
 
-        GST_INFO("pipeline: %s\n",g_str_pipe_desc.c_str() );
+        g_print("pipeline: %s\n",g_str_pipe_desc.c_str() );
         json_destroy(&root);
 
         return g_str_pipe_desc.c_str();
@@ -359,11 +359,11 @@ static const gchar* parse_create_command(char *desc,  gint pipe_id )
            // rtsp
            if(codec_type == eCodecTypeH264) {
                 g_str_pipe_desc = std::string("rtspsrc location=") + std::string(stream_source)
-                                                +std::string(" udp-buff-size=800000 ! rtph264depay  ! h264parse ! mfxh264dec ")
+                                                +std::string(" udp-buffer-size=1000000 ! rtph264depay  ! h264parse ! mfxh264dec ")
                                                 +g_str_helper_desc;
            } else if(codec_type == eCodecTypeH265) {
                 g_str_pipe_desc = std::string("rtspsrc location=") + std::string(stream_source)
-                                                +std::string(" udp-buff-size=800000 ! rtph265depay  ! h265parse ! mfxhevcdec ")
+                                                +std::string(" udp-buffer-size=1000000 ! rtph265depay  ! h265parse ! mfxhevcdec ")
                                                 +g_str_helper_desc;
             }
      } else {
@@ -378,7 +378,7 @@ static const gchar* parse_create_command(char *desc,  gint pipe_id )
                                                 +g_str_helper_desc;
             }
     }
-    GST_INFO("pipeline: %s\n",g_str_pipe_desc.c_str() );
+    g_print("pipeline: %s\n",g_str_pipe_desc.c_str() );
     json_destroy(&root);
 
     return g_str_pipe_desc.c_str();

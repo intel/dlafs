@@ -100,7 +100,9 @@ void Looper::quit() {
     std::lock_guard<std::mutex> guard(_mLock);
     _bQuit = true;
     _mCond.notify_all();
-
+    if (_tLooperThread.joinable()) {
+   	    _tLooperThread.join();
+    }
 }
 
 void Looper::handleSend()

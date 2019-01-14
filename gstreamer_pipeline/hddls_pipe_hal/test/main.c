@@ -55,7 +55,7 @@ void  pipe_run(int argc, char **argv, int id)
 
 int main(int argc, char **argv)
 {
-	unsigned int pipe_num = 2;
+	unsigned int pipe_num = 1;
 	unsigned int i;
 	std::vector<std::thread> thr_pool;
 
