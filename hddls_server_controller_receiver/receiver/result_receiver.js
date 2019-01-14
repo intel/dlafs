@@ -49,6 +49,9 @@ function incoming(data) {
   var pipe_id = data.headers.pipe_id;
   var con = 'pipe_' + pipe_id.toString();
   let path = './' + con;
+  if(!fs.existsSync(path)) {
+	  fs.mkdirSync(path);
+  }
   if (data.headers.type == constants.msgType.eMetaJPG) {
       console.log('save JPG');
       let temp = pipe2file.get(pipe_id);
@@ -59,9 +62,9 @@ function incoming(data) {
       pipe2file.set(pipe_id, temp);
   } else if(data.headers.type == constants.msgType.eMetaText) {
       console.log('save txt');
-      let path = './' + con + '/output.txt';
+	  let path = './' + con + '/output.txt';
       fs.appendFileSync(path, metaData);
-    }
+  }
 }
 
 ws.on('message', incoming);
