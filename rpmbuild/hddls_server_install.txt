@@ -103,11 +103,11 @@ Note: below steps is the least
 Step 1: 
 	Please refer to certificate_create_explanation.md to generate certificate files.
 Step 2: 
-	Copy "ca-crt.pem client1-crt.pem client1-key.pem" into 'controller/cert_client_8216_8124'
-	Copy "ca-crt.pem client1-crt.pem client1-key.pem" into 'receiver/cert_client_8216_8124'
-	Copy "ca-crt.pem server-crt.pem server-key.pem" into 'server/cert_server_8216_8124'
-	Copy 'client1.crl' into 'cert_server_8216_8124'
-	Copy 'server.crl' into 'cert_client_8216_8124'
+	Copy "ca-crt.pem client1-crt.pem client1-key.pem" into 'controller/cert_client'
+	Copy "ca-crt.pem client1-crt.pem client1-key.pem" into 'receiver/cert_client'
+	Copy "ca-crt.pem server-crt.pem server-key.pem" into 'server/cert_server'
+	Copy 'client1.crl' into 'cert_server'
+	Copy 'server.crl' into 'cert_client'
 
 9. Run HDDL-S Server
 ---------------------

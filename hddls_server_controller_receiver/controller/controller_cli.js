@@ -29,8 +29,8 @@ const path = require('../lib/path_parser');
 var modelCheck = {};
 var pipe_ids = new Set();
 var crl = null;
-if(fs.existsSync('./cert_client_8126_8124/server.crl')) {
-  crl = fs.readFileSync('./cert_client_8126_8124/server.crl')
+if(fs.existsSync('./client_cert/server.crl')) {
+  crl = fs.readFileSync('./client_cert/server.crl')
 }
 // CLI help tips
 const tips = [ ('help                             ' + 'show all commands')
@@ -79,10 +79,10 @@ function completer(line) {
 var clientOptions = {
   host: '127.0.0.1',
   port: 8445,
-  ca: fs.readFileSync('./cert_client_8126_8124/ca-crt.pem'),
+  ca: fs.readFileSync('./client_cert/ca-crt.pem'),
   checkServerIdentity: () => undefined,
-  key: fs.readFileSync('./cert_client_8126_8124/client1-key.pem'),
-  cert: fs.readFileSync('./cert_client_8126_8124/client1-crt.pem'),
+  key: fs.readFileSync('./client_cert/client1-key.pem'),
+  cert: fs.readFileSync('./client_cert/client1-crt.pem'),
   completer: completer
 };
 

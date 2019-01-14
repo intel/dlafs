@@ -26,14 +26,18 @@ const fs = require('fs');
 const fileHelper = require('../lib/file_helper');
 const constants = require('../lib/constants');
 const SecureWebsocket = require('../lib/secure_client');
+var crl = null;
+if(fs.existsSync('./client_cert/server.crl')) {
+  crl = fs.readFileSync('./client_cert/server.crl')
+}
 
 var options = {
   host: '127.0.0.1',
   port: 8445,
-  ca: fs.readFileSync('./cert_client_8126_8124/ca-crt.pem'),
+  ca: fs.readFileSync('./client_cert/ca-crt.pem'),
   checkServerIdentity: () => undefined,
-  key: fs.readFileSync('./cert_client_8126_8124/client1-key.pem'),
-  cert: fs.readFileSync('./cert_client_8126_8124/client1-crt.pem'),
+  key: fs.readFileSync('./client_cert/client1-key.pem'),
+  cert: fs.readFileSync('./client_cert/client1-crt.pem'),
   route: 'data'
 };
 

@@ -24,12 +24,12 @@
 'use strict';
 const SecureServer = require('../lib/secure_wss_server');
 const fs = require('fs');
-var privateKey  = fs.readFileSync('./cert_server_8126_8124/server-key.pem', 'utf8');
-var certificate = fs.readFileSync('./cert_server_8126_8124/server-crt.pem', 'utf8');
-var ca = fs.readFileSync('./cert_server_8126_8124/ca-crt.pem', 'utf8');
+var privateKey  = fs.readFileSync('./server_crt/server-key.pem', 'utf8');
+var certificate = fs.readFileSync('./server_crt/server-crt.pem', 'utf8');
+var ca = fs.readFileSync('./server_crt/ca-crt.pem', 'utf8');
 var crl = null;
-if(fs.existsSync('./cert_server_8126_8124/client1.crl')) {
-  crl = fs.readFileSync('./cert_server_8126_8124/client1.crl')
+if(fs.existsSync('./server_crt/client1.crl')) {
+  crl = fs.readFileSync('./server_crt/client1.crl')
 }
 const constants = require("../lib/constants");
 const fileHelper = require("../lib/file_helper")
