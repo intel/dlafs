@@ -99,15 +99,28 @@ exports.uploadFile = function uploadFile (files, ws, headers, cb) {
         var hash = crypto.createHash('md5').setEncoding('hex');
         stream.pipe(hash);
       }
-      ws.send(Buffer.from(JSON.stringify(headers)+String.fromCharCode(1)), {fin: false});
+      try {
+        ws.send(Buffer.from(JSON.stringify(headers)+String.fromCharCode(1)), {fin: false});
+      } catch(err) {
+        console.log('Got error%s', err.message);
+      }
       stream.on('data', (chunk)=> {
-        ws.send(chunk, { fin: false });
+        try{
+          ws.send(chunk, { fin: false });
+        } catch (err) {
+          stream.destroy();
+          console.log('Got error%s', err.message);
+        }
       });
       stream.on('end', ()=> {
         checkSum = checkSum || hash.read();
-        ws.send(String.fromCharCode(1) + checkSum, { fin: true });
-        console.log(`${filePath} upload complete, MD5 ${checkSum}`);
-        uploadFile(files, ws, headers, cb);
+        try{
+          ws.send(String.fromCharCode(1) + checkSum, { fin: true });
+          console.log(`${filePath} upload complete, MD5 ${checkSum}`);
+          uploadFile(files, ws, headers, cb);
+        } catch (err) {
+          stream.destroy();
+        }
       });
     })
   }

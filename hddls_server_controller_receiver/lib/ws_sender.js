@@ -21,16 +21,20 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 exports.sendMessage = function (ws, message, code) {
-    ws.send(JSON.stringify({headers: {method: 'text', code: code || 200}, payload: `${message}`}));
+    if (!!ws && ws.readyState === ws.OPEN) {
+        ws.send(JSON.stringify({headers: {method: 'text', code: code || 200}, payload: `${message}`}));
+    }
 }
 
 exports.sendProtocol = function (ws, headers, payload, code) {
-    var protocol = Object.assign(
-        {
-            headers: headers,
-            payload: payload,
-            code: code || 200
-        }
-    );
-    ws.send(JSON.stringify(protocol));
+    if (!!ws && ws.readyState === ws.OPEN) {
+        var protocol = Object.assign(
+            {
+                headers: headers,
+                payload: payload,
+                code: code || 200
+            }
+        );
+        ws.send(JSON.stringify(protocol));
+    }
 }

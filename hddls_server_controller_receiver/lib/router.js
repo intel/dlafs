@@ -77,18 +77,17 @@ exports.createHandler = function createHandler(ws, message, adminCtx) {
             adminCtx.pipe2json.delete(pipe2delete);
             //update controller when pipeline exit
             if (ws.readyState === ws.OPEN) {
-                ws.send(JSON.stringify({headers: {method: 'pipe_delete'}, payload: [pipe2delete], code: 200}));
+                wsSender.sendProtocol(ws, {method: 'pipe_delete'}, [pipe2delete], 200);
             }
         });
 
         pipes.add(pipe_id);
         adminCtx.pipe2pid.set(pipe_id, {cid: ws.id, child: child});
         updatePipeJSON(adminCtx.pipe2json, create_json, pipe_id, 'create');
-        console.log(adminCtx.pipe2json);
         console.log('create pipe %s', pipe_id);
         wsSender.sendMessage(ws, `pipe_create ${pipe_id}`);
-        ws.send(JSON.stringify({headers: {method: 'pipe_id'}, payload: Array.from(pipes), code: 200}));
-        ws.send(JSON.stringify({headers: {method: 'pipe_info', pipe_id: pipe_id}, payload: create_json, code: 200}));
+        wsSender.sendProtocol(ws, {method: 'pipe_id'}, Array.from(pipes), 200);
+        wsSender.sendProtocol(ws, {method: 'pipe_info', pipe_id: pipe_id}, create_json, 200);
     }
 }
 

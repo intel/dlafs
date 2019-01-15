@@ -236,7 +236,7 @@ function getConnHandler(app, adminCtx){
                 try{
                     app(ws, result, adminCtx);
                 } catch(err) {
-                    console.log(err.message);
+                    console.log('Server Handle Got error %s', err.message);
                 }
             }
         });
