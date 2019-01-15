@@ -50,8 +50,14 @@ if(crl != null) {
 if (process.platform === "win32") {
   options.socket = "\\\\.\\pipe\\" + "ipc";
 } else {
-  options.socket = '/tmp/unix.sock';
+  options.socket = 'ipc_socket/unix.sock';
 }
+
+if(!fs.existsSync('ipc_socket')) {
+  fs.mkdirSync('ipc_socket', {mode: 0o770});
+}
+
+
 var pipe2file = new Map();
 for (let i = 0; i < 100; i++) {
   pipe2file.set(i, 0);
