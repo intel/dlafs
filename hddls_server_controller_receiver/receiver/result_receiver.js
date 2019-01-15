@@ -53,16 +53,17 @@ function incoming(data) {
 	  fs.mkdirSync(path);
   }
   if (data.headers.type == constants.msgType.eMetaJPG) {
-      console.log('save JPG');
+      //console.log('save JPG');
       let temp = pipe2file.get(pipe_id);
       let image_name = 'image_' + temp + '.jpg';
       let path = './' + con + '/' + image_name;
+      console.log('Save jpeg:' + path);
       fileHelper.saveBuffer(path, metaData);
       temp++;
       pipe2file.set(pipe_id, temp);
   } else if(data.headers.type == constants.msgType.eMetaText) {
-      console.log('save txt');
-	  let path = './' + con + '/output.txt';
+      let path = './' + con + '/output.txt';
+      console.log('Save txt to ' + path + ": " + metaData);
       fs.appendFileSync(path, metaData);
   }
 }
