@@ -87,7 +87,8 @@ exports.createHandler = function createHandler(ws, message, adminCtx) {
         console.log(adminCtx.pipe2json);
         console.log('create pipe %s', pipe_id);
         wsSender.sendMessage(ws, `pipe_create ${pipe_id}`);
-        ws.send(JSON.stringify({headers: {method: 'pipe_id'}, payload: Array.from(pipes), code: 200}));
+        ws.send(JSON.stringify({headers: {method: 'pipe_id'}, payload: [pipes], code: 200}));
+        ws.send(JSON.stringify({headers: {method: 'pipe_info', pipe_id: pipe_id}, payload: create_json, code: 200}));
     }
 }
 

@@ -82,7 +82,7 @@ class clientCLI {
         this._inParser = customIn || incoming;
     }
     close() {
-        this._rl.emit('close');
+        !!this._rl && this._rl.emit('close');
     }
 
     prependListener(message, ...Args) {

@@ -28,6 +28,7 @@ const fileHelper = require('../lib/file_helper');
 const path = require('../lib/path_parser');
 var modelCheck = {};
 var pipe_ids = new Set();
+var pipe2info = new Map();
 var crl = null;
 if(fs.existsSync('./client_cert/server.crl')) {
   crl = fs.readFileSync('./client_cert/server.crl')
@@ -200,6 +201,11 @@ return function incoming(ws, message, rl) {
     } else if(method === 'checkSum'){
 		console.log('update model meta')
       	method ==='checkSum' && (modelCheck = fileHelper.safelyJSONParser(message.payload.toString()));
+    } else if(method === 'pipe_info') {
+      if(message.headers.hasOwnProperty('pipe_id')) {
+        let pipeID = message.headers.pipe_id;
+        pipe2info.set(pipeID, fileHelper.safelyJSONParser(message.payload));
+      }
     }
   };
 }

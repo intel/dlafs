@@ -96,6 +96,7 @@ class SecuredWebsocketClient extends EventEmitter {
             });
           }).on('error', (e) => {
             console.error(`Got error: ${e.message}` + " please check your URL");
+            process.exit(0);
           });
 
     };
