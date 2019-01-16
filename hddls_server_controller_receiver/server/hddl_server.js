@@ -54,7 +54,7 @@ if (process.platform === "win32") {
 }
 
 if(!fs.existsSync('ipc_socket')) {
-  fs.mkdirSync('ipc_socket', {mode: 0o770});
+  fs.mkdirSync('ipc_socket', {mode: 0o700});
 }
 
 

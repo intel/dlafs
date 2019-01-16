@@ -218,9 +218,9 @@ exports.updateModel = function (ws, model, adminCtx){
     if(!fs.existsSync(folderName))
     {
       console.log('making dir %s', './' + folderName);
-      fs.mkdirSync('./' + folderName, { recursive: true });
+      fs.mkdirSync('./' + folderName, { recursive: true, mode: 0o600 });
     }
-    var stream = fs.createWriteStream(filePath);
+    var stream = fs.createWriteStream(filePath, { mode: 0o600 });
     stream.on("open", ()=>{
       stream.write(buffer);
       stream.end();

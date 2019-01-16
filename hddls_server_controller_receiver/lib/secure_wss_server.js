@@ -155,7 +155,7 @@ class SecureServer extends EventEmitter {
         ipcServer.on('connection', getUnixConnHandler(this._unixApp, adminCtx, options.ipcProtocol || 'json'));
         server.listen(options.port ? options.port : options.host);
         ipcServer.listen({path: options.socket, readableAll: false, writableAll: false});
-        fs.chmodSync(options.socket, 0o770);
+        fs.chmodSync(options.socket, 0o600);
 
     }
 
