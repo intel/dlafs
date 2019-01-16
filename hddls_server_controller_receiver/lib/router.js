@@ -57,10 +57,10 @@ exports.createHandler = function createHandler(ws, message, adminCtx) {
             pipes =  new Set();
             adminCtx.client2pipe.set(ws.id, pipes);
         }
-        let child = spawn(gst_cmd, {
-            shell: true
-        });
-
+        // let child = spawn(gst_cmd, {
+        //     shell: true
+        // });
+        let child = spawn('hddlspipes', ['-i', `${pipe_id}`, '-u', `${adminCtx.socketURL}`, '-l' ,`${create_json.command_create.loop_times}`], {env: process.env});
         child.stderr.on('data', function (data) {
              console.error("STDERR:", data.toString());
         });
