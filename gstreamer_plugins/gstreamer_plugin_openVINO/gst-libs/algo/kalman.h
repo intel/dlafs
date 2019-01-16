@@ -86,6 +86,7 @@ cv::Rect2d convertBBoxToOcvBBox(const BBox & bbox);
 class KalmanTracker
 {
 public:
+    KalmanTracker() : maxAge(12), count(0) {}
     KalmanTracker(int maxAge) : maxAge(maxAge), count(0) {}
 
     /**

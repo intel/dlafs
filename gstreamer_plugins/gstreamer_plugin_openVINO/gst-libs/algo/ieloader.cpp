@@ -147,11 +147,14 @@ GstFlowReturn IELoader::set_device(InferenceEngine::TargetDevice dev)
         mIEPlugin = InferenceEnginePluginPtr(HDDL_PLUGIN);
         break;
     default:
-        g_print("Not support device [ %d ]", (int)dev);
+        g_print("Not support device [ %d ]\n", (int)dev);
         return GST_FLOW_ERROR;
         break;
     }
-    return GST_FLOW_OK;
+    if(mIEPlugin)
+        return GST_FLOW_OK;
+    else
+        return GST_FLOW_ERROR;
 }
 GstFlowReturn IELoader::read_model(std::string strModelXml,
         std::string strModelBin, int modelType, std::string network_config)

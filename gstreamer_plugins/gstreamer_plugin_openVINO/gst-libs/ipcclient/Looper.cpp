@@ -89,7 +89,7 @@ void Looper::run() {
             }
         }
         catch (std::exception &ex) {
-            g_print("Event Error\n");
+            std::cout << "Event Error:" << ex.what() << std::endl;
         }
         catch (...) {}
     }

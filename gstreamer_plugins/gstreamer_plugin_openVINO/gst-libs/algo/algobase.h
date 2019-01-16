@@ -201,6 +201,7 @@ private:
         //It's not expected that class instances are copied, the operator= should be declared as private.
         //In this case, if an attempt to copy is made, the compiler produces an error.
         CvdlAlgoBase& operator=(const CvdlAlgoBase& src){return *this;}
+        CvdlAlgoBase(const CvdlAlgoBase& src){/* do not create copies */};
 
 public:
     gboolean mCapsInited;

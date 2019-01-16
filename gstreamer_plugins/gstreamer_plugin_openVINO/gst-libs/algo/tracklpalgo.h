@@ -37,6 +37,7 @@ class LicencePlateDetect
 {
 public:
     LicencePlateDetect(std::string svmModelPath);
+    LicencePlateDetect() {};
     cv::Rect detectLicencePlates(const cv::Mat & image);
 
 protected:
@@ -90,14 +91,15 @@ public:
 
     std::vector<ObjectData> mLastObjectTrackRes; // last fame track result
 
-    KalmanTracker *lpTracker;
-    LicencePlateDetect *lpDetect;
+    KalmanTracker lpTracker;
+    LicencePlateDetect lpDetect;
     std::string mSvmModelStr;
 
 private:
     //It's not expected that class instances are copied, the operator= should be declared as private.
     //In this case, if an attempt to copy is made, the compiler produces an error.
     TrackLpAlgo& operator=(const TrackLpAlgo& src){return *this;}
+    //TrackLpAlgo(const TrackLpAlgo& src){/* do not create copies */};
 };
 
 

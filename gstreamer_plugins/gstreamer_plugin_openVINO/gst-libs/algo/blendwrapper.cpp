@@ -155,7 +155,11 @@ static GstBuffer *generate_osd(BlendHandle handle, GstBuffer *input_buf)
         return NULL;
     }
     osd_mem = ocl_memory_acquire(osd_buf);
-    g_return_val_if_fail(osd_mem, NULL);
+    //g_return_val_if_fail(osd_mem, NULL);
+    if(!osd_mem) {
+        gst_buffer_unref(osd_buf);
+        return NULL;
+    }
     osd_mem->purpose = 2;
 
     std::ostringstream stream_ts;

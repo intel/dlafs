@@ -531,7 +531,7 @@ GstFlowReturn CvdlAlgoBase::init_ieloader(const char* modeFileName, guint ieType
 
     ret = mIeLoader.set_device(InferenceEngine::TargetDevice::eHDDL);
     if(ret != GST_FLOW_OK){
-        g_print("IE failed to set device be eHDDL!");
+        g_print("IE failed to set device be eHDDL!\n");
         return GST_FLOW_ERROR;
     }
     // Load different Model based on different device.

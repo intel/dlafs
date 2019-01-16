@@ -175,8 +175,8 @@ OclVppBlender::process (const SharedPtr<VideoFrame>& src,  /* osd */
     }
 
     m_dst = (OclCLMemInfo*) m_context->acquireMemoryCL (dst->mem, 1);
-    if (!m_src2) {
-        GST_ERROR("failed to acquire src2 memory\n");
+    if (!m_dst) {
+        GST_ERROR("failed to acquire dst memory\n");
         m_context->releaseMemoryCL(&m_src);
         m_context->releaseVAMemoryCL(&m_src2);
         m_context->finish();
@@ -186,6 +186,8 @@ OclVppBlender::process (const SharedPtr<VideoFrame>& src,  /* osd */
     printOclKernelInfo(); // test
     status = blend_helper();
 
+#ifdef USE_CV_OCL
+#else
     if(clBuffer_osd)
         clReleaseMemObject(clBuffer_osd);
     clBuffer_osd = 0;
@@ -193,6 +195,7 @@ OclVppBlender::process (const SharedPtr<VideoFrame>& src,  /* osd */
     if(clBuffer_dst)
         clReleaseMemObject(clBuffer_dst);
     clBuffer_dst = 0;
+#endif
 
     m_context->releaseMemoryCL(&m_src);
     m_context->releaseMemoryCL(&m_dst);

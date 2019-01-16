@@ -148,9 +148,9 @@ static GstFlowReturn
 res_convert_send_data (ResConvert * convertor, GstBuffer * buf, GstBuffer * inbuf)
 {
     GstFlowReturn result = GST_FLOW_OK;
-    GstBuffer *txt_buf;
-    ResMemory *txt_mem;
-    CvdlMeta *cvdl_meta;
+    GstBuffer *txt_buf = NULL;
+    ResMemory *txt_mem = NULL;
+    CvdlMeta *cvdl_meta = NULL;
     
     GST_LOG_OBJECT (convertor, "pushing buffer...");
 
@@ -160,12 +160,16 @@ res_convert_send_data (ResConvert * convertor, GstBuffer * buf, GstBuffer * inbu
         txt_buf = res_buffer_alloc(convertor->src_pool);
         if(txt_buf){
             txt_mem = RES_MEMORY_CAST(res_memory_acquire(txt_buf));
-            res_convert_fill_txt_data(txt_mem, cvdl_meta);
-            txt_mem->pts = GST_BUFFER_PTS (inbuf);
-            GST_BUFFER_PTS(txt_buf) = GST_BUFFER_PTS (inbuf);
-            GST_BUFFER_DTS(txt_buf) = GST_BUFFER_DTS (inbuf);
-            GST_BUFFER_DURATION(txt_buf) = GST_BUFFER_DURATION (inbuf);
-            gst_pad_push (convertor->txt_srcpad, txt_buf);
+            if(txt_mem) {
+                res_convert_fill_txt_data(txt_mem, cvdl_meta);
+                txt_mem->pts = GST_BUFFER_PTS (inbuf);
+                GST_BUFFER_PTS(txt_buf) = GST_BUFFER_PTS (inbuf);
+                GST_BUFFER_DTS(txt_buf) = GST_BUFFER_DTS (inbuf);
+                GST_BUFFER_DURATION(txt_buf) = GST_BUFFER_DURATION (inbuf);
+                gst_pad_push (convertor->txt_srcpad, txt_buf);
+            }else{
+                gst_buffer_unref(txt_buf);
+            }
         }
     }
 

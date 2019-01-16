@@ -83,10 +83,10 @@ static void post_tracklp_process(CvdlAlgoData *algoData)
     
       // track
       std::vector<ObjectData> trackResult;
-       bboxArrayWithId = trackLpAlgo->lpTracker->update(boxes, trackLpAlgo->mImageProcessorInVideoWidth, 
+       bboxArrayWithId = trackLpAlgo->lpTracker.update(boxes, trackLpAlgo->mImageProcessorInVideoWidth, 
             trackLpAlgo->mImageProcessorInVideoHeight);
        // trackResult is the track result, but not used for LP detection
-       const std::map<long, long> & boxIDToObjectID = trackLpAlgo->lpTracker->getBoxToObjectMapping();
+       const std::map<long, long> & boxIDToObjectID = trackLpAlgo->lpTracker.getBoxToObjectMapping();
        parseTrackResult(bboxArrayWithId, trackResult);
        for(guint i=0; i<trackResult.size();i++) {
                trackResult[i].rect = utils.convert_rect(trackResult[i].rect,
@@ -140,7 +140,7 @@ static void post_tracklp_process(CvdlAlgoData *algoData)
     
                // detect LP based on mObjectVec
                cv::Mat roiImage = ocl_mem->frame.getMat(0);
-               cv::Rect lpDetResult = trackLpAlgo->lpDetect->detectLicencePlates(roiImage);
+               cv::Rect lpDetResult = trackLpAlgo->lpDetect.detectLicencePlates(roiImage);
                gst_buffer_unref(ocl_buf);
                if(lpDetResult.x < 0){
                     continue;
@@ -216,14 +216,14 @@ TrackLpAlgo::TrackLpAlgo():CvdlAlgoBase(post_tracklp_process, CVDL_TYPE_CV)
 
     mSvmModelStr = std::string(CVDL_MODEL_DIR_DEFAULT"/svm_model.xml");
 
-    lpTracker = new KalmanTracker(KFMaxAge);
-    lpDetect = new LicencePlateDetect(mSvmModelStr);
+    lpTracker = KalmanTracker(KFMaxAge);
+    lpDetect = LicencePlateDetect(mSvmModelStr);
 }
 
 TrackLpAlgo::~TrackLpAlgo()
 {
-    delete lpTracker;
-    delete lpDetect;
+    //delete lpTracker;
+    //delete lpDetect;
     g_print("TrackLpAlgo: image process %d frames, image preprocess fps = %.2f\n",
         mFrameDoneNum, 1000000.0*mFrameDoneNum/mImageProcCost);
 }

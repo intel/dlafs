@@ -245,7 +245,7 @@ InferenceEngine::Precision GenericAlgo::getIEPrecision(ExDataType type)
                 return InferenceEngine::Precision::FP32;
                 break;
             default:
-                return InferenceEngine::Precision::FP32;
+                //return InferenceEngine::Precision::FP32;
                 break;
      }
     return  InferenceEngine::Precision::FP32;

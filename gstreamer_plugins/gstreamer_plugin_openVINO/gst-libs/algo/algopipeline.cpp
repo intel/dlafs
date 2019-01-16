@@ -348,8 +348,8 @@ AlgoPipelineHandle algo_pipeline_create(AlgoPipelineConfig* config, int num)
     int preId, nextId = 0;
     AlgoItem *preSinkItem[MAX_PIPELINE_OUT_NUM] = {NULL};
 
-    pipeline->algo_chain = (AlgoItem *)g_new0(AlgoItem, num+1);  //add sinkalgo
-    pipeline->algo_num   = num+1;
+    pipeline->algo_num = num + 1;
+    pipeline->algo_chain = (AlgoItem *)g_new0(AlgoItem, pipeline->algo_num);  //add sinkalgo
     pipeline->first = NULL;
 
     int i, j;

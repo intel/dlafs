@@ -32,9 +32,11 @@
 using namespace HDDLStreamFilter;
 using namespace std;
 
+#if 0
 const char* voc_names[] = { "aeroplane", "bicycle", "bird", "boat", "bottle", "bus", "car", "cat", "chair", "cow",
                             "diningtable", "dog", "horse", "motorbike", "person", "pottedplant", "sheep", "sofa",
                             "train", "tvmonitor" };
+#endif
 const char* barrier_names[] = { "minibus", "minitruck", "car", "mediumbus", "mpv", "suv", "largetruck", "largebus",
                             "other" };
 
@@ -157,11 +159,11 @@ GstFlowReturn Yolov1TinyAlgo::parse_inference_result(InferenceEngine::Blob::Ptr 
   **************************************************************************/
     void Yolov1TinyAlgo::set_default_label_name()
     {
-        if (cClassNum == 9) {
+        //if (cClassNum == 9) {
             set_label_names(barrier_names);
-        } else {
-            set_label_names(voc_names);
-        }
+        //} else {
+        //    set_label_names(voc_names);
+        //}
     }
     
     void Yolov1TinyAlgo::set_label_names(const char** label_names)

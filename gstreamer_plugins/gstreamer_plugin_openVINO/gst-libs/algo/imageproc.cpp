@@ -118,7 +118,7 @@ void ImageProcessor::setup_ocl_context(VADisplay display)
              mOclVpp.reset (NEW_VPP_SHARED_PTR (OCL_VPP_BLENDER));
              break;
         default:
-            GST_ERROR("ocl: invalid vpp type!!!\n");
+            //GST_ERROR("ocl: invalid vpp type!!!\n");
             break;
     }
 

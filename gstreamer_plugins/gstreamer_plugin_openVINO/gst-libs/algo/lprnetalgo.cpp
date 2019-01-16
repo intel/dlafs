@@ -175,15 +175,15 @@ GstFlowReturn LPRNetAlgo::parse_inference_result(InferenceEngine::Blob::Ptr &res
      }
 #endif
     ObjectData objData = outData->mObjectVecIn[objId];
-    if(prob_sum >= 90) {
+    //if(prob_sum >= 90) {
              objData.prob = prob_sum/100.0;
              objData.label = result;
              objData.objectClass =  0;
              outData->mObjectVec.push_back(objData);
-     } else {
-         result.clear();
-         ret = GST_FLOW_ERROR;
-     }
+     //} else {
+     //    result.clear();
+     //    ret = GST_FLOW_ERROR;
+     //}
 
     return ret;
 }

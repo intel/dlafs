@@ -132,6 +132,10 @@ ocl_memory_alloc (OclPool* oclpool)
     OclPoolPrivate *priv = oclpool->priv;
     //OclMemory *ocl_mem = g_new0(OclMemory, 1);
     OclMemory *ocl_mem = new OclMemory;
+    if(ocl_mem==NULL) {
+        g_print("Failed to allocate OclMemory!\n");
+        return NULL;
+    }
 
     OCL_MEMORY_WIDTH (ocl_mem) = GST_VIDEO_INFO_WIDTH (&priv->info);
     OCL_MEMORY_HEIGHT (ocl_mem) = GST_VIDEO_INFO_HEIGHT (&priv->info);
@@ -160,8 +164,14 @@ ocl_memory_alloc (OclPool* oclpool)
             ocl_mem->mem_size = 0;
             break;
     }
-    g_return_val_if_fail(ocl_mem->frame.offset == 0, NULL);
-    g_return_val_if_fail(ocl_mem->frame.isContinuous(), NULL);
+    //g_return_val_if_fail(ocl_mem->frame.offset == 0, NULL);
+    //g_return_val_if_fail(ocl_mem->frame.isContinuous(), NULL);
+    if(!(ocl_mem->frame.offset==0) || !(ocl_mem->frame.isContinuous())) {
+        ocl_mem->frame.release();
+        delete ocl_mem;
+        g_print("ocl_mem->frame.create failed!\n");
+        return NULL;
+    }
 
     if(priv->info.finfo->format == GST_VIDEO_FORMAT_BGRA) {
          // OclVppBlender::blend_helper () - clCreateImage2D

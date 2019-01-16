@@ -80,10 +80,10 @@ static void post_tracklp_process(CvdlAlgoData *algoData)
     
       // track
       std::vector<ObjectData> trackResult;
-       bboxArrayWithId = tackAlgo->kalmanTracker->update(boxes, tackAlgo->mImageProcessorInVideoWidth, 
+       bboxArrayWithId = tackAlgo->kalmanTracker.update(boxes, tackAlgo->mImageProcessorInVideoWidth, 
             tackAlgo->mImageProcessorInVideoHeight);
        // trackResult is the track result, but not used for LP detection
-       const std::map<long, long> & boxIDToObjectID = tackAlgo->kalmanTracker->getBoxToObjectMapping();
+       const std::map<long, long> & boxIDToObjectID = tackAlgo->kalmanTracker.getBoxToObjectMapping();
        parseTrackResult(bboxArrayWithId, trackResult);
        for(guint i=0; i<trackResult.size();i++) {
                trackResult[i].rect = utils.convert_rect(trackResult[i].rect,
@@ -123,12 +123,12 @@ KalmanTrackAlgo::KalmanTrackAlgo():CvdlAlgoBase(post_tracklp_process, CVDL_TYPE_
     mInputHeight = TRACKING_LP_INPUT_H;
 
     mSvmModelStr = std::string(CVDL_MODEL_DIR_DEFAULT"/svm_model.xml");
-    kalmanTracker = new KalmanTracker(KFMaxAge);
+    kalmanTracker = KalmanTracker(KFMaxAge);
 }
 
 KalmanTrackAlgo::~KalmanTrackAlgo()
 {
-    delete kalmanTracker;
+    //delete kalmanTracker;
     g_print("KalmanTrackAlgo: image process %d frames, image preprocess fps = %.2f\n",
         mFrameDoneNum, 1000000.0*mFrameDoneNum/mImageProcCost);
 }

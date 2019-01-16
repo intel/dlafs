@@ -327,6 +327,10 @@ void hddlspipe_prepare(int argc, char **argv)
 static void hddlspipes_replay(HddlsPipe *hp)
 {
       GError     *error = NULL;
+      if(!hp) {
+        g_print("Error: hp==null!\n");
+        return;
+      }
 
       g_source_remove (hp->bus_watch_id);
       gst_object_unref (hp->pipeline);
@@ -351,7 +355,7 @@ static void hddlspipes_replay(HddlsPipe *hp)
 void  hddlspipes_replay_if_need(HddlsPipe *hp)
 {
      while( --g_loop_times > 0) {
-          if( hp->state != ePipeState_Null)
+          if( hp && hp->state != ePipeState_Null)
                 hddlspipes_replay(hp);
      }
 }

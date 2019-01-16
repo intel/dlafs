@@ -144,6 +144,7 @@ int Transceiver::handleRequest(list<ipcProtocol>& lMsgs)
         }
         catch (exception &ex)
         {
+            std::cout << ex.what() << std::endl;
         }
         catch (...)
         {

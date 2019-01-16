@@ -77,13 +77,14 @@ public:
 
     std::vector<ObjectData> mLastObjectTrackRes; // last fame track result
 
-    KalmanTracker *kalmanTracker;
+    KalmanTracker kalmanTracker;
     std::string mSvmModelStr;
 
 private:
     //It's not expected that class instances are copied, the operator= should be declared as private.
     //In this case, if an attempt to copy is made, the compiler produces an error.
     KalmanTrackAlgo& operator=(const KalmanTrackAlgo& src){return *this;}
+    //KalmanTrackAlgo(const KalmanTrackAlgo& src){/* do not create copies */};
 };
 
 
