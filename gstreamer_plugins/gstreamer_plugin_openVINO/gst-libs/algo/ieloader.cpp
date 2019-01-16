@@ -48,7 +48,18 @@
 #endif
 #endif
 
-#define IECALLNORET(call)                                       \
+#define IECALLCHECK(call)                                       \
+if (InferenceEngine::OK != (call)) {                            \
+    std::cout << #call " failed: " << resp.msg << std::endl;    \
+    return GST_FLOW_ERROR;                                    \
+}
+
+#define IECALLNORETCHECK(call)                                       \
+if (InferenceEngine::OK != (call)) {                            \
+    std::cout << #call " failed: " << resp.msg << std::endl;    \
+}
+
+#define IECALLASSERT(call)                                       \
 if (InferenceEngine::OK != (call)) {                            \
     std::cout << #call " failed: " << resp.msg << std::endl;    \
     std::exit(EXIT_FAILURE);                                    \
@@ -125,7 +136,6 @@ IELoader::~IELoader()
 GstFlowReturn IELoader::set_device(InferenceEngine::TargetDevice dev)
 {
     mTargetDev = dev;
-    //std::string pluginPath = std::string("/opt/intel/computer_vision_sdk/inference_engine/lib/ubuntu_16.04/intel64");
     switch (dev) {
     case InferenceEngine::TargetDevice::eCPU:
         mIEPlugin = InferenceEnginePluginPtr("libMKLDNNPlugin.so");
@@ -134,11 +144,10 @@ GstFlowReturn IELoader::set_device(InferenceEngine::TargetDevice dev)
         mIEPlugin = InferenceEnginePluginPtr("libclDNNPlugin.so");
         break;
     case InferenceEngine::TargetDevice::eHDDL:
-        //mIEPlugin = InferenceEngine::PluginDispatcher({ pluginPath }).getPluginByDevice("HDDL");
         mIEPlugin = InferenceEnginePluginPtr(HDDL_PLUGIN);
         break;
     default:
-        GST_ERROR("Not support device [ %d ]", (int)dev);
+        g_print("Not support device [ %d ]", (int)dev);
         return GST_FLOW_ERROR;
         break;
     }
@@ -244,19 +253,14 @@ GstFlowReturn IELoader::read_model(std::string strModelXml,
     ret = mIEPlugin->LoadNetwork(mExeNetwork, cnnNetwork, networkConfig, &resp);
     if (InferenceEngine::StatusCode::OK != ret) {
         // GENERAL_ERROR = -1
-        g_print("Failed to call mIEPlugin->LoadNetwork, ret_code = %d, models=%s\n", ret, strModelBin.c_str());
-        //return GST_FLOW_ERROR;
+        g_print("Failed to  LoadNetwork, ret_code = %d, models=%s\n", ret, strModelBin.c_str());
         exit(-1);
     }
 
     // First create 16 request for current thread.
     for (int r = 0; r < REQUEST_NUM; r++) {
-        ret = mExeNetwork->CreateInferRequest(mInferRequest[r], &resp);
+        IECALLASSERT(mExeNetwork->CreateInferRequest(mInferRequest[r], &resp));
         mRequestEnable[r] = true;
-        if (InferenceEngine::OK != ret) {
-            std::cout << "CreateInferRequest failed: " << resp.msg << std::endl;
-            std::exit(EXIT_FAILURE);
-        }
     }
     return GST_FLOW_OK;
 }
@@ -380,7 +384,7 @@ GstFlowReturn IELoader::get_input_size(int *w, int *h, int *c)
     {
         InferenceEngine::IInferRequest::Ptr inferRequestAsyn = mInferRequest[reqestId];
         InferenceEngine::Blob::Ptr inputBlobPtr;
-        IECALLNORET(inferRequestAsyn->GetBlob(mFirstInputName.c_str(), inputBlobPtr, &resp));
+        IECALLCHECK(inferRequestAsyn->GetBlob(mFirstInputName.c_str(), inputBlobPtr, &resp));
         *w = (int)inputBlobPtr->dims()[0];
         *h = (int)inputBlobPtr->dims()[1];
         *c = (int)inputBlobPtr->dims()[2];
@@ -412,7 +416,7 @@ GstFlowReturn IELoader::do_inference_async(void *data, uint64_t frmId, int objId
     {
         InferenceEngine::IInferRequest::Ptr inferRequestAsyn = mInferRequest[reqestId];
         InferenceEngine::Blob::Ptr inputBlobPtr;
-        IECALLNORET(inferRequestAsyn->GetBlob(mFirstInputName.c_str(), inputBlobPtr, &resp));
+        IECALLCHECK(inferRequestAsyn->GetBlob(mFirstInputName.c_str(), inputBlobPtr, &resp));
 
         // Load images.
         if (src.empty()) {
@@ -425,7 +429,7 @@ GstFlowReturn IELoader::do_inference_async(void *data, uint64_t frmId, int objId
         // set data for second input blob
         if(mNeedSecondInputData) {
             InferenceEngine::Blob::Ptr inputBlobPtrSecond;
-            IECALLNORET(inferRequestAsyn->GetBlob(mSecondInputName.c_str(), inputBlobPtrSecond, &resp));
+            IECALLCHECK(inferRequestAsyn->GetBlob(mSecondInputName.c_str(), inputBlobPtrSecond, &resp));
             if (!inputBlobPtrSecond){
                 release_request(reqestId);
                 g_print("inputBlobPtrSecond is null!\n");
@@ -434,17 +438,21 @@ GstFlowReturn IELoader::do_inference_async(void *data, uint64_t frmId, int objId
             second_input_to_blob(inputBlobPtrSecond);
          }
 
+        algoData->ie_start = g_get_monotonic_time();
         // send a request
-        IECALLNORET(inferRequestAsyn->StartAsync(&resp));
+        IECALLCHECK(inferRequestAsyn->StartAsync(&resp));
 
         // Start thread listen to result
         auto WaitAsync = [this, algoData, frmId, objId, cb](InferenceEngine::IInferRequest::Ptr inferRequestAsyn, int reqestId)
         {
             //CvdlAlgoBase *algo;
             InferenceEngine::ResponseDesc resp;
-            IECALLNORET(inferRequestAsyn->Wait(InferenceEngine::IInferRequest::WaitMode::RESULT_READY, &resp));
+            IECALLNORETCHECK(inferRequestAsyn->Wait(InferenceEngine::IInferRequest::WaitMode::RESULT_READY, &resp));
+            algoData->ie_duration = g_get_monotonic_time() - algoData->ie_start;
+            int duration = algoData->ie_duration/1000;
+            GST_INFO("%s: IE wait for %d ms\n", algoData->algoBase->mName.c_str(), duration);
             InferenceEngine::Blob::Ptr resultBlobPtr;
-            IECALLNORET(inferRequestAsyn->GetBlob(mFirstOutputName.c_str(), resultBlobPtr, &resp));
+            IECALLNORETCHECK(inferRequestAsyn->GetBlob(mFirstOutputName.c_str(), resultBlobPtr, &resp));
 
             if (this->mOutputPrecision == InferenceEngine::Precision::FP32)
             {
@@ -462,7 +470,6 @@ GstFlowReturn IELoader::do_inference_async(void *data, uint64_t frmId, int objId
                 release_request(reqestId);
                 return;
             }
-
             GST_LOG("Got inference result: frmId = %ld",frmId);
             // put result into out_queue
             cb(algoData);
@@ -489,7 +496,7 @@ GstFlowReturn IELoader::do_inference_sync(void *data, uint64_t frmId, int objId,
     {
         InferenceEngine::IInferRequest::Ptr inferRequestSync = mInferRequest[reqestId];
         InferenceEngine::Blob::Ptr inputBlobPtr;
-        IECALLNORET(inferRequestSync->GetBlob(mFirstInputName.c_str(), inputBlobPtr, &resp));
+        IECALLCHECK(inferRequestSync->GetBlob(mFirstInputName.c_str(), inputBlobPtr, &resp));
 
         // Load images.
         if (src.empty()) {
@@ -501,7 +508,7 @@ GstFlowReturn IELoader::do_inference_sync(void *data, uint64_t frmId, int objId,
          // set data for second input blob
         if(mNeedSecondInputData) {
             InferenceEngine::Blob::Ptr inputBlobPtrSecond;
-            IECALLNORET(inferRequestSync->GetBlob(mSecondInputName.c_str(), inputBlobPtrSecond, &resp));
+            IECALLCHECK(inferRequestSync->GetBlob(mSecondInputName.c_str(), inputBlobPtrSecond, &resp));
             if (!inputBlobPtrSecond){
                 release_request(reqestId);
                 g_print("inputBlobPtrSecond is null!\n");

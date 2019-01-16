@@ -96,13 +96,13 @@ using PostCallback = std::function<void(CvdlAlgoData* algoData)>;
 class CvdlAlgoData{
 public:
     CvdlAlgoData(): mGstBuffer(NULL) ,mFrameId(0), mPts(0),mOutputIndex(0),  mAllObjectDone(true),
-                                                mGstBufferOcl(NULL), algoBase(NULL)
+                                                mGstBufferOcl(NULL), algoBase(NULL), ie_start(0), ie_duration(0)
     {
         mObjectVec.clear();
         mObjectVecIn.clear();
     }
     CvdlAlgoData(GstBuffer *buf) : mGstBuffer(buf), mFrameId(0), mPts(0),mOutputIndex(0), mAllObjectDone(true),
-                                                mGstBufferOcl(NULL), algoBase(NULL)
+                                                mGstBufferOcl(NULL), algoBase(NULL), ie_start(0), ie_duration(0)
     {
         if(buf){
             //gst_buffer_ref(buf);
@@ -137,6 +137,8 @@ public:
     std::vector<ObjectData> mObjectVecIn;
 
     CvdlAlgoBase* algoBase;
+    gint64 ie_start;
+    gint64 ie_duration;
 };
 
 
@@ -158,9 +160,10 @@ public:
          // wait IE infer thread finished
          int times = 100;
          while((mInferCnt>0) ||(mInQueue.size()>0)) {
-            g_usleep(10000);
+            g_usleep(100000);//100ms
             clear_queue();
-            if(times--<=0) {
+            if(times--<=0) 
+           {
                 int value = mInferCnt;
                 g_print("warning: mInferCnt = %d in %s\n", value, mName.c_str() );
                 break;
