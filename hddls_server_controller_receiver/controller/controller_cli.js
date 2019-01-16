@@ -177,7 +177,7 @@ function setup(options) {
     if(dispatcher[cmd[0]]) {
       fn = dispatcher[cmd[0]];
     } else {
-      console.log(`command not support ${args} please check`);
+      fn = (ws, rl) => {rl.emit('hint', `wrong cmd ${args} please check`)};
     }
     return fn;
     }
@@ -195,11 +195,10 @@ return function incoming(ws, message, rl) {
         message.payload.forEach(elem=> pipe_ids.add(elem));
         rl.prompt();
     } else if(method === 'pipe_delete') {
-      console.log('pipe delete %s', message.payload);
-      message.payload.forEach(elem=> pipe_ids.delete(elem));
-      rl.prompt();
+        console.log('pipe delete %s', message.payload);
+        message.payload.forEach(elem=> pipe_ids.delete(elem));
+        rl.prompt();
     } else if(method === 'checkSum'){
-		console.log('update model meta')
       	method ==='checkSum' && (modelCheck = fileHelper.safelyJSONParser(message.payload.toString()));
     } else if(method === 'pipe_info') {
       if(message.headers.hasOwnProperty('pipe_id')) {

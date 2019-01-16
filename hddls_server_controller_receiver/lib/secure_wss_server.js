@@ -234,7 +234,7 @@ function getConnHandler(app, adminCtx){
         //console.log(adminCtx.wsConns);
         ws.on('message', function handle(message) {
             var result = wsReceiver.websocketParser(message);
-            if(!!app) {
+            if(!!app && result != null) {
                 try{
                     app(ws, result, adminCtx);
                 } catch(err) {

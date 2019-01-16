@@ -1,6 +1,6 @@
 #!/usr/bin/env nodejs
 //Copyright (C) 2018 Intel Corporation
-// 
+//
 //SPDX-License-Identifier: MIT
 //
 //MIT License
@@ -41,6 +41,9 @@ var options = {
   route: 'data'
 };
 
+if(crl != null) {
+  options.crl = crl;
+}
 var pipe2file = new Map();
 for (let i = 0; i < 100; i++) {
   pipe2file.set(i, 0);

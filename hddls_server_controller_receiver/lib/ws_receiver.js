@@ -36,6 +36,8 @@ exports.websocketParser = function websocketParser(message) {
 function bufParser(buf) {
     let headerDelimiter = buf.indexOf(1);
     let headers = fileHelper.safelyJSONParser(buf.slice(0, headerDelimiter).toString());
+    if(headers == null)
+        return null
     let delimiterChecksum = buf.lastIndexOf(1);
     var result =  {
         headers : headers,
