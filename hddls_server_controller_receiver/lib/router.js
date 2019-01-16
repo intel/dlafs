@@ -45,6 +45,7 @@ exports.createHandler = function createHandler(ws, message, adminCtx) {
         wsSender.sendMessage(ws, 'json format error', 400);
         return;
     }
+    var clientID = ws.id;
     for (let i = 0; i < create_json.command_create.pipe_num; i++) {
         let pipe_id = pipe_base ++;
         let gst_cmd = `hddlspipes -i  ${pipe_id} -l ${create_json.command_create.loop_times} -u ${adminCtx.socketURL}`;
@@ -75,9 +76,10 @@ exports.createHandler = function createHandler(ws, message, adminCtx) {
             pipes.delete(pipe2delete);
             adminCtx.pipe2pid.delete(pipe2delete);
             adminCtx.pipe2json.delete(pipe2delete);
+            let clientWS = adminCtx.wsConns.get(clientID);
             //update controller when pipeline exit
-            if (ws.readyState === ws.OPEN) {
-                wsSender.sendProtocol(ws, {method: 'pipe_delete'}, [pipe2delete], 200);
+            if (!! clientWS && clientWS.readyState === clientWS.OPEN) {
+                wsSender.sendProtocol(clientWS, {method: 'pipe_delete'}, [pipe2delete], 200);
             }
         });
 
