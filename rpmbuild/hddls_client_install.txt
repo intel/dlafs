@@ -9,9 +9,9 @@
 
 
 	Install certificate files, which is from server install guide:
-  		Copy "ca-crt.pem client1-crt.pem client1-key.pem" into 'controller/cert_client_8216_8124'
-  		Copy "ca-crt.pem client1-crt.pem client1-key.pem" into 'receiver/cert_client_8216_8124'
-  		Copy 'client1.crl' into 'cert_server_8216_8124'
+  		Copy "ca-crt.pem client1-crt.pem client1-key.pem" into 'controller/client_cert'
+  		Copy "ca-crt.pem client1-crt.pem client1-key.pem" into 'receiver/client_cert'
+  		Copy 'client1.crl' into 'server_cert'
 
 2. Run receiver client
 ----------------------
@@ -29,6 +29,9 @@ Open a new terminal, and run below command:
 			m <models directory>
       Note: Choose the models directory that will be updated into hddls-server
             You can type "models", which is the same with: HDDLS_CVDL_MODEL_PATH
+
+ Note: make sure client_cert/*.pem mode is 400
+
 
 Note:
 1. command format:

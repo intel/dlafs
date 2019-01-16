@@ -103,11 +103,18 @@ Note: below steps is the least
 Step 1: 
 	Please refer to certificate_create_explanation.md to generate certificate files.
 Step 2: 
-	Copy "ca-crt.pem client1-crt.pem client1-key.pem" into 'controller/cert_client'
-	Copy "ca-crt.pem client1-crt.pem client1-key.pem" into 'receiver/cert_client'
-	Copy "ca-crt.pem server-crt.pem server-key.pem" into 'server/cert_server'
-	Copy 'client1.crl' into 'cert_server'
-	Copy 'server.crl' into 'cert_client'
+    Copy "ca-crt.pem client1-crt.pem client1-key.pem" into 'controller/client_cert'
+    Copy "ca-crt.pem client1-crt.pem client1-key.pem" into 'receiver/client_cert'
+    Copy "ca-crt.pem server-crt.pem server-key.pem" into 'server/server_cert'
+    Copy 'client1.crl' into 'server_cert'
+    Copy 'server.crl' into 'client_cert'
+Step 3:
+    Change all pem files mode to be 400
+        chmod 400 client_cert/*.pem
+        chmod 400 server_cert/*.pem
+    Change client_cert and server_cert mode to be 700
+        chmod 700 client_cert
+        chmod 700 server_cert
 
 9. Run HDDL-S Server
 ---------------------
@@ -115,8 +122,14 @@ Step 2:
 	export HDDLS_CVDL_MODEL_PATH=`pwd`/models
 	node hddls-server.js
 
-Note:
-  1. How to deploy customer models
+Note: make sure models directory mode is 700
+      make sure models/xxx/*.bin mode is 600
+      make sure server_cert/*.pem mode is 400
+
+
+10. Others
+----------
+  A. How to deploy customer models
      Step 1: implement libxxxalgo.so as customer guide
      Step 2: copy model IR files into <HDDLS_CVDL_MODEL_PATH>/<model_name>
      Step 3: register this customer models
@@ -126,15 +139,15 @@ Note:
 
      For an example: see hddls_server/models/example
             run command: registeralgo -a example
-  2. Dont't remove the files in hddls_server/models
+  B. Dont't remove the files in hddls_server/models
      The hddlspipe will read models file from this directory.
 
-  3. Maybe it will fail to run h265 video stream, it was caused by cannot find libmfx_hevcd_hw64.so in /opt/intel/mediasdk/lib64/mfx/
+  C. Maybe it will fail to run h265 video stream, it was caused by cannot find libmfx_hevcd_hw64.so in /opt/intel/mediasdk/lib64/mfx/
      It was mediasdk driver cfg issues.
      There is a WA:
             cd /opt/intel/mediasdk/lib64
             sudo ln -sf ../plugins mfx
-  4. How to run SRTP streame source
+  D. How to run SRTP streame source
      Step 1: Setup SRTP server as bolow:
 	 		launch-1.0 filesrc location=./1600x1200_concat.264 ! h264parse ! rtph264pay ! 'application/x-rtp, payload=(int)96, ssrc=(uint)114879' ! srtpenc key="012345678901234567890123456789012345678901234567890123456789" ! udpsink host=10.239.67.158 port=5000
 			Note: Host is for the receiver IP, you can run this command in any other machine
