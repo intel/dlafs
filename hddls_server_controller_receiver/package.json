@@ -7,7 +7,7 @@
   },
   "dependencies": {
     "jsonwebtoken": "~8.4.0",
-    "ws": "~6.1.2",
+    "ws": "latest",
     "mocha": "~5.2.0"
   },
   "keywords": [

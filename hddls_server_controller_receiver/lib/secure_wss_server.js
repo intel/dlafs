@@ -171,7 +171,7 @@ class SecureServer extends EventEmitter {
 	    try {
 		   if(!!value.child) {
 			console.log(`kill pipe_id ${key} with pid ${value.child.pid}`);
-			value.child.kill()
+			value.child.kill('SIGKILL')
 		   }
 	    } catch (err) {
 	    	console.log('Got Error %s', err.message);
