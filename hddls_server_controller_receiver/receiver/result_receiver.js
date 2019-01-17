@@ -45,9 +45,6 @@ if(crl != null) {
   options.crl = crl;
 }
 var pipe2file = new Map();
-for (let i = 0; i < 100; i++) {
-  pipe2file.set(i, 0);
-}
 
 var ws = new SecureWebsocket(options);
 
@@ -60,8 +57,10 @@ function incoming(data) {
 	  fs.mkdirSync(path);
   }
   if (data.headers.type == constants.msgType.eMetaJPG) {
-      //console.log('save JPG');
-      let temp = pipe2file.get(pipe_id);
+      let temp = 0;
+      if(pipe2file.has(pipe_id)) {
+        temp = pipe2file.get(pipe_id);
+      }
       let image_name = 'image_' + temp + '.jpg';
       let path = './' + con + '/' + image_name;
       console.log('Save jpeg:' + path);
