@@ -82,7 +82,7 @@ exports.createHandler = function createHandler(ws, message, adminCtx) {
                 wsSender.sendProtocol(clientWS, {method: 'pipe_delete'}, [pipe2delete], 200);
             }
         });
-
+        child.on('error', (err)=> {console.log(`spawn child process error ${err.message}`)});
         pipes.add(pipe_id);
         adminCtx.pipe2pid.set(pipe_id, {cid: ws.id, child: child});
         updatePipeJSON(adminCtx.pipe2json, create_json, pipe_id, 'create');
@@ -225,4 +225,5 @@ exports.updateModel = function (ws, model, adminCtx){
       stream.write(buffer);
       stream.end();
     });
+    stream.on('error', (err)=> console.log(`save Buffer error ${err.message}`));
   }
