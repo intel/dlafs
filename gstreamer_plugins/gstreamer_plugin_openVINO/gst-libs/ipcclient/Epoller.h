@@ -32,6 +32,8 @@
 #include <unistd.h>
 
 class Epoller {
+  Epoller(const Epoller& other) = delete;
+  Epoller& operator = (const Epoller&) = delete;
  public:
 
   Epoller(bool bET = true);

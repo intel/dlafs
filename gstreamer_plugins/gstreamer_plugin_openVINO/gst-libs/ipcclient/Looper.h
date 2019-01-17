@@ -40,6 +40,8 @@
 
 class Looper
 {
+  Looper(const Looper& other) = delete;
+  Looper& operator = (const Looper&) = delete;
  public:
   Looper(int fd, shared_ptr<Transceiver> pTrans, GAsyncQueue *receive_queue);
   ~Looper();

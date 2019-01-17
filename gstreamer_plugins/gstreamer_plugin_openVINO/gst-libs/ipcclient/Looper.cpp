@@ -49,10 +49,9 @@ Looper::Looper(int iFD, shared_ptr<Transceiver> pTrans,  GAsyncQueue *receive_qu
 Looper::~Looper() {
     if (!_bQuit) {
         quit();
-
-        if (_tLooperThread.joinable()) {
-            _tLooperThread.join();
-        }
+    }
+    if (_tLooperThread.joinable()) {
+         _tLooperThread.join();
     }
 }
 

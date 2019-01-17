@@ -31,6 +31,8 @@
 using namespace std;
 
 class Transceiver {
+  Transceiver(const Transceiver& other) = delete;
+  Transceiver& operator = (const Transceiver&) = delete;
  public:
   Transceiver(int iFD);
   ~Transceiver();
