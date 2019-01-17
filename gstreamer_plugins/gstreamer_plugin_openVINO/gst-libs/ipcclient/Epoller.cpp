@@ -31,7 +31,11 @@ Epoller::Epoller(bool bET) : _iEpollFD(-1), _iMaxConn(1024),_pPrevs(NULL), _bET(
 
 Epoller::~Epoller()
 {
-
+  if(_pPrevs != NULL)
+  {
+    delete[] _pPrevs;
+    _pPrevs = NULL;
+  }
   if(_iEpollFD > 0)
   {
     close(_iEpollFD);
