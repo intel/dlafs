@@ -1,0 +1,14 @@
+cmake_minimum_required(VERSION 3.0.0)
+
+project(dlib NONE)
+
+include(ExternalProject)
+ExternalProject_Add(dlib
+    GIT_REPOSITORY https://github.com/davisking/dlib.git
+    GIT_TAG 70a342f44a71d27f51890178917da317c1ccee3f
+    SOURCE_DIR "${CMAKE_BINARY_DIR}/dlib/dlib"
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
+    INSTALL_COMMAND ""
+    TEST_COMMAND ""
+)
