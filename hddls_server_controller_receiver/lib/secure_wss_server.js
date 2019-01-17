@@ -334,8 +334,8 @@ function getUnixConnHandler(app, adminCtx, protocol="json")
                 console.log(err.message);
             }
         });
-        stream.on('error', ()=> {
-            this.destroy();
+        stream.on('error', (err)=> {
+            console.log(err.message);
         })
         transceiver.init();
     }
