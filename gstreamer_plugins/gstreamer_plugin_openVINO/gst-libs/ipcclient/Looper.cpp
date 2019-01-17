@@ -31,18 +31,19 @@
 #include "../ws/wsclient.h"
 #include <string.h>
 
-Looper::Looper(int iFD, shared_ptr<Transceiver> pTrans,  GAsyncQueue *receive_queue) : _bQuit(false)
+Looper::Looper(shared_ptr<Transceiver> pTrans,  GAsyncQueue *receive_queue) : _bQuit(false)
 {
     _tEpoller.create(1);
 
-    _iLooperFD = iFD;
+    int iLooperFD = pTrans->getFD();
+
     receive_message_queue = receive_queue;
 
-    if (_iLooperFD == -1) {
+    if (iLooperFD == -1) {
         g_print("Please provide valid FD\n");
     }
 
-    _tEpoller.add(_iLooperFD, _iLooperFD, EPOLLIN | EPOLLOUT);
+    _tEpoller.add(iLooperFD, iLooperFD, EPOLLIN | EPOLLOUT);
     this->_pTrans = pTrans;
 }
 
@@ -53,20 +54,6 @@ Looper::~Looper() {
     if (_tLooperThread.joinable()) {
          _tLooperThread.join();
     }
-}
-
-void Looper::initialize(int fd, shared_ptr<Transceiver> pTrans) {
-    _tEpoller.create(1);
-
-    _iLooperFD = fd;
-
-    if (_iLooperFD == -1) {
-        g_print("Please provide valid FD\n" );
-    }
-
-    _tEpoller.add(_iLooperFD, _iLooperFD, EPOLLIN | EPOLLOUT);
-    this->_pTrans = pTrans;
-
 }
 
 void Looper::start() {
@@ -102,10 +89,6 @@ void Looper::run() {
 
 void Looper::quit() {
     _bQuit = true;
-    _mCond.notify_all();
-    if (_tLooperThread.joinable()) {
-   	    _tLooperThread.join();
-    }
 }
 
 void Looper::handleSend()
@@ -133,16 +116,12 @@ void Looper::handleRead()
     }
 }
 
-void Looper::notify() {
-    if(pTrans->isValid())
+void Looper::notify()
+{
+    if (_pTrans->isValid())
     {
-        _tEpoller.modify(pTrans->getFD(), pTrans->getFD(), EPOLLOUT|EPOLLIN);
+        _tEpoller.modify(_pTrans->getFD(), _pTrans->getFD(), EPOLLOUT | EPOLLIN);
     }
-}
-
-void Looper::handleRead(std::string buff) {
-    std::string output = buff.empty() ? "Empty" : buff;
-    GST_LOG("Receive Message: %s\n", output.c_str());
 }
 
 void Looper::push(ipcProtocol& tMsg)
