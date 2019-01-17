@@ -108,7 +108,7 @@ void Looper::handleSend()
 {
     if(_pTrans->isValid())
     {
-        while(_pTrans->handleResponse()>0);
+        while (_pTrans->handleResponse() >= 0 && pop2Buffer());
     }
 }
 
@@ -139,4 +139,19 @@ void Looper::notify(shared_ptr<Transceiver> pTrans) {
 void Looper::handleRead(std::string buff) {
     std::string output = buff.empty() ? "Empty" : buff;
     GST_LOG("Receive Message: %s\n", output.c_str());
+}
+
+void Looper::push(ipcProtocol& tMsg)
+{
+    _qSndQueue.push(tMsg);
+    notify();
+}
+
+bool Looper::pop2Buffer()
+{
+    ipcProtocol tMsg;
+    bool bRet = false;
+    if(_qSndQueue.tryPop(tMsg))
+        bRet = _pTrans->sendMsg(tMsg);
+    return bRet;
 }

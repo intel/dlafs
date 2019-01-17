@@ -107,7 +107,7 @@ static void item_free_func(gpointer data)
 
      GST_INFO("Connect to %s, pipe_id = %d\n",  serverUri , client_id);
      ipcclient->pTrans = make_shared<Transceiver>(ipcclient->sockfd);
-     ipcclient->pLooper = new Looper(ipcclient->sockfd, ipcclient->pTrans, ipcclient->message_queue);
+     ipcclient->pLooper = new Looper(ipcclient->pTrans, ipcclient->message_queue);
      ipcclient->pLooper->start();
      std::string sPipeID;
      ipcProtocol tInitMsg;
@@ -117,11 +117,8 @@ static void item_free_func(gpointer data)
      //char  id_info[4];
      //*((int *)id_info)= ipcclient->id;
      tInitMsg.sPayload = std::to_string( ipcclient->id);
-     std::string sBuff = "";
-     AppProtocol::format(tInitMsg, sBuff);
      GST_INFO(" Send 1st data: size = %ld, type = %d, sPayload = %s\n",  sBuff.size(), tInitMsg.iType,  tInitMsg.sPayload.c_str());
-     ipcclient->pTrans->writeToSendBuffer(sBuff);
-     ipcclient->pLooper->notify(ipcclient->pTrans);
+     ipcclient->pLooper->push(tInitMsg);
 
      return (WsClientHandle)ipcclient;
  }
@@ -143,9 +140,7 @@ static void item_free_func(gpointer data)
          tMsg.iType = eMetaText;
      //fill tMsg.sPayload with data
      tMsg.sPayload =  std::string(data, len);
-     AppProtocol::format(tMsg, sBuff);
-     ipcclient->pTrans->writeToSendBuffer(sBuff);
-     ipcclient->pLooper->notify(ipcclient->pTrans);
+     ipcclient->pLooper->push(tMsg);
  }
 
 int wsclient_send_infer_data(WsClientHandle handle, void *data, guint64 pts)

@@ -16,12 +16,6 @@
  * if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-/*
-  * Author: Zhang, Yi3
-  * Email:  yi3.zhang@intel.com
-  * Date: 2018.12.16
-  */
-
 #include "Transceiver.h"
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -61,7 +55,6 @@ void Transceiver::close()
 int Transceiver::handleResponse() {
     if (!isValid()) return -1;
     int iBytesSent = 0;
-    std::lock_guard<std::mutex> lock(_mLock);
     do {
         iBytesSent = 0;
         if (!_sSendBuf.empty()) {
@@ -155,6 +148,15 @@ int Transceiver::handleRequest(list<ipcProtocol>& lMsgs)
 
 void Transceiver::writeToSendBuffer(const string& msg)
 {
-    std::lock_guard<std::mutex> lock(_mLock);
     _sSendBuf.append(msg);
+}
+
+bool Transceiver::sendMsg(ipcProtocol& tMsg)
+{
+    if(!isValid())
+        return false;
+    string sBuff = "";
+    AppProtocol::format(tMsg, sBuff);
+    this->writeToSendBuffer(sBuff);
+    return true;
 }

@@ -45,9 +45,9 @@ class Transceiver {
   int handleResponse();
   int getFD(){return _iFD;};
   void writeToSendBuffer(const string& msg);
+  bool sendMsg(ipcProtocol& tMsg);
  private:
   int _iFD;
-  std::mutex  _mLock;
   string _sSendBuf;
   string _sRecvBuf;
 

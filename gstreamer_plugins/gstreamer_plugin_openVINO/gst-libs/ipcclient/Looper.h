@@ -37,34 +37,32 @@
 
 #include "Transceiver.h"
 #include "Epoller.h"
-
+#include "ThreadSafeQueue.h"
 class Looper
 {
   Looper(const Looper& other) = delete;
   Looper& operator = (const Looper&) = delete;
  public:
-  Looper(int fd, shared_ptr<Transceiver> pTrans, GAsyncQueue *receive_queue);
+  Looper(shared_ptr<Transceiver> pTrans, GAsyncQueue *receive_queue);
   ~Looper();
   void run();
   void start();
-  void initialize(int fd, shared_ptr<Transceiver> pTrans); // deprecated do not use
   void quit();
   void notify(shared_ptr<Transceiver> pTrans);
+  void push(ipcProtocol& tMsg);
   //unsigned long int == uint64_t
 
  private:
   std::thread _tLooperThread;
-  std::mutex  _mLock;
-  std::condition_variable _mCond;
+  ThreadSafeQueue<ipcProtocol> _qSndQueue;
   bool _bQuit;
-  int  _iLooperFD;
   Epoller _tEpoller;
   GAsyncQueue *receive_message_queue;
 
  private:
-  void handleRead(std::string buffer);
   void handleRead();
   void handleSend();
+  bool pop2Buffer();
   shared_ptr<Transceiver> _pTrans;
 };
 
