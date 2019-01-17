@@ -39,9 +39,8 @@ using namespace cv::ocl;
 
 namespace HDDLStreamFilter
 {
-#ifdef USE_CV_OCL
-OclStatus
-OclVppCrc::crc_helper()
+
+OclStatus OclVppCrc::crc_helper()
 {
     gboolean ret;
     m_kernel.args(m_src->cl_memory[0], m_src->cl_memory[1], m_src_w, m_src_h, m_crop_x, m_crop_y,
@@ -67,82 +66,6 @@ OclVppCrc::crc_helper()
     return OCL_SUCCESS;
 }
 
-#else
-OclStatus
-OclVppCrc::crc_helper()
-{
-    cl_int status = CL_SUCCESS;
-
-    status = clSetKernelArg (m_kernel, 0, sizeof(cl_mem), &m_src->cl_memory[0]);
-    if(CL_ERROR_PRINT (status, "clSetKernelArg")) {
-        return OCL_FAIL;
-    }
-
-    status = clSetKernelArg (m_kernel, 1, sizeof(cl_mem), &m_src->cl_memory[1]);
-    if(CL_ERROR_PRINT (status, "clSetKernelArg")) {
-        return OCL_FAIL;
-    }
-
-    status = clSetKernelArg (m_kernel, 2, sizeof(guint32), &m_src_w);
-    if(CL_ERROR_PRINT (status, "clSetKernelArg")) {
-        return OCL_FAIL;
-    }
-
-    status = clSetKernelArg (m_kernel, 3, sizeof(guint32), &m_src_h);
-    if(CL_ERROR_PRINT (status, "clSetKernelArg")) {
-        return OCL_FAIL;
-    }
-
-    status = clSetKernelArg (m_kernel, 4, sizeof(guint32), &m_crop_x);
-    if(CL_ERROR_PRINT (status, "clSetKernelArg")) {
-        return OCL_FAIL;
-    }
-
-    status = clSetKernelArg (m_kernel, 5, sizeof(guint32), &m_crop_y);
-    if(CL_ERROR_PRINT (status, "clSetKernelArg")) {
-        return OCL_FAIL;
-    }
-
-    status = clSetKernelArg (m_kernel, 6, sizeof(guint32), &m_crop_w);
-    if(CL_ERROR_PRINT (status, "clSetKernelArg")) {
-        return OCL_FAIL;
-    }
-
-    status = clSetKernelArg (m_kernel, 7, sizeof(guint32), &m_crop_h);
-    if(CL_ERROR_PRINT (status, "clSetKernelArg")) {
-        return OCL_FAIL;
-    }
-
-    status = clSetKernelArg (m_kernel, 8, sizeof(cl_mem), &m_dst->cl_memory[0]);
-    if(CL_ERROR_PRINT (status, "clSetKernelArg")) {
-        return OCL_FAIL;
-    }
-
-    status = clSetKernelArg (m_kernel, 9, sizeof(guint32), &m_src_w);
-    if(CL_ERROR_PRINT (status, "clSetKernelArg")) {
-        return OCL_FAIL;
-    }
-
-    status = clSetKernelArg (m_kernel, 10, sizeof(guint32), &m_src_h);
-    if(CL_ERROR_PRINT (status, "clSetKernelArg")) {
-        return OCL_FAIL;
-    }
-
-    size_t globalWorkSize[2], localWorkSize[2];
-
-    localWorkSize[0] = 8;
-    localWorkSize[1] = 8;
-    globalWorkSize[0] = ALIGN_POW2 (m_crop_w, 2 * localWorkSize[0]) / 2;
-    globalWorkSize[1] = ALIGN_POW2 (m_crop_h, 2 * localWorkSize[1]) / 2;
-
-    if (CL_ERROR_PRINT (clEnqueueNDRangeKernel (m_context->getCommandQueue(), m_kernel, 2, NULL,
-                     globalWorkSize, localWorkSize, 0, NULL, NULL), "clEnqueueNDRangeKernel")) {
-        return OCL_FAIL;
-    }
-
-    return OCL_SUCCESS;
-}
-#endif
 OclStatus
 OclVppCrc::process (const SharedPtr<VideoFrame>& src, const SharedPtr<VideoFrame>& dst)
 {
@@ -161,11 +84,7 @@ OclVppCrc::process (const SharedPtr<VideoFrame>& src, const SharedPtr<VideoFrame
         GST_ERROR("OclVppCrc failed due to invalid resolution\n");
         return OCL_INVALID_PARAM;
     }
-#ifdef USE_CV_OCL
-        if (m_kernel.empty())
-#else
-        if (!m_kernel)
-#endif
+    if (m_kernel.empty())
     {
         GST_ERROR("OclVppCrc: invalid kernel\n");
         return OCL_FAIL;

@@ -68,11 +68,7 @@ public:
     printOclKernelInfo();
 protected:
     guint16   m_pixel_size;
-    #ifdef USE_CV_OCL
     cv::ocl::Kernel m_kernel;
-    #else
-    cl_kernel m_kernel;
-    #endif
     SharedPtr<OclContext> m_context;
 };
 

@@ -63,7 +63,7 @@ public:
 
     cl_context getContext ();
     cl_command_queue getCommandQueue ();
-    cl_kernel acquireKernel (const char* name, const char* file = NULL);
+    //cl_kernel acquireKernel (const char* name, const char* file = NULL);
     cv::ocl::Kernel acquireKernelCV (const char* name, const char* file = NULL);
 
     gpointer acquireVAMemoryCL (VASurfaceID* surface, const cl_uint num_planes,

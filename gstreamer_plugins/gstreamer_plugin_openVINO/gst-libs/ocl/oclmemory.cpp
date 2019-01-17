@@ -32,6 +32,8 @@
 #include <CL/cl.h>
 
 using namespace cv;
+using namespace std;
+
 
 GST_DEBUG_CATEGORY_STATIC (ocl_memory_debug);
 #define GST_CAT_DEFAULT ocl_memory_debug
@@ -55,9 +57,13 @@ ocl_memory_acquire (GstBuffer* buffer)
 
     if (memory ) {
         OclMemory* ocl_mem = (OclMemory*)memory;
-        if (ocl_mem &&
-            !strcmp (GST_MEMORY_CAST(ocl_mem)->allocator->mem_type, OCL_ALLOCATOR_NAME))
-            return ocl_mem;
+        //if (ocl_mem &&
+        //    !strcmp (GST_MEMORY_CAST(ocl_mem)->allocator->mem_type, OCL_ALLOCATOR_NAME))
+        if(GST_MEMORY_CAST(ocl_mem)->allocator) {
+            std::string mem_name = std::string(GST_MEMORY_CAST(ocl_mem)->allocator->mem_type);
+            if(!mem_name.compare(OCL_ALLOCATOR_NAME))
+                return ocl_mem;
+        }
     }
 
     return NULL;

@@ -31,6 +31,7 @@
 #include <gst/base/gstbytereader.h>
 #include <memory.h>
 #include "resmemory.h"
+#include <safe_str_lib.h>
 
 GST_DEBUG_CATEGORY_STATIC (res_memory_debug);
 #define GST_CAT_DEFAULT res_memory_debug
@@ -53,10 +54,13 @@ res_memory_acquire (GstBuffer* buffer)
 
     if (memory ) {
         ResMemory* res_mem = (ResMemory*)memory;
-        if (res_mem &&
-            !strcmp (GST_MEMORY_CAST(res_mem)->allocator->mem_type,
-                RES_ALLOCATOR_NAME))
-            return res_mem;
+        int indicator = 0;
+        int str_len = strnlen_s(RES_ALLOCATOR_NAME, 32);
+        if (strcmp_s(GST_MEMORY_CAST(res_mem)->allocator->mem_type,
+                     str_len, RES_ALLOCATOR_NAME, &indicator) == EOK) {
+            if(indicator==0)
+                return res_mem;
+        }
     }
     return NULL;
 }
