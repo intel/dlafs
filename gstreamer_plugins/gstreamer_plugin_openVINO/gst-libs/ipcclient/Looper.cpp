@@ -79,11 +79,17 @@ void Looper::run() {
 
             for (int n = 0; n < iEventNum; ++n) {
                 const epoll_event &ev = _tEpoller.get(n);
-                if (ev.events & EPOLLIN) {
-                    handleRead();
-                }
-                if(ev.events & EPOLLOUT){
-                    handleSend();
+                if (ev.events & (EPOLLERR | EPOLLHUP))
+                {
+                    _pTrans->close();
+                } else if (ev.events > 0)
+                {
+                    if (ev.events & EPOLLIN) {
+                        handleRead();
+                    }
+                    if(ev.events & EPOLLOUT){
+                        handleSend();
+                    }
                 }
             }
         }
@@ -141,8 +147,11 @@ void Looper::handleRead(std::string buff) {
 
 void Looper::push(ipcProtocol& tMsg)
 {
-    _qSndQueue.push(tMsg);
-    notify();
+    if (_pTrans->isValid())
+    {
+        _qSndQueue.push(tMsg);
+        notify();
+    }
 }
 
 bool Looper::pop2Buffer()

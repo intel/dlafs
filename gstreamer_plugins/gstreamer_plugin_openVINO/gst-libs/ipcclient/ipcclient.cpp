@@ -117,7 +117,7 @@ static void item_free_func(gpointer data)
      //char  id_info[4];
      //*((int *)id_info)= ipcclient->id;
      tInitMsg.sPayload = std::to_string( ipcclient->id);
-     GST_INFO(" Send 1st data: size = %ld, type = %d, sPayload = %s\n",  tInitMsg.size(), tInitMsg.iType,  tInitMsg.sPayload.c_str());
+     GST_INFO(" Send 1st data: size = %d, type = %d, sPayload = %s\n",  tInitMsg.size(), tInitMsg.iType,  tInitMsg.sPayload.c_str());
      ipcclient->pLooper->push(tInitMsg);
 
      return (WsClientHandle)ipcclient;
