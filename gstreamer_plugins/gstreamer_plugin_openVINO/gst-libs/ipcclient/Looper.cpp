@@ -92,11 +92,9 @@ void Looper::run() {
         }
         catch (...) {}
     }
-    close(_iLooperFD);
 }
 
 void Looper::quit() {
-    std::lock_guard<std::mutex> guard(_mLock);
     _bQuit = true;
     _mCond.notify_all();
     if (_tLooperThread.joinable()) {
@@ -129,7 +127,7 @@ void Looper::handleRead()
     }
 }
 
-void Looper::notify(shared_ptr<Transceiver> pTrans) {
+void Looper::notify() {
     if(pTrans->isValid())
     {
         _tEpoller.modify(pTrans->getFD(), pTrans->getFD(), EPOLLOUT|EPOLLIN);

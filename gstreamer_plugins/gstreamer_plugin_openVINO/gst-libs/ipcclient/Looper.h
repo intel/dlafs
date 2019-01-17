@@ -48,7 +48,7 @@ class Looper
   void run();
   void start();
   void quit();
-  void notify(shared_ptr<Transceiver> pTrans);
+  void notify();
   void push(ipcProtocol& tMsg);
   //unsigned long int == uint64_t
 
