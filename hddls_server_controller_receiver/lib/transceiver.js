@@ -116,7 +116,6 @@ class Transceiver {
 
       send(message, type=0) {
         let buffer = Buffer.from(message);
-        console.log(buffer);
         this._header(buffer.length + 8, type);
         this._packet.message = buffer;
         this._send();

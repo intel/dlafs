@@ -69,6 +69,7 @@ class SecuredWebsocketClient extends EventEmitter {
         });
 
         const httpObj = this._isUnix ? http : https;
+        try{
         httpObj.get(options, (res) => {
             const { statusCode } = res;
             const contentType = res.headers['content-type'];
@@ -98,6 +99,10 @@ class SecuredWebsocketClient extends EventEmitter {
             console.error(`Got error: ${e.message}` + " please check your URL");
             process.exit(0);
           });
+        } catch (err) {
+            console.log(`Http Get error ${err.message}`);
+            process.exit(0);
+        }
 
     };
 

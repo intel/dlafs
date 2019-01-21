@@ -101,7 +101,8 @@ function getAnswerHandler(question, callback)
     var handler = function (answer) {
         answer = answer.trim();
         const url = answer.trim().split(':');
-        if(!answer || url.length == 2)
+
+        if(!answer || url.length == 2 && ! isNaN(url[1]))
         {
             !answer && console.log(`use default setting ${that._options.host}:${that._options.port}`);
             !!answer && (that._options.host = url[0],that._options.port = url[1]);

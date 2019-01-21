@@ -90,6 +90,7 @@ exports.uploadFile = function uploadFile (files, ws, headers, cb) {
     }
     fs.lstat(filePath, (err, stat)=> {
       if(err || stat.isDirectory()) {
+        console.log(`${filePath} is a folder or not exists`);
         uploadFile(files, ws, headers, cb);
         return;
       }

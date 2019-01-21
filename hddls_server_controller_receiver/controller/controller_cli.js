@@ -59,7 +59,7 @@ function completer(line) {
       }
     }
     catch{
-      console.log("error path pls check")
+      console.log(" error path pls check")
       files = []
     }
     if(args.length === 1) {
@@ -118,8 +118,8 @@ function setup(options) {
           return;
         }
         var pipe_id = parseInt(cmd[2]);
-        var headers = {pipe_id: pipe_id, method: 'property'};
         if(pipe_ids.has(pipe_id)) {
+          var headers = {pipe_id: pipe_id, method: 'property'};
           fileHelper.uploadFile([cmd[1]], ws, headers, ()=> rl.prompt())
         } else{
           rl.emit('hint', `pipe_id ${pipe_id} not exist `);
@@ -130,8 +130,13 @@ function setup(options) {
           rl.emit('hint', `wrong cmd ${args} please check`);
           return;
         }
-        var headers = {pipe_id: parseInt(cmd[2]), method: 'destroy'};
-        fileHelper.uploadFile([cmd[1]], ws, headers, ()=> rl.prompt())
+        var pipe_id = parseInt(cmd[2]);
+        if(pipe_ids.has(pipe_id)) {
+          var headers = {pipe_id: parseInt(cmd[2]), method: 'destroy'};
+          fileHelper.uploadFile([cmd[1]], ws, headers, ()=> rl.prompt());
+        } else {
+          rl.emit('hint', `pipe_id ${pipe_id} not exist `);
+        }
       },
       'pipe': function(ws, rl) {
         rl.emit('hint', pipe_ids)

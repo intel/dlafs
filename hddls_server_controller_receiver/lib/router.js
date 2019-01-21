@@ -25,6 +25,7 @@ const wsSender = require('./ws_sender.js');
 const { spawn } = require('child_process');
 const path = require('../lib/path_parser')
 const fileHelper = require('../lib/file_helper');
+const BufferStream = require('../lib/buffer_stream');
 const fs = require('fs');
 var pipe_base = 0;
 exports.router = function route(obj) {
@@ -220,10 +221,7 @@ exports.updateModel = function (ws, model, adminCtx){
       console.log('making dir %s', './' + folderName);
       fs.mkdirSync('./' + folderName, { recursive: true, mode: 0o700 });
     }
+    var modelBuffer = new BufferStream(buffer);
     var stream = fs.createWriteStream(filePath, { mode: 0o600 });
-    stream.on("open", ()=>{
-      stream.write(buffer);
-      stream.end();
-    });
-    stream.on('error', (err)=> console.log(`save Buffer error ${err.message}`));
+    modelBuffer.pipe(stream).on('error', (err)=> console.log(`save Buffer error ${err.message}`));;
   }
