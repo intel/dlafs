@@ -52,14 +52,7 @@ Note: below steps is the least
 	sh autogen.sh
 	./configure && make && sudo make install
 
-4. Install uWebSocket
----------------------
-	sudo apt-get install libssl-dev
-	git clone https://github.com/uNetworking/uWebSockets.git
-	cd uWebSocket && git checkout 1a126c8d4eb9127c2689ede9a8fdf8abcb62b981
-	make && sudo make install
-
-5. Install OpenCV
+4. Install OpenCV
 -----------------
 	export CPLUS_INCLUDE_PATH=/opt/intel/mediasdk/include:$CPLUS_INCLUDE_PATH
 	sudo ln -sf /opt/intel/opencl/SDK/include /opt/intel/opencl/include
@@ -78,7 +71,7 @@ Note: below steps is the least
 	sudo make install
 	Note: OpenVINO has provided OpenCV libraries, but HDDL-S need VA support in OpenCV, so we must rebuild it. 
 
-6. Set enviroment variables
+5. Set enviroment variables
 ---------------------------
 	source /opt/intel/computer_vision_sdk/bin/setupvars.sh
 	export LD_LIBRARY_PATH=/usr/local/lib:/opt/intel/computer_vision_sdk_2018.5.445/deployment_tools/inference_engine/external/hddl/lib:$LD_LIBRARY_PATH
@@ -88,7 +81,7 @@ Note: below steps is the least
 	export PATH=$PATH:/opt/intel/mediasdk/bin/
 
 
-7. Setup HDDL-S Server
+6. Setup HDDL-S Server
 ----------------------
 	rpm -ivh --nodeps <HDDL-S rpm package>
 	sudo apt-get install nodejs-legacy npm
@@ -98,7 +91,7 @@ Note: below steps is the least
 	cd hddls_server_controller_receiver
 	npm install
 
-8. Generate and install certifiate files
+7. Generate and install certifiate files
 ----------------------------------------
 Step 1: 
 	Please refer to certificate_create_explanation.md to generate certificate files.
@@ -116,7 +109,7 @@ Step 3:
         chmod 700 client_cert
         chmod 700 server_cert
 
-9. Run HDDL-S Server
+8. Run HDDL-S Server
 ---------------------
 	cd hddls_server_controller_receiver/server
 	export HDDLS_CVDL_MODEL_PATH=`pwd`/models
@@ -127,7 +120,7 @@ Note: make sure models directory mode is 700
       make sure server_cert/*.pem mode is 400
 
 
-10. Others
+9. Others
 ----------
   A. How to deploy customer models
      Step 1: implement libxxxalgo.so as customer guide
@@ -147,8 +140,8 @@ Note: make sure models directory mode is 700
      There is a WA:
             cd /opt/intel/mediasdk/lib64
             sudo ln -sf ../plugins mfx
-  D. How to run SRTP streame source
-     Step 1: Setup SRTP server as bolow:
+  D. How to run SRTP stream source
+     Step 1: Setup SRTP server as below:
 	 		launch-1.0 filesrc location=./1600x1200_concat.264 ! h264parse ! rtph264pay ! 'application/x-rtp, payload=(int)96, ssrc=(uint)114879' ! srtpenc key="012345678901234567890123456789012345678901234567890123456789" ! udpsink host=10.239.67.158 port=5000
 			Note: Host is for the receiver IP, you can run this command in any other machine
 	 Step 2: Set json file at controller client

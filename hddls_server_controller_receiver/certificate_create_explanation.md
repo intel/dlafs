@@ -1,41 +1,35 @@
 # 1. Environment prepration
 
-Find openssl.cnf, for example, if the path is /usr/local/openssl/ssl/openssl.cnf, then typ commands as:
-
-~$ cp /usr/local/openssl/ssl/openssl.cnf ./
-~$ mkdir ./demoCA  ./demoCA/newcerts   ./demoCA/private
-~$ chmod 777./demoCA/private
-~$ echo '01'>./demoCA/serial
-~$ touch./demoCA/index.txt
-~$ sudo vim openssl.cnf
+~$ mkdir demoCA
+~$ touch demoCA/index.txt
 
 # 2. Generate CA
 
 Generate a Certificate Authority:
-	~$ openssl req -new -x509 -keyout ca-key.pem -out ca-crt.pem -config openssl.cnf
+	~$ openssl req -new -x509 -keyout ca-key.pem -out ca-crt.pem
 
 * Insert a CA Password and remember it
-* Specify a CA Common Name, like 'root.localhost' or 'ca.localhost'. This MUST be different from both server and client CN.
+* Specify a CA Common Name, like 'root.localhost' or 'ca.localhost'.
 
 
 # 3 Generate Server certificate
 
 Generate Server Key:
-	~$ openssl genrsa -out server-key.pem 1024
+	~$ openssl genrsa -out server-key.pem 4096
 
 Generate Server certificate signing request:
-	~$ openssl req -new -key server-key.pem -out server-csr.pem -config openssl.cnf
+	~$ openssl req -new -key server-key.pem -out server-csr.pem
 
-* Specify server Common Name, run   **cat /etc/hosts**    to check valid DNS name, please DO NOT name as **'localhost'**.
+* Specify server Common Name.
 * For this example, do not insert the challenge password.
 
 Sign certificate using the CA:
-	~$ openssl ca -in server-csr.pem -out server-crt.pem -cert ca-crt.pem -keyfile ca-key.pem -config openssl.cnf
+	~$ openssl ca -in server-csr.pem -out server-crt.pem -cert ca-crt.pem -keyfile ca-key.pem
 
 # 4 Generate Client certificate
 
 Generate Client Key:
-	~$ openssl genrsa -out client1-key.pem 1024
+	~$ openssl genrsa -out client1-key.pem 4096
 
 Generate Client certificate signing request:
 	~$ openssl req -new -key client1-key.pem -out client1-csr.pem -config openssl.cnf
@@ -44,27 +38,23 @@ Generate Client certificate signing request:
 * For this example, do not insert the challenge password.
 
 Sign certificate using the CA:
-	~$ openssl ca -in client1-csr.pem -out client1-crt.pem -cert ca-crt.pem -keyfile ca-key.pem -config openssl.cnf
+	~$ openssl ca -in client1-csr.pem -out client1-crt.pem -cert ca-crt.pem -keyfile ca-key.pem
 
 # 5 Generate CRL
 
 Enviroment prepartion
-	~$ cp ca-key.pem ./demoCA/private/cakey.pem
-	~$ cp ca-crt.pem ./demoCA/cacert.pem
-	~$ echo '00' >./demoCA/crlnumber
+    ~$ touch ./demoCA/crlnumber
+    ~$ echo "01" > demoCA/crlnumber
 
 Revoke Server Certificate
-	~$ openssl ca -revoke server-crt.pem -config openssl.cnf
-
+    ~$ openssl ca -keyfile ca-key.pem -cert ca-crt.pem -revoke server-crt.pem
 Generate Server CRL
-	~$ openssl ca -gencrl  -out server.crl  -config openssl.cnf
+    ~$ openssl ca -gencrl -keyfile ca-key.pem -cert ca-crt.pem -out server.crl
 
 Revoke Client Certificate
-	~$ openssl ca -revoke client1-crt.pem -config openssl.cnf
-
+    ~$ openssl ca -keyfile ca-key.pem -cert ca-crt.pem -revoke client1-crt.pem
 Generate Client CRL
-	~$ openssl ca -gencrl  -out client1.crl  -config openssl.cnf
-
+	~$ openssl ca -gencrl -keyfile ca-key.pem -cert ca-crt.pem -out client1.crl
 
 # 6. Some Q&A about CA and CRL
   1) Can client and server use different CA?
