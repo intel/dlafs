@@ -223,5 +223,5 @@ exports.updateModel = function (ws, model, adminCtx){
     }
     var modelBuffer = new BufferStream(buffer);
     var stream = fs.createWriteStream(filePath, { mode: 0o600 });
-    modelBuffer.pipe(stream).on('error', (err)=> console.log(`save Buffer error ${err.message}`));;
+    modelBuffer.pipe(stream).on('error', (err)=> console.log(`save Buffer error ${err.message}`));
   }

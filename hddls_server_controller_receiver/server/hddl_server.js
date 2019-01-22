@@ -96,7 +96,15 @@ function unixApp(data, adminCtx){
 server.unixUse(unixApp);
 server.adminUse(incoming);
 
-server.start();
+server.on('error', (error)=>{console.log("Server ERROR: " + error.message); server.close();process.exit(0)});
+
+try {
+  server.start();
+} catch(error){
+  console.log(error.message);
+  server.close();
+  process.exit(0);
+}
 
 process.on('SIGINT', ()=> {
   console.log('Server close due to exit');

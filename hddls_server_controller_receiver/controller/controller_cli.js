@@ -41,6 +41,7 @@ const tips = [ ('help                             ' + 'show all commands')
            ,('pipe                             ' + 'display pipes belong to the client')
            ,('q                                ' + 'exit client.')
            ,('m <model_path>                   ' + 'upload custom file')
+           ,('show                             ' + 'show models in server side')
 ].join('\n');
 
 
@@ -176,6 +177,11 @@ function setup(options) {
           fileHelper.uploadFile(merged, ws, {method: 'model'}, ()=> rl.prompt())
         }, error => rl.emit('hint', 'Scan child dir err ' + error));
         childPromise.catch(reason=>rl.emit('hint', 'Scan root dir err ' + reason.message));
+      },
+      'show' : function(ws, rl) {
+        console.log("Current models in server");
+        console.log(modelCheck);
+        rl.prompt();
       }
     }
 

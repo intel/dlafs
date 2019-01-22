@@ -110,6 +110,11 @@ class SecureServer extends EventEmitter {
         if(options.port == null && options.host == null) {
             throw new TypeError('No port specified');
         }
+
+        if(fs.existsSync(options.socket)) 
+        {
+            throw new TypeError(`Unix Path ${options.socket} exists`);
+        }
         //unix socket doesn't need port set.
         var server;
         if(options.port) {
@@ -152,7 +157,8 @@ class SecureServer extends EventEmitter {
         };
         adminWS.on('connection', getConnHandler.call(options, this._adminApp, adminCtx));
         dataWS.on('connection', getDataConnHandler.call(options, this._dataApp, adminCtx));
-        ipcServer.on('connection', getUnixConnHandler(this._unixApp, adminCtx, options.ipcProtocol || 'json'));
+        ipcServer.on('connection', getUnixConnHandler(this._unixApp, adminCtx));
+        server.on('error', (e)=> this.emit('error', e));
         server.listen(options.port ? options.port : options.host);
         ipcServer.listen({path: options.socket, readableAll: false, writableAll: false});
         fs.chmodSync(options.socket, 0o600);
@@ -260,9 +266,17 @@ function getConnHandler(app, adminCtx){
 
 function getDataConnHandler(app, adminCtx){
     var that = this;
+    var masterID = null;
     return function connection(ws, request) {
-        //ws.id = parseInt(request.headers['token'].client_id);
-        ws.id = 1;
+
+        if(masterID == null) {
+            ws.id = parseInt(request.headers['token'].client_id);
+            masterID = parseInt(request.headers['token'].client_id);
+        } else if(parseInt(request.headers['token'].client_id) != masterID) {
+            console.log("reject redundant receiver");
+            ws.terminate();
+            return;
+        }
         adminCtx.dataCons = ws;
         ws.on('message', function handle(message) {
             var result = message;
@@ -276,7 +290,7 @@ function getDataConnHandler(app, adminCtx){
         });
         ws.on('close', (code, reason)=> {
             console.log(`ws client ${ws.id} close reason ${code}/${reason}`);
-        })
+        });
     }
 }
 
@@ -318,7 +332,7 @@ function getUnixSocketServer(options) {
     return server;
 }
 
-function getUnixConnHandler(app, adminCtx, protocol="json")
+function getUnixConnHandler(app, adminCtx)
 {
     const pipe2socket = adminCtx.pipe2socket;
     return function (stream) {
