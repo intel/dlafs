@@ -25,7 +25,7 @@ const wsSender = require('./ws_sender.js');
 const { spawn } = require('child_process');
 const path = require('../lib/path_parser')
 const fileHelper = require('../lib/file_helper');
-const BufferStream = require('../lib/buffer_stream');
+const BufferStream = require('../lib/single_buffer_stream');
 const fs = require('fs');
 var pipe_base = 0;
 exports.router = function route(obj) {
@@ -58,9 +58,7 @@ exports.createHandler = function createHandler(ws, message, adminCtx) {
             pipes =  new Set();
             adminCtx.client2pipe.set(ws.id, pipes);
         }
-        // let child = spawn(gst_cmd, {
-        //     shell: true
-        // });
+
         let child = spawn('hddlspipes', ['-i', `${pipe_id}`, '-u', `${adminCtx.socketURL}`, '-l' ,`${create_json.command_create.loop_times}`], {env: process.env});
         child.stderr.on('data', function (data) {
              console.error("STDERR:", data.toString());
@@ -154,67 +152,32 @@ function updatePipeJSON(pipe2json, obj, pipe_id, type) {
     pipe2json.set(pipe_id, pipeJSON);
 }
 
-exports.mockCreateHandler =  function (ws, message, adminCtx) {
-    var create_json = fileHelper.safelyJSONParser(message.payload);
-    if(create_json === null) {
-        wsSender.sendMessage(ws, 'json format error', 400);
-        return;
-    }
-    var pipe_id = pipe_base ++;
-    for (let i = 0; i < create_json.command_create.pipe_num; i++) {
-      	var gst_cmd = './socket_client  /tmp/unix.sock ' + pipe_id;
-	//var gst_cmd = 'hddlspipes -i  ' + pipe_id + ' -l 1 -u ' + 'ws://127.0.0.1:10086';
-	console.log('cmd %s', gst_cmd);
-        var pipes;
-        if(adminCtx.client2pipe.has(ws.id)) {
-          pipes = adminCtx.client2pipe.get(ws.id);
-        } else {
-            pipes =  new Set();
-            adminCtx.client2pipe.set(ws.id, pipes);
-        }
-      let child = spawn(gst_cmd, {
-        shell: true
-      });
-
-      child.stderr.on('data', function (data) {
-        console.error("STDERR:", data.toString());
-      });
-
-      child.stdout.on('data', function (data) {
-        console.log("STDOUT:", data.toString());
-      });
-
-      child.on('exit', function (exitCode) {
-        console.log("Child exited with code: " + exitCode);
-        pipes.delete(pipe_id);
-        adminCtx.pipe2pid.delete(pipe_id);
-        ws.send(JSON.stringify({headers: {method: 'pipe_id'}, payload: Array.from(pipes), code: 200}));
-      });
-
-      pipes.add(pipe_id);
-      adminCtx.pipe2pid.set(pipe_id, {cid: ws.id, child: child});
-      updatePipeJSON(adminCtx.pipe2json, create_json, pipe_id, 'create');
-      console.log('create pipe %s', pipe_id);
-      wsSender.sendMessage(ws, `pipe_create ${pipe_id}`);
-      ws.send(JSON.stringify({headers: {method: 'pipe_id'}, payload: Array.from(pipes), code: 200}));
-    }
-
-}
-
-
 exports.updateModel = function (ws, model, adminCtx){
     if(!model.headers.hasOwnProperty('path')) {
         throw new Error('x1b[31mNo Path in Headers\x1b[0m');
     }
     var filePath = model.headers.path;
     var dir = path.dirname(path.dirname(filePath));
-    saveBuffer(filePath, model.payload);
-    var modelMeta = JSON.stringify(fileHelper.updateCheckSum(filePath, model.checkSum));
-    fs.writeFileSync(path.join(dir, 'model_info.json'), modelMeta);
-	console.log('sendMeata');
-    wsSender.sendProtocol(ws,{method: 'checkSum'}, modelMeta);
+    if(!adminCtx.fileLock.has(filePath)){
+        //no other controller update the file, acquire the file lock
+        adminCtx.fileLock.add(filePath);
+        saveBuffer(filePath, model.payload, adminCtx.fileLock);
+        var modelMeta = JSON.stringify(fileHelper.updateCheckSum(filePath, model.checkSum));
+        fs.writeFileSync(path.join(dir, 'model_info.json'), modelMeta);
+        console.log('sendMeta');
+        //inform each controller about the update
+        adminCtx.wsConns.forEach((value, key, map) => {
+            console.log(`update model for client id ${key}`);
+            wsSender.sendProtocol(value, {method: 'checkSum'}, modelMeta);
+        });
+        wsSender.sendProtocol(ws, {method: 'checkSum'}, modelMeta);
+    } else {
+        //the model is being updated by other controller.
+        wsSender.sendProtocol(ws, {method: 'error'}, `file ${filePath} being updating by other controller`);
+    }
+
   }
-  function saveBuffer(filePath, buffer) {
+  function saveBuffer(filePath, buffer, fileLock) {
     var folderName = path.dirname(filePath);
     if(!fs.existsSync(folderName))
     {
@@ -222,6 +185,19 @@ exports.updateModel = function (ws, model, adminCtx){
       fs.mkdirSync('./' + folderName, { recursive: true, mode: 0o700 });
     }
     var modelBuffer = new BufferStream(buffer);
-    var stream = fs.createWriteStream(filePath, { mode: 0o600 });
-    modelBuffer.pipe(stream).on('error', (err)=> console.log(`save Buffer error ${err.message}`));
+    var writer = fs.createWriteStream(filePath, { mode: 0o600 });
+    writer.on('error', (err)=> {
+        console.log(`save Buffer error ${err.message}`);
+        fileLock.delete(filePath);
+    });
+    modelBuffer.on('error', (err)=> {
+        console.log(`read Buffer error ${err.message}`); 
+        writer.end();
+    });
+    //release file lock when completing file writing.
+    writer.on('finish', ()=> {
+        console.log(`${filePath} upload complete`);
+        fileLock.delete(filePath);
+    });
+    modelBuffer.pipe(writer);
   }

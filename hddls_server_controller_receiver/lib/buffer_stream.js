@@ -16,7 +16,7 @@ class BufferStream extends Readable {
 
     _read(size) {
         var chunk = this.buf.slice(this.offset, this.offset + size);
-        if(chunk) {
+        if(chunk.length > 0) {
             this.push(chunk);
             this.offset += size;
         } else {

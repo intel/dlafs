@@ -104,6 +104,7 @@ class SecureServer extends EventEmitter {
         this._pipe2json = new Map();
         this._wsConns = new Map();
         this._dataCons = null;
+        this._fileLock = new Set();
     }
 
     initServer(options) {
@@ -153,7 +154,8 @@ class SecureServer extends EventEmitter {
             pipe2pid: this._pipe2pid,
             pipe2json: this._pipe2json,
             dataCons: this._dataCons,
-            socketURL: this._options.socket
+            socketURL: this._options.socket,
+            fileLock: this._fileLock
         };
         adminWS.on('connection', getConnHandler.call(options, this._adminApp, adminCtx));
         dataWS.on('connection', getDataConnHandler.call(options, this._dataApp, adminCtx));
