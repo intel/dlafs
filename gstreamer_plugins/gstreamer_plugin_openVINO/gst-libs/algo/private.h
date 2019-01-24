@@ -15,15 +15,9 @@
  * if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-/*
-  * Author: River,Li
-  * Email: river.li@intel.com
-  * Date: 2018.10
-  */
 
-
- #ifndef __HDDLS_ALGO_PRIVATE_H__
- #define  __HDDLS_ALGO_PRIVATE_H__
+#ifndef __HDDLS_ALGO_PRIVATE_H__
+#define  __HDDLS_ALGO_PRIVATE_H__
 
 #define QUEUE_ELEMENT_MAX_NUM 100
 

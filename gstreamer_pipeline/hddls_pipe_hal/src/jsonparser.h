@@ -21,12 +21,6 @@
   *OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
   */
 
-  /*
-  * Author: River,Li
-  * Email: river.li@intel.com
-  * Date: 2018.10
-  */
-
  #ifndef __JSON_PARSER_H__
  #define __JSON_PARSER_H__
 

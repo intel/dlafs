@@ -21,13 +21,6 @@
   *OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
   */
 
-  /*
-  * Author: River,Li
-  * Email: river.li@intel.com
-  * Date: 2018.10
-  */
-
-
 #include "hddlspipe.h"
 
 int  main(int argc, char **argv)

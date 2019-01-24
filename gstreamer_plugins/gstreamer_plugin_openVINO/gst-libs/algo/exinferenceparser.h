@@ -15,11 +15,6 @@
  * if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-/*
-  * Author: River,Li
-  * Email: river.li@intel.com
-  * Date: 2018.10
-  */
 
 #ifndef __EX_INFERENCE_PARSER_H__
 #define __EX_INFERENCE_PARSER_H__

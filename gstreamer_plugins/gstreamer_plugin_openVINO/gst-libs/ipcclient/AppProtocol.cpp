@@ -15,13 +15,8 @@
  * if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-/*
-  * Author: Zhang, Yi3
-  * Email:  yi3.zhang@intel.com
-  * Date: 2018.12.16
-  */
 #include "AppProtocol.h"
- #include <glib.h>
+#include <glib.h>
 #include <gst/gst.h>
 #include <arpa/inet.h>
 #include <sys/types.h>
