@@ -418,7 +418,7 @@ cvdl_filter_caps_negotiation (const CvdlFilter* cvdlfilter)
     const GstVideoInfo *sink_info = &cvdlfilter->sink_info;
     const GstVideoInfo *src_info = &cvdlfilter->src_info;
 
-    // TODO: only NV12 supported at present
+    // Only NV12 supported at present
     if (GST_VIDEO_INFO_FORMAT (sink_info) != GST_VIDEO_INFO_FORMAT (src_info) ||
         GST_VIDEO_INFO_FORMAT (sink_info) != GST_VIDEO_FORMAT_NV12) {
         GST_ERROR_OBJECT (cvdlfilter, "CvdlFilter only support on NV12 frame at present");

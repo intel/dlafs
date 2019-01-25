@@ -110,7 +110,6 @@ ExInferData* parse_inference_result(void *in_data, int data_type, int data_len, 
 // return 0  - nothing has been changed
 int  post_process_inference_data(ExInferData *data)
 {
-     //TODO
      data->outputIndex = 0; //must set its value
      return 0;
 }

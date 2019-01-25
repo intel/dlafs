@@ -126,7 +126,7 @@ GstFlowReturn Yolov1TinyAlgo::parse_inference_result(InferenceEngine::Blob::Ptr 
         return GST_FLOW_ERROR;
     }
 
-    //TODO: put in into class member, not need new each time
+    //Improvement need: put in into class member, not need new each time
     Yolov1TinyInternalData *internalData = new Yolov1TinyInternalData;
     if(!internalData) {
         GST_ERROR("Yolov1TinyInternalData is NULL!");

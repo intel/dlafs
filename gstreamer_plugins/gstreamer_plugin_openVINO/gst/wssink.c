@@ -57,14 +57,14 @@ static const char gst_ws_bit_src_caps_str[] = "image/jpeg";
 static GstStaticPadTemplate gst_ws_bit_src_factory =
 GST_STATIC_PAD_TEMPLATE ("sink_bit",
     GST_PAD_SINK,
-    GST_PAD_ALWAYS,
+    GST_PAD_SOMETIMES,
     GST_STATIC_CAPS (gst_ws_bit_src_caps_str));
 
 static const char gst_ws_txt_src_caps_str[] = "data/res_txt";
 static GstStaticPadTemplate gst_ws_txt_src_factory =
 GST_STATIC_PAD_TEMPLATE ("sink_txt",
     GST_PAD_SINK,
-    GST_PAD_ALWAYS,
+    GST_PAD_SOMETIMES,
     GST_STATIC_CAPS (gst_ws_txt_src_caps_str));
     /*GST_STATIC_CAPS_ANY);*/
 
@@ -101,8 +101,7 @@ static gboolean get_buffers_with_same_ts(GstWsSink * basesink, GstBuffer **bit_b
     }
     GST_WS_SINK_TXT_UNLOCK(basesink);
 
-    // TODO: align bit buffer and txt buffer
-
+    // Improvement need: align bit buffer and txt buffer
     // can not get any, return NULL
     if(G_UNLIKELY((!bit_buf_temp && !txt_buf_temp))) {
         *txt_buf = NULL;
@@ -505,7 +504,7 @@ default_element_query (GstElement * element, GstQuery * query)
   gboolean res = FALSE;
   GstWsSink *basesink = GST_WS_SINK (element);
 
-  // TODO: how to query the 2 sink pad?
+  // Improvement need: how to query the 2 sink pad?
   res = gst_pad_peer_query (basesink->sinkpad_bit, query);
   GST_DEBUG_OBJECT (basesink, "query %s returns %d",
       GST_QUERY_TYPE_NAME (query), res);

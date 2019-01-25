@@ -123,7 +123,7 @@ IELoader::IELoader()
 
 IELoader::~IELoader()
 {
-    //TODO: how to release IE?
+    //IE will be release automatically.
 }
 
 
@@ -194,7 +194,7 @@ GstFlowReturn IELoader::read_model(std::string strModelXml,
         mSecondInputName = inputInfo->first;
         GST_INFO("IE blobs second input name is %s\n", mSecondInputName.c_str());
 
-        //TODO: make it generic!
+        //Improvement need: make it generic!
         auto secondInputDims = inputInfo->second->getDims();
         if( secondInputDims.size() != 2 || secondInputDims[0] != 1 || secondInputDims[1] != mSecDataSrcCount){
             g_print("Parsing netowrk error (wrong size of second input).\n");
@@ -329,7 +329,7 @@ GstFlowReturn IELoader::convert_input_to_blob(const cv::UMat& img,
 
 GstFlowReturn IELoader::second_input_to_blob(InferenceEngine::Blob::Ptr& inputBlobPtr)
 {
-    //TODO: make it can support any data type, and provide a input data pointer
+    //Improvement need: make it can support any data type, and provide a input data pointer
     if( (mInputPrecision != InferenceEngine::Precision::FP32) ||
          (mSecDataPrecision !=  InferenceEngine::Precision::FP32)){
         GST_ERROR("error: second input data is should be FP32!\n");

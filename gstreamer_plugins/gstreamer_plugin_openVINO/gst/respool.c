@@ -76,7 +76,7 @@ res_memory_alloc (ResPool* respool)
 
     GstMemory *memory = GST_MEMORY_CAST (res_mem);
     gst_memory_init (memory, GST_MEMORY_FLAG_NO_SHARE, priv->allocator, parent,
-         sizeof(InferenceData), 0, 0, sizeof(InferenceData)); //TODO
+         sizeof(InferenceData), 0, 0, sizeof(InferenceData));
 
     return memory;
 }
@@ -99,10 +99,10 @@ res_pool_alloc (GstBufferPool* pool, GstBuffer** buffer,
         return GST_FLOW_ERROR;
     }
 
-    //TODO: GDestroyNotify need to release InferenceData?
-   // gst_mini_object_set_qdata (GST_MINI_OBJECT_CAST (res_mem),
-   //     RES_MEMORY_QUARK, GST_MEMORY_CAST (res_mem),
-   //     (GDestroyNotify) gst_memory_unref);
+    //GDestroyNotify need to release InferenceData?
+    // gst_mini_object_set_qdata (GST_MINI_OBJECT_CAST (res_mem),
+    //     RES_MEMORY_QUARK, GST_MEMORY_CAST (res_mem),
+    //     (GDestroyNotify) gst_memory_unref);
 
     gst_buffer_append_memory (res_buf, (GstMemory *)res_mem);
 

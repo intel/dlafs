@@ -107,7 +107,7 @@ static CvdlAlgoBase* algo_create(int type)
    return algo;
 }
 
-//TODO: need support one algo link to multiple algos,  specified the algo's src pad 
+//Improvement need: support one algo link to multiple algos,  specified the algo's src pad
 static void algo_item_link(AlgoItem* from, AlgoItem* to, int index)
 {
     CvdlAlgoBase *algoFrom, *algoTo;
@@ -185,7 +185,7 @@ void algo_pipeline_config_destroy(AlgoPipelineConfig *config)
 }
 
 // create a AlgoPipelineConfig from description string
-// The format is:
+// The format is like:
 //  case 1.   "yolov1tiny ! opticalflowtrack ! googlenetv2"
 //  case 2.   "detection ! track name=tk ! tk.vehicle_classification  ! tk.person_face_detection ! face_recognication"
 AlgoPipelineConfig *algo_pipeline_config_create(gchar *desc, int *num)
@@ -202,7 +202,7 @@ AlgoPipelineConfig *algo_pipeline_config_create(gchar *desc, int *num)
     register_init();
     register_dump();
 
-    //TODO: need to support case 2 better
+    //Improvement need: need to support case 2 better
 
     GST_INFO("algo pipeline congig description: %s\n", desc);
     // delete the blank char
@@ -324,11 +324,11 @@ static void algo_pipeline_print(AlgoPipelineHandle handle)
       CvdlAlgoBase* algo = (CvdlAlgoBase *)pipeline->first;
       CvdlAlgoBase* last = (CvdlAlgoBase *)pipeline->last;
 
-      //TODO: print tree-shape algo pipeline
+      //Improvement need: print tree-shape algo pipeline
       g_print("algopipeline chain: ");
       while(algo && algo!=last && last) {
-                g_print("%s ->  ",register_get_algo_name(algo->mAlgoType));
-                algo = algo->mNext[0];//TODO
+            g_print("%s ->  ",register_get_algo_name(algo->mAlgoType));
+            algo = algo->mNext[0];
       }
       if(algo)
         g_print("%s\n",register_get_algo_name(algo->mAlgoType));
@@ -604,7 +604,7 @@ void algo_pipeline_get_buffer(AlgoPipelineHandle handle, GstBuffer **buf)
     CvdlAlgoBase* algo = NULL;
 
     *buf = NULL;
-    //TODO: need support multiple output buffer
+    //Improvement need: support multiple output buffer
     if(pipeline) {
         algo = static_cast<CvdlAlgoBase *>(pipeline->last);
         if(algo)
@@ -617,7 +617,7 @@ void algo_pipeline_flush_buffer(AlgoPipelineHandle handle)
     AlgoPipeline *pipeline = (AlgoPipeline *) handle;
     CvdlAlgoBase* algo = NULL;
 
-    //TODO: need support multiple output buffer
+    //Improvement need: support multiple output buffer
     if(pipeline) {
         algo = static_cast<CvdlAlgoBase *>(pipeline->last);
         GST_INFO("%s() - put EOS buffer!\n",__func__);

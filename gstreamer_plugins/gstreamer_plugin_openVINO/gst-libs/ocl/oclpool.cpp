@@ -93,7 +93,7 @@ ocl_pool_set_config (GstBufferPool* pool, GstStructure* config)
         gst_caps_unref (priv->caps);
 
     priv->caps = gst_caps_ref (caps);
-    priv->add_videometa = TRUE;   //TODO
+    priv->add_videometa = TRUE;
 
     // Only support BGRA/BRG/Gray8 format
     info.offset[1] = info.offset[2] = 0;
@@ -182,7 +182,7 @@ ocl_memory_alloc (OclPool* oclpool)
 
     GstMemory *memory = GST_MEMORY_CAST (ocl_mem);
     gst_memory_init (memory, GST_MEMORY_FLAG_NO_SHARE, priv->allocator, NULL,
-          GST_VIDEO_INFO_SIZE (&priv->info), 0, 0, GST_VIDEO_INFO_SIZE (&priv->info)); //TODO
+          GST_VIDEO_INFO_SIZE (&priv->info), 0, 0, GST_VIDEO_INFO_SIZE (&priv->info));
 
     return memory;
 }

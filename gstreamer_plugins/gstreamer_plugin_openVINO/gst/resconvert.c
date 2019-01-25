@@ -58,7 +58,7 @@ enum
 
 struct _ResOclBlendPrivate
 {
-    // TODO: Put more private data here
+    // Improvement need: Put more private data here
     int id;
 };
 
@@ -222,7 +222,7 @@ static void
 res_convert_flush (ResConvert * convertor)
 {
   GST_DEBUG_OBJECT (convertor, "flushing convertorer");
-  //TODO
+  //Improvement need
 }
 
 
@@ -304,19 +304,16 @@ res_convert_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         /**---set caps for peer pad below----*/
         GstPadDirection direction = GST_PAD_DIRECTION (pad);
         GstCaps *prev_incaps = NULL, *newcaps;
-        //GstPad *mypad = NULL;
         GstPad *otherpad = NULL;
         if(direction==GST_PAD_SRC){
-            //mypad = convertor->pic_srcpad;
             otherpad  = convertor->sinkpad;
         }else{
-            //mypad = convertor->sinkpad;
             otherpad = convertor->pic_srcpad;
         }
 
         // Don't process src event
         if(direction==GST_PAD_SRC){
-            // TODO: how to process src event?
+            // Improvement need: how to process src event?
             gst_event_unref (event);
             break;
         }
@@ -337,9 +334,7 @@ res_convert_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         GST_CAPS_FLAGS (newcaps) = GST_CAPS_FLAGS (caps);
 
         structure  = gst_structure_copy(gst_caps_get_structure(caps, 0));
-        //features = gst_caps_features_copy(gst_caps_get_features(caps, 0));
         GST_DEBUG("structure:\n%s\n",gst_structure_to_string(structure));
-        //g_printf("features:\n%s\n",gst_caps_features_to_string(features));
 
         gst_structure_set_name(structure, "video/x-raw");
         gst_structure_remove_field(structure, "format=(string)NV12");
@@ -351,10 +346,8 @@ res_convert_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         GST_DEBUG("caps =\n %s\n", gst_caps_to_string(caps));
         GST_DEBUG("newcaps =\n %s\n", gst_caps_to_string(newcaps));
         newcaps = gst_caps_intersect_full (newcaps, prev_incaps, GST_CAPS_INTERSECT_FIRST);
-        //g_print("intersect newcaps =\n %s\n", gst_caps_to_string(newcaps));
 
-        // TODO: need to free structure and features?
-
+        // Need to free structure and features?
         // set caps
         gst_pad_set_caps (otherpad, newcaps);
         blender_init(convertor->blend_handle ,caps);
@@ -368,8 +361,7 @@ res_convert_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         gst_caps_unref(newcaps);
         gst_caps_unref (prev_incaps);
 
-        // TODO: set caps for txt_srcpad
-
+        // Need set caps for txt_srcpad?
         // free event
         gst_event_unref (event);
         break;
@@ -637,7 +629,6 @@ res_convert_init (ResConvert * convertor)
     GST_DEBUG_CATEGORY_INIT (resconvert_debug, "resconvert", 0,
             "Convert inference result into OSD");
 
-    //TODO:
     GstCaps *caps = gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING, "BGRA", NULL);
     gst_caps_set_simple (caps, "width", G_TYPE_INT, sizeof(InferenceData), "height",
       G_TYPE_INT, 1, NULL);
@@ -656,7 +647,7 @@ res_convert_init (ResConvert * convertor)
     gst_caps_unref(caps);
 
     /* create src pads */
-    //TODO: also we can create src pads dynamically in future
+    //we can create src pads dynamically in future
     res_convert_create_src_pad (convertor, STREAM_TYPE_TXT);
     res_convert_create_src_pad (convertor, STREAM_TYPE_PIC);
 

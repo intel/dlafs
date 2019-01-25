@@ -27,10 +27,19 @@
 
 using namespace std;
 #include <string>
+#include <vector>
 
 #define CVDLFILTER_NAME "cvdlfilter0"
 #define RESCONVERT_NAME "resconvert0"
 #define WSSINK_NAME "wssink0"
+
+const std::vector<std::string> g_filter_name_vec = {
+    "resconvert0",  "wssink0",   "mfxjpegenc",
+    "rtph264depay", "h264parse", "mfxh264dec",
+    "rtph265depay", "h265parse", "mfxhevcdec",
+    "rtspsrc",      "udpsrc",    "srtpdec"
+};
+
 
 static std::string g_str_pipe_desc = std::string("null");
 static std::string g_str_server_uri = std::string("null");
@@ -161,9 +170,21 @@ static int set_property(struct json_object *parent, HddlsPipe *hp, const char *f
                         }
                     json_object_iter_next (&iter);
           }
-         return ret;
+          return ret;
 }
 
+static int do_set_properties(struct json_object *parent, HddlsPipe *hp)
+{
+    int ret = 0;
+    // set property for algopipline
+    ret = set_property(parent, hp, CVDLFILTER_NAME);
+
+    //set property for other plugins
+    for(unsigned int i=0;i<g_filter_name_vec.size();i++)
+        set_property(parent, hp, g_filter_name_vec[i].c_str());
+
+    return ret;
+}
 static void process_commands(HddlsPipe *hp, char *desc)
 {
      struct json_object *root = NULL;
@@ -185,15 +206,13 @@ static void process_commands(HddlsPipe *hp, char *desc)
         case eCommand_PipeDestroy:
                 g_print("Receive command: destroy pipeline....\n");
                 hddlspipe_stop (hp);
-                 hp->state = ePipeState_Null;
+                hp->state = ePipeState_Null;
                 break;
         case eCommand_SetProperty:
                 GST_INFO("Receive command: set pipeline....\n");
                 hddlspipe_pause( hp);
                 // set property
-                ret = set_property(root, hp, CVDLFILTER_NAME);
-                set_property(root, hp, RESCONVERT_NAME);
-                set_property(root, hp, WSSINK_NAME);
+                ret = do_set_properties(root, hp);
                 hddlspipe_resume(hp);
                 break;
          default:
@@ -203,12 +222,12 @@ static void process_commands(HddlsPipe *hp, char *desc)
       if(ret==1) {
          g_loop_times++;
          //update g_pipe_desc
-         // filesrc location=/home/lijunjie/1600x1200_concat.mp4  ! qtdemux  ! h264parse
+         // filesrc location=~/1600x1200_concat.mp4  ! qtdemux  ! h264parse
          // ! mfxh264dec  ! cvdlfilter name=cvdlfilter0 algopipeline="yolov1tiny ! opticalflowtrack ! googlenetv2"
          // ! resconvert name=resconvert0  resconvert0.src_pic ! mfxjpegenc
          // ! wssink name=wssink0 wsclientid=13   resconvert0.src_txt ! wssink0.
          gchar* begin = g_strstr_len(g_str_pipe_desc.c_str(), 1024, "algopipeline=" );
-         gchar*end = NULL;
+         gchar* end = NULL;
          gchar *secA = NULL, *secC=NULL;
          if(begin) {
                 begin = begin+14;
@@ -218,11 +237,11 @@ static void process_commands(HddlsPipe *hp, char *desc)
                     secC = end;//g_strndup(end, strnlen_s(end, 1024));
                     // replace g_pipe_desc
                     GST_INFO("old g_pipe_desc = %s\n", g_str_pipe_desc.c_str());
-                   g_str_pipe_desc = std::string(secA) + g_str_algopipeline + std::string(secC);
-                   GST_INFO("new g_pipe_desc = %s\n", g_str_pipe_desc.c_str());
-                   if(secA && secC)
+                    g_str_pipe_desc = std::string(secA) + g_str_algopipeline + std::string(secC);
+                    GST_INFO("new g_pipe_desc = %s\n", g_str_pipe_desc.c_str());
+                    if(secA && secC)
                         hddlspipe_stop (hp);
-                   if(secA) g_free(secA);
+                    if(secA) g_free(secA);
                 }
         }
       }
