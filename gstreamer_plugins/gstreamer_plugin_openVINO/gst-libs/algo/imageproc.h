@@ -23,7 +23,6 @@
 #include <gst/video/video.h>
 #include <gst/gstbuffer.h>
 #include <gst/gstpad.h>
-#include "va/va.h"
 
 #include <interface/videodefs.h>
 #include <interface/vppinterface.h>
@@ -78,11 +77,11 @@ public:
     SharedPtr<VppInterface> mOclVpp;
     int mOclVppType;
 private:
-    void setup_ocl_context(VADisplay display);
+    void setup_ocl_context(VideoDisplayID display);
     GstFlowReturn process_image_crc(GstBuffer* inbuf, GstBuffer** outbuf, VideoRect *crop);
     GstFlowReturn process_image_blend(GstBuffer* inbuf, GstBuffer* inbuf2, GstBuffer** outbuf, VideoRect *rect);
 
-    VADisplay mDisplay;
+    VideoDisplayID mDisplay;
     SharedPtr<OclContext> mContext;
     gboolean   mOclInited;
     CRCFormat   mOclFormat;

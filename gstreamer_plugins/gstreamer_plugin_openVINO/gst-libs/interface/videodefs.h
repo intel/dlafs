@@ -20,7 +20,6 @@
 #define VIDEO_COMMON_DEFS_H_
 
 #include <stdint.h>
-#include <va/va.h>
 #include <gst/gstbuffer.h>
 #include <CL/cl.h>
 
@@ -78,6 +77,24 @@ extern "C" {
 #define OCL_FOURCC_BGR3 OCL_FOURCC('B','G','G','3')
 #define OCL_FOURCC_BGRP OCL_FOURCC('B','G','G','P')
 #define OCL_FOURCC_GRAY OCL_FOURCC('G','R','A','Y')
+#define OCL_FOURCC_YV12 OCL_FOURCC('Y','V','1','2')
+#define OCL_FOURCC_I420 OCL_FOURCC('I','4','2','0')
+#define OCL_FOURCC_YUY2 OCL_FOURCC('Y','U','Y','2')
+#define OCL_FOURCC_UYVY OCL_FOURCC('U','Y','V','Y')
+
+
+#ifdef __WIN32__
+    #include <d3d11.h>
+    typedef ID3D11Texture2D VideoSurfaceID;
+    typedef *ID3D11Device   VideoDisplayID;
+    #define INVALID_SURFACE_ID (-1)
+#else//linux
+    #include <va/va.h>
+    typedef VASurfaceID  VideoSurfaceID;
+    typedef VADisplay    VideoDisplayID;
+    #define INVALID_SURFACE_ID VA_INVALID_SURFACE
+#endif
+
 
 typedef enum {
     OCL_SUCCESS = 0,
@@ -115,8 +132,8 @@ typedef struct _OclGstMfxVideoMeta
   /* check linear buffer */
   gboolean is_linear;
   guint token;
-  VASurfaceID surface_id;
-  VADisplay display_id;
+  VideoSurfaceID surface_id;
+  VideoDisplayID display_id;
 }OclGstMfxVideoMeta;
 
 typedef struct _OclGstMfxVideoMetaHolder
@@ -132,7 +149,7 @@ typedef struct {
     uint32_t    width;
     uint32_t    height;
 
-    VASurfaceID surface; /* usded for OCL input only */
+    VideoSurfaceID surface; /* usded for OCL input only */
 
     VideoRect   crop;
     uint32_t    flags;
@@ -177,7 +194,7 @@ typedef struct {
 #define OCL_MIME_HEVC "video/hevc"
 #define OCL_MIME_JPEG "image/jpeg"
 
-#define OCL_VPP_CRC           "vpp/ocl_crc"
+#define OCL_VPP_CRC       "vpp/ocl_crc"
 #define OCL_VPP_BLENDER   "vpp/ocl_blender"
 
 #ifdef __cplusplus

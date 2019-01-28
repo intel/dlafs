@@ -17,9 +17,7 @@
 
 #include <unistd.h>
 #include <string.h>
-#include <va/va_drmcommon.h>
 #include <gst/allocators/gstdmabuf.h>
-#include "va/va.h"
 
 #include "oclpool.h"
 #include "oclmemory.h"

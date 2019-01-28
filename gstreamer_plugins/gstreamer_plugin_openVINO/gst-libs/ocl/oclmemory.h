@@ -21,12 +21,9 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
-
-#include "va/va.h"
 #include "interface/lock.h"
 #include <vector>
 #include <opencv2/opencv.hpp>
-#include <va/va.h>
 #include <CL/cl.h>
 
 
@@ -55,7 +52,7 @@ struct _OclMemory {
     gint        width;
     gint        height;
     size_t      size;
-    size_t    mem_size;
+    size_t      mem_size;
     gint        purpose;
 
     HDDLStreamFilter::Lock        lock;
@@ -63,7 +60,6 @@ struct _OclMemory {
 
 struct _OclAllocator {
     GstAllocator parent;
-
     OclMemoryType mem_type;
 };
 

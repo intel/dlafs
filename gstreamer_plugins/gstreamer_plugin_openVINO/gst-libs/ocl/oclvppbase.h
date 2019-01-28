@@ -18,12 +18,9 @@
 #ifndef _VPP_BASE_H_
 #define _VPP_BASE_H_
 
-#include <va/va.h>
 #include <CL/opencl.h>
-
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/ocl.hpp>
-#include <opencv2/core/va_intel.hpp>
 
 #include <interface/vppinterface.h>
 #include <ocl/oclcommon.h>

@@ -106,7 +106,7 @@ GST_STATIC_PAD_TEMPLATE (
     );
 
 /*static guint res_convert_signals[LAST_SIGNAL] = { 0 };*/
-extern VASurfaceID gst_get_mfx_surface(GstBuffer* inbuf, GstVideoInfo *info, VADisplay *display);
+extern VideoSurfaceID gst_get_mfx_surface(GstBuffer* inbuf, GstVideoInfo *info, VideoDisplayID *display);
 
 static GstFlowReturn
 res_convert_fill_txt_data(ResMemory *res_mem, CvdlMeta *cvdl_meta)

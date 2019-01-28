@@ -21,9 +21,7 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
-
 #include <glib.h>
-#include <va/va.h>
 
 #include "interface/videodefs.h"
 
@@ -57,8 +55,8 @@ typedef struct _InferenceMetaHolder{
 }InferenceMetaHolder;
 
 typedef struct _CvdlMeta{
-    VASurfaceID surface_id;
-    VADisplay   display_id;
+    VideoSurfaceID surface_id;
+    VideoDisplayID display_id;
     guint32     width;
     guint32     height;
     InferenceMeta *inference_result;
@@ -89,7 +87,7 @@ InferenceMeta* gst_buffer_get_inference_meta (GstBuffer * buffer);
 
 
 gpointer
-cvdl_meta_create (VADisplay display, VASurfaceID surface, VideoRect *rect, const char *label,
+cvdl_meta_create (VideoDisplayID display, VideoSurfaceID surface, VideoRect *rect, const char *label,
                         float prob, guint32 color, VideoPoint *points, int count);
 gpointer
 cvdl_meta_add (gpointer meta, VideoRect *rect, const char *label, float prob, guint32 color,

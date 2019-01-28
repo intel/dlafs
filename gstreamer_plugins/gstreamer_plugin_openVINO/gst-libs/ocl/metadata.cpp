@@ -214,7 +214,7 @@ gst_buffer_get_inference_meta (GstBuffer * buffer)
 
 /* called when allocate cvdlfilter output buffer*/
 gpointer
-cvdl_meta_create (VADisplay display, VASurfaceID surface,
+cvdl_meta_create (VideoDisplayID display, VideoSurfaceID surface,
                        VideoRect *rect, const char *label,
                        float prob, guint32 color,
                        VideoPoint *points, int count)

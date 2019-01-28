@@ -29,7 +29,7 @@
 #include "algobase.h"
 
 
-#ifdef WIN32
+#ifdef __WIN32__
 #define HDDL_PLUGIN "HDDLPlugin.dll"
 #else
 #define HDDL_PLUGIN "libHDDLPlugin.so"

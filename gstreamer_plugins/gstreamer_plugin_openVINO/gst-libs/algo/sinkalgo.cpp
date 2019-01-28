@@ -74,8 +74,8 @@ GstBuffer* SinkAlgo::dequeue_buffer()
         GST_MINI_OBJECT_REFCOUNT(algoData->mGstBuffer));
 
     // put object data as meta data
-    VASurfaceID surface;
-    VADisplay display;
+    VideoSurfaceID surface;
+    VideoDisplayID display;
     unsigned int color = 0x00FF00;
     surface= gst_get_mfx_surface (buf, NULL, &display);
 

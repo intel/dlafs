@@ -91,7 +91,7 @@ GstFlowReturn ImageProcessor::ocl_init(GstCaps *incaps, GstCaps *oclcaps, int vp
     return GST_FLOW_OK;
 }
 
-void ImageProcessor::setup_ocl_context(VADisplay display)
+void ImageProcessor::setup_ocl_context(VideoDisplayID display)
 {
     if(mOclInited)
         return;
@@ -140,7 +140,7 @@ void ImageProcessor::ocl_unlock()
 GstFlowReturn ImageProcessor::process_image_crc(GstBuffer* inbuf,
     GstBuffer** outbuf, VideoRect *crop)
 {
-    VADisplay display;
+    VideoDisplayID display;
 
     /* Input data must be NV12 surface from mfxdec element */
     mSrcFrame->fourcc = video_format_to_va_fourcc (GST_VIDEO_INFO_FORMAT (&mInVideoInfo));
@@ -148,7 +148,7 @@ GstFlowReturn ImageProcessor::process_image_crc(GstBuffer* inbuf,
     mSrcFrame->width  = mInVideoInfo.width;
     mSrcFrame->height = mInVideoInfo.height;
 
-    if(mSrcFrame->surface == VA_INVALID_SURFACE) {
+    if(mSrcFrame->surface == INVALID_SURFACE_ID) {
         GST_ERROR ("Failed to map VASurface to CL_MEM!");
         return GST_FLOW_ERROR;
     }
@@ -195,7 +195,7 @@ GstFlowReturn ImageProcessor::process_image_crc(GstBuffer* inbuf,
 GstFlowReturn ImageProcessor::process_image_blend(GstBuffer* inbuf,
         GstBuffer* inbuf2, GstBuffer** outbuf, VideoRect *rect)
 {
-    VADisplay display;
+    VideoDisplayID display;
     GstBuffer *osd_buf, *dst_buf;
     OclMemory *osd_mem, *dst_mem;
 
@@ -233,7 +233,7 @@ GstFlowReturn ImageProcessor::process_image_blend(GstBuffer* inbuf,
     mDstFrame->width  = rect->width;
     mDstFrame->height = rect->height;
 
-    if(mSrcFrame2->surface == VA_INVALID_SURFACE) {
+    if(mSrcFrame2->surface == INVALID_SURFACE_ID) {
         GST_ERROR ("Failed to get VASurface!");
         return GST_FLOW_ERROR;
     }

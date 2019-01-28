@@ -91,7 +91,7 @@ OclVppBlender::process (const SharedPtr<VideoFrame>& src,  /* osd */
         return OCL_FAIL;
     }
 
-    m_src2 = (OclCLMemInfo*) m_context->acquireVAMemoryCL ((VASurfaceID*)&src2->surface, 2);
+    m_src2 = (OclCLMemInfo*) m_context->acquireVAMemoryCL ((VideoSurfaceID *)&src2->surface, 2);
     if (!m_src2) {
         GST_ERROR("failed to acquire src2 va memory\n");
         m_context->releaseMemoryCL(&m_src);

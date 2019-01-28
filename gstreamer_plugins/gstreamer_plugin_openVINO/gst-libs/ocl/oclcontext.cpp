@@ -17,10 +17,9 @@
 
 #include "oclcommon.h"
 #include "oclcontext.h"
-
 #include <vector>
 #include <iterator>
-#include <CL/va_ext.h>
+
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -29,7 +28,15 @@
 using namespace std;
 using namespace cv;
 using namespace cv::ocl;
+
+#ifdef __WIN32__
+#include <opencv2/core/directx.hpp>
+using namespace cv::directx::ocl;
+#else
+#include <CL/va_ext.h>
+#include <opencv2/core/va_intel.hpp>
 using namespace cv::va_intel;
+#endif
 
 namespace HDDLStreamFilter {
 
@@ -41,12 +48,12 @@ namespace HDDLStreamFilter {
 class OclDevice {
 
 public:
-    static SharedPtr<OclDevice> getInstance (VADisplay display);
+    static SharedPtr<OclDevice> getInstance (VideoDisplayID display);
 
-    void setDisplay(VADisplay display) {m_display = display;};
+    void setDisplay(VideoDisplayID display) {m_display = display;};
     cl_context getContext ();
     cl_command_queue getCommandQueue ();
-    gboolean createFromVA_Intel (cl_mem_flags flags, VASurfaceID* surface, cl_uint plane, cl_mem* mem);
+    gboolean createFromVA_Intel (cl_mem_flags flags, VideoSurfaceID* surface, cl_uint plane, cl_mem* mem);
     gboolean clEnqueueAcquireVA_Intel (cl_uint num_objects, const cl_mem *mem_objects,
         cl_uint num_events_in_wait_list = 0, const cl_event *event_wait_list = NULL, cl_event *ocl_event = NULL);
     gboolean clEnqueueReleaseVA_Intel (cl_uint num_objects, const cl_mem *mem_objects,
@@ -69,23 +76,32 @@ private:
     static WeakPtr<OclDevice> m_instance;
     static Lock m_lock;
 
+    #ifdef __WIN32__
+    cv::directx::ocl::Context m_ocvContext;
+    #else
     cv::ocl::Context m_ocvContext;
+    #endif
     //OclKernelCVMap m_kernel_cv_map;
     OclProgramCVMap m_program_cv_map;
 
     cl_context m_context;
     cl_command_queue m_queue;
 
-    VADisplay m_display;
+    VideoDisplayID m_display;
     //all operations need procted by m_lock
     cl_platform_id m_platform;
     cl_device_id m_device;
 
+#ifdef __WIN32__
+    clCreateFromD3D11Texture2DKHR_fn clCreateFromD3D11Texture2DKHR;
+    clEnqueueAcquireD3D11ObjectsKHR_fn clEnqueueAcquireD3D11ObjectsKHR;
+    clEnqueueReleaseD3D11ObjectsKHR_fn clEnqueueReleaseD3D11ObjectsKHR;
+#else
     clGetDeviceIDsFromVA_APIMediaAdapterINTEL_fn clGetDeviceIDsFromVA_APIMediaAdapterINTEL;
     clCreateFromVA_APIMediaSurfaceINTEL_fn       clCreateFromVA_APIMediaSurfaceINTEL;
     clEnqueueAcquireVA_APIMediaSurfacesINTEL_fn  clEnqueueAcquireVA_APIMediaSurfacesINTEL;
     clEnqueueReleaseVA_APIMediaSurfacesINTEL_fn  clEnqueueReleaseVA_APIMediaSurfacesINTEL;
-
+#endif
     friend class OclContext;
 
     DISALLOW_COPY_AND_ASSIGN (OclDevice)
@@ -94,7 +110,7 @@ private:
 Lock OclDevice::m_lock;
 WeakPtr<OclDevice> OclDevice::m_instance;
 
-SharedPtr<OclContext> OclContext::create (VADisplay display)
+SharedPtr<OclContext> OclContext::create (VideoDisplayID display)
 {
     SharedPtr<OclContext> context (new OclContext);
     if (!context->init (display))
@@ -111,7 +127,7 @@ OclContext::~OclContext ()
     releaseVAMemoryCL (&m_dest_mem);
 }
 
-gboolean OclContext::init (VADisplay display)
+gboolean OclContext::init (VideoDisplayID display)
 {
     m_device = OclDevice::getInstance (display);
 
@@ -171,7 +187,7 @@ OclContext::releaseMemoryCL (gpointer info)
 }
 
 gpointer
-OclContext::acquireVAMemoryCL (VASurfaceID* surface, const cl_uint num_planes, const cl_mem_flags flags)
+OclContext::acquireVAMemoryCL (VideoSurfaceID* surface, const cl_uint num_planes, const cl_mem_flags flags)
 {
     OclCLMemInfo* mem_info = NULL;
 
@@ -219,7 +235,7 @@ OclContext::releaseVAMemoryCL (gpointer info)
 }
 
 gboolean
-OclContext::setDestSurface (VASurfaceID* surface)
+OclContext::setDestSurface (VideoSurfaceID* surface)
 {
     m_dest_mem = (OclCLMemInfo*) acquireVAMemoryCL (surface, 2);
 
@@ -255,7 +271,7 @@ OclDevice::~OclDevice ()
 }
 
 SharedPtr<OclDevice>
-OclDevice::getInstance (VADisplay display)
+OclDevice::getInstance (VideoDisplayID display)
 {
     AutoLock lock(m_lock);
     SharedPtr<OclDevice> device = m_instance.lock ();
@@ -264,9 +280,12 @@ OclDevice::getInstance (VADisplay display)
 
     device.reset (new OclDevice);
 
-    // init ocl based on VADisplay
+#ifdef __WIN32__
+    device->m_ocvContext = cv::directx::ocl::initializeContextFromD3D11Device((ID3D11Device *)display);
+#else
+    // init ocl based on VideoDisplayID
     device->m_ocvContext = cv::va_intel::ocl::initializeContextFromVA(display, true);
-
+#endif
     device->setDisplay(display);
     if (!device->init ()) {
         device.reset ();
@@ -299,6 +318,20 @@ OclDevice::init ()
     GST_INFO ("OpenCL platform %s is used, status = %d\n", platform, status);
     //debug end
 
+#ifdef __WIN32__
+    clCreateFromD3D11Texture2DKHR = (clCreateFromD3D11Texture2DKHR_fn)
+         getExtensionFunctionAddress(platform, "clCreateFromD3D11Texture2DKHR");
+    clEnqueueAcquireD3D11ObjectsKHR = (clEnqueueAcquireD3D11ObjectsKHR_fn)
+         getExtensionFunctionAddress(platform, "clEnqueueAcquireD3D11ObjectsKHR");
+    clEnqueueReleaseD3D11ObjectsKHR = (clEnqueueReleaseD3D11ObjectsKHR_fn)
+         getExtensionFunctionAddress(platform, "clEnqueueReleaseD3D11ObjectsKHR");
+    if (!clCreateFromD3D11Texture2DKHR ||
+        !clEnqueueAcquireD3D11ObjectsKHR ||
+        !clEnqueueReleaseD3D11ObjectsKHR) {
+        g_print ("OclDevice: failed to get extension function\n");
+        return FALSE;
+    }
+#else
     clGetDeviceIDsFromVA_APIMediaAdapterINTEL = (clGetDeviceIDsFromVA_APIMediaAdapterINTEL_fn)
         getExtensionFunctionAddress ("clGetDeviceIDsFromVA_APIMediaAdapterINTEL");
     clCreateFromVA_APIMediaSurfaceINTEL = (clCreateFromVA_APIMediaSurfaceINTEL_fn)
@@ -315,6 +348,7 @@ OclDevice::init ()
         g_print ("OclDevice: failed to get extension function\n");
         return FALSE;
     }
+ #endif
     return TRUE;
 }
 
@@ -453,13 +487,17 @@ OclDevice::releaseKernelCVMap ()
 }
 
 gboolean
-OclDevice::createFromVA_Intel (cl_mem_flags flags, VASurfaceID* surface, cl_uint plane, cl_mem* mem)
+OclDevice::createFromVA_Intel (cl_mem_flags flags, VideoSurfaceID* surface, cl_uint plane, cl_mem* mem)
 {
     cl_int status = CL_SUCCESS;
 
     m_context = getContext();
-    *mem = clCreateFromVA_APIMediaSurfaceINTEL (m_context, flags, surface, plane, &status);
 
+    #ifdef __WIN32__
+        *mem = clCreateFromD3D11Texture2DKHR(m_context, flags, surface, plane, &status);
+    #else
+        *mem = clCreateFromVA_APIMediaSurfaceINTEL (m_context, flags, surface, plane, &status);
+    #endif
     if (CL_ERROR_PRINT (status, "clCreateFromVA_APIMediaSurfaceINTEL")) {
         GST_ERROR("error - surface = %d, plane = %d, flags = %ld, m_context = %p\n", *surface, plane, flags, m_context);
         return FALSE;
@@ -473,8 +511,16 @@ OclDevice::clEnqueueAcquireVA_Intel(cl_uint num_objects, const cl_mem *mem_objec
     cl_uint num_events_in_wait_list, const cl_event *event_wait_list, cl_event *ocl_event)
 {
     m_queue = (cl_command_queue)Queue::getDefault().ptr();
-    if (CL_ERROR_PRINT (clEnqueueAcquireVA_APIMediaSurfacesINTEL (m_queue, num_objects, mem_objects,
-            num_events_in_wait_list, event_wait_list, ocl_event), "clEnqueueAcquireVA_APIMediaSurfacesINTEL"))
+    cl_int status = CL_SUCCESS;
+
+    #ifdef __WIN32__
+        status = clEnqueueAcquireD3D11ObjectsKHR(m_queue, num_objects, &mem_objects,
+            0, NULL, NULL);
+    #else
+        status = clEnqueueAcquireVA_APIMediaSurfacesINTEL (m_queue, num_objects, mem_objects,
+            num_events_in_wait_list, event_wait_list, ocl_event);
+    #endif
+    if (CL_ERROR_PRINT (status, "clEnqueueAcquireVA_APIMediaSurfacesINTEL"))
         return FALSE;
 
      return TRUE;
@@ -485,9 +531,17 @@ OclDevice::clEnqueueReleaseVA_Intel(const cl_uint num_objects, const cl_mem *mem
     cl_uint num_events_in_wait_list, const cl_event *event_wait_list, cl_event *ocl_event)
 {
     gboolean succ = TRUE;
+    cl_int status = CL_SUCCESS;
 
-    if (CL_ERROR_PRINT (clEnqueueReleaseVA_APIMediaSurfacesINTEL (m_queue, num_objects, mem_objects,
-            num_events_in_wait_list, event_wait_list, ocl_event), "clEnqueueReleaseVA_APIMediaSurfacesINTEL"))
+    #ifdef __WIN32__
+        status = clEnqueueReleaseD3D11ObjectsKHR(m_queue, num_objects, mem_objects,
+            0, NULL, NULL);
+    #else
+        status = clEnqueueReleaseVA_APIMediaSurfacesINTEL (m_queue, num_objects, mem_objects,
+            num_events_in_wait_list, event_wait_list, ocl_event);
+    #endif
+
+    if (CL_ERROR_PRINT (status, "clEnqueueReleaseVA_APIMediaSurfacesINTEL"))
         succ = FALSE;
 
     if (CL_ERROR_PRINT (clFlush (m_queue), "clFlush"))

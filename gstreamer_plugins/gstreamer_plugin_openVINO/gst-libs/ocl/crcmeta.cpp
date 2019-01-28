@@ -201,14 +201,14 @@ OclGstMfxVideoMeta *gst_buffer_get_mfx_meta (GstBuffer * buffer)
   return result;
 }
 
-VASurfaceID gst_get_mfx_surface(GstBuffer* inbuf, GstVideoInfo *info, VADisplay *display)
+VideoSurfaceID gst_get_mfx_surface(GstBuffer* inbuf, GstVideoInfo *info, VideoDisplayID *display)
 {
-    VASurfaceID surface = VA_INVALID_SURFACE;
+    VideoSurfaceID surface = INVALID_SURFACE_ID;
 
     OclGstMfxVideoMeta *meta = gst_buffer_get_mfx_meta(inbuf);
-    g_return_val_if_fail (meta != NULL, VA_INVALID_SURFACE);
+    g_return_val_if_fail (meta != NULL, INVALID_SURFACE_ID);
     
-    surface = (VASurfaceID)meta->surface_id;
+    surface = (VideoSurfaceID)meta->surface_id;
     *display = meta->display_id;
     return surface;
 }

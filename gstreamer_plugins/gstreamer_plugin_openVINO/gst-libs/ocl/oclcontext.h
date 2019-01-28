@@ -23,12 +23,10 @@
 #include <map>
 #include <glib.h>
 #include <string>
-#include <va/va.h>
 #include <CL/cl.h>
-
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/ocl.hpp>
-#include <opencv2/core/va_intel.hpp>
+
 
 #include "interface/lock.h"
 #include "interface/videodefs.h"
@@ -59,20 +57,20 @@ typedef OclProgramCVMap::iterator OclProgramCVMapIterator;
 class OclContext
 {
 public:
-    static SharedPtr<OclContext> create (VADisplay display);
+    static SharedPtr<OclContext> create (VideoDisplayID display);
 
     cl_context getContext ();
     cl_command_queue getCommandQueue ();
     //cl_kernel acquireKernel (const char* name, const char* file = NULL);
     cv::ocl::Kernel acquireKernelCV (const char* name, const char* file = NULL);
 
-    gpointer acquireVAMemoryCL (VASurfaceID* surface, const cl_uint num_planes,
+    gpointer acquireVAMemoryCL (VideoSurfaceID* surface, const cl_uint num_planes,
                                         const cl_mem_flags flags = CL_MEM_READ_ONLY);
     gpointer acquireMemoryCL (cl_mem mem, const cl_uint num_planes);
     void releaseVAMemoryCL (gpointer info);
     void releaseMemoryCL (gpointer info);
 
-    gboolean setDestSurface (VASurfaceID* surface);
+    gboolean setDestSurface (VideoSurfaceID* surface);
     void finish ();
 
     ~OclContext ();
@@ -80,7 +78,7 @@ public:
     OclCLMemInfo *m_dest_mem;
 private:
     OclContext ();
-    gboolean init (VADisplay display);
+    gboolean init (VideoDisplayID display);
     SharedPtr<OclDevice> m_device;
     DISALLOW_COPY_AND_ASSIGN (OclContext)
 };

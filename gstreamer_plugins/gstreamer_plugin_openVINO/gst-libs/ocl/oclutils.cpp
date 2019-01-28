@@ -15,21 +15,21 @@
  * if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "va/va.h"
+#include "interface/videodefs.h"
 #include "oclutils.h"
 
 guint
 video_format_to_va_fourcc (GstVideoFormat format)
 {
     switch(format) {
-        case GST_VIDEO_FORMAT_NV12: return VA_FOURCC_NV12;
-        case GST_VIDEO_FORMAT_I420: return VA_FOURCC_YV12;
-        case GST_VIDEO_FORMAT_YV12: return VA_FOURCC_YV12;
-        case GST_VIDEO_FORMAT_YUY2: return VA_FOURCC_YUY2;
-        case GST_VIDEO_FORMAT_UYVY: return VA_FOURCC_UYVY;
-        case GST_VIDEO_FORMAT_BGRA: return VA_FOURCC_ARGB;
-        case GST_VIDEO_FORMAT_BGRx: return VA_FOURCC_ARGB;
-        case GST_VIDEO_FORMAT_BGR:  return VA_FOURCC_ARGB;
+        case GST_VIDEO_FORMAT_NV12: return OCL_FOURCC_NV12;
+        case GST_VIDEO_FORMAT_I420: return OCL_FOURCC_YV12;
+        case GST_VIDEO_FORMAT_YV12: return OCL_FOURCC_YV12;
+        case GST_VIDEO_FORMAT_YUY2: return OCL_FOURCC_YUY2;
+        case GST_VIDEO_FORMAT_UYVY: return OCL_FOURCC_UYVY;
+        case GST_VIDEO_FORMAT_BGRA: return OCL_FOURCC_BGRA;
+        case GST_VIDEO_FORMAT_BGRx: return OCL_FOURCC_BGRX;
+        case GST_VIDEO_FORMAT_BGR:  return OCL_FOURCC_BGR3;
         default: return 0;
     }
 }
