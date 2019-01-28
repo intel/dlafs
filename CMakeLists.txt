@@ -4,6 +4,10 @@ project(hddl_s)
 
 include(FindPkgConfig)
 
+if(UNIX)
+  set(CMAKE_INSTALL_PREFIX "/usr/lib/x86_64-linux-gnu/")
+endif()
+
 ### third part dependencies
 
 # OpenCV

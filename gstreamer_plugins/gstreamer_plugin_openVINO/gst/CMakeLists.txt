@@ -24,5 +24,8 @@ aux_source_directory(. SRC_LIST_C)
 
 add_library (gstcvdlfilter SHARED ${SRC_LIST_C})
 target_link_libraries(gstcvdlfilter )
-install(TARGETS gstcvdlfilter DESTINATION lib COMPONENT libraries)
+
+#install(TARGETS gstcvdlfilter DESTINATION lib COMPONENT libraries)
+
+install(TARGETS gstcvdlfilter DESTINATION gstreamer-1.0 COMPONENT libraries)
 #set_property(TARGET HelloWorld PROPERTY CXX_STANDARD 17)

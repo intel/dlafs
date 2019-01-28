@@ -14,8 +14,8 @@ include_directories(${GSTREAMER_INCLUDE_DIRS})
 
 aux_source_directory(. SRC_LIST_C)
 
-add_library (ipc_client SHARED ${SRC_LIST_C})
+add_library (ipc_client STATIC ${SRC_LIST_C})
 target_link_libraries(ipc_client ${OpenCV_LIBS} ${InferenceEngine_LIBRARIES} dlib::dlib)
 
-install(TARGETS ipc_client DESTINATION lib COMPONENT libraries)
+#install(TARGETS ipc_client DESTINATION lib COMPONENT libraries)
 #set_property(TARGET ipc_client PROPERTY CXX_STANDARD 11)

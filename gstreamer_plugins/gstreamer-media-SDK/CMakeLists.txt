@@ -117,7 +117,7 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_uninstall.cmake.in" "${C
 add_custom_target(uninstall "${CMAKE_COMMAND}" -P "${CMAKE_BINARY_DIR}/cmake_uninstall.cmake")
 
 install (TARGETS gstmfx
-    LIBRARY DESTINATION gstreamer-1.0
+    LIBRARY DESTINATION "${CMAKE_BINARY_DIR}/../../../"
     RUNTIME DESTINATION bin)
 
 message("Build: " ${CMAKE_BUILD_TYPE})

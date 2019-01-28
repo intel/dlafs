@@ -26,9 +26,9 @@ include_directories(${DLIB_DIR})
 aux_source_directory(. SRC_LIST_C)
 
 add_subdirectory(${DLIB_DIR}/dlib  dlib_build)	
-add_library (cvdl_algo SHARED ${SRC_LIST_C})
+add_library (cvdl_algo STATIC ${SRC_LIST_C})
 target_link_libraries(cvdl_algo ${InferenceEngine_LIBRARIES} dlib::dlib)
 
-install(TARGETS cvdl_algo DESTINATION lib COMPONENT libraries)
+#install(TARGETS cvdl_algo DESTINATION lib COMPONENT libraries)
 #target_link_libraries(cvdl_algo ${OpenCV_LIBS} ${InferenceEngine_LIBRARIES} dlib::dlib)
 #set_property(TARGET cvdl_algo PROPERTY CXX_STANDARD 11)

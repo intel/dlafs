@@ -12,7 +12,7 @@ include_directories(${GSTREAMER_INCLUDE_DIRS})
 
 aux_source_directory(. SRC_LIST_C)
 
-add_library (ws_client SHARED ${SRC_LIST_C})
-install(TARGETS ws_client DESTINATION lib COMPONENT libraries)
+add_library (ws_client STATIC ${SRC_LIST_C})
+#install(TARGETS ws_client DESTINATION lib COMPONENT libraries)
 #target_link_libraries(ws_client dlib::dlib)
 set_property(TARGET ws_client PROPERTY CXX_STANDARD 11)

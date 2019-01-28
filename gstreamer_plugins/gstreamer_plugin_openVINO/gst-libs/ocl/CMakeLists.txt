@@ -16,6 +16,6 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 
 aux_source_directory(. SRC_LIST_C)
 
-add_library (ocl_vpp SHARED ${SRC_LIST_C})
+add_library (ocl_vpp STATIC ${SRC_LIST_C})
 target_link_libraries(ocl_vpp ${OpenCV_LIBS})
-install(TARGETS ocl_vpp DESTINATION lib COMPONENT libraries)
+#install(TARGETS ocl_vpp DESTINATION lib COMPONENT libraries)
