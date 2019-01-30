@@ -492,7 +492,7 @@ void hddlspipe_prepare(int argc, char **argv)
     hp->state = ePipeState_Ready;
 
     // start command thread
-    hp->message_handle_thread = g_thread_create(thread_handle_message, (void *)hp, TRUE, NULL );
+    hp->message_handle_thread = g_thread_new("message_thread",thread_handle_message, (void *)hp);
     return hp;
 }
 
