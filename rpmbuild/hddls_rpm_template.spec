@@ -1,6 +1,6 @@
 Name:           Intel_Movidius_MyriadX_HDDL-S_Linux
-Version:BetaV1.2
-Release:ww03_2019
+Version:BetaV1.3
+Release:ww05_2019
 Summary:        This is hddl-s projects.
 License:        GPL
 #URL:
@@ -30,7 +30,7 @@ cp -a usr/* $RPM_BUILD_ROOT%{usrpath}
 %{usrpath}/local/bin/*
 %{usrpath}/lib/x86_64-linux-gnu/gstreamer-1.0/*
 %{usrpath}/lib/x86_64-linux-gnu/libgstcvdl/*
-%{usrpath}/include/gstcvdl/*
+#%{usrpath}/include/gstcvdl/*
 
 %config
 

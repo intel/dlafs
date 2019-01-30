@@ -48,26 +48,26 @@ echo "=======================created directory 'rpm_src_dir'====================
 fi
 
 mkdir -p rpm_src_dir/usr/lib/x86_64-linux-gnu/gstreamer-1.0
-cp -raf $PROJECTS_PATH/gstreamer_plugins/gstreamer-media-SDK/build/lib/release/* rpm_src_dir/usr/lib/x86_64-linux-gnu/gstreamer-1.0/.
-cp -raf $PROJECTS_PATH/gstreamer_plugins/gstreamer_plugin_openVINO/libgstcvdlfilter.so rpm_src_dir/usr/lib/x86_64-linux-gnu/gstreamer-1.0/.
+cp -raf $PROJECTS_PATH/build/gstreamer_plugins/msdk-gst-prefix/src/msdk-gst-build/lib/release/libgstmfx.so rpm_src_dir/usr/lib/x86_64-linux-gnu/gstreamer-1.0/.
+cp -raf $PROJECTS_PATH/build/gstreamer_plugins/gstreamer_plugin_openVINO/libgstcvdlfilter.so rpm_src_dir/usr/lib/x86_64-linux-gnu/gstreamer-1.0/.
 #ln -sf rpm_src_dir/usr/lib/x86_64-linux-gnu/gstreamer-1.0/libgstcvdlfilter.so rpm_src_dir/usr/lib/x86_64-linux-gnu/libgstcvdlfilter.so
 mkdir -p rpm_src_dir/usr/local/bin
-cp -raf $PROJECTS_PATH/gstreamer_pipeline/hddlspipes rpm_src_dir/usr/local/bin/.
-cp -raf $PROJECTS_PATH/gstreamer_pipeline/registeralgo rpm_src_dir/usr/local/bin/.
-cp -raf $PROJECTS_PATH/gstreamer_pipeline/hddlspipestest rpm_src_dir/usr/local/bin/.
-chmod a+x hddls_prepare.sh
-chmod a+x hddls_pre_install.sh
-cp -raf hddls_prepare.sh rpm_src_dir/usr/local/bin/.
-cp -raf hddls_pre_install.sh rpm_src_dir/usr/local/bin/.
+cp -raf $PROJECTS_PATH/build/gstreamer_pipeline/hddls_pipe_hal/src/hddlspipes rpm_src_dir/usr/local/bin/.
+cp -raf $PROJECTS_PATH/build/gstreamer_pipeline/hddls_pipe_hal/tools/registeralgo rpm_src_dir/usr/local/bin/.
+#cp -raf $PROJECTS_PATH/build/gstreamer_pipeline/hddls_pipe_hal/test/hddlspipestest rpm_src_dir/usr/local/bin/.
+#chmod a+x hddls_prepare.sh
+#chmod a+x hddls_pre_install.sh
+#cp -raf hddls_prepare.sh rpm_src_dir/usr/local/bin/.
+#cp -raf hddls_pre_install.sh rpm_src_dir/usr/local/bin/.
 
 mkdir -p rpm_src_dir/usr/lib/x86_64-linux-gnu/libgstcvdl
 cp -raf $PROJECTS_PATH/gstreamer_plugins/gstreamer_plugin_openVINO/gst-libs/ocl/kernels rpm_src_dir/usr/lib/x86_64-linux-gnu/libgstcvdl/.
 #cp -raf $PROJECTS_PATH/gstreamer_plugins/gstreamer_plugin_openVINO/gst-libs/models rpm_src_dir/usr/lib/x86_64-linux-gnu/libgstcvdl/.
 cp -raf $PROJECTS_PATH/gstreamer_plugins/gstreamer_plugin_openVINO/gst-libs/resources/* rpm_src_dir/usr/lib/x86_64-linux-gnu/libgstcvdl/.
-mkdir -p rpm_src_dir/usr/include/gstcvdl
+#mkdir -p rpm_src_dir/usr/include/gstcvdl
 #cp -raf $PROJECTS_PATH/gstreamer_plugins/gstreamer_plugin_openVINO/gst-libs/ocl/oclcommon.h rpm_src_dir/usr/include/gstcvdl/.
-cp -raf $PROJECTS_PATH/gstreamer_plugins/gstreamer_plugin_openVINO/gst-libs/algo/exinferdata.h rpm_src_dir/usr/include/gstcvdl/.
-cp -raf $PROJECTS_PATH/gstreamer_plugins/gstreamer_plugin_openVINO/gst-libs/algo/exinferenceparser.h rpm_src_dir/usr/include/gstcvdl/.
+cp -raf $PROJECTS_PATH/gstreamer_plugins/gstreamer_plugin_openVINO/gst-libs/algo/exinferdata.h rpm_src_dir/usr/lib/x86_64-linux-gnu/libgstcvdl/.
+cp -raf $PROJECTS_PATH/gstreamer_plugins/gstreamer_plugin_openVINO/gst-libs/algo/exinferenceparser.h rpm_src_dir/usr/lib/x86_64-linux-gnu/libgstcvdl/.
 
 if [ $? -eq 0 ]; then 
 echo "====================copied files to directory 'rpm_src_dir'================="
