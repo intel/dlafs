@@ -1,11 +1,15 @@
-1. build
-   make
-   sudo make install
+1. How to build
+   Method 1: Makefile
+      make -j8
+   	  sudo make install
 
-2. Prepare to run
-
-export HDDLS_CVDL_KERNEL_PATH=/usr/lib/x86_64-linux-gnu/libgstcvdl/kernels
-export HDDLS_CVDL_MODEL_PATH=/usr/lib/x86_64-linux-gnu/libgstcvdl/models
+   Method 2: CMake
+     cd <top dir>
+     mkdir build
+	 cd build
+	 cmake ..
+	 make -j8
+	 sudo make install
 
 
 2. Test to run local file

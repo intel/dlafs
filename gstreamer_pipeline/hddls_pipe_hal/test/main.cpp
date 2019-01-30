@@ -31,7 +31,7 @@ void  pipe_run(int argc, char **argv, int id)
     HddlsPipe*   pipe = NULL;
     hddlspipe_prepare(argc, argv);
 
-    pipe = hddlspipe_create( id );
+    pipe = hddlspipe_create(id);
     if(!pipe) {
         g_print("Error: failed to create pipel ine!\n");
         return;

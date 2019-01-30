@@ -30,7 +30,7 @@
 #include <algorithm>
 #include <interface/videodefs.h>
 
- #include <glib.h>
+#include <glib.h>
 #include <gst/gst.h>
 #include "../ws/wsclient.h"
 #include <string.h>

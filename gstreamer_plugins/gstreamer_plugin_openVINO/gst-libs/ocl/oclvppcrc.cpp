@@ -41,7 +41,6 @@ OclStatus OclVppCrc::crc_helper()
     m_kernel.args(m_src->cl_memory[0], m_src->cl_memory[1], m_src_w, m_src_h, m_crop_x, m_crop_y,
                   m_crop_w, m_crop_h, m_dst->cl_memory[0],m_dst_w, m_dst_h);
 
-
     size_t globalWorkSize[2], localWorkSize[2];
     if((m_dst_w<256) ||(m_dst_h<256)) {
         localWorkSize[0] = 4;

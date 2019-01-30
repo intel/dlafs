@@ -22,7 +22,7 @@
   */
 
 #include "stdio.h"
-#include "hddlspipe.h"
+#include "hddlspipetest.h"
 #include <json-c/json.h>
 #include "jsonparser.h"
 

@@ -22,15 +22,15 @@
 #
 .PHONY: all clean
 
-SRC_FILES := $(wildcard *.c)
-OBJECTS := $(patsubst %.c, %.o, $(SRC_FILES))
+SRC_FILES := $(wildcard *.cpp)
+OBJECTS := $(patsubst %.cpp, %.o, $(SRC_FILES))
 TARGETS := hddlspipestest
 
 all: $(TARGETS)
 
 $(TARGETS): $(OBJECTS)
-	@$(CXX) $^ -o $@ $(LDFLAGS) -Wl,-rpath-link -lpthread
-$(OBJECTS): %.o: %.c
+	@$(CXX) $^ -o $@ $(LDFLAGS) -Wl,-rpath-link
+$(OBJECTS): %.o: %.cpp
 	@$(CXX) $< -o $@ -c $(CXXFLAGS) $(DEFINES)
 	
 clean:

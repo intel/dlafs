@@ -32,6 +32,15 @@
 #include <stdlib.h>
 #include <getopt.h>
 
+
+enum E_ERROR_CODE{
+    eErrorNone=0,
+    eErrorInvalidPipeline=1,
+    eErrorInvalideJsonObject = 2,
+    eErrorInvalideAlgopipeline = 3,
+};
+
+
 enum E_PIPE_STATE {
     ePipeState_Null = 0,
     ePipeState_Ready = 1,
@@ -51,11 +60,13 @@ typedef struct _HddlsPipe {
     GstElement          *pipeline;
     guint               bus_watch_id;
     struct json_object  *config;
+//  WsClientHandle ws;
+    GThread              *message_handle_thread;
     gint pipe_id;
 }HddlsPipe;
 
 void hddlspipe_prepare(int argc, char **argv);
-HddlsPipe*   hddlspipe_create(int id );
+HddlsPipe*   hddlspipe_create( int id);
 void  hddlspipe_start(HddlsPipe * hp);
 void  hddlspipe_stop(HddlsPipe * hp);
 void hddlspipe_resume(HddlsPipe *pipe);

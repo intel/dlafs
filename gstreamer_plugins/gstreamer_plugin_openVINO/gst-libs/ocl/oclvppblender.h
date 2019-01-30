@@ -19,6 +19,7 @@
 #define _OCL_VPP_BLENDER_H_
 
 #include "oclvppbase.h"
+#include "Vppfactory.h"
 
 namespace HDDLStreamFilter
 {

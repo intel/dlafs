@@ -23,15 +23,15 @@
 .PHONY: all clean
 CXX := g++
 
-SRC_FILES := $(wildcard *.c)
-OBJECTS := $(patsubst %.c, %.o, $(SRC_FILES))
+SRC_FILES := $(wildcard *.cpp)
+OBJECTS := $(patsubst %.cpp, %.o, $(SRC_FILES))
 TARGETS := registeralgo
 
 all: $(TARGETS)
 
 $(TARGETS): $(OBJECTS)
 	@$(CXX) $^ -o $@ $(LDFLAGS) -Wl,-rpath-link
-$(OBJECTS): %.o: %.c
+$(OBJECTS): %.o: %.cpp
 	@$(CXX) $< -o $@ -c $(CXXFLAGS) $(DEFINES)
 	
 clean:
