@@ -252,7 +252,8 @@ function getConnHandler(app, adminCtx){
         });
         ws.on('close', (code, reason)=> {
             console.log(`ws client ${ws.id} close reason ${code}/${reason}`);
-        })
+            adminCtx.wsConns.delete(ws.id);
+        });
         if(adminCtx.client2pipe.has(ws.id)) {
             console.log('Client Reconnect id %s', ws.id);
             let pipes = adminCtx.client2pipe.get(ws.id);
@@ -354,6 +355,10 @@ function getUnixConnHandler(app, adminCtx)
             console.log(err.message);
             stream.destroy();
         })
+        stream.on('end', ()=> {
+            console.log(`ipc socket pipe_id ${transceiver.id} disconnects`);
+            //adminCtx.pipe2socket.delete(transceiver.id);
+        });
         transceiver.init();
     }
 };

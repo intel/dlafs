@@ -1,4 +1,4 @@
-#!/usr/bin/env nodejs
+#!/usr/bin/env node
 //Copyright (C) 2018 Intel Corporation
 // 
 //SPDX-License-Identifier: MIT
@@ -66,18 +66,19 @@ const route = require('../lib/router');
 var server = new SecureServer(options);
 
 
-var routes = {
+const routes = {
   "text": (ws,message, adminCtx)=>{console.log(`Message from client ${message.payload}`);ws.send(JSON.stringify(message));},
   "create": route.createHandler,
   "destroy": route.destroyHandler,
   "property": route.propertyHandler,
   "model": route.updateModel
-}
+};
+
 var router = route.router(routes);
 function incoming(ws, message, adminCtx) {
   let fn = router(message);
   !!fn && fn(ws, message, adminCtx);
-};
+}
 
 function unixApp(data, adminCtx){
     if(data.type == constants.msgType.ePipeID && adminCtx.pipe2pid.has(parseInt(data.payload))) {

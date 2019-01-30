@@ -24,7 +24,7 @@
 
 class Transceiver {
     constructor(socket, handler) {
-        this.socket = socket;
+        this._socket = socket;
         this._packet = {};
         this._process = false;
         this._state = 'HEADER';
@@ -35,14 +35,14 @@ class Transceiver {
     }
 
     init() {
-        this.socket.on('data', (data) => {
+        this._socket.on('data', (data) => {
             this._bufferedBytes += data.length;
             this.queue.push(data);
             this._process = true;
             this._onData();
           });
-          this.socket.on('served', this.handler);
-          this.socket.on('error', err=>console.log(err.message));
+          this._socket.on('served', this.handler);
+          this._socket.on('error', err=>console.log(err.message));
     }
 
     _hasEnough(size) {
@@ -96,7 +96,7 @@ class Transceiver {
         if (this._hasEnough(this._payloadLength)) {
           let type = this._readBytes(4).readUInt32BE(0,true);
           let received = this._readBytes(this._payloadLength - 4);
-          !!received  && this.socket.emit('served', {type: type, payload: received});
+          !!received  && this._socket.emit('served', {type: type, payload: received});
           this._state = 'HEADER';
         }
       }
@@ -125,14 +125,18 @@ class Transceiver {
         this._packet.header = { length: messageLength, type: type};
       };
 
+      destroy(){
+        this._socket.destroy();
+      }
+
       _send() {
         let contentLength = Buffer.allocUnsafe(4);
         let contentType = Buffer.allocUnsafe(4);
         contentLength.writeUInt32BE(this._packet.header.length);
         contentType.writeUInt32BE(this._packet.header.type);
-        this.socket.write(contentLength);
-        this.socket.write(contentType);
-        this.socket.write(this._packet.message);
+        this._socket.write(contentLength);
+        this._socket.write(contentType);
+        this._socket.write(this._packet.message);
         this._packet = {};
       }
 };

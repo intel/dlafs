@@ -75,6 +75,7 @@ exports.createHandler = function createHandler(ws, message, adminCtx) {
             pipes.delete(pipe2delete);
             adminCtx.pipe2pid.delete(pipe2delete);
             adminCtx.pipe2json.delete(pipe2delete);
+            adminCtx.pipe2socket.delete(pipe2delete);
             let clientWS = adminCtx.wsConns.get(clientID);
             //update controller when pipeline exit
             if (!! clientWS && clientWS.readyState === clientWS.OPEN) {
@@ -128,11 +129,8 @@ exports.destroyHandler = function destroyHandler(ws, message, adminCtx) {
         var socket = adminCtx.pipe2socket.get(pipe_id);
         if(!!socket) {
             console.log('delete pipe %s', pipe_id);
-            //socket.send(message.payload, 3);
-	    	destroy_json.command_destroy.client_id = ws.id;
-            destroy_json.command_destroy.pipe_id = message.headers.pipe_id;
-            socket.send(JSON.stringify(destroy_json));
-			adminCtx.pipe2pid.get(pipe_id).child.kill('SIGKILL');
+            adminCtx.pipe2pid.get(pipe_id).child.kill('SIGKILL');
+            socket.destroy();
         } else {
             console.log("Cannot find pipe socket %s",pipe_id);
         }
@@ -191,7 +189,8 @@ exports.updateModel = function (ws, model, adminCtx){
         fileLock.delete(filePath);
     });
     modelBuffer.on('error', (err)=> {
-        console.log(`read Buffer error ${err.message}`); 
+        console.log(`read Buffer error ${err.message}`);
+        fileLock.delete(filePath);
         writer.end();
     });
     //release file lock when completing file writing.
