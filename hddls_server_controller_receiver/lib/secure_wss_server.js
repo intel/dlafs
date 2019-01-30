@@ -357,7 +357,8 @@ function getUnixConnHandler(app, adminCtx)
         })
         stream.on('end', ()=> {
             console.log(`ipc socket pipe_id ${transceiver.id} disconnects`);
-            //adminCtx.pipe2socket.delete(transceiver.id);
+            if(transceiver.hasOwnProperty('id'))
+                adminCtx.pipe2socket.delete(transceiver.id);
         });
         transceiver.init();
     }
