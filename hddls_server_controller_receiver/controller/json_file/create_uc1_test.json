@@ -6,11 +6,12 @@
          "pipe_num": 2,
          "stream_source": "/home/lijunjie/1600x1200.p4",
          "codec_type": "H.264",
+         "output_type":1,
          "cvdlfilter0":
         {
              "algopipeline": "yolov1tiny ! opticalflowtrack ! googlenetv2"
         },
-        "loop_times":-100
+        "loop_times":100000
 
     }
  }

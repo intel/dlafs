@@ -6,6 +6,7 @@
          "pipe_num": 1,
          "stream_source": "/home/lijunjie/1600x1200.mp4",
          "codec_type": "H.264",
+         "output_type":1,
          "cvdlfilter0":
         {
              "algopipeline": "yolov1tiny ! opticalflowtrack ! googlenetv2"

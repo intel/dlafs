@@ -117,19 +117,19 @@ static gchar* parse_create_command(char *desc,  gint pipe_id )
         json_object_is_type (object, json_type_object)) {
             //1.1 parse input stream source
             if(json_get_string(object, "stream_source", &stream_source)) {
-                    g_print("input source = %s\n",stream_source);
+                g_print("input source = %s\n",stream_source);
             }
-           // 1.2 codec_type
-           if(json_get_string(object, "codec_type", &stream_codec_type)) {
-                    g_print("stream codec type = %s\n",stream_codec_type);
+            // 1.2 codec_type
+            if(json_get_string(object, "codec_type", &stream_codec_type)) {
+                g_print("stream codec type = %s\n",stream_codec_type);
             }
             // 1.3 parse property
             if(json_get_string_d2(object, CVDLFILTER_NAME, "algopipeline", &algo_pipeline_desc)) {
-                     g_print("property - algopipeline = %s\n",algo_pipeline_desc);
-                     if(strlen(algo_pipeline_desc)<2)
-                         algo_pipeline_desc = DEFAULT_ALGO_PIPELINE;
+                 g_print("property - algopipeline = %s\n",algo_pipeline_desc);
+                 if(strlen(algo_pipeline_desc)<2)
+                     algo_pipeline_desc = DEFAULT_ALGO_PIPELINE;
              } else { //default
-                    algo_pipeline_desc = DEFAULT_ALGO_PIPELINE;
+                 algo_pipeline_desc = DEFAULT_ALGO_PIPELINE;
              }
     }
     if(!stream_source || !stream_codec_type) {

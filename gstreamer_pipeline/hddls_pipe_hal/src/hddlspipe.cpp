@@ -275,6 +275,7 @@ static const gchar* parse_create_command(char *desc,  gint pipe_id )
       //char helper_desc[256];
       E_CODEC_TYPE codec_type = eCodecTypeNone;
       int srtp_port = 5000;
+      int output_type = 1;// 0 - meta_data; 1 - meta data + jpeg data  
 
      root = json_create(desc);
      if(!root) {
@@ -298,6 +299,9 @@ static const gchar* parse_create_command(char *desc,  gint pipe_id )
             // 1.2 codec_type
             if(json_get_string(object, "codec_type", &stream_codec_type)) {
                 g_print("stream codec type = %s\n",stream_codec_type);
+            }
+            if(json_get_int(object, "output_type", &output_type)) {
+                g_print("output type = %d\n",output_type);
             }
             // 1.3 srtp parameter if need
             if(json_get_string(object, "srtp_caps", &srtp_caps)) {
@@ -345,9 +349,17 @@ static const gchar* parse_create_command(char *desc,  gint pipe_id )
             json_destroy(&root);
             return NULL;
      }
-      g_str_helper_desc = std::string(" ! cvdlfilter name=cvdlfilter0 algopipeline=\"") + std::string(algo_pipeline_desc) + std::string("\" ") +
-                                            std::string(" ! resconvert name=resconvert0   resconvert0.src_pic ! mfxjpegenc ! wssink name=wssink0 wsclientid=") +
-                                            std::to_string(pipe_id)  + std::string("  resconvert0.src_txt ! wssink0.");
+     if(output_type) {
+        // meta data + jpeg data
+        g_str_helper_desc = std::string(" ! cvdlfilter name=cvdlfilter0 algopipeline=\"") + std::string(algo_pipeline_desc) + std::string("\" ") +
+                          std::string(" ! resconvert name=resconvert0 resconvert0.src_pic ! mfxjpegenc ! wssink name=wssink0 wsclientid=") +
+                          std::to_string(pipe_id)  + std::string("  resconvert0.src_txt ! wssink0.");
+     }else {
+       // meta data
+       g_str_helper_desc = std::string(" ! cvdlfilter name=cvdlfilter0 algopipeline=\"") + std::string(algo_pipeline_desc) + std::string("\" ") +
+                          std::string(" ! resconvert name=resconvert0 resconvert0.src_txt ! wssink name=wssink0 wsclientid=") +
+                          std::to_string(pipe_id);
+     }
 
     if( ((std::string(stream_source).compare("srtp")) || (std::string(stream_source).compare("SRTP"))) && srtp_caps) {
         g_str_srtp_desc = std::string("udpsrc") + std::string(" port=") + std::to_string(srtp_port) +
