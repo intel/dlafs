@@ -132,7 +132,11 @@ void OpticalflowTrackAlgo::set_data_caps(GstCaps *incaps)
             GST_WARNING("Failed get ocl_mem after image process!");
             return empty_mat;
         }
+#ifdef USE_OPENCV_3_4_x
         cv::Mat mat = ocl_mem->frame.getMat(0);
+#else
+        cv::Mat mat = ocl_mem->frame.getMat(cv::ACCESS_RW);
+#endif
         return mat;
     }
 

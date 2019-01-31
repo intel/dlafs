@@ -11,9 +11,18 @@ endif()
 
 ### third part dependencies
 
+
+set(OPENCV_VERSION "4.0.0")
+
 # OpenCV
 #find_package (OpenCV REQUIRED)
-pkg_check_modules(OpenCV    REQUIRED  opencv)
+if(USE_OPENCV_3_4_x)
+	#OpenCV 3.4.1
+	pkg_check_modules(OpenCV    REQUIRED  opencv)
+else()
+	#OpenCV 4.0.0
+	pkg_check_modules(OpenCV    REQUIRED  opencv4)
+endif()
 
 # eigen3
 #configure_file(thirdpart/eigen3CMakeLists.txt.in deps/eigen3/CMakeLists.txt)

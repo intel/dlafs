@@ -139,7 +139,11 @@ static void post_tracklp_process(CvdlAlgoData *algoData)
                 }
     
                // detect LP based on mObjectVec
-               cv::Mat roiImage = ocl_mem->frame.getMat(0);
+               #ifdef USE_OPENCV_3_4_x
+                   cv::Mat roiImage = ocl_mem->frame.getMat(0);
+               #else
+                   cv::Mat roiImage = ocl_mem->frame.getMat(cv::ACCESS_RW);
+               #endif
                cv::Rect lpDetResult = trackLpAlgo->lpDetect.detectLicencePlates(roiImage);
                gst_buffer_unref(ocl_buf);
                if(lpDetResult.x < 0){
@@ -701,8 +705,11 @@ cv::Rect LicencePlateDetect::detectLicencePlates(const cv::Mat & image)
 
     // contours
     std::vector<std::vector<cv::Point>> contours;
+#ifdef USE_OPENCV_3_4_x
     cv::findContours(candidateMask, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
-
+#else
+    cv::findContours(candidateMask, contours, RETR_EXTERNAL, CHAIN_APPROX_NONE);
+#endif
     auto iter = contours.begin();
     std::vector<cv::RotatedRect> candidates;
 
@@ -774,10 +781,14 @@ cv::Mat  LicencePlateDetect::calcFeatures(const cv::Mat & plateImage)
 {
     // Get histogram features
     cv::Mat gray;
-    cv::cvtColor(plateImage, gray, CV_RGB2GRAY);
-
     cv::Mat binary;
+#ifdef USE_OPENCV_3_4_x
+    cv::cvtColor(plateImage, gray, CV_RGB2GRAY);
     cv::threshold(gray, binary, 0, 255, CV_THRESH_OTSU + CV_THRESH_BINARY);
+#else
+    cv::cvtColor(plateImage, gray, COLOR_RGB2GRAY);
+    cv::threshold(gray, binary, 0, 255, THRESH_OTSU + THRESH_BINARY);
+#endif
 
     int rows = binary.rows;
     int cols = binary.cols;

@@ -169,7 +169,11 @@ static GstBuffer *generate_osd(BlendHandle handle, GstBuffer *input_buf)
     InferenceMeta *inference_result = cvdl_meta->inference_result;
     int meta_count = cvdl_meta->meta_count;
     int i;
+#ifdef USE_OPENCV_3_4_x
     cv::Mat mdraw = osd_mem->frame.getMat(0);
+#else
+    cv::Mat mdraw = osd_mem->frame.getMat(cv::ACCESS_RW);
+#endif
     uint32_t x,y;
     cv::rectangle(mdraw, cv::Rect(0,0,osd_mem->width, osd_mem->height), cv::Scalar(0, 0, 0, 0), cv::FILLED);
     cv::putText(mdraw, stream_ts.str(), cv::Point(10, 30), 1, 1.8, cv::Scalar(255, 0, 255, 255), 2);//RGBA

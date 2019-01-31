@@ -62,4 +62,4 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     cvdlfilter,
     "CV/DL filters for HDDL-S",
     plugin_init, VERSION,
-    "LGPL-2.1", PACKAGE_NAME, GST_PACKAGE_ORIGIN);
+    "LGPL", PACKAGE_NAME, GST_PACKAGE_ORIGIN);

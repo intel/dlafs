@@ -277,7 +277,11 @@ GstFlowReturn IELoader::convert_input_to_blob(const cv::UMat& img,
         GST_ERROR("WARNNING: resize from %dx%d to %dx%d !\n", src.cols, src.rows, w, h);
         cv::resize(img, src, cv::Size(w, h));
     } else {
+#ifdef USE_OPENCV_3_4_x
         src = img.getMat(0);
+#else
+        src = img.getMat(cv::ACCESS_RW);
+#endif
     }
     g_return_val_if_fail(src.data, GST_FLOW_ERROR);
 

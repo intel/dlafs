@@ -179,8 +179,11 @@ ocl_memory_map (GstMemory* memory, gsize size, GstMapFlags flags)
        *     #13 res_convert_chain
        */
     //data = OCL_MEMORY_MEM (memory);
+#ifdef USE_OPENCV_3_4_x
     data =  (gpointer)ocl_mem->frame.getMat(0).ptr();
-
+#else
+    data =  (gpointer)ocl_mem->frame.getMat(cv::ACCESS_RW).ptr();
+#endif
     return data;
 }
 

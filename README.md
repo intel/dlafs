@@ -53,15 +53,17 @@ Note: below steps is the least
 	cd intel_sdk_for_opencl_2017_7.0.0.2568_x64
 	sudo ./install_GUI.sh
 
-3. Install OpenCV
------------------
+3. Install OpenCV_4.0.0-rc
+--------------------------
 	export CPLUS_INCLUDE_PATH=/opt/intel/mediasdk/include:$CPLUS_INCLUDE_PATH
 	sudo ln -sf /opt/intel/opencl/SDK/include /opt/intel/opencl/include
 	sudo ln -sf /opt/intel/mediasdk/include/va   /usr/local/include/va
 	git clone https://github.com/opencv/opencv.git
-	cd opencv && git checkout 6ffc48769ac60d53c4bd1913eac15117c9b1c9f7
+	cd opencv && git checkout -b 4.0.0-rc 4.0.0-rc
+	          or git checkout a6387c3012d5331798ffca2acdd8297f417101e4
 	mkdir build && cd build
-	cmake -DWITH_VA_INTEL=ON -DWITH_IPP=OFF -DWITH_CUDA=OFF ..
+	git checkout -b 4.0.0-rc 4.0.0-rc    (git checkout a6387c3012d5331798ffca2acdd8297f417101e4)
+	cmake -DWITH_VA_INTEL=ON -DWITH_IPP=OFF -DWITH_CUDA=OFF -DOPENCV_GENERATE_PKGCONFIG=ON ..
 		Note: make sure:
 			--     VA:                          YES
 			--     Intel VA-API/OpenCL:         YES (OpenCL: /opt/intel/opencl)
@@ -71,6 +73,10 @@ Note: below steps is the least
 	make -j8
 	sudo make install
 	Note: OpenVINO has provided OpenCV libraries, but HDDL-S need VA support in OpenCV, so we must rebuild it. 
+          
+			terminate called after throwing an instance of 'cv::Exception'
+			what():  OpenCV(4.0.1-openvino) /home/jenkins/workspace/OpenCV/OpenVINO/build/opencv/modules/core/src/va_intel.cpp:51: error: (-6:Unknown error code -6) OpenCV was build without VA support (libva) in function 'initializeContextFromVA'
+
 
 4. Set enviroment variables
 ---------------------------
