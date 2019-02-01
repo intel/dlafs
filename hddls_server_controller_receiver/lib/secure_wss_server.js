@@ -339,14 +339,14 @@ function getUnixConnHandler(app, adminCtx)
 {
     const pipe2socket = adminCtx.pipe2socket;
     return function (stream) {
-        var transceiver = new Transceiver(stream, (data)=> {
+        const transceiver = new Transceiver(stream, (data)=> {
             if(data.type == constants.msgType.ePipeID) {
                 console.log('pipe connection acknowledged %s', data.payload);
                 transceiver.id = parseInt(data.payload);
                 pipe2socket.set(parseInt(data.payload), transceiver);
             }
             try{
-                !!app && app(data, Object.assign(adminCtx, {transceiver: transceiver}));
+                !!app && app(data, adminCtx, transceiver);
             } catch (err) {
                 console.log(err.message);
             }

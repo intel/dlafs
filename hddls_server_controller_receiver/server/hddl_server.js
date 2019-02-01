@@ -80,16 +80,21 @@ function incoming(ws, message, adminCtx) {
   !!fn && fn(ws, message, adminCtx);
 }
 
-function unixApp(data, adminCtx){
+function unixApp(data, adminCtx, transceiver){
     if(data.type == constants.msgType.ePipeID && adminCtx.pipe2pid.has(parseInt(data.payload))) {
       console.log("valid pipe %s", data.payload);
       var createJSON;
       createJSON = adminCtx.pipe2json.get(parseInt(data.payload)).create;
       var initConfig = JSON.stringify(createJSON);
-      adminCtx.transceiver.send(initConfig);
+      transceiver.send(initConfig);
     } else {
-      !!adminCtx.dataCons && adminCtx.dataCons.readyState === adminCtx.dataCons.OPEN && adminCtx.dataCons.send(JSON.stringify({headers: {type: data.type, pipe_id: adminCtx.transceiver.id}, payload: data.payload}));
-      //!!adminCtx.dataCons && fileHelper.uploadBuffer(data.payload, adminCtx.dataCons, {headers: {type: data.type, pipe_id: transceiver.id}});
+      if(!!adminCtx.dataCons && adminCtx.dataCons.readyState === adminCtx.dataCons.OPEN && transceiver.hasOwnProperty('id'))
+        adminCtx.dataCons.send(
+          JSON.stringify(
+          {
+            headers: {type: data.type, pipe_id: transceiver.id},
+            payload: data.payload
+          }));
     }
 }
 
