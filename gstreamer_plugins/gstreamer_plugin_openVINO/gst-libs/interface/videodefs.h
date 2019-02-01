@@ -120,7 +120,9 @@ typedef struct _InferenceData{
     VideoRect rect;
     char label[128];
     VideoPoint track[MAX_TRAJECTORY_POINTS_NUM];
-    int   track_num;
+    int track_num;
+    // frame index of this inference data belong to
+    int frame_index;
 }InferenceData;
 
 typedef struct _OclGstMfxVideoMeta

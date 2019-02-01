@@ -195,7 +195,7 @@ static void process_sink_buffers(gpointer userData)
         wsclient_set_id(basesink->wsclient_handle,  basesink->wsc_id);
     }
 
-    // txt data
+    // meta data
     if(txt_buf) {
         ResMemory *txt_mem;
         txt_mem = RES_MEMORY_CAST(res_memory_acquire(txt_buf));
@@ -207,12 +207,17 @@ static void process_sink_buffers(gpointer userData)
             int count = txt_mem->data_count;
             GST_LOG("object num = %d\n",count);
             for(i=0; i<count; i++) {
-                g_print("pipe %d: %2d xml_data - ",basesink->wsc_id, basesink->data_index);
-                data_len = wsclient_send_infer_data(basesink->wsclient_handle, infer_data, txt_mem->pts);
-                basesink->data_index++;
+                g_print("pipe %d: %d frame, %2d xml_data - ",basesink->wsc_id,
+                    basesink->frame_index, basesink->meta_data_index);
+                infer_data->frame_index = basesink->frame_index;
+                data_len = wsclient_send_infer_data(basesink->wsclient_handle,
+                    infer_data, txt_mem->pts, basesink->meta_data_index);
+                basesink->meta_data_index++;
                 size += data_len;
                 infer_data++;
-             }
+            }
+            if(count>0)
+                basesink->frame_index++;
         }
     }
 
@@ -230,12 +235,11 @@ static void process_sink_buffers(gpointer userData)
             if (gst_memory_map (mem, &mapInfo[i], GST_MAP_READ)) {
                 data_base = mapInfo[i].data;
                 data_len = mapInfo[i].size;
-                wsclient_send_data(basesink->wsclient_handle, (char *)data_base, data_len);
-                g_print("pipe %d: index = %d,  jpeg size = %ld\n",basesink->wsc_id, basesink->data_index, data_len );
+                wsclient_send_data(basesink->wsclient_handle, (char *)data_base, data_len, eMetaJPG);
+                g_print("pipe %d: index = %d, jpeg size = %ld\n",basesink->wsc_id, basesink->bit_data_index, data_len );
+                basesink->bit_data_index++;
             }
             size += data_len;
-            //g_print("ws send bit_data: size=%ld, ts=%.3fs, data=%p\n\n", data_len,
-            //    GST_BUFFER_PTS(bit_buf)/1000000000.0, data_base);
         }
 
         for (i = 0; i < n; ++i)
@@ -703,7 +707,9 @@ gst_ws_sink_init (GstWsSink * basesink, gpointer g_class)
     basesink->wsclient_handle_proxy = INVALID_WSC_PROXY;
     basesink->wss_uri = NULL;
     basesink->wsc_id = 0;
-    basesink->data_index = 0;
+    basesink->meta_data_index = 0;
+    basesink->bit_data_index = 0;
+    basesink->frame_index = 0;
 
     basesink->priv = priv = GST_WS_SINK_GET_PRIVATE (basesink);
 

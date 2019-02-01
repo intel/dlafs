@@ -22,7 +22,17 @@
 #ifdef __cplusplus
  extern "C" {
 #endif
- 
+
+ enum ePlayloadType{
+     ePipeID = 0,
+     ePipeCreate = 1,
+     ePipeProperty = 2,
+     ePipeDestroy = 3,
+     eMetaJPG = 4,
+     eMetaText = 5,
+     eErrorInfo = 6,
+ };
+
  typedef void * WsClientHandle;
  typedef struct MessageItem_{
      char *data;
@@ -30,8 +40,8 @@
  }MessageItem;
  
  WsClientHandle wsclient_setup(const char *serverUri, int client_id);
- void wsclient_send_data(WsClientHandle handle, char *data, int len);
- int wsclient_send_infer_data(WsClientHandle handle, void *infer_data, guint64 pts);
+ void wsclient_send_data(WsClientHandle handle, char *data, int len, enum ePlayloadType type);
+ int wsclient_send_infer_data(WsClientHandle handle, void *infer_data, guint64 pts, int infer_index);
  void wsclient_destroy(WsClientHandle handle);
  MessageItem * wsclient_get_data(WsClientHandle handle);
  MessageItem *wsclient_get_data_timed(WsClientHandle handle);

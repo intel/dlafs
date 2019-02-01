@@ -120,7 +120,7 @@ static void item_free_func(gpointer data)
      return (WsClientHandle)wsclient;
  }
  
- void wsclient_send_data(WsClientHandle handle, char *data, int len)
+ void wsclient_send_data(WsClientHandle handle, char *data, int len, enum ePlayloadType type)
  {
      WsClient *wsclient = (WsClient *)handle;
      if(!handle) {
@@ -149,21 +149,25 @@ static void item_free_func(gpointer data)
  }
 
 
-int wsclient_send_infer_data(WsClientHandle handle, void *data, guint64 pts)
+int wsclient_send_infer_data(WsClientHandle handle, void *data, guint64 pts,  int infer_index)
 {
-     InferenceData *infer_data = (InferenceData *)data;
+    InferenceData *infer_data = (InferenceData *)data;
     std::ostringstream   data_str; 
     float ts = pts/1000000000.0;
+    data_str  << "frame=" << infer_data->frame_index <<", ";
+    data_str  << "infer_index=" << infer_index <<", ";
     data_str  << "pts="   << ts << "s,";
     data_str  << "prob="  << infer_data->probility << ",";
     data_str  << "name=" << infer_data->label << ",";
-    data_str  << "rect=("  << infer_data->rect.x << "," << infer_data->rect.y << ")@" << infer_data->rect.width << "x" << infer_data->rect.height;
+    data_str  << "rect=("  << infer_data->rect.x << ","
+              << infer_data->rect.y << ")@" << infer_data->rect.width
+              << "x" << infer_data->rect.height;
     data_str  << std::endl;
     std::string str = data_str.str();
 
     const char*txt_cache = str.c_str();
     int data_len = str.size();
-    wsclient_send_data(handle, (char *)txt_cache, data_len);
+    wsclient_send_data(handle, (char *)txt_cache, data_len, eMetaText);
     g_print("send data size=%d, %s\n",data_len, txt_cache);
 
    return data_len;
