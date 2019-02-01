@@ -2,6 +2,7 @@ pkg_check_modules(GLIB2      REQUIRED  glib-2.0)
 pkg_check_modules(GSTREAMER  REQUIRED  gstreamer-1.0)
 pkg_check_modules(OpenCV     REQUIRED  opencv)
 pkg_check_modules(EIGEN3     REQUIRED  eigen3)
+pkg_check_modules(EIGEN3     REQUIRED  json-c)
 
 find_package(InferenceEngine REQUIRED)
 
@@ -59,6 +60,7 @@ target_link_libraries(gstcvdlfilter
 	${InferenceEngine_LIBRARIES}
    	dlib
 	pthread
+	json-c
 	)
 
 add_subdirectory(customer)

@@ -36,6 +36,8 @@
 #include <string.h>
 #include <sstream>
 
+#include "jsonpacker.h"
+
 using namespace std;
 #include <thread>
 #include <string>
@@ -130,22 +132,50 @@ static void item_free_func(gpointer data)
      ipcclient->pLooper->push(tMsg);
  }
 
-int wsclient_send_infer_data(WsClientHandle handle, void *data, guint64 pts, int infer_index)
+#if 0
+static std::string covert_infer_data_to_string(void *data, guint64 pts, int infer_index)
 {
-     InferenceData *infer_data = (InferenceData *)data;
+    InferenceData *infer_data = (InferenceData *)data;
     std::ostringstream   data_str; 
-    float ts = pts/1000000000.0;
-    data_str  << "frame=" << infer_data->frame_index <<", ";
+    double ts = pts/1000000000.0;
+    data_str  << "frame_index=" << infer_data->frame_index <<", ";
     data_str  << "infer_index=" << infer_index <<", ";
     data_str  << "ts="   << ts << "s,";
     data_str  << "prob="  << infer_data->probility << ",";
-    data_str  << "name=" << infer_data->label << ",";
+    data_str  << "label=" << infer_data->label << ",";
     data_str  << "rect=("  << infer_data->rect.x << ","
               << infer_data->rect.y << ")@" << infer_data->rect.width
               << "x" << infer_data->rect.height;
     data_str  << std::endl;
     std::string str = data_str.str();
 
+    return str;
+}
+#endif
+static std::string covert_infer_data_to_json_string(void *data, guint64 pts, int infer_index)
+{
+    InferenceData *infer_data = (InferenceData *)data;
+    JsonPackage json_data;
+
+    json_data.add_object_int("frame_index",infer_data->frame_index);
+    json_data.add_object_int("infer_index",infer_index);
+    json_data.add_object_int64("pts",pts);
+    json_data.add_object_double("prob",infer_data->probility);
+    json_data.add_object_string("label",infer_data->label);
+    json_data.add_object_rect("rect", infer_data->rect.x, infer_data->rect.y,
+                                     infer_data->rect.width, infer_data->rect.height);
+    const char* string_data = json_data.object_to_string();
+
+    return std::string(string_data) + std::string("\n");
+}
+
+int wsclient_send_infer_data(WsClientHandle handle, void *data, guint64 pts, int infer_index)
+{
+#if 0
+    std::string str = covert_infer_data_to_string(data, pts, infer_index);
+#else
+    std::string str = covert_infer_data_to_json_string(data, pts, infer_index);
+#endif
     const char*txt_cache = str.c_str();
     int data_len = str.size();
     wsclient_send_data(handle, (char *)txt_cache, data_len, eMetaText);
