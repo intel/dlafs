@@ -38,9 +38,9 @@ const tips = [ ('help                             ' + 'show all commands')
            ,('c <create.json>                  ' + 'create pipelines')
            ,('p <property.json> <pipe_id>      ' + 'set pipelines property')
            ,('d <destroy.json>  <pipe_id>      ' + 'destroy pipelines')
-           ,('pipe                             ' + 'display pipes belong to the client')
-           ,('q                                ' + 'exit client.')
-           ,('m <model_path>                   ' + 'upload custom file')
+           ,('pipe                             ' + 'display pipes\' info')
+           ,('q                                ' + 'exit')
+           ,('m <model_path>                   ' + 'upload custom model files')
            ,('show                             ' + 'show models in server side')
 ].join('\n');
 
@@ -140,7 +140,17 @@ function setup(options) {
         }
       },
       'pipe': function(ws, rl) {
-        rl.emit('hint', pipe_ids)
+        console.log('\x1b[33mtotal pipes \x1b[0m');
+        let pipeString = '';
+        pipe_ids.forEach((value, index, array) => {
+          pipeString += ' ' + value;
+        });
+        console.log(`\x1b[33m${pipeString}\x1b[0m`);
+        console.log('\x1b[33mdetailed pipe info \x1b[0m');
+        pipe2info.forEach((value, key, map) => {
+          console.log(`\x1b[33mpipe_id:${key} \npipe_info: \n ${JSON.stringify(value, null, 2)}\x1b[0m`);
+        });
+        rl.prompt();
       },
       'q': function(ws,rl) {
 	      rl.emit('hint', `Bye ${process.pid}`);
@@ -207,15 +217,23 @@ return function incoming(ws, message, rl) {
         rl.prompt();
     } else if(method === 'pipe_delete') {
         console.log('pipe delete %s', message.payload);
-        message.payload.forEach(elem=> pipe_ids.delete(elem));
+        message.payload.forEach(elem=> {
+          pipe_ids.delete(elem);
+          pipe2info.delete(elem);
+        });
         rl.prompt();
     } else if(method === 'checkSum'){
       	method ==='checkSum' && (modelCheck = fileHelper.safelyJSONParser(message.payload.toString()));
     } else if(method === 'pipe_info') {
       if(message.headers.hasOwnProperty('pipe_id')) {
         let pipeID = message.headers.pipe_id;
-        pipe2info.set(pipeID, fileHelper.safelyJSONParser(message.payload));
+        pipe2info.set(pipeID, message.payload);
       }
+    } else if(method === 'pipe_message') {
+
+      console.log(`\x1b[31m\nERROR from pipe: ${message.headers.pipe_id}\x1b[0m`);
+      console.log(message.payload);
+      rl.prompt();
     }
   };
 }

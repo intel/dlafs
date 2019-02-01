@@ -87,6 +87,23 @@ function unixApp(data, adminCtx, transceiver){
       createJSON = adminCtx.pipe2json.get(parseInt(data.payload)).create;
       var initConfig = JSON.stringify(createJSON);
       transceiver.send(initConfig);
+    } else if(data.type == constants.msgType.eErrorInfo) {
+      if(transceiver.hasOwnProperty('id')) {
+        if(adminCtx.pipe2pid.has(transceiver['id'])) {
+          const controllerID = adminCtx.pipe2pid.get(transceiver['id'])['cid'] || null;
+          if(controllerID != null) {
+            if(adminCtx.wsConns.has(controllerID)) {
+              const controllerWS = adminCtx.wsConns.get(controllerID);
+              if(controllerWS.readyState === controllerWS.OPEN)
+                controllerWS.send(JSON.stringify(
+                  {
+                    headers: {method: 'pipe_message', pipe_id: transceiver.id},
+                    payload: data.payload.toString()
+                  }));
+            }
+          }
+        }
+      }
     } else {
       if(!!adminCtx.dataCons && adminCtx.dataCons.readyState === adminCtx.dataCons.OPEN && transceiver.hasOwnProperty('id'))
         adminCtx.dataCons.send(
