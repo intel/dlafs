@@ -48,6 +48,7 @@
  void wsclient_free_item(MessageItem *item);
  void wsclient_set_id(WsClientHandle handle,  int id);
  int wsclient_get_id(WsClientHandle handle);
+ void wsclient_upload_error_info(WsClientHandle handle, char *error_info);
 #ifdef __cplusplus
  };
 #endif

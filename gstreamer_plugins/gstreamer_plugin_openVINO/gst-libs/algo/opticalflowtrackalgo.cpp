@@ -20,6 +20,7 @@
 #include "opticalflowtrackalgo.h"
 #include <interface/videodefs.h>
 #include "algoregister.h"
+#include "algopipeline.h"
 
 using namespace HDDLStreamFilter;
 using namespace cv;
@@ -83,8 +84,9 @@ OpticalflowTrackAlgo::~OpticalflowTrackAlgo()
 // set data caps
 //   1. pass orignal video caps to it, which is the input data of image processor
 //   2. create ocl caps for OCL processing the orignal video image to be the Gray format, which is the input of object tracking
-void OpticalflowTrackAlgo::set_data_caps(GstCaps *incaps)
+int OpticalflowTrackAlgo::set_data_caps(GstCaps *incaps)
 {
+    GstFlowReturn ret = GST_FLOW_OK;
     if(mInCaps)
         gst_caps_unref(mInCaps);
     mInCaps = gst_caps_copy(incaps);
@@ -96,10 +98,14 @@ void OpticalflowTrackAlgo::set_data_caps(GstCaps *incaps)
     gst_caps_set_simple (mOclCaps, "width", G_TYPE_INT, mInputWidth, "height",
       G_TYPE_INT, mInputHeight, NULL);
 
-    mImageProcessor.ocl_init(incaps, mOclCaps, IMG_PROC_TYPE_OCL_CRC, CRC_FORMAT_GRAY);
+    ret = mImageProcessor.ocl_init(incaps, mOclCaps, IMG_PROC_TYPE_OCL_CRC, CRC_FORMAT_GRAY);
     mImageProcessor.get_input_video_size(&mImageProcessorInVideoWidth,
                                          &mImageProcessorInVideoHeight);
     gst_caps_unref (mOclCaps);
+
+    if(ret!=GST_FLOW_OK)
+        return eCvdlFilterErrorCode_OCL;
+    return eCvdlFilterErrorCode_None;
 }
 
 /**************************************************************************

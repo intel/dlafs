@@ -47,8 +47,8 @@ using namespace std;
 #endif
 
  struct _ipcclient{
-      shared_ptr<Transceiver> pTrans;
-      Looper* pLooper;
+     shared_ptr<Transceiver> pTrans;
+     Looper* pLooper;
      struct sockaddr_un server;
      int sockfd;
      int id;
@@ -67,11 +67,11 @@ static void item_free_func(gpointer data)
 
  WsClientHandle wsclient_setup(const char *serverUri, int client_id)
  {
-     IPCClient *ipcclient = (IPCClient *)g_new0 (IPCClient, 1);
-     if(!ipcclient) {
-         g_print("Failed to calloc IPCClient!\n");
-         return 0;
-     }
+    IPCClient *ipcclient = (IPCClient *)g_new0 (IPCClient, 1);
+    if(!ipcclient) {
+        g_print("Failed to calloc IPCClient!\n");
+        return 0;
+    }
 
     GST_INFO("%s() - serverUri = %s, client_id = %d\n",__func__, serverUri, client_id);
 
@@ -104,12 +104,10 @@ static void item_free_func(gpointer data)
      std::string sPipeID;
      ipcProtocol tInitMsg;
      tInitMsg.iType = ePipeID;
-     //tInitMsg.sPayload = "{ \"type\": 1 \"payload\": " + string(argv[2]) + "}";
-     //tInitMsg.sPayload = std::string("pipe_id=") + std::to_string(client_id);
-     //char  id_info[4];
-     //*((int *)id_info)= ipcclient->id;
+
      tInitMsg.sPayload = std::to_string( ipcclient->id);
-     GST_INFO(" Send 1st data: size = %d, type = %d, sPayload = %s\n",  tInitMsg.size(), tInitMsg.iType,  tInitMsg.sPayload.c_str());
+     GST_INFO(" Send 1st data: size = %d, type = %d, sPayload = %s\n",
+        tInitMsg.size(), tInitMsg.iType,  tInitMsg.sPayload.c_str());
      ipcclient->pLooper->push(tInitMsg);
 
      return (WsClientHandle)ipcclient;
@@ -127,9 +125,16 @@ static void item_free_func(gpointer data)
      std::string message;
      ipcProtocol tMsg;
      tMsg.iType = type;
-     //fill tMsg.sPayload with data
-     tMsg.sPayload =  std::string(data, len);
+     //fill Payload with data
+     tMsg.sPayload = std::string(data, len);
      ipcclient->pLooper->push(tMsg);
+ }
+
+
+ void wsclient_upload_error_info(WsClientHandle handle, char *error_info)
+ {
+     std::string info = std::string(error_info);
+     wsclient_send_data(handle, error_info, info.size(), eErrorInfo);
  }
 
 #if 0
@@ -180,6 +185,9 @@ int wsclient_send_infer_data(WsClientHandle handle, void *data, guint64 pts, int
     int data_len = str.size();
     wsclient_send_data(handle, (char *)txt_cache, data_len, eMetaText);
     g_print("send data size=%d, %s\n",data_len, txt_cache);
+
+    //debug
+    wsclient_upload_error_info(handle, (char *)txt_cache);
 
    return data_len;
 }

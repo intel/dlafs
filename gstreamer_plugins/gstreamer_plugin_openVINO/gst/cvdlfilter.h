@@ -41,6 +41,7 @@ typedef struct _CvdlFilter        CvdlFilter;
 typedef struct _CvdlFilterClass   CvdlFilterClass;
 typedef struct _CvdlFilterPrivate CvdlFilterPrivate;
 
+
 struct _CvdlFilter
 {
     GstBaseTransform    element;

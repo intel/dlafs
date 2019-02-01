@@ -168,8 +168,8 @@ public:
     int get_out_queue_size();
 
     GstFlowReturn init_ieloader(const char* modeFileName, guint ieType, std::string network_config=std::string("none"));
-    void  init_dl_caps(GstCaps* incaps);
-    virtual void set_data_caps(GstCaps *incaps);
+    GstFlowReturn init_dl_caps(GstCaps* incaps);
+    virtual int set_data_caps(GstCaps *incaps);
     // only for dl algo
     virtual GstFlowReturn algo_dl_init(const char* modeFileName)
     {

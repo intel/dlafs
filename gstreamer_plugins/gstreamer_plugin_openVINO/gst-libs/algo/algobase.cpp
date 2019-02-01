@@ -381,11 +381,11 @@ CvdlAlgoBase::CvdlAlgoBase(PostCallback  cb, guint cvdlType )
      gst_task_set_leave_callback (mTask, algo_leave_thread, NULL, NULL);
 }
 
-void CvdlAlgoBase::set_data_caps(GstCaps *incaps)
+int CvdlAlgoBase::set_data_caps(GstCaps *incaps)
 {
     // Only used for DL algo, for other algo need implement this virtual function
     if(mCvdlType != CVDL_TYPE_DL)
-        return;
+        return eCvdlFilterErrorCode_Unknown;
 
     std::string filenameXML;
     const gchar *env = g_getenv("HDDLS_CVDL_MODEL_PATH");
@@ -396,10 +396,17 @@ void CvdlAlgoBase::set_data_caps(GstCaps *incaps)
        filenameXML = std::string("HDDLS_CVDL_MODEL_PATH") + std::string("/") + mName
                                 + std::string("/") + mName + std::string(".xml");
         g_print("Error: cannot find %s model files: %s\n", mName.c_str(), filenameXML.c_str());
-        exit(1);
+        return eCvdlFilterErrorCode_IE;
+        //exit(1);
     }
-    algo_dl_init(filenameXML.c_str());
-    init_dl_caps(incaps);
+    GstFlowReturn ret = GST_FLOW_OK;
+    ret = algo_dl_init(filenameXML.c_str());
+    if(ret != GST_FLOW_OK)
+        return eCvdlFilterErrorCode_IE;
+    ret = init_dl_caps(incaps);
+    if(ret != GST_FLOW_OK)
+        return eCvdlFilterErrorCode_OCL;
+    return eCvdlFilterErrorCode_None;
 }
 
 CvdlAlgoBase::~CvdlAlgoBase()
@@ -551,8 +558,9 @@ GstFlowReturn CvdlAlgoBase::init_ieloader(const char* modeFileName, guint ieType
    return ret;
 }
 
-void  CvdlAlgoBase::init_dl_caps(GstCaps* incaps)
+GstFlowReturn  CvdlAlgoBase::init_dl_caps(GstCaps* incaps)
 {
+    GstFlowReturn ret = GST_FLOW_OK;
     if(mInCaps)
         gst_caps_unref(mInCaps);
     mInCaps = gst_caps_copy(incaps);
@@ -568,10 +576,11 @@ void  CvdlAlgoBase::init_dl_caps(GstCaps* incaps)
     gst_caps_set_simple (mOclCaps, "width", G_TYPE_INT, mInputWidth, "height",
                          G_TYPE_INT, mInputHeight, NULL);
 
-    mImageProcessor.ocl_init(incaps, mOclCaps, IMG_PROC_TYPE_OCL_CRC, CRC_FORMAT_BGR_PLANNAR);
+    ret = mImageProcessor.ocl_init(incaps, mOclCaps, IMG_PROC_TYPE_OCL_CRC, CRC_FORMAT_BGR_PLANNAR);
     mImageProcessor.get_input_video_size(&mImageProcessorInVideoWidth,
                                          &mImageProcessorInVideoHeight);
     gst_caps_unref (mOclCaps);
+    return ret;
 }
 
 void CvdlAlgoBase::save_buffer(unsigned char *buf, int w, int h, int p, int id, int bPlannar, const char *info)

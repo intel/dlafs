@@ -28,6 +28,15 @@ extern "C" {
 #include "algoregister.h"
 #include "private.h"
 
+enum eCvdlFilterErrorCode {
+    eCvdlFilterErrorCode_None = 0,
+    eCvdlFilterErrorCode_IE = 1,
+    eCvdlFilterErrorCode_OCL = 2,
+    eCvdlFilterErrorCode_EmptyPipe = 3,
+    eCvdlFilterErrorCode_InvalidPipe = 4,
+    eCvdlFilterErrorCode_Unknown = 4,
+};
+
 typedef void* AlgoHandle;
 typedef struct _AlgoPipelineConfig{
     int curId; 
@@ -79,8 +88,8 @@ void algo_pipeline_config_destroy(AlgoPipelineConfig *config);
 AlgoPipelineConfig *algo_pipeline_config_create(gchar *desc, int *num);
 
 void algo_pipeline_destroy(AlgoPipelineHandle handle);
-void algo_pipeline_set_caps(AlgoPipelineHandle handle, int algo_id, GstCaps* caps);
-void algo_pipeline_set_caps_all(AlgoPipelineHandle handle, GstCaps* caps);
+int algo_pipeline_set_caps(AlgoPipelineHandle handle, int algo_id, GstCaps* caps);
+int algo_pipeline_set_caps_all(AlgoPipelineHandle handle, GstCaps* caps);
 void algo_pipeline_start(AlgoPipelineHandle handle);
 void algo_pipeline_stop(AlgoPipelineHandle handle);
 void algo_pipeline_put_buffer(AlgoPipelineHandle handle, GstBuffer *buf, guint w, guint h);

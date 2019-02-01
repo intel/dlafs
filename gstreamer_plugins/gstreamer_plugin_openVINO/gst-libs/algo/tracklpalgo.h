@@ -75,7 +75,7 @@ class TrackLpAlgo : public CvdlAlgoBase
 public:
     TrackLpAlgo();
     virtual ~TrackLpAlgo();
-    virtual void set_data_caps(GstCaps *incaps);
+    virtual int set_data_caps(GstCaps *incaps);
     void verify_detection_result(std::vector<ObjectData> &objectVec);
     void try_add_new_one_object(ObjectData &objectData, guint64 frameId);
     void verify_tracked_object();

@@ -232,6 +232,29 @@ cvdl_filter_finalize (GObject * object)
 
     G_OBJECT_CLASS (parent_class)->finalize (object);
 }
+
+static char* error_to_string(int code){
+    char* error_info = NULL;
+
+    switch(code) {
+        case eCvdlFilterErrorCode_IE:
+            error_info = g_strdup("IE Error");
+            break;
+        case eCvdlFilterErrorCode_OCL:
+            error_info = g_strdup("OCL Error");
+            break;
+        case eCvdlFilterErrorCode_EmptyPipe:
+        case eCvdlFilterErrorCode_InvalidPipe:
+            error_info = g_strdup("pipeline Error");
+            break;
+        default:
+            error_info = g_strdup("Unknown");
+            break;
+    }
+    return error_info;
+}
+
+
 static GstStateChangeReturn
 cvdl_filter_change_state (GstElement * element, GstStateChange transition)
 {
@@ -241,6 +264,7 @@ cvdl_filter_change_state (GstElement * element, GstStateChange transition)
   int count = 0;
   gint32 duration = 0;
   GstStateChangeReturn result;
+  int ret = 0;
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
@@ -257,7 +281,22 @@ cvdl_filter_change_state (GstElement * element, GstStateChange transition)
               algo_pipeline_config_destroy(config);
 
           if(priv->inCaps)
-              algo_pipeline_set_caps_all(cvdlfilter->algoHandle, priv->inCaps);
+              ret = algo_pipeline_set_caps_all(cvdlfilter->algoHandle, priv->inCaps);
+
+          if(ret!=eCvdlFilterErrorCode_None) {
+            gint code = ret;
+            GQuark quark = g_quark_from_string ("cvdlfilter");
+            char*error_info = error_to_string(ret);
+            char *sent_debug = g_strdup_printf ("%s failed!\n", error_info);
+            g_free(error_info);
+            const char* sent_text = "cvdlfilter error";
+
+            GError *gerror = g_error_new_literal (quark, code, sent_text);
+            GstMessage *message =
+                gst_message_new_error(GST_OBJECT_CAST (element), gerror, sent_debug);
+
+            gst_element_post_message (element, message);
+          }
 
           /* start push buffer thread to push data to next element
         * It will be done in a task with  push_buffer_func() */

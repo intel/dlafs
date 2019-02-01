@@ -251,7 +251,7 @@ GstFlowReturn IELoader::read_model(std::string strModelXml,
     if (InferenceEngine::StatusCode::OK != ret) {
         // GENERAL_ERROR = -1
         g_print("Failed to  LoadNetwork, ret_code = %d, models=%s\n", ret, strModelBin.c_str());
-        exit(-1);
+        //exit(-1);
     }
 
     // First create 16 request for current thread.

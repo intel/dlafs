@@ -22,6 +22,7 @@
 #include "mathutils.h"
 #include "kalmantrackalgo.h"
 #include <interface/videodefs.h>
+#include "algopipeline.h"
 
 
 using namespace cv;
@@ -136,8 +137,9 @@ KalmanTrackAlgo::~KalmanTrackAlgo()
 // set data caps
 //   1. pass orignal video caps to it, which is the input data of image processor
 //   2. create ocl caps for OCL processing the orignal video image to be the Gray format, which is the input of object tracking
-void KalmanTrackAlgo::set_data_caps(GstCaps *incaps)
+int KalmanTrackAlgo::set_data_caps(GstCaps *incaps)
 {
+    GstFlowReturn ret = GST_FLOW_OK;
     if(mInCaps)
         gst_caps_unref(mInCaps);
     mInCaps = gst_caps_copy(incaps);
@@ -145,14 +147,18 @@ void KalmanTrackAlgo::set_data_caps(GstCaps *incaps)
     // set OCL surface: width and height and format
     //   track will use BGR data format
     //int oclSize = mInputWidth * mInputHeight * 3;
-     mOclCaps = gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING, "BGR", NULL);
+    mOclCaps = gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING, "BGR", NULL);
     gst_caps_set_simple (mOclCaps, "width", G_TYPE_INT, mInputWidth, "height",
                          G_TYPE_INT, mInputHeight, NULL);
 
-    mImageProcessor.ocl_init(incaps, mOclCaps, IMG_PROC_TYPE_OCL_CRC, CRC_FORMAT_BGR);
+    ret = mImageProcessor.ocl_init(incaps, mOclCaps, IMG_PROC_TYPE_OCL_CRC, CRC_FORMAT_BGR);
     mImageProcessor.get_input_video_size(&mImageProcessorInVideoWidth,
                                          &mImageProcessorInVideoHeight);
     gst_caps_unref (mOclCaps);
+
+    if(ret!=GST_FLOW_OK)
+        return eCvdlFilterErrorCode_OCL;
+    return eCvdlFilterErrorCode_None;
 }
 
 void KalmanTrackAlgo::verify_detection_result(std::vector<ObjectData> &objectVec)

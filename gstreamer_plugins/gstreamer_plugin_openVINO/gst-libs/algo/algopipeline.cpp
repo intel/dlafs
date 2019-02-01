@@ -460,41 +460,46 @@ void algo_pipeline_destroy(AlgoPipelineHandle handle)
     g_free(pipeline);
     //register_reset();
 }
-void algo_pipeline_set_caps(AlgoPipelineHandle handle, int algo_id, GstCaps* caps)
+int algo_pipeline_set_caps(AlgoPipelineHandle handle, int algo_id, GstCaps* caps)
 {
      AlgoPipeline *pipeline = (AlgoPipeline *) handle;
      CvdlAlgoBase* algo = NULL;
      if(pipeline==NULL) {
          GST_ERROR("%s - algo pipeline handle is NULL!\n", __func__);
-         return;
+         return eCvdlFilterErrorCode_EmptyPipe;
      }
 
      if(algo_id>=pipeline->algo_num) {
         GST_ERROR("algo_id is invalid: %d", algo_id);
-        return;
+        return eCvdlFilterErrorCode_InvalidPipe;
      }
 
     algo = static_cast<CvdlAlgoBase *>(pipeline->algo_chain[algo_id].algo);
+    int ret = 0;
     if(!algo->mCapsInited)
-        algo->set_data_caps(caps);
+        ret = algo->set_data_caps(caps);
     algo->mCapsInited = true;
+    return ret;
 }
 
-void algo_pipeline_set_caps_all(AlgoPipelineHandle handle, GstCaps* caps)
+int algo_pipeline_set_caps_all(AlgoPipelineHandle handle, GstCaps* caps)
 {
     AlgoPipeline *pipeline = (AlgoPipeline *) handle;
     CvdlAlgoBase* algo = NULL;
-    int i;
+    int i, ret = eCvdlFilterErrorCode_None;
     if(pipeline==NULL) {
         GST_ERROR("%s - algo pipeline handle is NULL!\n", __func__);
-        return;
+        return eCvdlFilterErrorCode_EmptyPipe;
     }
     for(i=0; i< pipeline->algo_num; i++){
         algo = static_cast<CvdlAlgoBase *>(pipeline->algo_chain[i].algo);
         if(!algo->mCapsInited)
-            algo->set_data_caps(caps);
+            ret = algo->set_data_caps(caps);
+        if(ret)
+            return ret;
         algo->mCapsInited = true;
-    } 
+    }
+    return ret;
 }
 
 

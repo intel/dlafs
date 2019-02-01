@@ -37,7 +37,7 @@ class OpticalflowTrackAlgo : public CvdlAlgoBase
 public:
     OpticalflowTrackAlgo();
     virtual ~OpticalflowTrackAlgo();
-    virtual void set_data_caps(GstCaps *incaps);
+    virtual int set_data_caps(GstCaps *incaps);
 
     void verify_detection_result(std::vector<ObjectData> &objectVec);
     void track_objects(CvdlAlgoData* &algoData);
