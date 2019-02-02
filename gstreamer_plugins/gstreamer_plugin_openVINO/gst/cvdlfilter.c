@@ -254,6 +254,26 @@ static char* error_to_string(int code){
     return error_info;
 }
 
+/*
+static void report_error_info(GstElement *element, char* error_info)
+{
+#if 0
+    GST_ELEMENT_ERROR (element, RESOURCE, READ, (error_to_string(error_code)), GST_ERROR_SYSTEM);
+#else
+    int error_code = -1;
+    GQuark quark = g_quark_from_string (GST_ELEMENT_NAME(element));
+    char *sent_debug = g_strdup_printf ("%s \n", error_info);
+    g_free(error_info);
+    const char* sent_text = "cvdlfilter error";
+
+    GError *gerror = g_error_new_literal (quark, error_code, sent_text);
+    GstMessage *message =
+        gst_message_new_error(GST_OBJECT_CAST (element), gerror, sent_debug);
+
+    gst_element_post_message (element, message);
+#endif
+}
+*/
 
 static GstStateChangeReturn
 cvdl_filter_change_state (GstElement * element, GstStateChange transition)
@@ -276,7 +296,7 @@ cvdl_filter_change_state (GstElement * element, GstStateChange transition)
           else
               config = algo_pipeline_config_create(cvdlfilter->algo_pipeline_desc, &count);
           cvdlfilter->algoHandle = algo_pipeline_create(config, count);
-          algo_pipeline_start(cvdlfilter->algoHandle);
+          algo_pipeline_start(cvdlfilter->algoHandle, element);
           if(config)
               algo_pipeline_config_destroy(config);
 
@@ -284,18 +304,9 @@ cvdl_filter_change_state (GstElement * element, GstStateChange transition)
               ret = algo_pipeline_set_caps_all(cvdlfilter->algoHandle, priv->inCaps);
 
           if(ret!=eCvdlFilterErrorCode_None) {
-            gint code = ret;
-            GQuark quark = g_quark_from_string ("cvdlfilter");
-            char*error_info = error_to_string(ret);
-            char *sent_debug = g_strdup_printf ("%s failed!\n", error_info);
-            g_free(error_info);
-            const char* sent_text = "cvdlfilter error";
-
-            GError *gerror = g_error_new_literal (quark, code, sent_text);
-            GstMessage *message =
-                gst_message_new_error(GST_OBJECT_CAST (element), gerror, sent_debug);
-
-            gst_element_post_message (element, message);
+              char* error_info = error_to_string(ret);
+              pipeline_report_error_info(element,error_info);
+              g_free(error_info);
           }
 
           /* start push buffer thread to push data to next element

@@ -421,10 +421,12 @@ static gboolean bus_callback (GstBus* bus, GstMessage* msg, gpointer data)
         gst_message_parse_error (msg, &err, &dbg);
         if (err) {
             g_print ("ERROR: %s\n", err->message);
+            wsclient_upload_error_info(hp->ws, err->message);
             g_error_free (err);
         }
         if (dbg) {
             GST_INFO ("[Debug details: %s]\n", dbg);
+            wsclient_upload_error_info(hp->ws, dbg);
             g_free (dbg);
         }
         hddlspipe_stop (hp);
@@ -433,6 +435,7 @@ static gboolean bus_callback (GstBus* bus, GstMessage* msg, gpointer data)
     case GST_MESSAGE_EOS:
         /* end-of-stream */
         GST_INFO ("EOS\n");
+        wsclient_upload_error_info(hp->ws, "Got EOS");
         hddlspipe_stop (hp);
         break;
     default:

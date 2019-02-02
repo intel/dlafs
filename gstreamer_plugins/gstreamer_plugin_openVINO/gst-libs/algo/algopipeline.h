@@ -90,7 +90,7 @@ AlgoPipelineConfig *algo_pipeline_config_create(gchar *desc, int *num);
 void algo_pipeline_destroy(AlgoPipelineHandle handle);
 int algo_pipeline_set_caps(AlgoPipelineHandle handle, int algo_id, GstCaps* caps);
 int algo_pipeline_set_caps_all(AlgoPipelineHandle handle, GstCaps* caps);
-void algo_pipeline_start(AlgoPipelineHandle handle);
+void algo_pipeline_start(AlgoPipelineHandle handle, GstElement *element);
 void algo_pipeline_stop(AlgoPipelineHandle handle);
 void algo_pipeline_put_buffer(AlgoPipelineHandle handle, GstBuffer *buf, guint w, guint h);
 void algo_pipeline_get_buffer(AlgoPipelineHandle handle, GstBuffer **buf);
@@ -100,6 +100,8 @@ const char* algo_pipeline_get_name(guint  mAlgoType);
 void algo_pipeline_flush_buffer(AlgoPipelineHandle handle);
 int algo_pipeline_get_input_queue_size(AlgoPipelineHandle handle);
 int algo_pipeline_get_all_queue_size(AlgoPipelineHandle handle);
+
+void pipeline_report_error_info(GstElement *element, const char* error_info);
 
 #ifdef __cplusplus
 };

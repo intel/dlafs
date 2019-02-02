@@ -187,7 +187,7 @@ int wsclient_send_infer_data(WsClientHandle handle, void *data, guint64 pts, int
     g_print("send data size=%d, %s\n",data_len, txt_cache);
 
     //debug
-    wsclient_upload_error_info(handle, (char *)txt_cache);
+    //wsclient_upload_error_info(handle, (char *)txt_cache);
 
    return data_len;
 }

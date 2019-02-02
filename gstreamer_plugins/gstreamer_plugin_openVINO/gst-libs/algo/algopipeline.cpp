@@ -503,7 +503,7 @@ int algo_pipeline_set_caps_all(AlgoPipelineHandle handle, GstCaps* caps)
 }
 
 
-void algo_pipeline_start(AlgoPipelineHandle handle)
+void algo_pipeline_start(AlgoPipelineHandle handle, GstElement *element)
 {
     AlgoPipeline *pipeline = (AlgoPipeline *) handle;
     CvdlAlgoBase* algo = NULL;
@@ -515,6 +515,7 @@ void algo_pipeline_start(AlgoPipelineHandle handle)
     }
     for(i=0; i< pipeline->algo_num; i++){
         algo = static_cast<CvdlAlgoBase *>(pipeline->algo_chain[i].algo);
+        algo->element = element;
         algo->start_algo_thread();
     }
 }
@@ -634,6 +635,26 @@ void algo_pipeline_flush_buffer(AlgoPipelineHandle handle)
 const char* algo_pipeline_get_name(guint  id)
 {
         return register_get_algo_name(id);
+}
+
+void pipeline_report_error_info(GstElement *element, const char* error_info)
+{
+#if 0
+        GST_ELEMENT_ERROR (element, RESOURCE, READ, (error_to_string(error_code)), GST_ERROR_SYSTEM);
+#else
+        int error_code = -1;
+        GQuark quark = g_quark_from_string (GST_ELEMENT_NAME(element));
+        char *sent_debug = g_strdup_printf ("%s \n", error_info);
+        const char* sent_text = "error in cvdlfilter";
+
+        GError *gerror = g_error_new_literal (quark, error_code, sent_text);
+        GstMessage *message =
+            gst_message_new_error(GST_OBJECT_CAST (element), gerror, sent_debug);
+
+        gst_element_post_message (element, message);
+#endif
+
+
 }
 
 #ifdef __cplusplus

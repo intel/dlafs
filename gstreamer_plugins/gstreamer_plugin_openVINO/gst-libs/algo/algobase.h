@@ -262,6 +262,9 @@ public:
     // It was used to generate object id
     gint mObjIndex;
 
+    //belong to this gst element
+    GstElement *element;
+
     // debug
     FILE *fpOclResult;
 };

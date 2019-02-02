@@ -395,10 +395,20 @@ int CvdlAlgoBase::set_data_caps(GstCaps *incaps)
     }else{
        filenameXML = std::string("HDDLS_CVDL_MODEL_PATH") + std::string("/") + mName
                                 + std::string("/") + mName + std::string(".xml");
-        g_print("Error: cannot find %s model files: %s\n", mName.c_str(), filenameXML.c_str());
+        //g_print("Error: cannot find %s model files: %s\n", mName.c_str(), filenameXML.c_str());
+
+        std::string error_str = std::string("Error: cannot find ") + mName +
+                  std::string(" model files: ") + filenameXML;
+        g_print("%s\n", error_str.c_str());
+        pipeline_report_error_info(element, error_str.c_str());
         return eCvdlFilterErrorCode_IE;
         //exit(1);
     }
+
+    //debug
+    //std::string log = std::string("Read models in: ") + filenameXML;
+    //pipeline_report_error_info(element, log.c_str());
+
     GstFlowReturn ret = GST_FLOW_OK;
     ret = algo_dl_init(filenameXML.c_str());
     if(ret != GST_FLOW_OK)
@@ -544,7 +554,10 @@ GstFlowReturn CvdlAlgoBase::init_ieloader(const char* modeFileName, guint ieType
     ret = mIeLoader.read_model(strModelXml, strModelBin, ieType, network_config);
     
     if(ret != GST_FLOW_OK){
-        g_print("IELoder failed to read model!\n");
+        //g_print("IELoder failed to read model!\n");
+        std::string error_str = std::string("IELoder failed to read model: ") + strModelBin;
+        g_print("%s\n", error_str.c_str());
+        pipeline_report_error_info(element, error_str.c_str());
         return GST_FLOW_ERROR;
     }
 
@@ -580,6 +593,11 @@ GstFlowReturn  CvdlAlgoBase::init_dl_caps(GstCaps* incaps)
     mImageProcessor.get_input_video_size(&mImageProcessorInVideoWidth,
                                          &mImageProcessorInVideoHeight);
     gst_caps_unref (mOclCaps);
+    if(ret != GST_FLOW_OK){
+        std::string error_str = std::string("ocl_init failed to be inited! ");
+        g_print("%s\n", error_str.c_str());
+        pipeline_report_error_info(element, error_str.c_str());
+    }
     return ret;
 }
 
