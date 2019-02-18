@@ -113,7 +113,7 @@ static void item_free_func(gpointer data)
      return (WsClientHandle)ipcclient;
  }
  
- void wsclient_send_data(WsClientHandle handle, char *data, int len, enum ePlayloadType type)
+ void wsclient_send_data(WsClientHandle handle, const char *data, int len, enum ePlayloadType type)
  {
      IPCClient *ipcclient = (IPCClient *)handle;
  
@@ -131,7 +131,7 @@ static void item_free_func(gpointer data)
  }
 
 
- void wsclient_upload_error_info(WsClientHandle handle, char *error_info)
+ void wsclient_upload_error_info(WsClientHandle handle, const char *error_info)
  {
      std::string info = std::string(error_info);
      wsclient_send_data(handle, error_info, info.size(), eErrorInfo);
@@ -183,7 +183,7 @@ int wsclient_send_infer_data(WsClientHandle handle, void *data, guint64 pts, int
 #endif
     const char*txt_cache = str.c_str();
     int data_len = str.size();
-    wsclient_send_data(handle, (char *)txt_cache, data_len, eMetaText);
+    wsclient_send_data(handle, (const char *)txt_cache, data_len, eMetaText);
     g_print("send data size=%d, %s\n",data_len, txt_cache);
 
     //debug

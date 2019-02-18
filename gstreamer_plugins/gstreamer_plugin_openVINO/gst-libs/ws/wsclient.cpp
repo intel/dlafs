@@ -120,7 +120,7 @@ static void item_free_func(gpointer data)
      return (WsClientHandle)wsclient;
  }
  
- void wsclient_send_data(WsClientHandle handle, char *data, int len, enum ePlayloadType type)
+ void wsclient_send_data(WsClientHandle handle, const char *data, int len, enum ePlayloadType type)
  {
      WsClient *wsclient = (WsClient *)handle;
      if(!handle) {
@@ -167,7 +167,7 @@ int wsclient_send_infer_data(WsClientHandle handle, void *data, guint64 pts,  in
 
     const char*txt_cache = str.c_str();
     int data_len = str.size();
-    wsclient_send_data(handle, (char *)txt_cache, data_len, eMetaText);
+    wsclient_send_data(handle, (const char *)txt_cache, data_len, eMetaText);
     g_print("send data size=%d, %s\n",data_len, txt_cache);
 
    return data_len;

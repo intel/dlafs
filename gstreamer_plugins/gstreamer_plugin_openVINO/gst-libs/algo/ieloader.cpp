@@ -229,15 +229,15 @@ GstFlowReturn IELoader::read_model(std::string strModelXml,
             networkConfig[VPU_CONFIG_KEY(NETWORK_CONFIG)] = "data=data,scale=64";
             break;
        case IE_MODEL_SSD:
-               // Get moblienet_ssd_config_xml file name based on strModelXml
-              config_xml = strModelXml.substr(0, strModelXml.rfind(".")) + std::string(".conf.xml");
-              networkConfig[VPU_CONFIG_KEY(NETWORK_CONFIG)] = "file=" + config_xml;
-              break;
+            // Get moblienet_ssd_config_xml file name based on strModelXml
+            config_xml = strModelXml.substr(0, strModelXml.rfind(".")) + std::string(".conf.xml");
+            networkConfig[VPU_CONFIG_KEY(NETWORK_CONFIG)] = "file=" + config_xml;
+            break;
         case IE_MODEL_LP_RECOGNIZE:
-              break;
+            break;
         case IE_MODEL_YOLOTINYV2:
-             networkConfig[VPU_CONFIG_KEY(NETWORK_CONFIG)] = "data=input,scale=128";
-             break;
+            networkConfig[VPU_CONFIG_KEY(NETWORK_CONFIG)] = "data=input,scale=128";
+            break;
         case IE_MODEL_GENERIC:
             if(network_config.compare("null"))
                 networkConfig[VPU_CONFIG_KEY(NETWORK_CONFIG)] = network_config.c_str();

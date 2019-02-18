@@ -77,20 +77,21 @@ typedef struct _AlgoPipeline{
     int algo_num;
     void *first;
     void *last;//[MAX_PIPELINE_OUT_NUM];
+    GstElement *element;
 }AlgoPipeline;
 
 typedef void* AlgoPipelineHandle;
 
 
-AlgoPipelineHandle algo_pipeline_create(AlgoPipelineConfig* config, int num);
-AlgoPipelineHandle algo_pipeline_create_default();
+AlgoPipelineHandle algo_pipeline_create(AlgoPipelineConfig* config, int num, GstElement *element);
+AlgoPipelineHandle algo_pipeline_create_default(GstElement *element);
 void algo_pipeline_config_destroy(AlgoPipelineConfig *config);
-AlgoPipelineConfig *algo_pipeline_config_create(gchar *desc, int *num);
+AlgoPipelineConfig *algo_pipeline_config_create(gchar *desc, int *num, GstElement *element);
 
 void algo_pipeline_destroy(AlgoPipelineHandle handle);
 int algo_pipeline_set_caps(AlgoPipelineHandle handle, int algo_id, GstCaps* caps);
 int algo_pipeline_set_caps_all(AlgoPipelineHandle handle, GstCaps* caps);
-void algo_pipeline_start(AlgoPipelineHandle handle, GstElement *element);
+void algo_pipeline_start(AlgoPipelineHandle handle);
 void algo_pipeline_stop(AlgoPipelineHandle handle);
 void algo_pipeline_put_buffer(AlgoPipelineHandle handle, GstBuffer *buf, guint w, guint h);
 void algo_pipeline_get_buffer(AlgoPipelineHandle handle, GstBuffer **buf);

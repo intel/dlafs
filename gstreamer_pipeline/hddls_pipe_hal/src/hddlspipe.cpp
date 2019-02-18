@@ -264,7 +264,7 @@ static gpointer thread_handle_message(void *data)
         return NULL;
 }
 
-static const gchar* parse_create_command(char *desc,  gint pipe_id )
+static const gchar* parse_create_command(char *desc,  gint pipe_id, WsClientHandle ws)
 {
       struct json_object *root = NULL;
       struct json_object *object = NULL;
@@ -319,17 +319,25 @@ static const gchar* parse_create_command(char *desc,  gint pipe_id )
                          //g_print("warning - get invalid algopipeline:%s , it will use default value: %s!\n",
                          //   str_algo_pipeline_desc.c_str(),  algo_pipeline_desc);
                          g_print("warning - get empty algopipeline, exit!\n");
+                         wsclient_upload_error_info(ws, "warning - get empty algopipeline, exit!\n");
+                         g_usleep(10000);
                          exit(eErrorInvalideAlgopipeline);
                      }
              } else { //default
                     algo_pipeline_desc = DEFAULT_ALGO_PIPELINE;
                     g_print("warning - failed to get algopipeline, exit!\n");
+                    wsclient_upload_error_info(ws, "warning - failed to get algopipeline, exit!\n");
+                    g_usleep(10000);
                     exit(eErrorInvalideAlgopipeline);
              }
     }
     if(!stream_source || !stream_codec_type) {
-            g_print("error - failed to get input stream source:%s,  stream_codec_type=%s\n",
-                stream_source, stream_codec_type);
+            //g_print("error - failed to get input stream source:%s,  stream_codec_type=%s\n",
+            //    stream_source, stream_codec_type);
+            std::string err_info = std::string("error - failed to get input stream source: ") + std::string(stream_source) +
+                std::string(", stream_codec_type=") + std::string(stream_codec_type) + std::string("\n");
+            wsclient_upload_error_info(ws, err_info.c_str());
+            g_print("%s",err_info.c_str());
             json_destroy(&root);
             return NULL;
      }
@@ -345,7 +353,10 @@ static const gchar* parse_create_command(char *desc,  gint pipe_id )
           // H.265
           codec_type = eCodecTypeH265;
      } else {
-            g_print("error- failed to get valid codec type : %s\n", stream_codec_type );
+            //g_print("error- failed to get valid codec type : %s\n", stream_codec_type );
+            std::string err_info = std::string("error- failed to get valid codec type : ") + str_stream_codec_type + std::string("\n");
+            wsclient_upload_error_info(ws, err_info.c_str());
+            g_print("%s",err_info.c_str());
             json_destroy(&root);
             return NULL;
      }
@@ -435,7 +446,7 @@ static gboolean bus_callback (GstBus* bus, GstMessage* msg, gpointer data)
     case GST_MESSAGE_EOS:
         /* end-of-stream */
         GST_INFO ("EOS\n");
-        wsclient_upload_error_info(hp->ws, "Got EOS");
+        //wsclient_upload_error_info(hp->ws, "Got EOS");
         hddlspipe_stop (hp);
         break;
     default:
@@ -484,7 +495,7 @@ void hddlspipe_prepare(int argc, char **argv)
     hp->state = ePipeState_Null;
 
     // parse pipeline_create command
-    pipeline_desc = parse_create_command(item->data, hp->pipe_id);
+    pipeline_desc = parse_create_command(item->data, hp->pipe_id, hp->ws);
     wsclient_free_item(item);
     if(!pipeline_desc) {
         g_print("Failed to get pipeline description!\n");

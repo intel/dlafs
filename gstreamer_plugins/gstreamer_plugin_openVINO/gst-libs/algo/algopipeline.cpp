@@ -47,9 +47,9 @@ static AlgoPipelineConfig algoTopologyDefault[] = {
     {2, ALGO_GOOGLENETV2,  1,  1, {-1}},
 };
 
-static CvdlAlgoBase* algo_create(int type)
+static CvdlAlgoBase* algo_create(GstElement *element, int type)
 {
-    CvdlAlgoBase* algo;
+    CvdlAlgoBase* algo = NULL;
     const char *algoName = NULL;
     switch(type) {
         case ALGO_YOLOV1_TINY:
@@ -84,24 +84,34 @@ static CvdlAlgoBase* algo_create(int type)
             break;
    };
 
-     // type/id >= 8 is for generic algo
-    if(type>=ALGO_MAX_DEFAULT_NUM) {
-            algoName =register_get_algo_name(type);
-            if(algoName) {
-                algo = new GenericAlgo(algoName);
-            } else {
-                register_dump();
-                g_print("Error: cannot find algo in algolist, algo_id = %d\n", type);
-                exit(1);
-            }
+   // type/id >= 8 is for generic algo
+   if(type>=ALGO_MAX_DEFAULT_NUM) {
+       algoName =register_get_algo_name(type);
+       if(algoName) {
+           algo = new GenericAlgo(algoName);
+       } else {
+           register_dump();
+           std::ostringstream data_str;
+           data_str  << "Cannot find algo in algolist, algo_id = " << type << std::endl;
+           std::string error_info = data_str.str();
+           g_print("%s", error_info.c_str());
+           pipeline_report_error_info(element,error_info.c_str());
+           algo = NULL;
+           //exit(1);
+        }
    }
 
-    if(algo) {
-        algo->mAlgoType = type;
-    }else {
-        register_dump();
-        g_print("Error: cannot create this algo = %d\n", type );
-        exit(1);
+   if(algo) {
+       algo->mAlgoType = type;
+   }else {
+       register_dump();
+       std::ostringstream data_str;
+       data_str  << "Cannot create this algo = " << type << std::endl;
+       std::string error_info = data_str.str();
+       g_print("%s", error_info.c_str());
+       pipeline_report_error_info(element,error_info.c_str());
+       //g_print("Error: cannot create this algo = %d\n", type );
+       //exit(1);
    }
 
    return algo;
@@ -188,7 +198,7 @@ void algo_pipeline_config_destroy(AlgoPipelineConfig *config)
 // The format is like:
 //  case 1.   "yolov1tiny ! opticalflowtrack ! googlenetv2"
 //  case 2.   "detection ! track name=tk ! tk.vehicle_classification  ! tk.person_face_detection ! face_recognication"
-AlgoPipelineConfig *algo_pipeline_config_create(gchar *desc, int *num)
+AlgoPipelineConfig *algo_pipeline_config_create(gchar *desc, int *num, GstElement *element)
 {
     AlgoPipelineConfig *config = NULL;
     gchar *p = desc, *pDot, *pName, *pParentName, *descStrip;
@@ -298,9 +308,17 @@ AlgoPipelineConfig *algo_pipeline_config_create(gchar *desc, int *num)
  #if 1
         config[i].curType = register_get_algo_id(p);
         if(config[i].curType==-1) {
-            g_print("error: not support this algo = %s\n", p);
+            //g_print("error: not support this algo = %s\n", p);
             register_dump();
-            exit(1);
+            std::ostringstream data_str;
+            data_str  << "Not support this algo = " << p << std::endl;
+            std::string error_info = data_str.str();
+            g_print("%s", error_info.c_str());
+            pipeline_report_error_info(element,error_info.c_str());
+            algo_pipeline_config_destroy(config);
+            config = NULL;
+            break;
+            //exit(1);
        }
 #else
         for(n=0;n<ALGO_MAX_DEFAULT_NUM-1;n++) {
@@ -334,17 +352,19 @@ static void algo_pipeline_print(AlgoPipelineHandle handle)
         g_print("%s\n",register_get_algo_name(algo->mAlgoType));
 }
 
-AlgoPipelineHandle algo_pipeline_create(AlgoPipelineConfig* config, int num)
+AlgoPipelineHandle algo_pipeline_create(AlgoPipelineConfig* config, int num, GstElement *element)
 {
     AlgoPipelineHandle handle = 0;
     AlgoPipeline *pipeline = (AlgoPipeline *)g_new0(AlgoPipeline,1);
     AlgoItem *item = NULL;
     int preId, nextId = 0;
     AlgoItem *preSinkItem[MAX_PIPELINE_OUT_NUM] = {NULL};
+    bool error = false;
 
     pipeline->algo_num = num + 1;
     pipeline->algo_chain = (AlgoItem *)g_new0(AlgoItem, pipeline->algo_num);  //add sinkalgo
     pipeline->first = NULL;
+    pipeline->element = element;
 
     int i, j;
     // set id/type/algo/nextItem/preItem for every Item
@@ -352,7 +372,11 @@ AlgoPipelineHandle algo_pipeline_create(AlgoPipelineConfig* config, int num)
         item = pipeline->algo_chain + i;
         item->id = config[i].curId;
         item->type = config[i].curType;
-        item->algo = static_cast<void *>(algo_create(config[i].curType));
+        item->algo = static_cast<void *>(algo_create(element, config[i].curType));
+        if(!item->algo) {
+            error = true;
+            break;
+        }
         preId = config[i].preId;
         if(preId>=0){
             item->preItem = pipeline->algo_chain + preId;
@@ -425,11 +449,17 @@ AlgoPipelineHandle algo_pipeline_create(AlgoPipelineConfig* config, int num)
     }
     #endif
 
+    if(error) {
+        g_free(pipeline->algo_chain);
+        g_free(pipeline);
+        return NULL;
+     }
+
      //create sinkalgo
      item = pipeline->algo_chain + num;
      item->id = num;
      item->type = ALGO_SINK;
-     item->algo = static_cast<void *>(algo_create(ALGO_SINK));
+     item->algo = static_cast<void *>(algo_create(element, ALGO_SINK));
      algo_item_link_sink(preSinkItem, MAX_PIPELINE_OUT_NUM, item);
      pipeline->last = item->algo;
 
@@ -438,10 +468,10 @@ AlgoPipelineHandle algo_pipeline_create(AlgoPipelineConfig* config, int num)
     return handle;
 }
 
-AlgoPipelineHandle algo_pipeline_create_default()
+AlgoPipelineHandle algo_pipeline_create_default(GstElement *element)
 {
     return algo_pipeline_create(algoTopologyDefault, 
-        sizeof(algoTopologyDefault)/sizeof(AlgoPipelineConfig));
+        sizeof(algoTopologyDefault)/sizeof(AlgoPipelineConfig), element);
 }
 void algo_pipeline_destroy(AlgoPipelineHandle handle)
 {
@@ -503,7 +533,7 @@ int algo_pipeline_set_caps_all(AlgoPipelineHandle handle, GstCaps* caps)
 }
 
 
-void algo_pipeline_start(AlgoPipelineHandle handle, GstElement *element)
+void algo_pipeline_start(AlgoPipelineHandle handle)
 {
     AlgoPipeline *pipeline = (AlgoPipeline *) handle;
     CvdlAlgoBase* algo = NULL;
@@ -515,7 +545,7 @@ void algo_pipeline_start(AlgoPipelineHandle handle, GstElement *element)
     }
     for(i=0; i< pipeline->algo_num; i++){
         algo = static_cast<CvdlAlgoBase *>(pipeline->algo_chain[i].algo);
-        algo->element = element;
+        algo->element = pipeline->element;
         algo->start_algo_thread();
     }
 }
@@ -653,8 +683,6 @@ void pipeline_report_error_info(GstElement *element, const char* error_info)
 
         gst_element_post_message (element, message);
 #endif
-
-
 }
 
 #ifdef __cplusplus

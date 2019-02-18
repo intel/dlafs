@@ -40,7 +40,7 @@
  }MessageItem;
  
  WsClientHandle wsclient_setup(const char *serverUri, int client_id);
- void wsclient_send_data(WsClientHandle handle, char *data, int len, enum ePlayloadType type);
+ void wsclient_send_data(WsClientHandle handle, const char *data, int len, enum ePlayloadType type);
  int wsclient_send_infer_data(WsClientHandle handle, void *infer_data, guint64 pts, int infer_index);
  void wsclient_destroy(WsClientHandle handle);
  MessageItem * wsclient_get_data(WsClientHandle handle);
@@ -48,7 +48,7 @@
  void wsclient_free_item(MessageItem *item);
  void wsclient_set_id(WsClientHandle handle,  int id);
  int wsclient_get_id(WsClientHandle handle);
- void wsclient_upload_error_info(WsClientHandle handle, char *error_info);
+ void wsclient_upload_error_info(WsClientHandle handle, const char *error_info);
 #ifdef __cplusplus
  };
 #endif

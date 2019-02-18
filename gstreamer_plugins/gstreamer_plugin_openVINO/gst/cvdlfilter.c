@@ -288,34 +288,40 @@ cvdl_filter_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-          break;
+        break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-           /* create the process task(thread) and start it */
-          if(cvdlfilter->algo_pipeline_desc==NULL)
-              config = algo_pipeline_config_create(default_algo_pipeline_desc, &count);
-          else
-              config = algo_pipeline_config_create(cvdlfilter->algo_pipeline_desc, &count);
-          cvdlfilter->algoHandle = algo_pipeline_create(config, count);
-          algo_pipeline_start(cvdlfilter->algoHandle, element);
-          if(config)
-              algo_pipeline_config_destroy(config);
+        /* create the process task(thread) and start it */
+        if(cvdlfilter->algo_pipeline_desc==NULL)
+            config = algo_pipeline_config_create(default_algo_pipeline_desc, &count, element);
+        else
+            config = algo_pipeline_config_create(cvdlfilter->algo_pipeline_desc, &count, element);
 
-          if(priv->inCaps)
-              ret = algo_pipeline_set_caps_all(cvdlfilter->algoHandle, priv->inCaps);
+        if(config) {
+            cvdlfilter->algoHandle = algo_pipeline_create(config, count, element);
+            algo_pipeline_start(cvdlfilter->algoHandle);
+            if(config)
+                algo_pipeline_config_destroy(config);
 
-          if(ret!=eCvdlFilterErrorCode_None) {
-              char* error_info = error_to_string(ret);
-              pipeline_report_error_info(element,error_info);
-              g_free(error_info);
-          }
+            if(priv->inCaps)
+                ret = algo_pipeline_set_caps_all(cvdlfilter->algoHandle, priv->inCaps);
 
-          /* start push buffer thread to push data to next element
-        * It will be done in a task with  push_buffer_func() */
-          if(gst_task_get_state(cvdlfilter->mPushTask) != GST_TASK_STARTED)
-               gst_task_start(cvdlfilter->mPushTask);
-          break;
+            if(ret!=eCvdlFilterErrorCode_None) {
+                char* error_info = error_to_string(ret);
+                pipeline_report_error_info(element,error_info);
+                g_free(error_info);
+            }
+         } else {
+            g_print("Failed to create algo config!\n");
+         }
+
+        /* start push buffer thread to push data to next element
+                * It will be done in a task with  push_buffer_func()
+                */
+        if(gst_task_get_state(cvdlfilter->mPushTask) != GST_TASK_STARTED)
+            gst_task_start(cvdlfilter->mPushTask);
+        break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-           break;
+        break;
     default:
             break;
   }
@@ -323,7 +329,7 @@ cvdl_filter_change_state (GstElement * element, GstStateChange transition)
   result = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
   switch (transition) {
       case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-              /*  When change state Playing-->Paused, stop algopipeline,
+     /*  When change state Playing-->Paused, stop algopipeline,
           *  so that we can Set property for algopipeline.
           *  The algo pipeline will have cached buffer to be processed.
           *  But it will cause gst-launch failed to change stat to be PLAYING
@@ -335,7 +341,7 @@ cvdl_filter_change_state (GstElement * element, GstStateChange transition)
           *   /GstPipeline:pipeline2/GstQTDemux:qtdemux2:
           *  streaming stopped, reason not-linked]
           */
-                   break;
+         break;
      case GST_STATE_CHANGE_PAUSED_TO_READY:
          /* stop the data push task */
          gst_task_set_state(cvdlfilter->mPushTask, GST_TASK_STOPPED);
@@ -650,6 +656,7 @@ cvdl_filter_init (CvdlFilter* cvdl_filter)
     gst_video_info_init (&cvdl_filter->src_info);
 
     cvdl_filter->frame_num = 0;
+    cvdl_filter->startTimePos = g_get_monotonic_time();
 
     // create task for push data to next filter/element
     g_rec_mutex_init (&cvdl_filter->mMutex);
