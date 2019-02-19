@@ -53,11 +53,11 @@ if (InferenceEngine::OK != (call)) {                            \
     std::cout << #call " failed: " << resp.msg << std::endl;    \
 }
 
-#define IECALLASSERT(call)                                       \
-if (InferenceEngine::OK != (call)) {                            \
-    std::cout << #call " failed: " << resp.msg << std::endl;    \
-    std::exit(EXIT_FAILURE);                                    \
-}
+//#define IECALLASSERT(call)                                       \
+//if (InferenceEngine::OK != (call)) {                            \
+//    std::cout << #call " failed: " << resp.msg << std::endl;    \
+//    std::exit(EXIT_FAILURE);                                    \
+//}
 
 using namespace InferenceEngine;
 using namespace std;
@@ -251,12 +251,12 @@ GstFlowReturn IELoader::read_model(std::string strModelXml,
     if (InferenceEngine::StatusCode::OK != ret) {
         // GENERAL_ERROR = -1
         g_print("Failed to  LoadNetwork, ret_code = %d, models=%s\n", ret, strModelBin.c_str());
-        //exit(-1);
+        return GST_FLOW_ERROR;
     }
 
     // First create 16 request for current thread.
     for (int r = 0; r < REQUEST_NUM; r++) {
-        IECALLASSERT(mExeNetwork->CreateInferRequest(mInferRequest[r], &resp));
+        IECALLCHECK(mExeNetwork->CreateInferRequest(mInferRequest[r], &resp));
         mRequestEnable[r] = true;
     }
     return GST_FLOW_OK;
@@ -324,8 +324,8 @@ GstFlowReturn IELoader::convert_input_to_blob(const cv::UMat& img,
             #endif
         }
     }else {
-            GST_ERROR("InferenceEngine::Precision not support: %d", (int)mInputPrecision);
-            return GST_FLOW_ERROR;
+        GST_ERROR("InferenceEngine::Precision not support: %d", (int)mInputPrecision);
+        return GST_FLOW_ERROR;
     }
 
     return GST_FLOW_OK;
