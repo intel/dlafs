@@ -81,12 +81,22 @@ void Looper::run() {
         }
         catch (...) {}
     }
+    // send the all buffers left, but not drop before exit
+    if(_bQuit)
+        flush();
 }
 
 void Looper::quit() {
     _bQuit = true;
 }
 
+void Looper::flush()
+{
+    if(_pTrans->isValid())
+    {
+        while (pop2Buffer() && _pTrans->handleResponse());
+    }
+}
 void Looper::handleSend()
 {
     if(_pTrans->isValid())

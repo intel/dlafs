@@ -44,6 +44,7 @@ class Looper
   void quit();
   void notify();
   void push(ipcProtocol& tMsg);
+  void flush();
   //unsigned long int == uint64_t
 
  private:
