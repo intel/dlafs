@@ -53,12 +53,6 @@ if (InferenceEngine::OK != (call)) {                            \
     std::cout << #call " failed: " << resp.msg << std::endl;    \
 }
 
-//#define IECALLASSERT(call)                                       \
-//if (InferenceEngine::OK != (call)) {                            \
-//    std::cout << #call " failed: " << resp.msg << std::endl;    \
-//    std::exit(EXIT_FAILURE);                                    \
-//}
-
 using namespace InferenceEngine;
 using namespace std;
 
