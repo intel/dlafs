@@ -2,24 +2,35 @@
 
    a) Generate CA's private key, you need to prepare one password to protect this private key
    # openssl genrsa -aes256 -out ca-key.pem 4096
+   or if use EC key:
+     openssl ecparam -genkey -name prime256v1 -out ca-key.pem
 
    b) Generate cert signing request file
    # openssl req -new -key ca-key.pem -out ca.csr
 
    c) Generate CA's self-signed cert, you need to input private key's password you prepared in step a)
    # openssl x509 -req -days 9999 -signkey ca-key.pem -in ca.csr -out ca-crt.pem
+   or if use EC key:
+     openssl req -x509 -new -SHA256 -nodes -key ca-key.pem -days 9999 -out ca-crt.pem
 
 2. Generate Server's private key and cert
 
    a) Generate server's private key
    # openssl genrsa -out server-key.pem 4096
+   or if use EC keys:
+     openssl ecparam -genkey -name prime256v1 -out server-key.pem
 
    b) Generate server's cert signing request file(Do not insert the challenge password)
    # openssl req -new -key server-key.pem -out server-csr.pem
+   or if use EC keys:
+	 openssl req -new -SHA256 -key server-key.pem -nodes -out server-csr.pem
+
      note: When OpenSSL prompts you for the Common Name for each certificate, use different names.
 
    c) Generate server's cert
    # openssl x509 -req -days 9999 -in server-csr.pem -CA ca-crt.pem -CAkey ca-key.pem -CAcreateserial -out server-crt.pem
+   or if use EC keys:
+     openssl x509 -req -SHA256 -days 9999 -in server-csr.pem -CA ca-crt.pem -CAkey ca-key.pem -CAcreateserial -out server-crt.pem
 
    d) Verify server's cert
    # openssl verify -CAfile ca-crt.pem server-crt.pem
@@ -28,12 +39,18 @@
 
    a) Generate client's private key
    # openssl genrsa -out client1-key.pem 4096
+   or if use EC keys:
+     openssl ecparam -genkey -name prime256v1 -out client1-key.pem
 
    b) Generate client's cert signing request file(Do not insert the challenge password)
    # openssl req -new -key client1-key.pem -out client1-csr.pem
+   or if use EC keys:
+     openssl req -new -SHA256 -key client1-key.pem -nodes -out client1-csr.pem
 
    c) Generate client's cert
    # openssl x509 -req -days 9999 -in client1-csr.pem -CA ca-crt.pem -CAkey ca-key.pem -CAcreateserial -out client1-crt.pem
+   or if use EC keys:
+     openssl x509 -req -SHA256 -days 9999 -in client1-csr.pem -CA ca-crt.pem -CAkey ca-key.pem -CAcreateserial -out client1-crt.pem
 
    d) Verify client's cert
    # openssl verify -CAfile ca-crt.pem client1-crt.pem
