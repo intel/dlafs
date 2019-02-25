@@ -28,6 +28,7 @@ public:
     int add_object_int64(const char *key, int64_t value);
     int add_object_double(const char *key, double value);
     int add_object_string(const char *key, const char* str);
+    int add_object_object(const char *key, struct json_object* new_obj);
     int add_object_rect(const char *key,
                                       int32_t x, int32_t y,
                                       int32_t w,int32_t h);

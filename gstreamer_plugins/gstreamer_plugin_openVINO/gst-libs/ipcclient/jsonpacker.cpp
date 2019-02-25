@@ -119,6 +119,20 @@ int JsonPackage::add_object_rect(const char *key,
     return ret;
 }
 
+int JsonPackage::add_object_object(const char *key, struct json_object* new_obj)
+{
+    if(!json_root)
+        return -1;
+    int ret = 0;
+    struct json_object* obj = NULL;
+    if(json_object_object_get_ex (json_root, key, &obj)) {
+        json_object_object_del(json_root, key);
+    }
+    ret = json_object_object_add(json_root, key, new_obj);
+    return ret;
+}
+
+
 const char* JsonPackage::object_to_string()
 {
     if(!json_root)

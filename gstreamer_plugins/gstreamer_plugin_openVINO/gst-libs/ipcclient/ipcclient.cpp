@@ -174,6 +174,80 @@ static std::string covert_infer_data_to_json_string(void *data, guint64 pts, int
     return std::string(string_data) + std::string("\n");
 }
 
+
+/* meta data json format
+  *   {
+  *       frame_index:<int>
+  *       index_index:<int>
+  *       pts:<int64>
+  *       obj_count:<int>
+  *       objects [
+  *            {
+  *                 prob:<double>
+  *                 label:<string>
+  *                 rect {
+  *                     x:<int>
+  *                     y:<int>
+  *                     w:<int>
+  *                     h:<int>
+  *                 }
+  *            }
+    *          {
+  *                 prob:<double>
+  *                 label:<string>
+  *                 rect {
+  *                     x:<int>
+  *                     y:<int>
+  *                     w:<int>
+  *                     h:<int>
+  *                 }
+  *            }
+  *            ...
+  *      ]
+  *
+  */
+static std::string covert_infer_data_to_json_string_full_frame(void *data, int count, guint64 pts, int infer_index)
+{
+    InferenceData *infer_data = (InferenceData *)data;
+    JsonPackage json_data;
+    struct json_object* array_obj = NULL;
+    struct json_object* obj = NULL, *sub_obj = NULL, *rect_obj = NULL;
+
+    json_data.add_object_int("frame_index",infer_data->frame_index);
+    json_data.add_object_int("infer_index",infer_index);
+    json_data.add_object_int64("pts",pts);
+    json_data.add_object_int("obj_count",count);
+
+    array_obj = json_object_new_array();
+    for(int i=0; i<count; i++) {
+        obj = json_object_new_object();
+        sub_obj = json_object_new_double(infer_data->probility);
+        json_object_object_add(obj, "prob", sub_obj);
+
+        sub_obj = json_object_new_string(infer_data->label);
+        json_object_object_add(obj, "label", sub_obj);
+
+        rect_obj = json_object_new_object();
+        sub_obj = json_object_new_int(infer_data->rect.x);
+        json_object_object_add(rect_obj, "x", sub_obj);
+        sub_obj = json_object_new_int(infer_data->rect.y);
+        json_object_object_add(rect_obj, "y", sub_obj);
+        sub_obj = json_object_new_int(infer_data->rect.width);
+        json_object_object_add(rect_obj, "w", sub_obj);
+        sub_obj = json_object_new_int(infer_data->rect.height);
+        json_object_object_add(rect_obj, "h", sub_obj);
+        json_object_object_add(obj, "rect", rect_obj);
+
+        json_object_array_add(array_obj, obj);
+        infer_data++;
+    }
+    json_data.add_object_object("objects",array_obj);
+    const char* string_data = json_data.object_to_string();
+
+    return std::string(string_data) + std::string("\n");
+}
+
+
 int ipcclient_send_infer_data(IPCClientHandle handle, void *data, guint64 pts, int infer_index)
 {
 #if 0
@@ -191,6 +265,26 @@ int ipcclient_send_infer_data(IPCClientHandle handle, void *data, guint64 pts, i
 
    return data_len;
 }
+
+
+int ipcclient_send_infer_data_full_frame(IPCClientHandle handle, void *data, int count, guint64 pts, int infer_index)
+{
+#if 0
+    std::string str = covert_infer_data_to_string(data, pts, infer_index);
+#else
+    std::string str = covert_infer_data_to_json_string_full_frame(data, count, pts, infer_index);
+#endif
+    const char*txt_cache = str.c_str();
+    int data_len = str.size();
+    ipcclient_send_data(handle, (const char *)txt_cache, data_len, eMetaText);
+    g_print("send data size=%d, %s\n",data_len, txt_cache);
+
+    //debug
+    //ipcclient_upload_error_info(handle, (char *)txt_cache);
+
+   return data_len;
+}
+
 
 void ipcclient_set_id(IPCClientHandle handle,  int id)
 {

@@ -206,6 +206,7 @@ static void process_sink_buffers(gpointer userData)
             InferenceData *infer_data = txt_mem->data;
             int count = txt_mem->data_count;
             GST_LOG("object num = %d\n",count);
+            #if 0
             for(i=0; i<count; i++) {
                 g_print("pipe %d: %d frame, %2d xml_data - ",basesink->ipcc_id,
                     basesink->frame_index, basesink->meta_data_index);
@@ -216,6 +217,13 @@ static void process_sink_buffers(gpointer userData)
                 size += data_len;
                 infer_data++;
             }
+            #else
+            infer_data->frame_index = basesink->frame_index;
+            data_len = ipcclient_send_infer_data_full_frame(basesink->ipc_handle,
+                infer_data, count,txt_mem->pts,basesink->meta_data_index);
+            basesink->meta_data_index+=count;
+            size += data_len;
+            #endif
             if(count>0)
                 basesink->frame_index++;
         }
@@ -303,6 +311,8 @@ gst_ipc_sink_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_IPC_SERVER_URI:
+        if(sink->ipcs_uri)
+            g_free(sink->ipcs_uri);
         sink->ipcs_uri = g_value_dup_string (value);
         break;
     case PROP_IPC_CLIENT_ID:
