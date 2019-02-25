@@ -32,7 +32,7 @@
 
 #include <glib.h>
 #include <gst/gst.h>
-#include "../ws/wsclient.h"
+#include "ipcclient.h"
 #include <string.h>
 #include <sstream>
 
@@ -65,7 +65,7 @@ static void item_free_func(gpointer data)
        return;
 }
 
- WsClientHandle wsclient_setup(const char *serverUri, int client_id)
+ IPCClientHandle ipcclient_setup(const char *serverUri, int client_id)
  {
     IPCClient *ipcclient = (IPCClient *)g_new0 (IPCClient, 1);
     if(!ipcclient) {
@@ -110,10 +110,10 @@ static void item_free_func(gpointer data)
         tInitMsg.size(), tInitMsg.iType,  tInitMsg.sPayload.c_str());
      ipcclient->pLooper->push(tInitMsg);
 
-     return (WsClientHandle)ipcclient;
+     return (IPCClientHandle)ipcclient;
  }
  
- void wsclient_send_data(WsClientHandle handle, const char *data, int len, enum ePlayloadType type)
+ void ipcclient_send_data(IPCClientHandle handle, const char *data, int len, enum ePlayloadType type)
  {
      IPCClient *ipcclient = (IPCClient *)handle;
  
@@ -131,10 +131,10 @@ static void item_free_func(gpointer data)
  }
 
 
- void wsclient_upload_error_info(WsClientHandle handle, const char *error_info)
+ void ipcclient_upload_error_info(IPCClientHandle handle, const char *error_info)
  {
      std::string info = std::string(error_info);
-     wsclient_send_data(handle, error_info, info.size(), eErrorInfo);
+     ipcclient_send_data(handle, error_info, info.size(), eErrorInfo);
  }
 
 #if 0
@@ -174,7 +174,7 @@ static std::string covert_infer_data_to_json_string(void *data, guint64 pts, int
     return std::string(string_data) + std::string("\n");
 }
 
-int wsclient_send_infer_data(WsClientHandle handle, void *data, guint64 pts, int infer_index)
+int ipcclient_send_infer_data(IPCClientHandle handle, void *data, guint64 pts, int infer_index)
 {
 #if 0
     std::string str = covert_infer_data_to_string(data, pts, infer_index);
@@ -183,16 +183,16 @@ int wsclient_send_infer_data(WsClientHandle handle, void *data, guint64 pts, int
 #endif
     const char*txt_cache = str.c_str();
     int data_len = str.size();
-    wsclient_send_data(handle, (const char *)txt_cache, data_len, eMetaText);
+    ipcclient_send_data(handle, (const char *)txt_cache, data_len, eMetaText);
     g_print("send data size=%d, %s\n",data_len, txt_cache);
 
     //debug
-    //wsclient_upload_error_info(handle, (char *)txt_cache);
+    //ipcclient_upload_error_info(handle, (char *)txt_cache);
 
    return data_len;
 }
 
-void wsclient_set_id(WsClientHandle handle,  int id)
+void ipcclient_set_id(IPCClientHandle handle,  int id)
 {
     IPCClient *ipcclient = (IPCClient *)handle;
 
@@ -204,7 +204,7 @@ void wsclient_set_id(WsClientHandle handle,  int id)
     return;
 }
 
-int wsclient_get_id(WsClientHandle handle)
+int ipcclient_get_id(IPCClientHandle handle)
 {
     IPCClient *ipcclient = (IPCClient *)handle;
 
@@ -219,7 +219,7 @@ int wsclient_get_id(WsClientHandle handle)
   * Pops data from the queue.
   * This function blocks until data become available.
   **/
-MessageItem *wsclient_get_data(WsClientHandle handle)
+MessageItem *ipcclient_get_data(IPCClientHandle handle)
 {
     IPCClient *ipcclient = (IPCClient *)handle;
     if(!handle) {
@@ -235,7 +235,7 @@ MessageItem *wsclient_get_data(WsClientHandle handle)
    * Pops data from the queue.
    * If no data is received before end_time, NULL is returned.
    **/
- MessageItem *wsclient_get_data_timed(WsClientHandle handle)
+ MessageItem *ipcclient_get_data_timed(IPCClientHandle handle)
  {
      IPCClient *ipcclient = (IPCClient *)handle;
      MessageItem *item = NULL;
@@ -248,11 +248,11 @@ MessageItem *wsclient_get_data(WsClientHandle handle)
      return item;
  }
 
-void wsclient_free_item(MessageItem *item)
+void ipcclient_free_item(MessageItem *item)
 {
         item_free_func(item);
 }
- void wsclient_destroy(WsClientHandle handle)
+ void ipcclient_destroy(IPCClientHandle handle)
  {
      IPCClient *ipcclient = (IPCClient *)handle;
      if(!handle)

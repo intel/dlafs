@@ -2,7 +2,7 @@
 aux_source_directory(. DIR_SRCS)
 
 include_directories(/usr/include)
-include_directories(${PROJECT_ROOT_PATH}/gstreamer_plugins/gstreamer_plugin_openVINO/gst-libs/ws)
+include_directories(${PROJECT_ROOT_PATH}/gstreamer_plugins/gstreamer_plugin_openVINO/gst-libs/ipcclient)
 #link_directories(${PROJECT_ROOT_PATH}/build/gstreamer_plugins/gstreamer_plugin_openVINO)
 
 add_executable (hddlspipestest ${DIR_SRCS})

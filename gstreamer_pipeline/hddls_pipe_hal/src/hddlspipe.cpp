@@ -31,10 +31,10 @@ using namespace std;
 
 #define CVDLFILTER_NAME "cvdlfilter0"
 #define RESCONVERT_NAME "resconvert0"
-#define WSSINK_NAME "wssink0"
+#define IPCSINK_NAME "ipcsink0"
 
 const std::vector<std::string> g_filter_name_vec = {
-    "resconvert0",  "wssink0",   "mfxjpegenc",
+    "resconvert0",  "ipcsink0",  "mfxjpegenc",
     "rtph264depay", "h264parse", "mfxh264dec",
     "rtph265depay", "h265parse", "mfxhevcdec",
     "rtspsrc",      "udpsrc",    "srtpdec"
@@ -69,8 +69,8 @@ static gint g_loop_times = 1;
 {
     g_print ("Usage: %s...\n", program_name);
     g_print (
-        " -u --specify uri of ws server.\n"
-        " -i --specify id of ws client.\n"
+        " -u --specify uri of ipc server.\n"
+        " -i --specify id of ipc client.\n"
         " -l --specify the loop times.\n"
          "-h --help Display this usage information.\n");
     exit (exit_code);
@@ -197,7 +197,7 @@ static void process_commands(HddlsPipe *hp, char *desc)
             return;
      }
 
-     g_print("pipe %d(%d) has got message: %s\n", hp->pipe_id, wsclient_get_id(hp->ws),  desc);
+     g_print("pipe %d(%d) has got message: %s\n", hp->pipe_id, ipcclient_get_id(hp->ipc),  desc);
      command_type = json_get_command_type(root);
      switch(command_type){
         case eCommand_PipeCreate:
@@ -225,7 +225,7 @@ static void process_commands(HddlsPipe *hp, char *desc)
          // filesrc location=~/1600x1200_concat.mp4  ! qtdemux  ! h264parse
          // ! mfxh264dec  ! cvdlfilter name=cvdlfilter0 algopipeline="yolov1tiny ! opticalflowtrack ! googlenetv2"
          // ! resconvert name=resconvert0  resconvert0.src_pic ! mfxjpegenc
-         // ! wssink name=wssink0 wsclientid=13   resconvert0.src_txt ! wssink0.
+         // ! ipcsink name=ipcsink0 ipcclientid=13   resconvert0.src_txt ! ipcsink0.
          gchar* begin = g_strstr_len(g_str_pipe_desc.c_str(), 1024, "algopipeline=" );
          gchar* end = NULL;
          gchar *secA = NULL, *secC=NULL;
@@ -252,11 +252,11 @@ static gpointer thread_handle_message(void *data)
         HddlsPipe *hp = (HddlsPipe*)data;
         MessageItem *item = NULL;
         while(TRUE) {
-                item = wsclient_get_data_timed(hp->ws);
+                item = ipcclient_get_data_timed(hp->ipc);
                 if(item && item->len>0) {
                      // process command data
                      process_commands(hp, item->data);
-                     wsclient_free_item(item);
+                     ipcclient_free_item(item);
                 }
                 if(hp->state==ePipeState_Null) //for thread quit
                     break;
@@ -264,7 +264,7 @@ static gpointer thread_handle_message(void *data)
         return NULL;
 }
 
-static const gchar* parse_create_command(char *desc,  gint pipe_id, WsClientHandle ws)
+static const gchar* parse_create_command(char *desc,  gint pipe_id, IPCClientHandle ipc)
 {
       struct json_object *root = NULL;
       struct json_object *object = NULL;
@@ -319,14 +319,14 @@ static const gchar* parse_create_command(char *desc,  gint pipe_id, WsClientHand
                          //g_print("warning - get invalid algopipeline:%s , it will use default value: %s!\n",
                          //   str_algo_pipeline_desc.c_str(),  algo_pipeline_desc);
                          g_print("warning - get empty algopipeline, exit!\n");
-                         wsclient_upload_error_info(ws, "warning - get empty algopipeline, exit!\n");
+                         ipcclient_upload_error_info(ipc, "warning - get empty algopipeline, exit!\n");
                          g_usleep(10000);
                          exit(eErrorInvalideAlgopipeline);
                      }
              } else { //default
                     algo_pipeline_desc = DEFAULT_ALGO_PIPELINE;
                     g_print("warning - failed to get algopipeline, exit!\n");
-                    wsclient_upload_error_info(ws, "warning - failed to get algopipeline, exit!\n");
+                    ipcclient_upload_error_info(ipc, "warning - failed to get algopipeline, exit!\n");
                     g_usleep(10000);
                     exit(eErrorInvalideAlgopipeline);
              }
@@ -336,7 +336,7 @@ static const gchar* parse_create_command(char *desc,  gint pipe_id, WsClientHand
             //    stream_source, stream_codec_type);
             std::string err_info = std::string("error - failed to get input stream source: ") + std::string(stream_source) +
                 std::string(", stream_codec_type=") + std::string(stream_codec_type) + std::string("\n");
-            wsclient_upload_error_info(ws, err_info.c_str());
+            ipcclient_upload_error_info(ipc, err_info.c_str());
             g_print("%s",err_info.c_str());
             json_destroy(&root);
             return NULL;
@@ -355,7 +355,7 @@ static const gchar* parse_create_command(char *desc,  gint pipe_id, WsClientHand
      } else {
             //g_print("error- failed to get valid codec type : %s\n", stream_codec_type );
             std::string err_info = std::string("error- failed to get valid codec type : ") + str_stream_codec_type + std::string("\n");
-            wsclient_upload_error_info(ws, err_info.c_str());
+            ipcclient_upload_error_info(ipc, err_info.c_str());
             g_print("%s",err_info.c_str());
             json_destroy(&root);
             return NULL;
@@ -363,12 +363,12 @@ static const gchar* parse_create_command(char *desc,  gint pipe_id, WsClientHand
      if(output_type) {
         // meta data + jpeg data
         g_str_helper_desc = std::string(" ! cvdlfilter name=cvdlfilter0 algopipeline=\"") + std::string(algo_pipeline_desc) + std::string("\" ") +
-                          std::string(" ! resconvert name=resconvert0 resconvert0.src_pic ! mfxjpegenc ! wssink name=wssink0 wsclientid=") +
-                          std::to_string(pipe_id)  + std::string("  resconvert0.src_txt ! wssink0.");
+                          std::string(" ! resconvert name=resconvert0 resconvert0.src_pic ! mfxjpegenc ! ipcsink name=ipcsink0 ipcclientid=") +
+                          std::to_string(pipe_id)  + std::string("  resconvert0.src_txt ! ipcsink0.");
      }else {
        // meta data
        g_str_helper_desc = std::string(" ! cvdlfilter name=cvdlfilter0 algopipeline=\"") + std::string(algo_pipeline_desc) + std::string("\" ") +
-                          std::string(" ! resconvert name=resconvert0 resconvert0.src_txt ! wssink name=wssink0 wsclientid=") +
+                          std::string(" ! resconvert name=resconvert0 resconvert0.src_txt ! ipcsink name=ipcsink0 ipcclientid=") +
                           std::to_string(pipe_id);
      }
 
@@ -432,12 +432,12 @@ static gboolean bus_callback (GstBus* bus, GstMessage* msg, gpointer data)
         gst_message_parse_error (msg, &err, &dbg);
         if (err) {
             g_print ("ERROR: %s\n", err->message);
-            wsclient_upload_error_info(hp->ws, err->message);
+            ipcclient_upload_error_info(hp->ipc, err->message);
             g_error_free (err);
         }
         if (dbg) {
             GST_INFO ("[Debug details: %s]\n", dbg);
-            wsclient_upload_error_info(hp->ws, dbg);
+            ipcclient_upload_error_info(hp->ipc, dbg);
             g_free (dbg);
         }
         hddlspipe_stop (hp);
@@ -446,7 +446,7 @@ static gboolean bus_callback (GstBus* bus, GstMessage* msg, gpointer data)
     case GST_MESSAGE_EOS:
         /* end-of-stream */
         GST_INFO ("EOS\n");
-        //wsclient_upload_error_info(hp->ws, "Got EOS");
+        //ipcclient_upload_error_info(hp->ipc, "Got EOS");
         hddlspipe_stop (hp);
         break;
     default:
@@ -469,7 +469,7 @@ void hddlspipe_prepare(int argc, char **argv)
 }
 
 /**
-  *   1. create hddls-pipe, connet to ws server
+  *   1. create hddls-pipe, connet to ipc server
   *   2. wait to receive pipe desc from server, and setup pipe based on desc
   **/
  HddlsPipe*   hddlspipe_create( )
@@ -479,24 +479,24 @@ void hddlspipe_prepare(int argc, char **argv)
     const gchar* pipeline_desc = NULL;
     GError     *error = NULL;
 
-   // 1. create ws client
+   // 1. create ipc client
    //if(!strcmp_s(g_server_uri, 4, "null", &indicator)) {
    if(!g_str_server_uri.compare("null")) {
-        hp->ws = wsclient_setup(g_str_default_server_uri.c_str(),  g_pipe_id);
+        hp->ipc = ipcclient_setup(g_str_default_server_uri.c_str(),  g_pipe_id);
    } else {
-         hp->ws = wsclient_setup(g_str_server_uri.c_str(),  g_pipe_id);
+         hp->ipc = ipcclient_setup(g_str_server_uri.c_str(),  g_pipe_id);
     }
    hp->pipe_id = g_pipe_id;
-    //it has connected to ws server.
+    //it has connected to ipc server.
 
-   // Block wait until get desc data from ws server
-    item = (MessageItem *)wsclient_get_data(hp->ws);
+   // Block wait until get desc data from ipc server
+    item = (MessageItem *)ipcclient_get_data(hp->ipc);
     GST_INFO("%s() -pipe %d  received message: %s\n", __func__, hp->pipe_id, item->data);
     hp->state = ePipeState_Null;
 
     // parse pipeline_create command
-    pipeline_desc = parse_create_command(item->data, hp->pipe_id, hp->ws);
-    wsclient_free_item(item);
+    pipeline_desc = parse_create_command(item->data, hp->pipe_id, hp->ipc);
+    ipcclient_free_item(item);
     if(!pipeline_desc) {
         g_print("Failed to get pipeline description!\n");
         return NULL;
@@ -507,7 +507,7 @@ void hddlspipe_prepare(int argc, char **argv)
        g_print ("failed to build pipeline, error message: %s\n",(error) ? error->message : NULL);
        return NULL;
    }
-    HDDLSPIPE_SET_PROPERTY( hp, WSSINK_NAME, "wsclientproxy", hp->ws, NULL);
+    HDDLSPIPE_SET_PROPERTY( hp, IPCSINK_NAME, "ipcclientproxy", hp->ipc, NULL);
 
     // set watch bus
     GstBus *bus = gst_element_get_bus (hp->pipeline);
@@ -584,7 +584,7 @@ static void hddlspipes_replay(HddlsPipe *hp)
           g_print ("ERROR: %s\n", error->message);
           //g_error_free (error);
       }
-       HDDLSPIPE_SET_PROPERTY( hp, WSSINK_NAME, "wsclientproxy", hp->ws, NULL);
+       HDDLSPIPE_SET_PROPERTY( hp, IPCSINK_NAME, "ipcclientproxy", hp->ipc, NULL);
 
         // set watch bus
        GstBus *bus = gst_element_get_bus (hp->pipeline);
@@ -615,9 +615,9 @@ void hddlspipe_destroy(HddlsPipe *hp)
         g_thread_join(hp->message_handle_thread);
     hp->message_handle_thread = NULL;
 
-    if(hp->ws)
-        wsclient_destroy(hp->ws);
-    hp->ws = NULL;
+    if(hp->ipc)
+        ipcclient_destroy(hp->ipc);
+    hp->ipc = NULL;
 
     g_source_remove (hp->bus_watch_id);
     gst_object_unref (hp->pipeline);

@@ -24,7 +24,7 @@
 #include <cmath>
 #include <arpa/inet.h>
 #include "Looper.h"
-#include "../ws/wsclient.h"
+#include "ipcclient.h"
 #include <string.h>
 
 Looper::Looper(shared_ptr<Transceiver> pTrans,  GAsyncQueue *receive_queue) : _bQuit(false)

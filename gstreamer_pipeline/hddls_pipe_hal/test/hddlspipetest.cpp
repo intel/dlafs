@@ -28,7 +28,7 @@
 
 #define CVDLFILTER_NAME "cvdlfilter0"
 #define RESCONVERT_NAME "resconvert0"
-#define WSSINK_NAME "wssink0"
+#define IPCSINK_NAME "ipcsink0"
 
 static gchar g_pipe_desc[1024] = "null";
 static gchar g_json_file_name[256] = "null"; 
@@ -42,7 +42,7 @@ static gint g_loop_times = 1;
     g_print ("Usage: %s...\n", program_name);
     g_print (
         " -j --specify json file name with full path.\n"
-        " -i --specify id of ws client.\n"
+        " -i --specify id of ipc client.\n"
         " -l --specify the loop times.\n"
          "-h --help Display this usage information.\n");
     exit (exit_code);
@@ -226,7 +226,7 @@ void hddlspipe_prepare(int argc, char **argv)
 }
 
 /**
-  *   1. create hddls-pipe, connet to ws server
+  *   1. create hddls-pipe, connet to ipc server
   *   2. wait to receive pipe desc from server, and setup pipe based on desc
   **/
  HddlsPipe*   hddlspipe_create( int id)
@@ -242,8 +242,8 @@ void hddlspipe_prepare(int argc, char **argv)
         exit(1);
    }
     int count = fread(json_buffer, 1,2048,pfJson);
-	if(count<=0)
-		g_print("Error: empty json file data!\n");
+    if(count<=0)
+        g_print("Error: empty json file data!\n");
     fclose(pfJson);
 
    hp->pipe_id = id;//g_pipe_id;

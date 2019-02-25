@@ -24,7 +24,7 @@
 
 #include "cvdlfilter.h"
 #include "resconvert.h"
-#include "wssink.h"
+#include "ipcsink.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -37,8 +37,8 @@ plugin_init (GstPlugin * plugin)
           TYPE_RES_CONVERT))
         return FALSE;
 
-    if (!gst_element_register (plugin, "wssink", GST_RANK_PRIMARY,
-          GST_TYPE_WS_SINK))
+    if (!gst_element_register (plugin, "ipcsink", GST_RANK_PRIMARY,
+          GST_TYPE_IPC_SINK))
         return FALSE;
 
   return TRUE;

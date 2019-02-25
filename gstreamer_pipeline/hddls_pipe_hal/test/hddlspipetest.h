@@ -28,7 +28,7 @@
 #include <assert.h>
 #include <glib.h>
 #include <gst/gst.h>
-#include <wsclient.h>
+#include <ipcclient.h>
 #include <stdlib.h>
 #include <getopt.h>
 
@@ -60,7 +60,6 @@ typedef struct _HddlsPipe {
     GstElement          *pipeline;
     guint               bus_watch_id;
     struct json_object  *config;
-//  WsClientHandle ws;
     GThread              *message_handle_thread;
     gint pipe_id;
 }HddlsPipe;
