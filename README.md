@@ -164,4 +164,11 @@ Note: below steps is the least
 		Step 2: Set json file at controller client
 			Please refer: hddls_server_controller_receiver/controller/json_file/create_srtp.json
 
+        Note: GST SRTP plugin encryption & authentication
+			a.	Encryption (properties rtp-cipher and rtcp-cipher): AES_ICM 256 bits (maximum security)
+			b.	Authentication (properties rtp-auth and rtcp-auth): HMAC_SHA1 80 bits (default, maximum protection)
+            For example: srtp-cipher=(string)aes-256-icm
+			             srtp-auth=(string)hmac-sha1-80
+						 srtcp-cipher=(string)aes-256-icm
+						 srtcp-auth=(string)hmac-sha1-80
 
