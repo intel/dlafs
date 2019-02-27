@@ -69,6 +69,10 @@ cp -raf $PROJECTS_PATH/gstreamer_plugins/gstreamer_plugin_openVINO/gst-libs/reso
 cp -raf $PROJECTS_PATH/gstreamer_plugins/gstreamer_plugin_openVINO/gst-libs/algo/exinferdata.h rpm_src_dir/usr/lib/x86_64-linux-gnu/libgstcvdl/.
 cp -raf $PROJECTS_PATH/gstreamer_plugins/gstreamer_plugin_openVINO/gst-libs/algo/exinferenceparser.h rpm_src_dir/usr/lib/x86_64-linux-gnu/libgstcvdl/.
 
+mkdir -p rpm_src_dir/usr/local/hddl_s
+cp -raf $PROJECTS_PATH/hddls_server_controller_receiver rpm_src_dir/usr/local/hddl_s/.
+rm -rf rpm_src_dir/usr/local/hddl_s/.gitignore
+
 if [ $? -eq 0 ]; then 
 echo "====================copied files to directory 'rpm_src_dir'================="
 fi
