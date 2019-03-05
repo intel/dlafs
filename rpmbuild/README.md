@@ -1,5 +1,5 @@
 1. Build RPM package:
-
+     sudo apt-get install elfutils
      hddls_rpm_build.sh <version> <weekly>
 
 2. Install rpm package
@@ -8,4 +8,4 @@
 
 3. Remove rpm package
 
-    rpm -e Intel_Movidius_MyriadX_HDDL-S_Linux
+    sudo rpm -e Intel_Movidius_MyriadX_HDDL-S_Linux

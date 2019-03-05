@@ -15,7 +15,7 @@ HDDL-S SW contain 2 parts:
 -------------------
 	sudo apt-get install libusb-1.0-0-dev libudev-dev libssl-dev rpm cmake libboost-program-options1.58-dev libboost-thread1.58 libboost-filesystem1.58 git libelf-dev dkms libssl-dev
 	sudo apt-get install gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-ugly gstreamer1.0-plugins-bad libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
-	sudo apt-get install libeigen3-dev  libopenblas-dev liblapack-dev libdlib-dev json-c
+	sudo apt-get install libeigen3-dev  libopenblas-dev liblapack-dev libdlib-dev
 	sudo ln -sf /opt/intel/mediasdk/lib64/libva.so.2 /usr/lib/libva.so
 	sudo ln -sf /opt/intel/mediasdk/lib64/libva-drm.so.2 /usr/lib/libva-drm.so
 
@@ -53,7 +53,17 @@ Note: below steps is the least
 	cd intel_sdk_for_opencl_2017_7.0.0.2568_x64
 	sudo ./install_GUI.sh
 
-3. Install OpenCV_4.0.0-rc
+3. Install json-c
+-----------------
+        sudo apt-get install git
+        git clone https://github.com/json-c/json-c.git
+        cd json-c
+        git checkout f8c632f579c71012f9aca81543b880a579f634fc
+        sudo apt-get install autoconf libtool
+        sh autogen.sh
+        ./configure && make && sudo make install
+
+4. Install OpenCV_4.0.0-rc
 --------------------------
 	export CPLUS_INCLUDE_PATH=/opt/intel/mediasdk/include:$CPLUS_INCLUDE_PATH
 	sudo ln -sf /opt/intel/opencl/SDK/include /opt/intel/opencl/include
@@ -62,23 +72,19 @@ Note: below steps is the least
 	cd opencv && git checkout -b 4.0.0-rc 4.0.0-rc
 	          or git checkout a6387c3012d5331798ffca2acdd8297f417101e4
 	mkdir build && cd build
-	git checkout -b 4.0.0-rc 4.0.0-rc    (git checkout a6387c3012d5331798ffca2acdd8297f417101e4)
 	cmake -DWITH_VA_INTEL=ON -DWITH_IPP=OFF -DWITH_CUDA=OFF -DOPENCV_GENERATE_PKGCONFIG=ON ..
 		Note: make sure:
 			--     VA:                          YES
 			--     Intel VA-API/OpenCL:         YES (OpenCL: /opt/intel/opencl)
-		If either is NO, please try WA as below:
-			sudo ln -sf /opt/intel/opencl/SDK/include /opt/intel/opencl/include
-			sudo ln -sf /opt/intel/mediasdk/include/va   /usr/local/include/va
 	make -j8
 	sudo make install
 	Note: OpenVINO has provided OpenCV libraries, but HDDL-S need VA support in OpenCV, so we must rebuild it. 
-          
-			terminate called after throwing an instance of 'cv::Exception'
-			what():  OpenCV(4.0.1-openvino) /home/jenkins/workspace/OpenCV/OpenVINO/build/opencv/modules/core/src/va_intel.cpp:51: error: (-6:Unknown error code -6) OpenCV was build without VA support (libva) in function 'initializeContextFromVA'
+	          terminate called after throwing an instance of 'cv::Exception'
+		  what():  OpenCV(4.0.1-openvino) /home/jenkins/workspace/OpenCV/OpenVINO/build/opencv/modules/core/src/va_intel.cpp:51:
+                           error: (-6:Unknown error code -6) OpenCV was build without VA support (libva) in function 'initializeContextFromVA'
 
 
-4. Set enviroment variables
+5. Set enviroment variables
 ---------------------------
 	source /opt/intel/computer_vision_sdk/bin/setupvars.sh
 	export LD_LIBRARY_PATH=/usr/local/lib:/opt/intel/computer_vision_sdk_2018.5.445/deployment_tools/inference_engine/external/hddl/lib:$LD_LIBRARY_PATH
@@ -87,9 +93,9 @@ Note: below steps is the least
 	export HDDLS_CVDL_KERNEL_PATH=/usr/lib/x86_64-linux-gnu/libgstcvdl/kernels
 	export PATH=$PATH:/opt/intel/mediasdk/bin/
 
-5. Build from source code 
+6. Build from source code
 -------------------------
-  
+        sudo apt-get install libgstreamer-plugins-bad1.0-dev  libx11-xcb-dev
 	1).HDDL-S pipe/plugins, which are C/C++ 
 		mkdir build && cd build
 		cmake ..
@@ -98,7 +104,7 @@ Note: below steps is the least
 	2). HDDL-S server/client, which are NodeJS 
 		It need not build, run it directly 
 
-6. Setup HDDL-S Server
+7. Setup HDDL-S Server
 ----------------------
 	sudo apt-get install nodejs-legacy npm
 	npm config set proxy <proxy>
@@ -107,7 +113,7 @@ Note: below steps is the least
 	cd hddls_server_controller_receiver
 	npm install
 
-7. Generate and install certifiate files
+8. Generate and install certifiate files
 ----------------------------------------
 	Step 1: 
 		Please refer to certificate_create_explanation.md to generate certificate files.
@@ -126,7 +132,7 @@ Note: below steps is the least
 		chmod 700 client_cert
 		chmod 700 server_cert
 
-8. Run HDDL-S Server
+9. Run HDDL-S Server
 ---------------------
 	cd hddls_server_controller_receiver/server
 	export HDDLS_CVDL_MODEL_PATH=`pwd`/models
@@ -137,7 +143,7 @@ Note: below steps is the least
 		make sure server_cert/*.pem mode is 400
 
 
-9. Others
+10. Others
 ----------
 	A. How to deploy customer models
 		Step 1: implement libxxxalgo.so as customer guide

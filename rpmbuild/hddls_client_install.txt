@@ -7,7 +7,6 @@
 	sudo n stable
 	npm install
 
-
 	Install certificate files, which is from server install guide:
   		Copy "ca-crt.pem client1-crt.pem client1-key.pem" into 'controller/client_cert'
   		Copy "ca-crt.pem client1-crt.pem client1-key.pem" into 'receiver/client_cert'

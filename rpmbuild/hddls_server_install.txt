@@ -64,9 +64,6 @@ Note: below steps is the least
 		Note: make sure:
 			--     VA:                          YES
 			--     Intel VA-API/OpenCL:         YES (OpenCL: /opt/intel/opencl)
-		If either is NO, please try WA as below:
-			sudo ln -sf /opt/intel/opencl/SDK/include /opt/intel/opencl/include
-			sudo ln -sf /opt/intel/mediasdk/include/va   /usr/local/include/va
 	make -j8
 	sudo make install
 	Note: OpenVINO has provided OpenCV libraries, but HDDL-S need VA support in OpenCV, so we must rebuild it. 
@@ -111,6 +108,7 @@ Step 3:
 
 8. Run HDDL-S Server
 ---------------------
+	cp -rf /usr/local/hddl-s .
 	cd hddls_server_controller_receiver/server
 	export HDDLS_CVDL_MODEL_PATH=`pwd`/models
 	node hddls-server.js

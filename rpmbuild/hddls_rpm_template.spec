@@ -1,6 +1,6 @@
 Name:           Intel_Movidius_MyriadX_HDDL-S_Linux
-Version:preGoldV1.0
-Release:ww09_2019
+Version:ww10
+Release:preGold
 Summary:        This is hddl-s projects.
 License:        GPL
 #URL:
@@ -36,8 +36,8 @@ cp -a usr/* $RPM_BUILD_ROOT%{usrpath}
 %config
 
 %post
-echo "Setup enviroment variables:"
-bash /usr/local/bin/hddls_prepare.sh
+#echo "Setup enviroment variables:"
+#bash /usr/local/bin/hddls_prepare.sh
 
 %clean
 rm -rf $RPM_BUILD_ROOT
