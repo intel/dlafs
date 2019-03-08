@@ -24,15 +24,15 @@ extern "C" {
 #endif
 
 enum {
-    ALGO_NONE      = -1,
-    ALGO_YOLOV1_TINY           = 0,
-    ALGO_OF_TRACK                  = 1,
-    ALGO_GOOGLENETV2         = 2,
-    ALGO_MOBILENET_SSD     = 3,
-    ALGO_TRACK_LP                  =4,
-    ALGO_LPRNET                        = 5,
-    ALGO_YOLOV2_TINY           = 6,
-    ALGO_REID                               = 7,
+    ALGO_NONE           = -1,
+    ALGO_YOLOV1_TINY    = 0,
+    ALGO_OF_TRACK       = 1,
+    ALGO_GOOGLENETV2    = 2,
+    ALGO_MOBILENET_SSD  = 3,
+    ALGO_TRACK_LP       = 4,
+    ALGO_LPRNET         = 5,
+    ALGO_YOLOV2_TINY    = 6,
+    ALGO_REID           = 7,
     ALGO_SINK,   /*last algo in algopipe*/
     ALGO_MAX_DEFAULT_NUM,
 };

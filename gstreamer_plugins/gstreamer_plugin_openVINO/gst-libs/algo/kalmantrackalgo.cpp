@@ -15,9 +15,9 @@
  * if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
- /*
-  * Track car/bus and detect the license plate
-  */
+//
+// Track car/bus and detect the license plate
+//
 #include <ocl/oclmemory.h>
 #include "mathutils.h"
 #include "kalmantrackalgo.h"
@@ -39,9 +39,9 @@ using namespace HDDLStreamFilter;
 #define TRACKING_LP_INPUT_W 300
 #define TRACKING_LP_INPUT_H 300
 
-/**
- * If not detect number >= TRACK_MAX_NUM, tracking will stop.
- */
+//
+// If not detect number >= TRACK_MAX_NUM, tracking will stop.
+//
 #define TRACK_LP_MAX_NUM 8
 #define TRACK_LP_FRAME_NUM 2
 
@@ -186,10 +186,10 @@ void KalmanTrackAlgo::verify_detection_result(std::vector<ObjectData> &objectVec
         objectVec.push_back(vecObjectCp[i]);
     }
 
-    /**
-    *  The same object, may be give out 2 rectangle, we need merge them.
-    *  After merge, we choose the later object as last object.
-    */
+    //
+    //  The same object, may be give out 2 rectangle, we need merge them.
+    //  After merge, we choose the later object as last object.
+    //
     vecObjectCp = objectVec;
     objectVec.clear();
     int rtNum = vecObjectCp.size();
@@ -223,24 +223,24 @@ void KalmanTrackAlgo::try_add_new_one_object(ObjectData &objectData, guint64 fra
        cv::Rect &rect = (*it).rect;
        float ov12, ov21;
        utils.get_overlap_ratio(rect, objRect, ov12, ov21);
-        if ((ov12 > 0.60f || ov21 > 0.4f)  &&  objectData.rect.y > rect.y * 9/10) {
-                    bNewOne = FALSE;
-                    objectData.flags |= FLAGS_TRACKED_LP_DATA_IS_SET;
-                    objectData.id = (*it).objId;
-                    (*it).rect = objRect;
-                     // We will set them in update_track_object()
-                    /* 
-                (*it).detectedNum++;
-                (*it).notDetectNum = 0;
-             */
-                     // convert it from orignal size base to tracking image base
-                     objRect = utils.convert_rect(objectData.rect, 
+       if ((ov12 > 0.60f || ov21 > 0.4f)  &&  objectData.rect.y > rect.y * 9/10) {
+            bNewOne = FALSE;
+            objectData.flags |= FLAGS_TRACKED_LP_DATA_IS_SET;
+            objectData.id = (*it).objId;
+            (*it).rect = objRect;
+            // We will set them in update_track_object()
+            //
+            //(*it).detectedNum++;
+            //(*it).notDetectNum = 0;
+            //
+            // convert it from orignal size base to tracking image base
+            objRect = utils.convert_rect(objectData.rect,
                                  mImageProcessorInVideoWidth,
                                  mImageProcessorInVideoHeight,
                                  mInputWidth, mInputHeight);
-                     (*it).vecPos.push_back(objRect);
-                     (*it).bHit = TRUE;
-                    break;
+            (*it).vecPos.push_back(objRect);
+            (*it).bHit = TRUE;
+            break;
         }
         it++;
    }
@@ -289,8 +289,8 @@ void KalmanTrackAlgo::verify_tracked_object()
     std::vector<TrackLpObjAttribute>::iterator it;
     for (it = mTrackObjVec.begin(); it != mTrackObjVec.end();) {
         if((*it).bHit  == FALSE) {
-                 (*it).notDetectNum++;
-                 //(*it).detectedNum=0;
+            (*it).notDetectNum++;
+            //(*it).detectedNum=0;
          }
          (*it).bHit = FALSE;
          it++;

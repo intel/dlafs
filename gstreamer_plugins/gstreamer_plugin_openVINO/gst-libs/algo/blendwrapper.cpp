@@ -43,7 +43,7 @@ void blender_init(BlendHandle handle, GstCaps *caps)
 {
     CvdlBlender *cvdl_blender  = (CvdlBlender *) handle;
     GstVideoInfo info;
-    int width, height;//, size;
+    int width, height;
     GstCaps *ocl_caps;
 
     if(cvdl_blender->mInited)
@@ -134,7 +134,6 @@ static void buffer_test(GstBuffer *buf)
 
 static GstBuffer *generate_osd(BlendHandle handle, GstBuffer *input_buf)
 {
-    //CvdlBlender *cvdl_blender  = (CvdlBlender *) handle;
     GstBuffer *osd_buf = NULL;
     OclMemory *osd_mem = NULL;
     CvdlMeta *cvdl_meta = NULL;

@@ -98,9 +98,9 @@ public:
         return cv::Rect(0, 0, 0, 0);
     }
 
-    /**
-    * @brief Calculate a mean shift position, if we track fail.
-    */
+    //
+    // @brief Calculate a mean shift position, if we track fail.
+    //
     void getLastShiftValue(float& shiftX, float& shiftY)
     {
         if (vecPos.size() >= 2) {

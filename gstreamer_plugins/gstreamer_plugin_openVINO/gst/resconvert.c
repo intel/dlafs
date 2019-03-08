@@ -37,17 +37,17 @@ GST_DEBUG_CATEGORY_STATIC (resconvert_debug);
 static GstElementClass *parent_class = NULL;
 //G_DEFINE_TYPE (ResConvert, res_convert, TYPE_RES_CONVERT);
 
-/* resconvert signals and args */
+// resconvert signals and args
 enum
 {
-  /* FILL ME */
+  //FILL ME
   LAST_SIGNAL
 };
 
 enum
 {
   PROP_0,
-  /* FILL ME for more properties*/
+  // FILL ME for more properties
 };
 
 enum
@@ -104,8 +104,7 @@ GST_STATIC_PAD_TEMPLATE (
     GST_STATIC_CAPS (src_txt_caps_str)
     /*GST_STATIC_CAPS_ANY*/
     );
-
-/*static guint res_convert_signals[LAST_SIGNAL] = { 0 };*/
+// static guint res_convert_signals[LAST_SIGNAL] = { 0 };
 extern VideoSurfaceID gst_get_mfx_surface(GstBuffer* inbuf, GstVideoInfo *info, VideoDisplayID *display);
 
 static GstFlowReturn
@@ -174,14 +173,13 @@ res_convert_send_data (ResConvert * convertor, GstBuffer * buf, GstBuffer * inbu
         gst_get_mfx_surface(inbuf, NULL, &data));
 
     // For pic data which has been blended already:
-    //  1) push the buffer directly
+    //  push the buffer directly
     if(convertor->pic_srcpad){
         // gst_pad_push will unref this buffer.
         gst_pad_push (convertor->pic_srcpad, buf);
     } else {
         gst_buffer_unref(buf);
     }
-
     GST_LOG_OBJECT (convertor, "result: %s", gst_flow_get_name (result));
 
     return result;
@@ -198,7 +196,7 @@ res_convert_send_event (ResConvert * convertor, GstEvent * event)
             GST_EVENT_TYPE_NAME (event));
        ret = FALSE;
   } else {
-        /* If at least one push returns TRUE, then we return TRUE. */
+        // If at least one push returns TRUE, then we return TRUE.
         GST_DEBUG_OBJECT (convertor->pic_srcpad, "%s event was handled",
             GST_EVENT_TYPE_NAME (event));
   }
@@ -208,7 +206,7 @@ res_convert_send_event (ResConvert * convertor, GstEvent * event)
             GST_EVENT_TYPE_NAME (event));
        ret = FALSE;
   } else {
-        /* If at least one push returns TRUE, then we return TRUE. */
+        // If at least one push returns TRUE, then we return TRUE.
         GST_DEBUG_OBJECT (convertor->txt_srcpad, "%s event was handled",
             GST_EVENT_TYPE_NAME (event));
   }
@@ -245,9 +243,6 @@ res_convert_clean (ResConvert * convertor)
 static void
 res_convert_finalize (ResConvert * convertor)
 {
-    // g_object_unref() --> gst_element_dispose
-    // it has unref all the pads
-
     // release pool
     res_convert_clean(convertor);
 
@@ -293,7 +288,8 @@ res_convert_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         // get info of caps
         gst_video_info_from_caps (&convertor->sink_info, caps);
 
-        /**---  set caps here  --*/
+        // set caps here
+        //
         // From src pad event, only process sink pad caps
         // From sink pad event, only process src pad caps
         // If not, there will be dead-loop
@@ -301,7 +297,7 @@ res_convert_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         // For example: event from sink pad, then call below function will be dead lock
         //              gst_pad_set_caps (convertor->sinkpad, caps);
 
-        /**---set caps for peer pad below----*/
+        // set caps for peer pad below
         GstPadDirection direction = GST_PAD_DIRECTION (pad);
         GstCaps *prev_incaps = NULL, *newcaps;
         GstPad *otherpad = NULL;
@@ -395,17 +391,14 @@ static gboolean
 res_convert_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
     ResConvert *convertor = RES_CONVERT (parent);
-    //GstPadDirection direction = GST_PAD_DIRECTION (pad);
-    gboolean ret = TRUE;//, forward = FALSE;
+    gboolean ret = TRUE;
 
     GST_LOG_OBJECT (convertor, "Have query of type %d on pad %" GST_PTR_FORMAT,
         GST_QUERY_TYPE (query), pad);
-
     GST_DEBUG("%s() - name = %s, query = %s\n",__func__, gst_pad_get_name(pad),
         GST_QUERY_TYPE_NAME (query));
 
     ret = gst_pad_query_default (pad, parent, query);
-
     switch (GST_QUERY_TYPE (query)) {
         case GST_QUERY_ALLOCATION:
             GST_DEBUG("%s() - query GST_QUERY_ALLOCATION...",__func__);
@@ -432,7 +425,7 @@ res_convert_query (GstPad * pad, GstObject * parent, GstQuery * query)
 }
 
 
-/* If we can pull that's prefered */
+//If we can pull that's prefered
 static gboolean
 res_convert_sink_activate (GstPad * sinkpad, GstObject * parent)
 {
@@ -445,7 +438,7 @@ res_convert_sink_activate (GstPad * sinkpad, GstObject * parent)
     return res;
 }
 
-/* This function gets called when we activate ourselves in push mode. */
+// This function gets called when we activate ourselves in push mode.
 static gboolean
 res_convert_sink_activate_mode (GstPad * pad, GstObject * parent,
     GstPadMode mode, gboolean active)
@@ -558,7 +551,6 @@ res_convert_change_state (GstElement * element, GstStateChange transition)
     switch (transition) {
         case GST_STATE_CHANGE_NULL_TO_READY:
             // create the process task(thread) and start it
-
             break;
         case GST_STATE_CHANGE_READY_TO_PAUSED:
             break;
@@ -610,7 +602,6 @@ res_convert_class_init (ResConvertClass * klass)
     GstElementClass *gstelement_class;
 
     parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
-
     gobject_class = (GObjectClass *) klass;
     gstelement_class = (GstElementClass *) klass;
 
@@ -624,8 +615,6 @@ static void
 res_convert_init (ResConvert * convertor)
 {
     ResConvertClass *klass = RES_CONVERT_GET_CLASS (convertor);
-    //GstCaps *caps = gst_caps_new_any();
-
     GST_DEBUG_CATEGORY_INIT (resconvert_debug, "resconvert", 0,
             "Convert inference result into OSD");
 
@@ -633,7 +622,7 @@ res_convert_init (ResConvert * convertor)
     gst_caps_set_simple (caps, "width", G_TYPE_INT, sizeof(InferenceData), "height",
       G_TYPE_INT, 1, NULL);
 
-    /* Create sink pad */
+    // Create sink pad
     convertor->sinkpad = gst_pad_new_from_template (klass->sink_template, "sink");
     gst_pad_set_event_function (convertor->sinkpad, GST_DEBUG_FUNCPTR (res_convert_sink_event));
     gst_pad_set_query_function (convertor->sinkpad, GST_DEBUG_FUNCPTR (res_convert_query));
@@ -642,11 +631,11 @@ res_convert_init (ResConvert * convertor)
     gst_pad_set_activatemode_function (convertor->sinkpad,  GST_DEBUG_FUNCPTR (res_convert_sink_activate_mode));
     gst_element_add_pad (GST_ELEMENT (convertor), convertor->sinkpad);
 
-    /* create a pool for src_txt buffer */
+    // create a pool for src_txt buffer
     convertor->src_pool = res_pool_create (caps, sizeof(InferenceData), 3, 10);
     gst_caps_unref(caps);
 
-    /* create src pads */
+    // create src pads
     //we can create src pads dynamically in future
     res_convert_create_src_pad (convertor, STREAM_TYPE_TXT);
     res_convert_create_src_pad (convertor, STREAM_TYPE_PIC);

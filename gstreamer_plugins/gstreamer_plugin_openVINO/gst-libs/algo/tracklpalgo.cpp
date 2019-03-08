@@ -16,9 +16,9 @@
  */
 
 
- /*
-  * Track car/bus and detect the license plate
-  */
+//
+// Track car/bus and detect the license plate
+//
 #include <ocl/oclmemory.h>
 #include "mathutils.h"
 #include "tracklpalgo.h"
@@ -41,9 +41,9 @@ using namespace HDDLStreamFilter;
 #define TRACKING_LP_INPUT_W 300
 #define TRACKING_LP_INPUT_H 300
 
-/**
- * If not detect number >= TRACK_MAX_NUM, tracking will stop.
- */
+//
+// If not detect number >= TRACK_MAX_NUM, tracking will stop.
+//
 #define TRACK_LP_MAX_NUM 8
 #define TRACK_LP_FRAME_NUM 2
 
@@ -151,13 +151,13 @@ static void post_tracklp_process(CvdlAlgoData *algoData)
                     continue;
                }
                 //test
-                /*
-                int test_idx = algoData->mFrameId+i;
-                trackLpAlgo->save_buffer(ocl_mem->frame.getMat(0).ptr(), trackLpAlgo->mInputWidth,
-                    trackLpAlgo->mInputHeight,3,test_idx,0, "track_lp"); 
-                g_print("idx=%d, LP=(%d,%d)@%dx%d\n",test_idx, lpDetResult.x, lpDetResult.y, lpDetResult.width, lpDetResult.height);
-           */
-             #if 1
+                //
+                //int test_idx = algoData->mFrameId+i;
+                //trackLpAlgo->save_buffer(ocl_mem->frame.getMat(0).ptr(), trackLpAlgo->mInputWidth,
+                //    trackLpAlgo->mInputHeight,3,test_idx,0, "track_lp");
+                //g_print("idx=%d, LP=(%d,%d)@%dx%d\n",test_idx, lpDetResult.x, lpDetResult.y, lpDetResult.width, lpDetResult.height);
+                //
+                #if 1
                  // expand LP scope 10%
                   int adjustW =  lpDetResult.width * 1.16;
                   int adjustH =  lpDetResult.height * 1.1;
@@ -177,7 +177,7 @@ static void post_tracklp_process(CvdlAlgoData *algoData)
                   lpDetResult.width = adjustW;
                   lpDetResult.y = adjustY;
                   lpDetResult.height = adjustH;
-            #endif
+                #endif
      
                 // figure out licensePlateBox
                 licensePlateBox = lpDetResult;
@@ -204,12 +204,12 @@ static void post_tracklp_process(CvdlAlgoData *algoData)
     
        // detectLicencePlates() has filtered candidate frame to choose the best one
        // so we need do it again
-#if  1
-         // update mTrackObjVec
+        #if  1
+        // update mTrackObjVec
         trackLpAlgo->verify_tracked_object();
         trackLpAlgo->update_track_object(algoData->mObjectVec);
         trackLpAlgo->mLastObjectTrackRes = trackResult;
- #endif
+        #endif
 
 }
 
@@ -285,10 +285,10 @@ void TrackLpAlgo::verify_detection_result(std::vector<ObjectData> &objectVec)
         objectVec.push_back(vecObjectCp[i]);
     }
 
-    /**
-    *  The same object, may be give out 2 rectangle, we need merge them.
-    *  After merge, we choose the later object as last object.
-    */
+    //
+    //  The same object, may be give out 2 rectangle, we need merge them.
+    //  After merge, we choose the later object as last object.
+    //
     vecObjectCp = objectVec;
     objectVec.clear();
     int rtNum = vecObjectCp.size();
@@ -322,24 +322,24 @@ void TrackLpAlgo::try_add_new_one_object(ObjectData &objectData, guint64 frameId
        cv::Rect &rect = (*it).rect;
        float ov12, ov21;
        utils.get_overlap_ratio(rect, objRect, ov12, ov21);
-        if ((ov12 > 0.60f || ov21 > 0.4f)  &&  objectData.rect.y > rect.y * 9/10) {
-                    bNewOne = FALSE;
-                    objectData.flags |= FLAGS_TRACKED_LP_DATA_IS_SET;
-                    objectData.id = (*it).objId;
-                    (*it).rect = objRect;
-                     // We will set them in update_track_object()
-                    /* 
-                (*it).detectedNum++;
-                (*it).notDetectNum = 0;
-             */
-                     // convert it from orignal size base to tracking image base
-                     objRect = utils.convert_rect(objectData.rect, 
-                                 mImageProcessorInVideoWidth,
-                                 mImageProcessorInVideoHeight,
-                                 mInputWidth, mInputHeight);
-                     (*it).vecPos.push_back(objRect);
-                     (*it).bHit = TRUE;
-                    break;
+       if ((ov12 > 0.60f || ov21 > 0.4f)  &&  objectData.rect.y > rect.y * 9/10) {
+            bNewOne = FALSE;
+            objectData.flags |= FLAGS_TRACKED_LP_DATA_IS_SET;
+            objectData.id = (*it).objId;
+            (*it).rect = objRect;
+            // We will set them in update_track_object()
+            //
+            //(*it).detectedNum++;
+            //(*it).notDetectNum = 0;
+            //
+            // convert it from orignal size base to tracking image base
+            objRect = utils.convert_rect(objectData.rect,
+                    mImageProcessorInVideoWidth,
+                    mImageProcessorInVideoHeight,
+                    mInputWidth, mInputHeight);
+            (*it).vecPos.push_back(objRect);
+            (*it).bHit = TRUE;
+            break;
         }
         it++;
    }
@@ -388,8 +388,8 @@ void TrackLpAlgo::verify_tracked_object()
     std::vector<TrackLpObjAttribute>::iterator it;
     for (it = mTrackObjVec.begin(); it != mTrackObjVec.end();) {
         if((*it).bHit  == FALSE) {
-                 (*it).notDetectNum++;
-                 //(*it).detectedNum=0;
+            (*it).notDetectNum++;
+            //(*it).detectedNum=0;
          }
          (*it).bHit = FALSE;
          it++;
@@ -490,39 +490,6 @@ void TrackLpAlgo::remove_no_lp(std::vector<ObjectData> &objectVec)
 //-------------------------------------------------------------------------
 
 #if 0
-struct HSVScope{
-    int minH;
-    int maxH;
-    int minS;
-    int maxS;
-    int minV;
-    int maxV;
-};
-
-static struct HSVScope hsvScope[] = {
-    {90, 140,  80,  255, 80, 255}, // Blue plate
-    {11,    34,  43,  255, 46, 255}, // Yellow palte
-    {0,    180,    0,  255,   0,   46 }, // black plate
-    {0,    180,    0,    30,  46, 220} // white plate
-};
-
-static bool checkHSV(const cv::Vec3b & hsv)
-{
-   int i = 0;
-   bool ret = false;
-
-   for(i=0;i<2;i++) {
-        ret     = (hsv[0] >hsvScope[i].minH) && (hsv[0]<hsvScope[i].maxH);
-        ret  &= (hsv[1] >hsvScope[i].minS) && (hsv[1]<hsvScope[i].maxS);
-        ret  &= (hsv[2] >hsvScope[i].minV) && (hsv[2]<hsvScope[i].maxV);
-        if(ret)
-            return true;
-    }
-    return false;
-}
-#else
-
-/*
 static int checkHSV_full_C( unsigned char  *hsv_in, int size, unsigned char *gray_out)
 {
    int i = 0, index = 0,j ;
@@ -555,7 +522,8 @@ static int checkHSV_full_C( unsigned char  *hsv_in, int size, unsigned char *gra
    }
     return 0;
 }
-*/
+#endif
+
 #include <emmintrin.h> //SSE2(include xmmintrin.h)
 static int checkHSV_full_SSE( unsigned char  *hsv, int size, unsigned char *gray_out)
 {
@@ -615,7 +583,7 @@ static int checkHSV_full_SSE( unsigned char  *hsv, int size, unsigned char *gray
    }
    return 0;
 }
-#endif
+
 
 static bool checkSize(cv::RotatedRect rect)
 {

@@ -58,8 +58,8 @@ public:
     cv::Rect rect; // vehicle rect of this frame
     gboolean bHit;// if be hit in new frame
 
-    int notDetectNum;   /* The object is not detected in the continuous notDetectNum, stop tracking and report. */
-    std::vector<cv::Rect> vecPos;/* Every frame vehicle position based on tracking size */
+    int notDetectNum;   // The object is not detected in the continuous notDetectNum, stop tracking and report.
+    std::vector<cv::Rect> vecPos;// Every frame vehicle position based on tracking size
     bool bBottom;// Had arrived at image bottom; default = false;
     cv::Rect getLastPos()
     {

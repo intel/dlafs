@@ -165,10 +165,10 @@ GstFlowReturn Yolov1TinyAlgo::parse_inference_result(InferenceEngine::Blob::Ptr 
     }
 
 
-/*
- *    total = 7 * 7 * 2 
- *    classes = 9
- */
+//
+//    total = 7 * 7 * 2
+//    classes = 9
+//
 void Yolov1TinyAlgo::nms_sort(Yolov1TinyInternalData *internalData)
 {
     int total = cGrideSize * cGrideSize * cBoxNumEachBlock;
@@ -275,10 +275,10 @@ void Yolov1TinyAlgo::get_detection_boxes(
     }
 }
 
-/*    num = 7 * 7 * 2
- *    thresh = 0.2
- *    classes = 9
- */
+//    num = 7 * 7 * 2
+//    thresh = 0.2
+//    classes = 9
+//
 void Yolov1TinyAlgo::get_result(Yolov1TinyInternalData *internalData, CvdlAlgoData *outData)
 {
     int num = cGrideSize * cGrideSize * cBoxNumEachBlock;

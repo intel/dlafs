@@ -34,11 +34,9 @@ GST_DEBUG_CATEGORY_STATIC (res_memory_debug);
 GQuark res_memory_quark (void)
 {
     static GQuark quark = 0;
-
     if (!quark) {
         quark = g_quark_from_string ("GstResMemory");
     }
-
     return quark;
 }
 
@@ -102,15 +100,13 @@ void res_memory_data_resize(GstMemory *memory, int count)
     RES_MEMORY_DATA_COUNT(memory) = count;
 }
 
-
-/* Called when gst_object_unref(memory) */
+// Called when gst_object_unref(memory)
 static void
 res_memory_free (GstAllocator* allocator, GstMemory* memory)
 {
     if (!allocator || !memory)
         return;
 
-    //ResAllocator* res_alloc = RES_ALLOCATOR_CAST (allocator);
     InferenceData *data = RES_MEMORY_DATA(memory);
     //int count = RES_MEMORY_DATA_COUNT(memory);
     // g_print("res_memory_free: res_mem = %p, res_mem->data=%p\n",memory, data );
@@ -146,7 +142,7 @@ res_allocator_class_init (ResAllocatorClass* res_class)
     GstAllocatorClass* klass = (GstAllocatorClass*) res_class;
 
     klass->alloc = NULL;
-    /* Called when gst_object_unref(memory) */
+    // Called when gst_object_unref(memory)
     klass->free = res_memory_free;
 
     GST_DEBUG_CATEGORY_INIT (res_memory_debug,

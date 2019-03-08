@@ -393,34 +393,8 @@ AlgoPipelineHandle algo_pipeline_create(AlgoPipelineConfig* config, int num, Gst
         }
     }
 
-// link algo and get first and last algo
-#if 0
-    // link from previous item to current item 
-    for(i=0; i< num; i++) {
-        item = pipeline->algo_chain + i;
-        if(item->preItem){
-            algo_item_link(item->preItem, item, 0);
-        }else {
-            // here preId = -1, means it is the first algo item
-            // Note: we should only have one first algo
-            pipeline->first = item->algo;
-        }
-        for(j=0;j<config[i].nextNum;j++) {
-            nextId = config[i].nextId[j];
-            if(nextId>=0){
-                // next algo has not been created
-                //algo_item_link(item, item->nextItem[j]);
-            }else {
-                nextId = (-1 * nextId) - 1;
-                if(nextId < MAX_PIPELINE_OUT_NUM)
-                     preSinkItem[nextId] = item;
-                else
-                    g_print("Error when algo pipe create: output algo nextId = %d\n", nextId);
-            }
-        }
-    }
-    #else
-     // link from current item to next item 
+    // link algo and get first and last algo
+    // link from current item to next item
     for(i=0; i< num; i++) {
         item = pipeline->algo_chain + i;
         if(!item->algo)
@@ -447,7 +421,7 @@ AlgoPipelineHandle algo_pipeline_create(AlgoPipelineConfig* config, int num, Gst
             }
         }
     }
-    #endif
+
 
     if(error) {
         g_free(pipeline->algo_chain);
@@ -488,7 +462,6 @@ void algo_pipeline_destroy(AlgoPipelineHandle handle)
     }
     g_free(pipeline->algo_chain);
     g_free(pipeline);
-    //register_reset();
 }
 int algo_pipeline_set_caps(AlgoPipelineHandle handle, int algo_id, GstCaps* caps)
 {
@@ -615,14 +588,6 @@ int algo_pipeline_get_all_queue_size(AlgoPipelineHandle handle)
         GST_ERROR("algo pipeline handle is NULL!\n");
         return 0;
     }
-    #if 0
-    algo = static_cast<CvdlAlgoBase *>(pipeline->first);
-    while(algo) {
-        size += algo->get_in_queue_size() + algo->get_out_queue_size();
-        size += algo->mInferCnt;
-        algo=algo->mNext[0];
-    }
-    #else
     for(i=0;i<pipeline->algo_num;i++) {
         algo = static_cast<CvdlAlgoBase *>(pipeline->algo_chain[i].algo);
         if(algo) {
@@ -630,7 +595,6 @@ int algo_pipeline_get_all_queue_size(AlgoPipelineHandle handle)
             size += algo->mInferCnt;
         }
     }
-    #endif
     return size;
 }
 

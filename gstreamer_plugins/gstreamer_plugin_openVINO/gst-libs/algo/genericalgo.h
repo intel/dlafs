@@ -41,7 +41,6 @@ public:
     void objdata_2_exobjdata(ObjectData &objData,  ExObjectData &exObjData);
     InferenceEngine::Precision getIEPrecision(ExDataType type) ;
 
-    //std::string mName;
     void *mHandler;
     pfInferenceResultParseFunc pfParser;
     pfPostProcessInferenceDataFunc pfPostProcess;

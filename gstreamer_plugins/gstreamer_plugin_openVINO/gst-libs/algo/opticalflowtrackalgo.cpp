@@ -36,13 +36,11 @@ using namespace cv;
 #define TRACKING_INPUT_W 512
 #define TRACKING_INPUT_H 512
 
-/**
- * If not detect number >= TRACK_MAX_NUM, tracking will stop.
- */
+//
+// If not detect number >= TRACK_MAX_NUM, tracking will stop.
+//
 #define TRACK_MAX_NUM 12
 #define TRACK_FRAME_NUM 3
-
-
 
 #define FLAGS_TRACKED_DATA_IS_SET   0x1000
 #define FLAGS_TRACKED_DATA_IS_PASS  0x2000
@@ -176,10 +174,10 @@ void OpticalflowTrackAlgo::verify_detection_result(std::vector<ObjectData> &obje
         objectVec.push_back(vecObjectCp[i]);
     }
 
-    /**
-    *  The same object, may be give out 2 rectangle, we need merge them.
-    *  After merge, we choose the later object as last object.
-    */
+    //
+    //  The same object, may be give out 2 rectangle, we need merge them.
+    //  After merge, we choose the later object as last object.
+    //
     vecObjectCp = objectVec;
     objectVec.clear();
     int rtNum = vecObjectCp.size();
@@ -202,7 +200,7 @@ void OpticalflowTrackAlgo::verify_detection_result(std::vector<ObjectData> &obje
 
 std::vector<cv::Point2f> OpticalflowTrackAlgo::calc_feature_points(cv::UMat &gray)
 {
-    /* Optical flow parameter */
+    // Optical flow parameter
     cv::TermCriteria termcrit(cv::TermCriteria::COUNT | cv::TermCriteria::EPS, 20, 0.03);
     const int MAX_COUNT = 100;
     cv::Size subPixWinSize(10, 10), winSize(15, 15);
@@ -386,9 +384,9 @@ cv::Rect OpticalflowTrackAlgo::compare_detect_predict(
 }
 
 
-/**
- * get ROI based on orignal video size
- */
+//
+// get ROI based on orignal video size
+//
 void OpticalflowTrackAlgo::get_roi_rect(cv::Rect& roiRect, cv::Rect curRect)
 {
     MathUtils utils;
@@ -506,7 +504,7 @@ void OpticalflowTrackAlgo::track_objects_fast(CvdlAlgoData* &algoData)
         }
     }
 
-    /* Check whether vecDetectRt.size == null?, if !=null, add new object */
+    // Check whether vecDetectRt.size == null?, if !=null, add new object
     add_new_objects(objectVec, algoData->mFrameId);
 
     if(mPreFrame)
@@ -554,7 +552,7 @@ void OpticalflowTrackAlgo::track_objects(CvdlAlgoData* &algoData)
         }
     }
 
-    /* Check whether vecDetectRt.size == null?, if !=null, add new object */
+    // Check whether vecDetectRt.size == null?, if !=null, add new object
     add_new_objects(objectVec, algoData->mFrameId);
 
     if(mPreFrame)

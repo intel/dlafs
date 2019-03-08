@@ -46,8 +46,6 @@ res_pool_set_config (GstBufferPool* pool, GstStructure* config)
         GST_WARNING_OBJECT (pool, "invalid config");
         return FALSE;
     }
-
-    //ResPoolPrivate *priv = RES_POOL_CAST (pool)->priv;
     gst_buffer_pool_config_set_params (config, caps, size, min, max);
 
     return GST_BUFFER_POOL_CLASS (parent_class)->set_config (pool, config);
@@ -66,7 +64,7 @@ res_memory_alloc (ResPool* respool)
     res_mem->pts  = 0;
     //g_print("res_memory_alloc: res_mem = %p, res_mem->data=%p\n",res_mem, res_mem->data );
 
-    /* find the real parent */
+    // find the real parent
     if ((parent = res_mem->parent.parent) == NULL)
       parent = (GstMemory *) res_mem;
 
@@ -105,7 +103,6 @@ res_pool_alloc (GstBufferPool* pool, GstBuffer** buffer,
     //     (GDestroyNotify) gst_memory_unref);
 
     gst_buffer_append_memory (res_buf, (GstMemory *)res_mem);
-
     *buffer = res_buf;
     return GST_FLOW_OK;
 }
@@ -115,7 +112,6 @@ res_pool_finalize (GObject* object)
 {
     ResPool *pool = RES_POOL_CAST (object);
     ResPoolPrivate *priv = pool->priv;
-
     GST_LOG_OBJECT (pool, "finalize res pool %p", pool);
 
     if (priv->caps)

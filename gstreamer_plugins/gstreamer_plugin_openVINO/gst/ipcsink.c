@@ -17,12 +17,18 @@
 
 
 #ifdef HAVE_CONFIG_H
-#  include "config.h"
+#include "config.h"
 #endif
 
 #include <interface/videodefs.h>
 #include "resmemory.h"
 #include "ipcsink.h"
+
+// This  filter is used to transit inference result (encoded frame and meta data) to client by IPC.
+// It is a sink filer and has 2 sink pad to get input buffer.
+//
+//It adopt unix domain socket for IPC between hddlspipe and HDDL-S server, including setup connection to HDDL-S server and send data to it.
+// Bitstream and meta data will be transmitted with a tag to descript which channel it belong to, so that server can route them to right destination.
 
 
 GST_DEBUG_CATEGORY_STATIC (gst_ipc_sink_debug);
@@ -33,14 +39,14 @@ GST_DEBUG_CATEGORY_STATIC (gst_ipc_sink_debug);
 
 struct _GstIpcSinkPrivate
 {
-    /* number of received and processed buffers */
+    // number of received and processed buffers
     guint64 bit_received_num;
     guint64 bit_processed_num;
     guint64 txt_received_num;
     guint64 txt_processed_num;
 };
 
-/* IpcSink properties */
+// IpcSink properties
 enum
 {
     PROP_0,
@@ -73,8 +79,8 @@ static GstElementClass *parent_class = NULL;
 static void gst_ipc_sink_get_times (GstIpcSink * basesink, GstBuffer * buffer, GstClockTime * start);
 
 #define INVALID_BUFFER_TS (-1)
-// get the bit buffer and txt buffer with the same ts
-// if not, find the earliest buffer as the output
+// Get the bit buffer and txt buffer with the same ts
+// If not, find the earliest buffer as the output
 static gboolean get_buffers_with_same_ts(GstIpcSink * basesink, GstBuffer **bit_buf, GstBuffer **txt_buf)
 {
     GstBuffer *bit_buf_temp, *txt_buf_temp;
@@ -85,7 +91,7 @@ static gboolean get_buffers_with_same_ts(GstIpcSink * basesink, GstBuffer **bit_
     txt_buf_temp = NULL;
     bit_buf_temp = NULL;
 
-    // try to get a buffer of bitstream
+    // Try to get a buffer of bitstream
     GST_IPC_SINK_BIT_LOCK(basesink);
     if(gst_buffer_list_length(basesink->bit_list)>0) {
         bit_buf_temp = gst_buffer_list_get(basesink->bit_list,0);
@@ -93,7 +99,7 @@ static gboolean get_buffers_with_same_ts(GstIpcSink * basesink, GstBuffer **bit_
     }
     GST_IPC_SINK_BIT_UNLOCK(basesink);
 
-    // try to get a buffer of txt data
+    // Try to get a buffer of txt data
     GST_IPC_SINK_TXT_LOCK(basesink);
     if(gst_buffer_list_length(basesink->txt_list)>0) {
         txt_buf_temp = gst_buffer_list_get(basesink->txt_list,0);
@@ -109,7 +115,7 @@ static gboolean get_buffers_with_same_ts(GstIpcSink * basesink, GstBuffer **bit_
         return FALSE;
     }
 
-    // bit buffer is early, only return it
+    // If bit buffer is early, only return it
     if(G_UNLIKELY(bit_ts < txt_ts)){
         GST_IPC_SINK_BIT_LOCK(basesink);
         gst_buffer_list_remove(basesink->bit_list, 0, 1);
@@ -120,7 +126,7 @@ static gboolean get_buffers_with_same_ts(GstIpcSink * basesink, GstBuffer **bit_
         return TRUE;
     }
 
-    // txt buffer is early, only return it
+    // If txt buffer is early, only return it
     if(G_UNLIKELY(txt_ts < bit_ts)){
         GST_IPC_SINK_TXT_LOCK(basesink);
         gst_buffer_list_remove(basesink->txt_list, 0, 1);
@@ -178,7 +184,6 @@ static void process_sink_buffers(gpointer userData)
     gboolean ret = FALSE;
     int i = 0;
     gsize data_len = 0, size = 0;
-    //GstIpcSinkPrivate *priv = basesink->priv;
 
     ret = get_buffers_with_same_ts(basesink, &bit_buf, &txt_buf);
     if(ret==FALSE) {
@@ -189,47 +194,34 @@ static void process_sink_buffers(gpointer userData)
     //setup ipcclient
     if(!basesink->ipc_handle) {
         if(basesink->ipc_handle_proxy != INVALID_IPCC_PROXY)
-               basesink->ipc_handle = basesink->ipc_handle_proxy;
+            basesink->ipc_handle = basesink->ipc_handle_proxy;
         else
-                basesink->ipc_handle = ipcclient_setup(basesink->ipcs_uri, basesink->ipcc_id);
+            basesink->ipc_handle = ipcclient_setup(basesink->ipcs_uri, basesink->ipcc_id);
         ipcclient_set_id(basesink->ipc_handle,  basesink->ipcc_id);
     }
 
-    // meta data
+    // Send meta data
     if(txt_buf) {
-        ResMemory *txt_mem;
+        ResMemory *txt_mem = NULL;
         txt_mem = RES_MEMORY_CAST(res_memory_acquire(txt_buf));
         if(!txt_mem || !txt_mem->data || !txt_mem->data_count) {
             g_print("Failed to get data from txt buffer!!!\n");
         }else{
-            // packaged txt data into websocket
+            // Packaged txt data into json file and sent out
             InferenceData *infer_data = txt_mem->data;
             int count = txt_mem->data_count;
             GST_LOG("object num = %d\n",count);
-            #if 0
-            for(i=0; i<count; i++) {
-                g_print("pipe %d: %d frame, %2d xml_data - ",basesink->ipcc_id,
-                    basesink->frame_index, basesink->meta_data_index);
-                infer_data->frame_index = basesink->frame_index;
-                data_len = ipcclient_send_infer_data(basesink->ipc_handle,
-                    infer_data, txt_mem->pts, basesink->meta_data_index);
-                basesink->meta_data_index++;
-                size += data_len;
-                infer_data++;
-            }
-            #else
             infer_data->frame_index = basesink->frame_index;
             data_len = ipcclient_send_infer_data_full_frame(basesink->ipc_handle,
                 infer_data, count,txt_mem->pts,basesink->meta_data_index);
             basesink->meta_data_index+=count;
             size += data_len;
-            #endif
             if(count>0)
                 basesink->frame_index++;
         }
     }
 
-    // jpeg bitstream data
+    // Send jpeg bitstream data
     if(bit_buf) {
         int n = gst_buffer_n_memory (bit_buf);
         GstMemory *mem = NULL;
@@ -291,7 +283,6 @@ static GstCaps *
 gst_ipc_sink_fixate (GstIpcSink * bsink, GstCaps * caps)
 {
     GST_DEBUG_OBJECT (bsink, "using default caps fixate function");
-
     caps = gst_caps_fixate (caps);
     return caps;
 }
@@ -354,14 +345,11 @@ gst_ipc_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstIpcSink *basesink;
   gboolean result = TRUE;
-
   basesink = GST_IPC_SINK_CAST (parent);
-  //bclass = GST_IPC_SINK_GET_CLASS (basesink);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
     {
-      //GstCaps *caps;
       GST_DEBUG_OBJECT (basesink, "caps %p", event);
 
       // we will not replace the caps
@@ -371,9 +359,7 @@ gst_ipc_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     case GST_EVENT_TAG:
     {
       GstTagList *taglist;
-
       gst_event_parse_tag (event, &taglist);
-
       gst_element_post_message (GST_ELEMENT_CAST (basesink),
           gst_message_new_tag (GST_OBJECT_CAST (basesink),
               gst_tag_list_copy (taglist)));
@@ -382,7 +368,6 @@ gst_ipc_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     case GST_EVENT_SINK_MESSAGE:
     {
       GstMessage *msg = NULL;
-
       gst_event_parse_sink_message (event, &msg);
       if (msg)
         gst_element_post_message (GST_ELEMENT_CAST (basesink), msg);
@@ -392,7 +377,6 @@ gst_ipc_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     {
       // EOS message is used to trigger the state change
       GstMessage *message = gst_message_new_eos (GST_OBJECT_CAST (basesink));
-      //gst_message_set_seqnum (message, seqnum);
       gst_element_post_message (GST_ELEMENT_CAST (basesink), message);
       break;
     }
@@ -406,7 +390,7 @@ gst_ipc_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
   return result;
 }
 
-/* get the timestamps on this buffer */
+// Get the timestamps on this buffer
 static void gst_ipc_sink_get_times (GstIpcSink * basesink, GstBuffer * buffer, GstClockTime * start)
 {
   GstClockTime timestamp;
@@ -467,7 +451,7 @@ gst_ipc_sink_pad_activate (GstPad * pad, GstObject * parent)
 
   basesink = GST_IPC_SINK (parent);
 
-  /* push mode */
+  // push mode
   GST_DEBUG_OBJECT (basesink, "Set push mode");
   if ((result = gst_pad_activate_mode (pad, GST_PAD_MODE_PUSH, TRUE))) {
     GST_DEBUG_OBJECT (basesink, "Success activating push mode");
@@ -499,7 +483,7 @@ gst_ipc_sink_pad_activate_mode (GstPad * pad, GstObject * parent,
   return res;
 }
 
-/* send an event to our sinkpad peer. */
+// Send an event to our sinkpad peer.
 static gboolean
 gst_ipc_sink_send_event (GstElement * element, GstEvent * event)
 {
@@ -526,15 +510,11 @@ default_element_query (GstElement * element, GstQuery * query)
 }
 
 static gboolean
-//gst_ipc_sink_default_query (GstIpcSink * basesink, GstPad *pad, GstQuery * query)
 gst_ipc_sink_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   gboolean res = TRUE;
   GstIpcSink *basesink;
-  //GstIpcSinkClass *bclass;
-
   basesink = GST_IPC_SINK_CAST (parent);
-  //bclass = GST_IPC_SINK_GET_CLASS (basesink);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_ALLOCATION:
@@ -558,7 +538,7 @@ gst_ipc_sink_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
       GstCaps *caps, *allowed;
       gboolean subset;
 
-      /* slightly faster than the default implementation */
+      // slightly faster than the default implementation
       gst_query_parse_accept_caps (query, &caps);
       allowed = gst_ipc_sink_query_caps (basesink, pad, NULL);
       subset = gst_caps_is_subset (caps, allowed);
@@ -582,8 +562,6 @@ gst_ipc_sink_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
   GstIpcSink *basesink = GST_IPC_SINK (element);
-  //GstIpcSinkClass *bclass;
-  //bclass = GST_IPC_SINK_GET_CLASS (basesink);
 
   switch (transition) {
         case GST_STATE_CHANGE_NULL_TO_READY:
@@ -595,7 +573,7 @@ gst_ipc_sink_change_state (GstElement * element, GstStateChange transition)
          case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
             GST_DEBUG_OBJECT (basesink, "PAUSED to PLAYING, don't need preroll");
 
-             // create task for push data to next filter/element
+            // create task for push data to next filter/element
             basesink->task = gst_task_new (process_sink_buffers, (gpointer)basesink, NULL);
             gst_task_set_lock (basesink->task, &basesink->task_lock);
             gst_task_set_enter_callback (basesink->task, NULL, NULL, NULL);
@@ -683,7 +661,7 @@ gst_ipc_sink_class_init (GstIpcSinkClass * klass)
           "IPC(Socket) client proxy to connected to its server.",
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-    /* src pad */
+    // 2 src pads
     gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_ipc_bit_src_factory));
     gst_element_class_add_pad_template (gstelement_class,
@@ -693,7 +671,7 @@ gst_ipc_sink_class_init (GstIpcSinkClass * klass)
     gstelement_class->send_event = GST_DEBUG_FUNCPTR (gst_ipc_sink_send_event);
     gstelement_class->query = GST_DEBUG_FUNCPTR (default_element_query);
 
-    /* Registering debug symbols for function pointers */
+    // Registering debug symbols for function pointers
     GST_DEBUG_REGISTER_FUNCPTR (gst_ipc_sink_fixate);
     GST_DEBUG_REGISTER_FUNCPTR (gst_ipc_sink_pad_activate);
     GST_DEBUG_REGISTER_FUNCPTR (gst_ipc_sink_pad_activate_mode);
@@ -709,7 +687,6 @@ gst_ipc_sink_init (GstIpcSink * basesink, gpointer g_class)
 {
     GstPadTemplate *pad_template;
     GstIpcSinkPrivate *priv;
-
     GST_DEBUG_CATEGORY_INIT (gst_ipc_sink_debug, "ipcsink", 0,
             "Send data out by IPC/Socket");
 
@@ -720,7 +697,6 @@ gst_ipc_sink_init (GstIpcSink * basesink, gpointer g_class)
     basesink->meta_data_index = 0;
     basesink->bit_data_index = 0;
     basesink->frame_index = 0;
-
     basesink->priv = priv = GST_IPC_SINK_GET_PRIVATE (basesink);
 
     priv->bit_received_num = 0;

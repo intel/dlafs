@@ -26,12 +26,12 @@
 
 G_BEGIN_DECLS
 
-#define TYPE_RES_CONVERT		    (res_convert_get_type())
-#define RES_CONVERT(obj)		    (G_TYPE_CHECK_INSTANCE_CAST((obj),TYPE_RES_CONVERT,ResConvert))
-#define RES_CONVERT_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST((klass),TYPE_RES_CONVERT,ResConvertClass))
+#define TYPE_RES_CONVERT            (res_convert_get_type())
+#define RES_CONVERT(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),TYPE_RES_CONVERT,ResConvert))
+#define RES_CONVERT_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),TYPE_RES_CONVERT,ResConvertClass))
 #define RES_CONVERT_GET_CLASS(klass)(G_TYPE_INSTANCE_GET_CLASS((klass),TYPE_RES_CONVERT,ResConvertClass))
-#define IS_RES_CONVERT(obj)		    (G_TYPE_CHECK_INSTANCE_TYPE((obj),TYPE_RES_CONVERT))
-#define IS_RES_CONVERT_CLASS(obj)	(G_TYPE_CHECK_CLASS_TYPE((klass),TYPE_RES_CONVERT))
+#define IS_RES_CONVERT(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),TYPE_RES_CONVERT))
+#define IS_RES_CONVERT_CLASS(obj)   (G_TYPE_CHECK_CLASS_TYPE((klass),TYPE_RES_CONVERT))
 
 typedef struct _ResConvert ResConvert;
 typedef struct _ResConvertClass ResConvertClass;
@@ -43,8 +43,10 @@ struct _ResConvert
   GstElement parent;
 
   GstPad *sinkpad;
-  GstPad *txt_srcpad;     /* output inference result raw data */
-  GstPad *pic_srcpad;     /* output inference result picture data */
+  // output inference result raw data
+  GstPad *txt_srcpad;
+  // output inference result picture data
+  GstPad *pic_srcpad;
 
   GstBufferPool* src_pool;
   GstBufferPool* osd_pool;

@@ -56,7 +56,6 @@ struct _ResPoolClass
 };
 
 GType res_pool_get_type (void);
-
 GstBufferPool* res_pool_create (GstCaps* caps, gsize size, gint min, gint max);
 
 G_END_DECLS

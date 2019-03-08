@@ -220,7 +220,7 @@ GstFlowReturn ImageProcessor::process_image_blend(GstBuffer* inbuf,
     mSrcFrame->width  = rect->width;
     mSrcFrame->height = rect->height;
 
-    /* input data must be NV12 surface from mfxdec element */
+    // input data must be NV12 surface from mfxdec element
     // NV12 input
     mSrcFrame2->fourcc = video_format_to_va_fourcc (GST_VIDEO_INFO_FORMAT (&mInVideoInfo));
     mSrcFrame2->surface= gst_get_mfx_surface (inbuf2, &mInVideoInfo, &display);

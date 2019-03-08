@@ -69,19 +69,19 @@ typedef struct _GstIpcSink GstIpcSink;
 typedef struct _GstIpcSinkClass GstIpcSinkClass;
 typedef struct _GstIpcSinkPrivate GstIpcSinkPrivate;
 
-/**
- * GstIpcSink:
- *
- * The opaque #GstIpcSink data structure.
- */
+//
+// GstIpcSink:
+//
+// The opaque #GstIpcSink data structure.
+//
 struct _GstIpcSink {
   GstElement     element;
 
-  /*< protected >*/
+  // protected
   GstPad        *sinkpad_bit;
   GstPad        *sinkpad_txt;
 
-  /*< private >*/ /* with LOCK */
+  // private   with LOCK
   gboolean       running;
   GMutex         lock;
   GCond          cond;
@@ -102,7 +102,7 @@ struct _GstIpcSink {
   gchar* ipcs_uri;
   int ipcc_id;
 
-  /*< private >*/
+  // private
   GstIpcSinkPrivate *priv;
   gint meta_data_index;
   gint bit_data_index;
@@ -111,14 +111,13 @@ struct _GstIpcSink {
   gpointer _gst_reserved[GST_PADDING_LARGE];
 };
 
-/**
- * GstIpcSinkClass:
- * @parent_class: Element parent class
- */
+//
+// GstIpcSinkClass:
+// @parent_class: Element parent class
+//
 struct _GstIpcSinkClass {
   GstElementClass parent_class;
-
-  /*< private >*/
+  //private
   gpointer       _gst_reserved[GST_PADDING_LARGE];
 };
 

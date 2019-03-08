@@ -204,9 +204,9 @@ public:
     guint  mAlgoType;
     std::string mName;
 
-   // There are 2 tasks,  DL task and CV task
-   //  DL task - run with IE inference engine
-   //  CV task - run without IE inference enngine
+    // There are 2 tasks,  DL task and CV task
+    //  DL task - run with IE inference engine
+    //  CV task - run without IE inference enngine
     guint mCvdlType;// DL or CV task
 
     /* Main task/thread to do the algo processing */
@@ -221,7 +221,7 @@ public:
     int mInputWidth;
     int mInputHeight;
 
-   // Orignal frame size
+    // Orignal frame size
     int mImageProcessorInVideoWidth;
     int mImageProcessorInVideoHeight;
 
@@ -240,11 +240,11 @@ public:
     // Obsoleted unused buffers, which need deleted but delay some times
     CvdlAlgoData  *mObsoletedAlgoData;;
 
-    /* pool for allocate buffer for inference result, CPU buffer */
+    // pool for allocate buffer for inference result, CPU buffer
     GstBufferPool *mResultPool;
 
-   // DL task - algoData has been figured out, post process objects in algoData if need
-   // CV task - use preprocessed picture to do specified CV algo processing.
+    // DL task - algoData has been figured out, post process objects in algoData if need
+    // CV task - use preprocessed picture to do specified CV algo processing.
     PostCallback postCb;
 
     std::atomic<int> mInferCnt;

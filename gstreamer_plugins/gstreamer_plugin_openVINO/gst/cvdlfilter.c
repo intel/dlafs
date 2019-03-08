@@ -18,6 +18,15 @@
 #include "cvdlfilter.h"
 #include <ocl/crcmeta.h>
 
+// This plugin is used to apply CV/DL algothrim into video frame, and attach the result as MetaData of GstBuffer
+//
+// It will do all CV/DL algorithms, and the complex processing flow and intermedia buffers will be handled by itself.
+// Traditional CV algorithm (CSC, Resize, object track) will be done in OpenCV/OpenCL component and
+// DL algorithm (object detection/recognition) will be done in IE/HDDL-R component.
+//
+//Each CV/DL algorithm is encapsulated to be an algo element, in which preprocessing and inference are bind together.
+//For example, object detection algorithm, is comprise of preprocessing and inference, csc+resize is preprocessing and detection is inference.
+
 GST_DEBUG_CATEGORY_STATIC (cvdl_filter_debug);
 #define GST_CAT_DEFAULT cvdl_filter_debug
 
@@ -28,19 +37,20 @@ G_DEFINE_TYPE (CvdlFilter, cvdl_filter, GST_TYPE_BASE_TRANSFORM);
 #define CVDL_FILTER_GET_PRIVATE(obj)  \
     (G_TYPE_INSTANCE_GET_PRIVATE ((obj), CVDL_FILTER_TYPE, CvdlFilterPrivate))
 
-/* Whether sync decoder with cvdlfilter
-   it means decode and cvdl processing by the same fps
-*/
+// Whether sync decoder with cvdlfilter
+// It will make decode and cvdl to be processed by the same fps
 // #define SYNC_WITH_DECODER
 
+// Some example for algo pipeline
 char default_algo_pipeline_desc[] = "yolov1tiny ! opticalflowtrack ! googlenetv2";
-char default_algo_pipeline_desc2[] = "mobilenetssd ! tracklp ! lprnet";
-char default_algo_pipeline_descX[] = "detection ! track name=tk ! tk.vehicle_classification  ! tk.person_face_detection ! face_recognication";
+//char default_algo_pipeline_desc2[] = "mobilenetssd ! tracklp ! lprnet";
+//char default_algo_pipeline_descX[] = "detection ! track name=tk ! tk.vehicle_classification  ! tk.person_face_detection ! face_recognication";
 
-/* GstVideoFlip properties */
+//CvdlFiler properties
 enum
 {
     PROP_0,
+    // Property for algo pipeline, which decide what algo will it run
     PROP_ALGO_PIPELINE_DESC,
     PROP_NUM
 };
@@ -54,6 +64,7 @@ struct _CvdlFilterPrivate
     guint height;
 };
 
+// Only support NV12 MFXSurface, which need use OpenCL do preprocess
 const char cvdl_filter_caps_str[] = \
     GST_VIDEO_CAPS_MAKE_WITH_FEATURES("memory:MFXSurface", "NV12");
 
@@ -112,8 +123,6 @@ cvdl_filter_transform_chain (GstPad * pad, GstObject * parent, GstBuffer * buffe
     GstClockTime timestamp, duration;
 
     // Not need ref this buffer, since it will be unrefed in CvdlAlgoBase::queue_buffer(GstBuffer *buffer)
-    // buffer = gst_buffer_ref(buffer);
-
     timestamp = GST_BUFFER_TIMESTAMP (buffer);
     duration = GST_BUFFER_DURATION (buffer);
 
@@ -121,17 +130,18 @@ cvdl_filter_transform_chain (GstPad * pad, GstObject * parent, GstBuffer * buffe
         GST_ELEMENT_ERROR (cvdlfilter, CORE, NOT_IMPLEMENTED, (NULL), ("unknown format"));
         return GST_FLOW_NOT_NEGOTIATED;
     }
-
     GST_LOG_OBJECT (cvdlfilter, "input buffer caps: %" GST_PTR_FORMAT, buffer);
 
+    // Drop this buffer due to algo was not ready now!!!
     if(gst_task_get_state(cvdlfilter->mPushTask) != GST_TASK_STARTED) {
           gst_buffer_unref(buffer);
           g_usleep(1000);//1ms
-          //g_print("Skip this buffer due to algo was not ready now!!!\n");
           return GST_FLOW_OK;
     }
 
-    /* vpp will not called in main pipeline thread, but it should be called in algo thread*/
+    // Considering perforamce, vision algo task will not be called in main pipeline thread,
+    // and it will be called in algo thread:
+    //
     // step 1: put input buffer into queue, which will do cvdl processing in another thread
     //         thread 1:  detection thread
     //              --> thread 2: object track thread
@@ -141,10 +151,6 @@ cvdl_filter_transform_chain (GstPad * pad, GstObject * parent, GstBuffer * buffe
     //         if there is output, attache it to outbuf
     //         if not, unref outbuf, and set it to be NULL
     cvdl_handle_buffer(cvdlfilter, buffer, priv->width, priv->height);
-
-    // It will be done in a task with  push_buffer_func()
-    //if(gst_task_get_state(cvdlfilter->mPushTask) != GST_TASK_STARTED)
-    //    gst_task_start(cvdlfilter->mPushTask);
 
     if(cvdlfilter->frame_num==0)
         cvdlfilter->startTimePos = g_get_monotonic_time();
@@ -254,27 +260,6 @@ static char* error_to_string(int code){
     return error_info;
 }
 
-/*
-static void report_error_info(GstElement *element, char* error_info)
-{
-#if 0
-    GST_ELEMENT_ERROR (element, RESOURCE, READ, (error_to_string(error_code)), GST_ERROR_SYSTEM);
-#else
-    int error_code = -1;
-    GQuark quark = g_quark_from_string (GST_ELEMENT_NAME(element));
-    char *sent_debug = g_strdup_printf ("%s \n", error_info);
-    g_free(error_info);
-    const char* sent_text = "cvdlfilter error";
-
-    GError *gerror = g_error_new_literal (quark, error_code, sent_text);
-    GstMessage *message =
-        gst_message_new_error(GST_OBJECT_CAST (element), gerror, sent_debug);
-
-    gst_element_post_message (element, message);
-#endif
-}
-*/
-
 static GstStateChangeReturn
 cvdl_filter_change_state (GstElement * element, GstStateChange transition)
 {
@@ -290,7 +275,7 @@ cvdl_filter_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
         break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-        /* create the process task(thread) and start it */
+        // create the process task(thread) and start it
         if(cvdlfilter->algo_pipeline_desc==NULL)
             config = algo_pipeline_config_create(default_algo_pipeline_desc, &count, element);
         else
@@ -311,12 +296,13 @@ cvdl_filter_change_state (GstElement * element, GstStateChange transition)
                 g_free(error_info);
             }
          } else {
-            g_print("Failed to create algo config!\n");
+            char *error_info = "Failed to create algo config!";
+            pipeline_report_error_info(element,error_info);
+            g_print("%s\n", error_info);
          }
 
-        /* start push buffer thread to push data to next element
-                * It will be done in a task with  push_buffer_func()
-                */
+         // start push buffer thread to push data to next element
+         // It will be done in a task with  push_buffer_func()
         if(gst_task_get_state(cvdlfilter->mPushTask) != GST_TASK_STARTED)
             gst_task_start(cvdlfilter->mPushTask);
         break;
@@ -329,21 +315,21 @@ cvdl_filter_change_state (GstElement * element, GstStateChange transition)
   result = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
   switch (transition) {
       case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-     /*  When change state Playing-->Paused, stop algopipeline,
-          *  so that we can Set property for algopipeline.
-          *  The algo pipeline will have cached buffer to be processed.
-          *  But it will cause gst-launch failed to change stat to be PLAYING
-          *   due not buffer was sent to next filter
-          *
-          *  If we put it to ready or null state, we will encounter below error:
-          *  ERROR: GStreamer encountered a general stream error.
-          *  [Debug details: qtdemux.c(5520): gst_qtdemux_loop ():
-          *   /GstPipeline:pipeline2/GstQTDemux:qtdemux2:
-          *  streaming stopped, reason not-linked]
-          */
+      // When change state Playing-->Paused, stop algopipeline,
+      //  so that we can Set property for algopipeline.
+      // The algo pipeline will have cached buffer to be processed.
+      // But it will cause gst-launch failed to change stat to be PLAYING
+      // due not buffer was sent to next filter
+      //
+      //  If we put it to ready or null state, we will encounter below error:
+      //  ERROR: GStreamer encountered a general stream error.
+      //     [Debug details: qtdemux.c(5520): gst_qtdemux_loop ():
+      //      /GstPipeline:pipeline2/GstQTDemux:qtdemux2:
+      //     streaming stopped, reason not-linked]
+      //
          break;
      case GST_STATE_CHANGE_PAUSED_TO_READY:
-         /* stop the data push task */
+         // stop the data push task
          gst_task_set_state(cvdlfilter->mPushTask, GST_TASK_STOPPED);
          algo_pipeline_flush_buffer(cvdlfilter->algoHandle);
          gst_task_join(cvdlfilter->mPushTask);
@@ -379,7 +365,6 @@ cvdl_filter_set_property (GObject* object, guint prop_id, const GValue* value, G
             G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
             break;
     }
-
     return;
 }
 
@@ -406,10 +391,8 @@ cvdl_filter_propose_allocation (GstBaseTransform* trans, GstQuery* decide_query,
 {
    GstCaps *caps = NULL;
    gboolean need_pool = FALSE;
-   //CvdlFilter *cvdlfilter = CVDL_FILTER (trans);
 
    gst_query_parse_allocation (query, &caps, &need_pool);
-
    if (!caps) {
        GST_DEBUG_OBJECT (trans, "no caps specified");
        return FALSE;
@@ -436,21 +419,19 @@ static gboolean
 cvdl_filter_decide_allocation (GstBaseTransform* trans, GstQuery* query)
 {
     GstBufferPool *pool = NULL;
-    gboolean update_pool = FALSE;
+    //gboolean update_pool = FALSE;
     guint min = 0, max = 0, size = 0;
 
     if (gst_query_get_n_allocation_pools (query) > 0) {
         gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
-        update_pool = TRUE;
-        GST_DEBUG_OBJECT (trans, "decide_allocation - update_pool should be false, but it is %d",update_pool);
+        //update_pool = TRUE;
+        GST_DEBUG_OBJECT (trans, "decide_allocation - update_pool should be false.");
         return FALSE;
     }
 
     GstCaps *caps;
     gboolean need_pool = FALSE;
-
     gst_query_parse_allocation (query, &caps, &need_pool);
-
     if (!caps) {
         GST_DEBUG_OBJECT (trans, "no caps specified");
         return FALSE;
@@ -461,7 +442,7 @@ cvdl_filter_decide_allocation (GstBaseTransform* trans, GstQuery* query)
         return FALSE;
     }
 
-    /* we also support various metadata */
+    // we also support various metadata
     gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
     gst_query_add_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE, NULL);
 
@@ -477,7 +458,7 @@ cvdl_filter_caps_negotiation (const CvdlFilter* cvdlfilter)
     // Only NV12 supported at present
     if (GST_VIDEO_INFO_FORMAT (sink_info) != GST_VIDEO_INFO_FORMAT (src_info) ||
         GST_VIDEO_INFO_FORMAT (sink_info) != GST_VIDEO_FORMAT_NV12) {
-        GST_ERROR_OBJECT (cvdlfilter, "CvdlFilter only support on NV12 frame at present");
+        GST_ERROR_OBJECT (cvdlfilter, "CvdlFilter only support NV12 frame at present");
         return FALSE;
     }
 
@@ -492,7 +473,6 @@ gst_compare_caps (GstCaps* incaps, GstCaps* outcaps)
 
     GstStructure *s1 = gst_caps_get_structure (incaps, 0);
     GstStructure *s2 = gst_caps_get_structure (outcaps, 0);
-
     GstCapsFeatures *f1 = gst_caps_get_features (incaps, 0);
     if (!f1) {
         f1 = GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY;
@@ -537,7 +517,6 @@ cvdl_filter_set_caps (GstBaseTransform* trans, GstCaps* incaps, GstCaps* outcaps
     }
 
     priv->negotiated = cvdl_filter_caps_negotiation (cvdlfilter);
-
     if (!priv->negotiated) {
         GST_ERROR_OBJECT (cvdlfilter, "cvdl_filter_caps_negotiation failed");
         return FALSE;
@@ -545,10 +524,6 @@ cvdl_filter_set_caps (GstBaseTransform* trans, GstCaps* incaps, GstCaps* outcaps
 
     priv->same_caps_flag = gst_compare_caps (incaps, outcaps);
     gst_base_transform_set_passthrough (trans, priv->same_caps_flag);
-
-   // wait cvdlfilter->algoHandle is ready
-    //while(cvdlfilter->algoHandle==NULL)
-     //    g_usleep(1000);
 
     gst_video_info_from_caps (&info, incaps);
     priv->width = info.width;
@@ -564,8 +539,6 @@ static GstCaps*
 cvdl_filter_fixate_caps (GstBaseTransform* trans,
     GstPadDirection direction, GstCaps* caps, GstCaps* othercaps)
 {
-    //ocl_fixate_caps (othercaps);
-
     return GST_BASE_TRANSFORM_CLASS (parent_class) ->fixate_caps (trans, direction, caps, othercaps);
 }
 
@@ -578,11 +551,9 @@ cvdl_filter_class_init (CvdlFilterClass * klass)
 
     GST_DEBUG_CATEGORY_INIT (cvdl_filter_debug, "cvdlfilter", 0,
         "Process video image with CV/DL algorithm.");
-
     GST_DEBUG ("cvdl_filter_class_init");
 
     g_type_class_add_private (klass, sizeof (CvdlFilterPrivate));
-
     obj_class->finalize     = cvdl_filter_finalize;
     obj_class->set_property = cvdl_filter_set_property;
     obj_class->get_property = cvdl_filter_get_property;
@@ -608,7 +579,7 @@ cvdl_filter_class_init (CvdlFilterClass * klass)
     trans_class->fixate_caps        = cvdl_filter_fixate_caps;
     trans_class->set_caps           = cvdl_filter_set_caps;
 
-    /* If no transform function, always_in_place is TRUE */
+    //If no transform function, always_in_place is TRUE
     //trans_class->transform          = NULL;
     trans_class->transform_ip       = cvdl_filter_transform_ip;
 }
@@ -618,25 +589,25 @@ static void push_buffer_func(gpointer userData)
 {
     CvdlFilter* cvdl_filter = (CvdlFilter* )userData;
     GstBaseTransform *trans = GST_BASE_TRANSFORM_CAST (userData);
-    GstBuffer *outbuf;
-    void *data;
+    GstBuffer *outbuf = NULL;
+    void *data = NULL;
 
     // get data from output queue, and attach it into outbuf
     // if no data in output queue, return NULL;
     algo_pipeline_get_buffer(cvdl_filter->algoHandle, &outbuf);
 
     cvdl_filter->frame_num_out++;
-    if(outbuf)
+    if(outbuf) {
         GST_DEBUG("cvdlfilter out: index = %d, buffer = %p, refcount = %d, surface = %d\n",
             cvdl_filter->frame_num_out, outbuf, GST_MINI_OBJECT_REFCOUNT(outbuf),
             gst_get_mfx_surface(outbuf, NULL, &data));
+    }
 
     //push the buffer only when can get an output data 
-    if(outbuf)
+    if(outbuf) {
         gst_pad_push(trans->srcpad, outbuf);
-
-    // gst_pad_push will unref this buffer, we need not do it again.
-    // gst_buffer_unref(outbuf);
+        // gst_pad_push will unref this buffer, we need not do it again.
+    }
 }
 
 

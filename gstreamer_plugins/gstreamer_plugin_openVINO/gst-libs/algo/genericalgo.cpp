@@ -33,47 +33,47 @@ using namespace std;
 
 static void post_callback(CvdlAlgoData *algoData)
 {
-        // post process algoData
-        GenericAlgo *genericAlgo = static_cast<GenericAlgo*> (algoData->algoBase);
-        std::vector<ObjectData> &objDataVec = algoData->mObjectVec;
-        ExInferData exInferData;
-        int ret = 0;
+    // post process algoData
+    GenericAlgo *genericAlgo = static_cast<GenericAlgo*> (algoData->algoBase);
+    std::vector<ObjectData> &objDataVec = algoData->mObjectVec;
+    ExInferData exInferData;
+    int ret = 0;
 
-        //convert objData to exInferData
-        for(guint i=0;i<objDataVec.size();i++) {
-            ExObjectData exObjData;
-            genericAlgo->objdata_2_exobjdata(objDataVec[i], exObjData);
-            exInferData.mObjectVec.push_back(exObjData);
-         }
+    //convert objData to exInferData
+    for(guint i=0;i<objDataVec.size();i++) {
+        ExObjectData exObjData;
+        genericAlgo->objdata_2_exobjdata(objDataVec[i], exObjData);
+        exInferData.mObjectVec.push_back(exObjData);
+    }
 
-        // do post process
-        if(genericAlgo->pfPostProcess)
-            ret = genericAlgo->pfPostProcess(exInferData);
+    // do post process
+    if(genericAlgo->pfPostProcess)
+        ret = genericAlgo->pfPostProcess(exInferData);
 
-        // sync exInferData to objDataVec
-        if(ret) {
-            std::vector<ObjectData>::iterator it;
-            for (it = objDataVec.begin(); it != objDataVec.end();) {
-                       ObjectData &objItem =(*it);
-                       guint index = -1;
-                       for(guint i=0;i<exInferData.mObjectVec.size();i++) {
-                            ExObjectData &exObjData = exInferData.mObjectVec[i];
-                            if(exObjData.id == (*it).id) {
-                                index = i;
-                                break;
-                            }
-                         }
-                         // not found, then remove this object
-                         if(index == (guint)(-1)) {
-                           it = objDataVec.erase(it);    //remove item.
-                           continue;
-                       }
-                       // update
-                       genericAlgo->exobjdata_2_objdata(exInferData.mObjectVec[index], objItem);
-                       ++it;
-              }
-              algoData->mOutputIndex = exInferData.outputIndex;
+    // sync exInferData to objDataVec
+    if(ret) {
+        std::vector<ObjectData>::iterator it;
+        for (it = objDataVec.begin(); it != objDataVec.end();) {
+            ObjectData &objItem =(*it);
+            guint index = -1;
+            for(guint i=0;i<exInferData.mObjectVec.size();i++) {
+                ExObjectData &exObjData = exInferData.mObjectVec[i];
+                if(exObjData.id == (*it).id) {
+                    index = i;
+                    break;
+                }
+            }
+            // not found, then remove this object
+            if(index == (guint)(-1)) {
+                it = objDataVec.erase(it);    //remove item.
+                continue;
+            }
+            // update
+            genericAlgo->exobjdata_2_objdata(exInferData.mObjectVec[index], objItem);
+            ++it;
         }
+        algoData->mOutputIndex = exInferData.outputIndex;
+    }
 }
 
 GenericAlgo::GenericAlgo(const char *name) : CvdlAlgoBase(post_callback, CVDL_TYPE_DL),
@@ -193,56 +193,56 @@ GstFlowReturn GenericAlgo::parse_inference_result(InferenceEngine::Blob::Ptr &re
     
 void GenericAlgo::exobjdata_2_objdata(ExObjectData &exObjData,  ObjectData &objData)
 {
-            objData.id = exObjData.id;
-            objData.objectClass = exObjData.objectClass ;
-            objData.prob = exObjData.prob;
-            objData.label = exObjData.label;
-            objData.rect.x = exObjData.x ;
-            objData.rect.y = exObjData.y;
-            objData.rect.width = exObjData.w;
-            objData.rect.height = exObjData.h;
+    objData.id = exObjData.id;
+    objData.objectClass = exObjData.objectClass ;
+    objData.prob = exObjData.prob;
+    objData.label = exObjData.label;
+    objData.rect.x = exObjData.x ;
+    objData.rect.y = exObjData.y;
+    objData.rect.width = exObjData.w;
+    objData.rect.height = exObjData.h;
 }
 
 void GenericAlgo::objdata_2_exobjdata(ObjectData &objData,  ExObjectData &exObjData)
 {
-            exObjData.id = objData.id;
-            exObjData.objectClass = objData.objectClass;
-            exObjData.prob= objData.prob;
-            exObjData.label= objData.label;
-            exObjData.x = objData.rect.x;
-            exObjData.y = objData.rect.y;
-            exObjData.w = objData.rect.width;
-            exObjData.h = objData.rect.height;
+    exObjData.id = objData.id;
+    exObjData.objectClass = objData.objectClass;
+    exObjData.prob= objData.prob;
+    exObjData.label= objData.label;
+    exObjData.x = objData.rect.x;
+    exObjData.y = objData.rect.y;
+    exObjData.w = objData.rect.width;
+    exObjData.h = objData.rect.height;
 }
 
 
 InferenceEngine::Precision GenericAlgo::getIEPrecision(ExDataType type) 
 {
-     switch(type) {
-            case DataTypeInt8:
-                return InferenceEngine::Precision::I8;
-                break;
-            case DataTypeUint8:
-                return InferenceEngine::Precision::U8;
-                break;
-            case DataTypeInt16:
-                return InferenceEngine::Precision::I16;
-                break;
-            case DataTypeUint16:
-                return InferenceEngine::Precision::U16;
-                break;
-            case DataTypeInt32:
-                return InferenceEngine::Precision::I32;
-                break;
-            case DataTypeFP16:
-                return InferenceEngine::Precision::FP16;
-                break;
-            case DataTypeFP32:
-                return InferenceEngine::Precision::FP32;
-                break;
-            default:
-                //return InferenceEngine::Precision::FP32;
-                break;
-     }
+    switch(type) {
+    case DataTypeInt8:
+        return InferenceEngine::Precision::I8;
+        break;
+    case DataTypeUint8:
+        return InferenceEngine::Precision::U8;
+        break;
+    case DataTypeInt16:
+        return InferenceEngine::Precision::I16;
+        break;
+    case DataTypeUint16:
+        return InferenceEngine::Precision::U16;
+        break;
+    case DataTypeInt32:
+        return InferenceEngine::Precision::I32;
+        break;
+    case DataTypeFP16:
+        return InferenceEngine::Precision::FP16;
+        break;
+    case DataTypeFP32:
+        return InferenceEngine::Precision::FP32;
+        break;
+    default:
+        //return InferenceEngine::Precision::FP32;
+        break;
+    }
     return  InferenceEngine::Precision::FP32;
 }
