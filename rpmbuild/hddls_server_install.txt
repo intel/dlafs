@@ -85,6 +85,7 @@ Note: below steps is the least
 	npm config set proxy <proxy>
 	sudo npm install -g n
 	sudo n stable
+	cp -rf /usr/local/hddl_s/* <work_path>
 	cd hddls_server_controller_receiver
 	npm install
 
@@ -108,7 +109,6 @@ Step 3:
 
 8. Run HDDL-S Server
 ---------------------
-	cp -rf /usr/local/hddl-s .
 	cd hddls_server_controller_receiver/server
 	export HDDLS_CVDL_MODEL_PATH=`pwd`/models
 	node hddls-server.js
@@ -117,6 +117,8 @@ Note: make sure models directory mode is 700
       make sure models/xxx/*.bin mode is 600
       make sure server_cert/*.pem mode is 400
 
+Note: If report "ipc_socket" exist, please remove ipc_socket by running:
+	rm -rf ipc_socket/unix.socket
 
 9. Others
 ----------

@@ -14,7 +14,8 @@
 
 2. Run receiver client
 ----------------------
-	cd receiver
+	cp -rf /usr/local/hddl_s/* <client_work_path>
+	cd hddls_server_controller_receiver/receiver
   	node result_receiver.js
 
 

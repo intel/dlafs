@@ -2,14 +2,33 @@
 HDDL-S project
 -------------
 
-HDDL-S extends HDDL-R to the whole computer vision based on deep learning, which is a fully pipeline integrated video/image decoder/encoder, image pre/post processing, vision analysis (object detection/recognition/tracking), and network transmission.
+The software architecture of HDDL-S reference design extends its scope to whole computer vision media application. It is a full pipeline integrating video decoder, computer vision processing (including image pre-processing, deep learning processing includes but is not limited to object detection and classification/recognition, object tracking etc.), post-processing (including image encoder, metadata encapsulation, etc.) and network transmission. So in HDDL-S, MSDK, OpenCL, OpenCV and network protocols will be involved as well as the entire HDDL-R software stack via OpenVINO.
+HDDL-S software architecture is based on GStreamer, which encapsulates all vision components so that can reach the good flexibility to build diversified vision applications. It is easy to build up kinds of vision application once the basic filters are implement.  HDDL-S can support multiple media channels, so a HDDL-S module is made up by multiple hddl channels, and each channel can setup a GStreamer pipeline. One webserver is created in a HDDL-S module to manage its all hddl channels, and provides vision processing service for multiple controller clients in host, and send vision processing result to receiver client.
 
-HDDL-S SW contain 2 parts: 
-1). HDDL-S pipeline stack
+
+HDDL-S SW contains 2 parts:
+
+	1). HDDL-S pipeline stack
 	It is based on OpenVINO R5 and running in gstreamer framework to cover all CV/DL tasks.
-2). HDDL-S server/client
+
+	2). HDDL-S server/client
 	It provides NodeJS interface for user to remote create and manage multiple HDDL-S pipelines and also get the processing result.
 
+
+Hardware requirement:
+	Host Board:	HDDL-S Module with 24 MYX cores
+	CPU:            Intel® Xeon® E-2176G Processor
+	Memory:	        16 GB
+
+Software requirement:
+	OS:		Ubuntu 16.04.3
+	Kernel:		4.14.20
+	OpenVINO:	R5
+	OpenCL SDK:	2017_7.0.0.2568_x64
+	Gstreamer:	1.8.3
+	OpenCV:		4.0.0-rc
+	Node JS:	11.10.0
+	Node WS:	6.1.2
 
 0. Install packages
 -------------------
@@ -138,12 +157,57 @@ Note: below steps is the least
 	export HDDLS_CVDL_MODEL_PATH=`pwd`/models
 	node hddls-server.js
 
-	Note: make sure models directory mode is 700
+	Note:
+		make sure models directory mode is 700
 		make sure models/xxx/*.bin mode is 600
 		make sure server_cert/*.pem mode is 400
 
+10. Setup HDDL-S client in host machine
+--------------------------------------
+   10.1 Prepare environment
 
-10. Others
+	sudo apt-get install nodejs-legacy npm
+	npm config set proxy <proxy>
+	sudo npm install -g n
+	sudo n stable
+	npm install
+
+	Install certificate files, which is got from server:
+		Copy "ca-crt.pem client1-crt.pem client1-key.pem" into 'controller/client_cert'
+		Copy "ca-crt.pem client1-crt.pem client1-key.pem" into 'receiver/client_cert'
+		Copy 'client1.crl' into 'server_cert'
+
+   10.2 Run receiver client
+
+	cd receiver
+	node result_receiver.js
+
+   10.3 Run controller client
+
+        Open a new terminal, and run below command:
+	cd hddls_server_controller_receiver/controller
+	node controller_cli.js
+		--Please choose server by ip: <server IP>:8445
+		--Please type model update command:
+			m <models directory>
+	Note: Choose the models directory that will be updated into hddls-server
+		You can type "models", which is the same with: HDDLS_CVDL_MODEL_PATH
+
+       Note:
+	1). Make sure client_cert/*.pem mode is 400
+	2). Command format:
+		help                          commanders that you can use.
+		c <create.json>               create pipeslines
+		p <property.json> <pipe_id>   set pipeslines property
+		d <destroy.json>  <pipe_id>   destroy pipeslines
+		pipe                          display pipes belonging to the very client
+		m <models directory>          display model info
+		q                             exit client.
+
+	3). We need put the model files into a specified directory, and put the subdirectory the same name with model
+
+
+11. Others
 ----------
 	A. How to deploy customer models
 		Step 1: implement libxxxalgo.so as customer guide

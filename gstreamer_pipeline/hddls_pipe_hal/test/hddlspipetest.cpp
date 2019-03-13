@@ -274,9 +274,10 @@ void hddlspipe_prepare(int argc, char **argv)
 }
 
 
+
 /**
-  *  Thread will loop in this function until calling hddlspipe_stop().
-  **/
+ *  Thread will loop in this function until calling hddlspipe_stop().
+ **/
  void  hddlspipe_start(HddlsPipe * hp)
 {
      g_assert (hp);
@@ -286,8 +287,8 @@ void hddlspipe_prepare(int argc, char **argv)
 }
 
  /**
-   *  Stop hddlspipe.
-   **/
+  *  Stop hddlspipe.
+  **/
  void hddlspipe_stop(HddlsPipe *hp)
 {
      g_assert (hp);
@@ -297,8 +298,8 @@ void hddlspipe_prepare(int argc, char **argv)
 }
 
  /**
-   *  Resume hddlspipe.
-   **/
+  *  Resume hddlspipe.
+  **/
  void  hddlspipe_resume (HddlsPipe *hp)
 {
     g_assert (hp);
