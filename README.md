@@ -3,6 +3,7 @@ HDDL-S project
 -------------
 
 The software architecture of HDDL-S reference design extends its scope to whole computer vision media application. It is a full pipeline integrating video decoder, computer vision processing (including image pre-processing, deep learning processing includes but is not limited to object detection and classification/recognition, object tracking etc.), post-processing (including image encoder, metadata encapsulation, etc.) and network transmission. So in HDDL-S, MSDK, OpenCL, OpenCV and network protocols will be involved as well as the entire HDDL-R software stack via OpenVINO.
+
 HDDL-S software architecture is based on GStreamer, which encapsulates all vision components so that can reach the good flexibility to build diversified vision applications. It is easy to build up kinds of vision application once the basic filters are implement.  HDDL-S can support multiple media channels, so a HDDL-S module is made up by multiple hddl channels, and each channel can setup a GStreamer pipeline. One webserver is created in a HDDL-S module to manage its all hddl channels, and provides vision processing service for multiple controller clients in host, and send vision processing result to receiver client.
 
 
@@ -16,11 +17,13 @@ HDDL-S SW contains 2 parts:
 
 
 Hardware requirement:
+
 	Host Board:	HDDL-S Module with 24 MYX cores
-	CPU:            Intel® Xeon® E-2176G Processor
+	CPU:            Intel Xeon E-2176G Processor
 	Memory:	        16 GB
 
 Software requirement:
+
 	OS:		Ubuntu 16.04.3
 	Kernel:		4.14.20
 	OpenVINO:	R5
@@ -38,32 +41,34 @@ Software requirement:
 	sudo ln -sf /opt/intel/mediasdk/lib64/libva.so.2 /usr/lib/libva.so
 	sudo ln -sf /opt/intel/mediasdk/lib64/libva-drm.so.2 /usr/lib/libva-drm.so
 
+
 1. Install OpenVINO R5
 ----------------------
 Install OpenVINO: https://software.intel.com/en-us/articles/OpenVINO-Install-Linux
 
-Note: below steps is the least
-1) Install external software dependencies
-2) Install the Intel Distribution of OpenVINO toolkit core components 
-3) Set the environment variables
-   source /opt/intel/computer_vision_sdk/bin/setupvars.sh
-4) Additional installation steps for Intel Processor Graphics (GPU) 
+	Note: below steps is the least
+	1). Install external software dependencies
+	2). Install the Intel Distribution of OpenVINO toolkit core components
+	3). Set the environment variables
+		source /opt/intel/computer_vision_sdk/bin/setupvars.sh
+	4). Additional installation steps for Intel Processor Graphics (GPU)
 
-	cd /opt/intel/computer_vision_sdk/install_dependencies
-	sudo ./install_NEO_OCL_driver.sh
+		cd /opt/intel/computer_vision_sdk/install_dependencies
+		sudo ./install_NEO_OCL_driver.sh
 
-	Add OpenCL users to the video group: 
-	sudo usermod -a -G video USERNAME
-		e.g. if the user running OpenCL host applications is foo, run: sudo usermod -a -G video foo
+		Add OpenCL users to the video group:
+		sudo usermod -a -G video USERNAME
+			e.g. if the user running OpenCL host applications is foo, run: sudo usermod -a -G video foo
 
-	Install 4.14 kernel using install_4_14_kernel.sh script and reboot into this kernel
-	sudo ./install_4_14_kernel.sh
+		Install 4.14 kernel using install_4_14_kernel.sh script and reboot into this kernel
+		sudo ./install_4_14_kernel.sh
 
-	If you use 8th Generation Intel processor, you will need to add:
-		i915.alpha_support=1
-	to the 4.14 kernel command line, in order to enable OpenCL functionality for this platform.
+		If you use 8th Generation Intel processor, you will need to add:
+			i915.alpha_support=1
+		to the 4.14 kernel command line, in order to enable OpenCL functionality for this platform.
 
-5) Additional Installation Steps for Intel Vision Accelerator Design with Intel Movidius VPUs
+	5). Additional Installation Steps for Intel Vision Accelerator Design with Intel Movidius VPUs
+
 
 2. Install OpenCL SDK
 ---------------------
@@ -71,6 +76,7 @@ Note: below steps is the least
 	tar -xvf intel_sdk_for_opencl_2017_7.0.0.2568_x64.gz
 	cd intel_sdk_for_opencl_2017_7.0.0.2568_x64
 	sudo ./install_GUI.sh
+
 
 3. Install json-c
 -----------------
@@ -114,7 +120,7 @@ Note: below steps is the least
 
 6. Build from source code
 -------------------------
-        sudo apt-get install libgstreamer-plugins-bad1.0-dev  libx11-xcb-dev
+	sudo apt-get install libgstreamer-plugins-bad1.0-dev  libx11-xcb-dev
 	1).HDDL-S pipe/plugins, which are C/C++ 
 		mkdir build && cd build
 		cmake ..
@@ -196,13 +202,13 @@ Note: below steps is the least
        Note:
 	1). Make sure client_cert/*.pem mode is 400
 	2). Command format:
-		help                          commanders that you can use.
-		c <create.json>               create pipeslines
-		p <property.json> <pipe_id>   set pipeslines property
-		d <destroy.json>  <pipe_id>   destroy pipeslines
-		pipe                          display pipes belonging to the very client
-		m <models directory>          display model info
-		q                             exit client.
+		-help                          commanders that you can use.
+		-c <create.json>               create pipeslines
+		-p <property.json> <pipe_id>   set pipeslines property
+		-d <destroy.json>  <pipe_id>   destroy pipeslines
+		-pipe                          display pipes belonging to the very client
+		-m <models directory>          display model info
+		-q                             exit client.
 
 	3). We need put the model files into a specified directory, and put the subdirectory the same name with model
 
