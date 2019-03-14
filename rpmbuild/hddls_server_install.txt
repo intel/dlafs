@@ -52,15 +52,15 @@ Note: below steps is the least
 	sh autogen.sh
 	./configure && make && sudo make install
 
-4. Install OpenCV
------------------
+4. Install OpenCV 4.0.0-rc
+--------------------------
 	export CPLUS_INCLUDE_PATH=/opt/intel/mediasdk/include:$CPLUS_INCLUDE_PATH
 	sudo ln -sf /opt/intel/opencl/SDK/include /opt/intel/opencl/include
 	sudo ln -sf /opt/intel/mediasdk/include/va   /usr/local/include/va
 	git clone https://github.com/opencv/opencv.git
-	cd opencv && git checkout 6ffc48769ac60d53c4bd1913eac15117c9b1c9f7
+	cd opencv && git checkout a6387c3012d5331798ffca2acdd8297f417101e4
 	mkdir build && cd build
-	cmake -DWITH_VA_INTEL=ON -DWITH_IPP=OFF -DWITH_CUDA=OFF ..
+	cmake -DWITH_VA_INTEL=ON -DWITH_IPP=OFF -DWITH_CUDA=OFF -DOPENCV_GENERATE_PKGCONFIG=ON ..
 		Note: make sure:
 			--     VA:                          YES
 			--     Intel VA-API/OpenCL:         YES (OpenCL: /opt/intel/opencl)
@@ -92,7 +92,7 @@ Note: below steps is the least
 7. Generate and install certifiate files
 ----------------------------------------
 Step 1: 
-	Please refer to certificate_create_explanation.md to generate certificate files.
+    Please refer to certificate_create_explanation.md to generate certificate files.
 Step 2: 
     Copy "ca-crt.pem client1-crt.pem client1-key.pem" into 'controller/client_cert'
     Copy "ca-crt.pem client1-crt.pem client1-key.pem" into 'receiver/client_cert'
