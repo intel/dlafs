@@ -1,16 +1,16 @@
 {
-    "client_id": 1,     
+    "client_id": 1,
     "command_type": 0 ,
-    "command_create":    
+    "command_create":
     {
          "pipe_num": 1,
          "stream_source": "rtsp://10.240.109.164:1554/simu0033",
-         "codec_type": "H.264",    
+         "codec_type": "H.264",
+	 "output_type": 1,
          "cvdlfilter0":
         {
              "algopipeline": "yolov1tiny ! opticalflowtrack ! googlenetv2"
         },
         "loop_times":1
-
     }
  }

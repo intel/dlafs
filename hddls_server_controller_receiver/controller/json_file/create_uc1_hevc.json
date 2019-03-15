@@ -12,6 +12,5 @@
              "algopipeline": "yolov1tiny ! opticalflowtrack ! googlenetv2"
         },
         "loop_times":1
-
     }
  }

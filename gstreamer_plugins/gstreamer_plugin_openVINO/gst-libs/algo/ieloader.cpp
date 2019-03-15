@@ -357,7 +357,8 @@ int IELoader::get_enable_request()
         return false;
     });
 
-    mRequestEnable[target_id] = false;
+    if(target_id!=-1)
+        mRequestEnable[target_id] = false;
     return target_id;
 }
 

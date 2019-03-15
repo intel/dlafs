@@ -1,9 +1,9 @@
 {
-    "client_id": 1,     
+    "client_id": 1,
     "command_type": 0 ,
-    "command_create":    
+    "command_create":
     {
-         "pipe_num": 2, 
+         "pipe_num": 2,
          "stream_source": "/home/lijunjie/1600x1200.mp4",
          "codec_type": "H.264",
          "output_type":1,

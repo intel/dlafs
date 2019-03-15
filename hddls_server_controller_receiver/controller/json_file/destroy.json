@@ -1,7 +1,7 @@
 {
-    "client_id": 1,     
+    "client_id": 1,
     "command_type": 1,
-    "command_destroy":   
+    "command_destroy":
    {
         "pipe_id":3
    }
