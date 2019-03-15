@@ -334,6 +334,10 @@ static const gchar* parse_create_command(char *desc,  gint pipe_id, IPCClientHan
     if(!stream_source || !stream_codec_type) {
             //g_print("error - failed to get input stream source:%s,  stream_codec_type=%s\n",
             //    stream_source, stream_codec_type);
+            if(!stream_source)
+                stream_source = "null_stream";
+            if(!stream_codec_type)
+                stream_codec_type = "invalid_codec";
             std::string err_info = std::string("error - failed to get input stream source: ") + std::string(stream_source) +
                 std::string(", stream_codec_type=") + std::string(stream_codec_type) + std::string("\n");
             ipcclient_upload_error_info(ipc, err_info.c_str());
@@ -491,6 +495,10 @@ void hddlspipe_prepare(int argc, char **argv)
 
    // Block wait until get desc data from ipc server
     item = (MessageItem *)ipcclient_get_data(hp->ipc);
+    if(!item) {
+        g_print("Failed to get MessageItem!\n");
+        return NULL;
+    }
     GST_INFO("%s() -pipe %d  received message: %s\n", __func__, hp->pipe_id, item->data);
     hp->state = ePipeState_Null;
 
@@ -545,9 +553,9 @@ void hddlspipe_prepare(int argc, char **argv)
      g_main_loop_quit (hp->loop);
 }
 
- /**
-   *  Resume hddlspipe.
-   **/
+/**
+ *  Resume hddlspipe.
+ **/
  void  hddlspipe_resume (HddlsPipe *hp)
 {
     g_assert (hp);
@@ -555,9 +563,9 @@ void hddlspipe_prepare(int argc, char **argv)
      hp->state = ePipeState_Running;
 }
 
-  /**
-   *  Pause hddlspipe.
-   **/
+/**
+ *  Pause hddlspipe.
+ **/
  void hddlspipe_pause(HddlsPipe *hp)
 {
      g_assert (hp);
@@ -606,8 +614,8 @@ void  hddlspipes_replay_if_need(HddlsPipe *hp)
 }
 
 /**
-  *  Destroy hddlspipe.
-  **/
+ *  Destroy hddlspipe.
+ **/
 void hddlspipe_destroy(HddlsPipe *hp)
 {
     hp->state = ePipeState_Null;
