@@ -171,7 +171,10 @@ static std::string covert_infer_data_to_json_string(void *data, guint64 pts, int
                                      infer_data->rect.width, infer_data->rect.height);
     const char* string_data = json_data.object_to_string();
 
-    return std::string(string_data) + std::string("\n");
+    if(string_data)
+        return std::string(string_data) + std::string("\n");
+    else
+        return std::string("none data!\n");
 }
 
 
@@ -247,7 +250,7 @@ static std::string covert_infer_data_to_json_string_full_frame(void *data, int c
     if(string_data)
         return std::string(string_data) + std::string("\n");
     else
-        return std::string("none data\n");
+        return std::string("none data!\n");
 }
 
 
