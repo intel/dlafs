@@ -27,12 +27,20 @@
 Transceiver::Transceiver(int iFD) {
     _iFD = iFD;
     _sSendBuf.reserve(1024);
+    _dataLen = 0;
+    _duration = 0;
 }
 
 Transceiver::~Transceiver() {
     this->close();
 }
 
+void Transceiver::printDataSpeed()
+{
+    std::cout << "Send " << _dataLen << " bytes data in " << _duration/1000 << " ms." << std::endl;
+    if(_duration > 0)
+        std::cout << "Send data speed: " << _dataLen / (1.024*1.024*_duration) << " MB/s." << std::endl;
+}
 bool Transceiver::isValid() {
     return _iFD != -1;
 }
@@ -55,11 +63,15 @@ void Transceiver::close()
 int Transceiver::handleResponse() {
     if (!isValid()) return -1;
     int iBytesSent = 0;
+    gint64 start = 0;
     do {
         iBytesSent = 0;
         if (!_sSendBuf.empty()) {
             size_t length = _sSendBuf.length();
+            start = g_get_monotonic_time();
             iBytesSent = this->send(_sSendBuf.c_str(), _sSendBuf.length(), 0);
+            _duration += g_get_monotonic_time() - start;
+            _dataLen  += iBytesSent;
             if (iBytesSent > 0) {
                 if (iBytesSent == (int)length) {
                     _sSendBuf.clear();

@@ -108,6 +108,10 @@ struct _GstIpcSink {
   gint bit_data_index;
   gint frame_index;
 
+  //debug
+  gint64 duration;
+  gint64 data_size;
+
   gpointer _gst_reserved[GST_PADDING_LARGE];
 };
 

@@ -34,6 +34,7 @@ Looper::Looper(shared_ptr<Transceiver> pTrans,  GAsyncQueue *receive_queue) : _b
     int iLooperFD = pTrans->getFD();
 
     receive_message_queue = receive_queue;
+    _iSendDuration = 0;
 
     if (iLooperFD == -1) {
         g_print("Please provide valid FD\n");
@@ -47,6 +48,8 @@ Looper::~Looper() {
     if (!_bQuit) {
         quit();
     }
+    _pTrans->printDataSpeed();
+    std::cout << "Send Duration = " << _iSendDuration/1000 << " ms." << std::endl;
     if (_tLooperThread.joinable()) {
          _tLooperThread.join();
     }
@@ -99,10 +102,12 @@ void Looper::flush()
 }
 void Looper::handleSend()
 {
+    gint64 start = g_get_monotonic_time();
     if(_pTrans->isValid())
     {
         while (_pTrans->handleResponse() >= 0 && pop2Buffer());
     }
+    _iSendDuration += g_get_monotonic_time() - start;
 }
 
 void Looper::handleRead()

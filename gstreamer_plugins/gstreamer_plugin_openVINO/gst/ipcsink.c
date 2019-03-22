@@ -200,6 +200,7 @@ static void process_sink_buffers(gpointer userData)
         ipcclient_set_id(basesink->ipc_handle,  basesink->ipcc_id);
     }
 
+    gint64 start_time = g_get_monotonic_time();
     // Send meta data
     if(txt_buf) {
         ResMemory *txt_mem = NULL;
@@ -220,6 +221,7 @@ static void process_sink_buffers(gpointer userData)
                 basesink->frame_index++;
         }
     }
+    basesink->data_size += size;
 
     // Send jpeg bitstream data
     if(bit_buf) {
@@ -241,10 +243,11 @@ static void process_sink_buffers(gpointer userData)
             }
             size += data_len;
         }
-
+        basesink->data_size += size;
         for (i = 0; i < n; ++i)
             gst_memory_unmap (mapInfo[i].memory, &mapInfo[i]);
-   }
+    }
+    basesink->duration += g_get_monotonic_time() - start_time;
 
     // release buffer
     if(bit_buf)
@@ -500,11 +503,11 @@ static gboolean
 default_element_query (GstElement * element, GstQuery * query)
 {
   gboolean res = FALSE;
-  GstIpcSink *basesink = GST_IPC_SINK (element);
+  GstIpcSink *sink = GST_IPC_SINK (element);
 
   // Improvement need: how to query the 2 sink pad?
-  res = gst_pad_peer_query (basesink->sinkpad_bit, query);
-  GST_DEBUG_OBJECT (basesink, "query %s returns %d",
+  res = gst_pad_peer_query (sink->sinkpad_bit, query);
+  GST_LOG_OBJECT (sink, "query %s, it returns %d",
       GST_QUERY_TYPE_NAME (query), res);
   return res;
 }
@@ -513,36 +516,32 @@ static gboolean
 gst_ipc_sink_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   gboolean res = TRUE;
-  GstIpcSink *basesink;
-  basesink = GST_IPC_SINK_CAST (parent);
+  GstIpcSink *ipcsink = GST_IPC_SINK_CAST (parent);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_ALLOCATION:
     {
-      res = gst_ipc_sink_propose_allocation (basesink, query);
+      res = gst_ipc_sink_propose_allocation (ipcsink, query);
       break;
     }
     case GST_QUERY_CAPS:
     {
-      GstCaps *caps, *filter;
-
+      GstCaps *caps = NULL, *filter = NULL;
+      res = TRUE;
       gst_query_parse_caps (query, &filter);
-      caps = gst_ipc_sink_query_caps (basesink, pad, filter);
+      caps = gst_ipc_sink_query_caps (ipcsink, pad, filter);
       gst_query_set_caps_result (query, caps);
       gst_caps_unref (caps);
-      res = TRUE;
       break;
     }
     case GST_QUERY_ACCEPT_CAPS:
     {
-      GstCaps *caps, *allowed;
-      gboolean subset;
-
-      // slightly faster than the default implementation
+      GstCaps *caps = NULL, *allowed = NULL;
+      gboolean subset = false;
       gst_query_parse_accept_caps (query, &caps);
-      allowed = gst_ipc_sink_query_caps (basesink, pad, NULL);
+      allowed = gst_ipc_sink_query_caps (ipcsink, pad, NULL);
       subset = gst_caps_is_subset (caps, allowed);
-      GST_DEBUG_OBJECT (basesink, "Checking if requested caps %" GST_PTR_FORMAT
+      GST_DEBUG_OBJECT (ipcsink, "Checking if requested caps %" GST_PTR_FORMAT
           " are a subset of pad caps %" GST_PTR_FORMAT " result %d", caps,
           allowed, subset);
       gst_caps_unref (allowed);
@@ -551,7 +550,7 @@ gst_ipc_sink_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
       break;
     }
     default:
-      res = gst_pad_query_default (pad, GST_OBJECT_CAST (basesink), query);
+      res = gst_pad_query_default (pad, GST_OBJECT_CAST (ipcsink), query);
       break;
   }
   return res;
@@ -612,6 +611,9 @@ gst_ipc_sink_change_state (GstElement * element, GstStateChange transition)
             break;
         case GST_STATE_CHANGE_READY_TO_NULL:
             GST_DEBUG_OBJECT (basesink, "READY to NULL");
+            g_print("IpcSink: Process %ld bytes data in %ld ms, data_width = %f MB/s\n",
+                basesink->data_size, basesink->duration/1000,
+                basesink->data_size/(basesink->duration * 1.024 * 1.024 + 1));
             break;
         default:
             break;
@@ -698,6 +700,9 @@ gst_ipc_sink_init (GstIpcSink * basesink, gpointer g_class)
     basesink->bit_data_index = 0;
     basesink->frame_index = 0;
     basesink->priv = priv = GST_IPC_SINK_GET_PRIVATE (basesink);
+
+    basesink->duration = 0;
+    basesink->data_size = 0;
 
     priv->bit_received_num = 0;
     priv->bit_processed_num = 0;

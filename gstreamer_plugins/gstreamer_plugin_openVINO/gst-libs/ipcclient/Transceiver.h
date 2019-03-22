@@ -19,6 +19,7 @@
 #ifndef SOCKET_CLIENT_TRANSCEIVER_H
 #define SOCKET_CLIENT_TRANSCEIVER_H
 
+#include <gst/gst.h>
 #include <cstdint>
 #include <string>
 #include <mutex>
@@ -41,11 +42,13 @@ class Transceiver {
   int getFD(){return _iFD;};
   void writeToSendBuffer(const string& msg);
   bool sendMsg(ipcProtocol& tMsg);
+  void printDataSpeed();
  private:
   int _iFD;
   string _sSendBuf;
   string _sRecvBuf;
-
+  gint64 _duration;
+  gint64 _dataLen;
 };
 
 #endif //SOCKET_CLIENT_TRANSCEIVER_H

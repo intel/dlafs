@@ -307,6 +307,10 @@ cvdl_filter_change_state (GstElement * element, GstStateChange transition)
             gst_task_start(cvdlfilter->mPushTask);
         break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+        if(gst_task_get_state(cvdlfilter->mWDTask) != GST_TASK_STARTED) {
+            cvdlfilter->mQuited = false;
+            gst_task_start(cvdlfilter->mWDTask);
+        }
         break;
     default:
             break;
@@ -315,18 +319,22 @@ cvdl_filter_change_state (GstElement * element, GstStateChange transition)
   result = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
   switch (transition) {
       case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      // When change state Playing-->Paused, stop algopipeline,
-      //  so that we can Set property for algopipeline.
-      // The algo pipeline will have cached buffer to be processed.
-      // But it will cause gst-launch failed to change stat to be PLAYING
-      // due not buffer was sent to next filter
-      //
-      //  If we put it to ready or null state, we will encounter below error:
-      //  ERROR: GStreamer encountered a general stream error.
-      //     [Debug details: qtdemux.c(5520): gst_qtdemux_loop ():
-      //      /GstPipeline:pipeline2/GstQTDemux:qtdemux2:
-      //     streaming stopped, reason not-linked]
-      //
+        cvdlfilter->mQuited = true;
+        gst_task_set_state(cvdlfilter->mWDTask, GST_TASK_STOPPED);
+        gst_task_join(cvdlfilter->mWDTask);
+
+        // When change state Playing-->Paused, stop algopipeline,
+        //  so that we can Set property for algopipeline.
+        // The algo pipeline will have cached buffer to be processed.
+        // But it will cause gst-launch failed to change stat to be PLAYING
+        // due not buffer was sent to next filter
+        //
+        //  If we put it to ready or null state, we will encounter below error:
+        //  ERROR: GStreamer encountered a general stream error.
+        //     [Debug details: qtdemux.c(5520): gst_qtdemux_loop ():
+        //      /GstPipeline:pipeline2/GstQTDemux:qtdemux2:
+        //     streaming stopped, reason not-linked]
+        //
          break;
      case GST_STATE_CHANGE_PAUSED_TO_READY:
          // stop the data push task
@@ -611,6 +619,26 @@ static void push_buffer_func(gpointer userData)
 }
 
 
+// watch dog thread
+static void watch_dog_func(gpointer userData)
+{
+    CvdlFilter* cvdl_filter = (CvdlFilter* )userData;
+    int num = 200;
+    int current_frame_num = cvdl_filter->frame_num;
+
+    while(num-->0 && !cvdl_filter->mQuited) {
+        if(cvdl_filter->frame_num > current_frame_num)
+            break;
+        g_usleep(500000); //500ms
+    }
+
+    if(num<=0) {
+        cvdl_filter->mQuited = true;
+        char *error_info = "Not get data for too long!\n";
+        pipeline_report_error_info((GstElement *)cvdl_filter,error_info);
+    }
+}
+
 static void
 cvdl_filter_init (CvdlFilter* cvdl_filter)
 {
@@ -628,6 +656,7 @@ cvdl_filter_init (CvdlFilter* cvdl_filter)
 
     cvdl_filter->frame_num = 0;
     cvdl_filter->startTimePos = g_get_monotonic_time();
+    cvdl_filter->mQuited = false;
 
     // create task for push data to next filter/element
     g_rec_mutex_init (&cvdl_filter->mMutex);
@@ -636,4 +665,10 @@ cvdl_filter_init (CvdlFilter* cvdl_filter)
     gst_task_set_enter_callback (cvdl_filter->mPushTask, NULL, NULL, NULL);
     gst_task_set_leave_callback (cvdl_filter->mPushTask, NULL, NULL, NULL);
 
+    // create Watch dog task
+    g_rec_mutex_init (&cvdl_filter->mWDMutex);
+    cvdl_filter->mWDTask = gst_task_new (watch_dog_func, (gpointer)cvdl_filter, NULL);
+    gst_task_set_lock (cvdl_filter->mWDTask, &cvdl_filter->mWDMutex);
+    gst_task_set_enter_callback (cvdl_filter->mWDTask, NULL, NULL, NULL);
+    gst_task_set_leave_callback (cvdl_filter->mWDTask, NULL, NULL, NULL);
 }

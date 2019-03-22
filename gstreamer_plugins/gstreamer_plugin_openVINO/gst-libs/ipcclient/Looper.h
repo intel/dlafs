@@ -53,6 +53,7 @@ class Looper
   bool _bQuit;
   Epoller _tEpoller;
   GAsyncQueue *receive_message_queue;
+  gint64 _iSendDuration;
 
  private:
   void handleRead();
