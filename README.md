@@ -2,18 +2,18 @@
 Deep Learning Accelerator Framework for Stream (renamed from HDDL-S) project
 ----------------------------------------------------------------------------
 
-The software architecture of Deep-Learning-Accelerator-Framework-for-Stream(DLAFS) reference design extends its scope to whole computer vision media application. It is a full pipeline integrating video decoder, computer vision processing (including image pre-processing, deep learning processing includes but is not limited to object detection and classification/recognition, object tracking etc.), post-processing (including image encoder, metadata encapsulation, etc.) and network transmission. So in DLAFS, MSDK, OpenCL, OpenCV and network protocols will be involved as well as the entire HDDL-R software stack via OpenVINO.
+The software architecture of Deep-Learning-Accelerator-Framework-for-Stream(DLAFS) reference design extends its scope to whole computer vision media application. It is a full pipeline integrating video decoder, computer vision processing (including image pre-processing, deep learning processing includes but is not limited to object detection and classification/recognition, object tracking etc.), post-processing (including image encoder, metadata encapsulation, etc.) and network transmission. So in HDDL-S software stack, MSDK, OpenCL, OpenCV and network protocols will be involved as well as the entire HDDL-R software stack via OpenVINO.
 
-DLAFS software architecture is based on GStreamer, which encapsulates all vision components so that can reach the good flexibility to build diversified vision applications. It is easy to build up kinds of vision application once the basic filters are implement. DLAFS can support multiple media channels, so a DLAFS module is made up by multiple hddl channels, and each channel can setup a GStreamer pipeline. One webserver is created in a DLAFS module to manage its all hddl channels, and provides vision processing service for multiple controller clients in host, and send vision processing result to receiver client.
+HDDL-S software architecture is based on GStreamer, which encapsulates all vision components so that can reach the good flexibility to build diversified vision applications. It is easy to build up kinds of vision application once the basic filters are implement. HDDL-S can support multiple media channels, so a HDDL-S module is made up by multiple hddl channels, and each channel can setup a GStreamer pipeline. One webserver is created in a HDDL-S module to manage its all hddl channels, and provides vision processing service for multiple controller clients in host, and send vision processing result to receiver client.
 
 
-DLAFS SW contains 2 parts:
+HDDL-S SW contains 2 parts:
 
-	1). DLAFS pipeline stack
+	1). HDDL-S pipeline stack
 	It is based on OpenVINO R5 and running in gstreamer framework to cover all CV/DL tasks.
 
-	2). DLAFS server/client
-	It provides NodeJS interface for user to remote create and manage multiple DLAFS pipelines and also get the processing result.
+	2). HDDL-S server/client
+	It provides NodeJS interface for user to remote create and manage multiple HDDL-S pipelines and also get the processing result.
 
 
 Hardware requirement:
@@ -103,7 +103,7 @@ Install OpenVINO: https://software.intel.com/en-us/articles/OpenVINO-Install-Lin
 			--     Intel VA-API/OpenCL:         YES (OpenCL: /opt/intel/opencl)
 	make -j8
 	sudo make install
-	Note: OpenVINO has provided OpenCV libraries, but DLAFS need VA support in OpenCV, so we must rebuild it. 
+	Note: OpenVINO has provided OpenCV libraries, but HDDL-S need VA support in OpenCV, so we must rebuild it. 
 	          terminate called after throwing an instance of 'cv::Exception'
 		  what():  OpenCV(4.0.1-openvino) /home/jenkins/workspace/OpenCV/OpenVINO/build/opencv/modules/core/src/va_intel.cpp:51:
                            error: (-6:Unknown error code -6) OpenCV was build without VA support (libva) in function 'initializeContextFromVA'
@@ -121,15 +121,15 @@ Install OpenVINO: https://software.intel.com/en-us/articles/OpenVINO-Install-Lin
 6. Build from source code
 -------------------------
 	sudo apt-get install libgstreamer-plugins-bad1.0-dev  libx11-xcb-dev
-	1).DLAFS pipe/plugins, which are C/C++ 
+	1).HDDL-S pipe/plugins, which are C/C++ 
 		mkdir build && cd build
 		cmake ..
 		make -j8
 		sudo make install
-	2). DLAFS server/client, which are NodeJS 
+	2). HDDL-S server/client, which are NodeJS 
 		It need not build, run it directly 
 
-7. Setup DLAFS Server
+7. Setup HDDL-S Server
 ----------------------
 	sudo apt-get install nodejs-legacy npm
 	npm config set proxy <proxy>
@@ -157,7 +157,7 @@ Install OpenVINO: https://software.intel.com/en-us/articles/OpenVINO-Install-Lin
 		chmod 700 client_cert
 		chmod 700 server_cert
 
-9. Run DLAFS Server
+9. Run HDDL-S Server
 ---------------------
 	cd hddls_server_controller_receiver/server
 	export HDDLS_CVDL_MODEL_PATH=`pwd`/models
@@ -168,7 +168,7 @@ Install OpenVINO: https://software.intel.com/en-us/articles/OpenVINO-Install-Lin
 		make sure models/xxx/*.bin mode is 600
 		make sure server_cert/*.pem mode is 400
 
-10. Setup DLAFS client in host machine
+10. Setup HDDL-S client in host machine
 --------------------------------------
    10.1 Prepare environment
 
