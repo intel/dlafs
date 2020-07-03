@@ -38,6 +38,9 @@ ImageProcessor::ImageProcessor()
     mOclInited = false;
     mPool = NULL;
     mOclFormat = CRC_FORMAT_BGR_PLANNAR; // default is plannar
+	mCrop = {0};
+	mOclVppType = 0;
+	mDisplay = nullptr;
 }
 
 ImageProcessor::~ImageProcessor()

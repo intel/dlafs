@@ -39,7 +39,8 @@ static void post_callback(CvdlAlgoData *algoData)
 {
         // post process algoData
 }
-MobileNetSSDAlgo::MobileNetSSDAlgo() : CvdlAlgoBase(post_callback, CVDL_TYPE_DL)
+MobileNetSSDAlgo::MobileNetSSDAlgo() : CvdlAlgoBase(post_callback, CVDL_TYPE_DL),
+mSSDMaxProposalCount(0), mSSDObjectSize(0), mCurPts(0), mLabelNames(nullptr)
 {
     mName = std::string(ALGO_MOBILENET_SSD_NAME);
     set_default_label_name();

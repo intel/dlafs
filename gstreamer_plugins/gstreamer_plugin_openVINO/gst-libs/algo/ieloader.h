@@ -24,6 +24,8 @@
 #include <vector>
 #include <tuple>
 #include <mutex>
+#include <memory>
+#include <bits/unique_ptr.h>
 #include <condition_variable>
 #include <opencv2/opencv.hpp>
 #include <inference_engine.hpp>
@@ -46,6 +48,8 @@ enum{
     IE_MODEL_YOLOTINYV2 = 4,
     IE_MODEL_REID = 5,
     IE_MODEL_GENERIC = 6, 
+	IE_MODEL_OMZ_VEHICLE_LICENSE_PLATE_DETECTION_BARRIER_0106 = 7,
+	IE_MODEL_OMZ_VEHICLE_ATTRIBUTES_RECOGNITION_BARRIER_0039 = 8,
     IE_MODEL_LP_NONE
 };
 
@@ -56,7 +60,8 @@ public:
     IELoader();
     ~IELoader();
 
-    GstFlowReturn set_device(InferenceEngine::TargetDevice dev);
+    //GstFlowReturn set_device(InferenceEngine::TargetDevice dev);
+    GstFlowReturn load_hddl_plugin(std::string);
     GstFlowReturn read_model(std::string strModelXml, std::string strModelBin, int modelType, std::string network_config);
     GstFlowReturn convert_input_to_blob(const cv::UMat& img, InferenceEngine::Blob::Ptr& inputBlobPtr);
     GstFlowReturn second_input_to_blob(InferenceEngine::Blob::Ptr& inputBlobPtr);
@@ -88,7 +93,7 @@ public:
     unsigned int mSecDataSrcCount;
     InferenceEngine::Precision mSecDataPrecision;
 
-    InferenceEngine::TargetDevice mTargetDev;
+    //InferenceEngine::TargetDevice mTargetDev;
     InferenceEngine::Precision mInputPrecision = InferenceEngine::Precision::U8;
     InferenceEngine::Precision mOutputPrecision = InferenceEngine::Precision::FP32;
 
@@ -107,9 +112,10 @@ private:
 
     std::string mModelXml;
     std::string mModelBin;
+	std::string mTargetDevice;
 
-    InferenceEngine::InferenceEnginePluginPtr mIEPlugin; // plugin must be first so it would be last in the destruction order
-    InferenceEngine::IExecutableNetwork::Ptr  mExeNetwork;
+	std::unique_ptr<InferenceEngine::Core> mCore;
+	InferenceEngine::ExecutableNetwork mExecutableNetwork;
 
     std::string mFirstInputName;
     std::string mFirstOutputName;

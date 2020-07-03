@@ -79,7 +79,7 @@ static void post_callback(CvdlAlgoData *algoData)
 GenericAlgo::GenericAlgo(const char *name) : CvdlAlgoBase(post_callback, CVDL_TYPE_DL),
         mHandler(NULL), pfParser(NULL), pfPostProcess(NULL), pfGetType(NULL),
         pfGetMS(NULL), pfGetNetworkConfig(NULL), mLoaded(false), inType(DataTypeInt8),
-        outType(DataTypeFP32), mCurPts(0)
+        outType(DataTypeFP32), mCurPts(0), mLabelNames(nullptr)
 {
     mName = std::string(name);
     const gchar *env = g_getenv("HDDLS_CVDL_MODEL_PATH");

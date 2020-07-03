@@ -53,7 +53,7 @@ if (InferenceEngine::OK != (call)) {                            \
     std::cout << #call " failed: " << resp.msg << std::endl;    \
 }
 
-using namespace InferenceEngine;
+//using namespace InferenceEngine;
 using namespace std;
 
 std::mutex requestCreateMutex;
@@ -110,9 +110,11 @@ static void data_norm_C(float* pfOut, unsigned char* pcInput,  int data_len,  fl
     }
 }
 #endif
-IELoader::IELoader()
+IELoader::IELoader(): mModelType(0), mSecDataSrcPtr(nullptr),
+mInputMean(0.0), mInputScale(0.0), mSecDataSrcCount(0)
 {
     mNeedSecondInputData = false;
+	mCore = std::make_unique<InferenceEngine::Core>();
 }
 
 IELoader::~IELoader()
@@ -121,29 +123,36 @@ IELoader::~IELoader()
 }
 
 
-GstFlowReturn IELoader::set_device(InferenceEngine::TargetDevice dev)
+//GstFlowReturn IELoader::set_device(InferenceEngine::TargetDevice dev)
+//{
+//    mTargetDev = dev;
+//    switch (dev) {
+//    case InferenceEngine::TargetDevice::eCPU:
+//        mIEPlugin = InferenceEngine::InferenceEnginePluginPtr("libMKLDNNPlugin.so");
+//        break;
+//    case InferenceEngine::TargetDevice::eGPU:
+//        mIEPlugin = InferenceEngine::InferenceEnginePluginPtr("libclDNNPlugin.so");
+//        break;
+//    case InferenceEngine::TargetDevice::eHDDL:
+//        mIEPlugin = InferenceEngine::InferenceEnginePluginPtr(HDDL_PLUGIN);
+//        break;
+//    default:
+//        g_print("Not support device [ %d ]\n", (int)dev);
+//        return GST_FLOW_ERROR;
+//        break;
+//    }
+//    if(mIEPlugin)
+//        return GST_FLOW_OK;
+//    else
+//        return GST_FLOW_ERROR;
+//}
+
+GstFlowReturn IELoader::load_hddl_plugin(std::string TargetDevice)
 {
-    mTargetDev = dev;
-    switch (dev) {
-    case InferenceEngine::TargetDevice::eCPU:
-        mIEPlugin = InferenceEnginePluginPtr("libMKLDNNPlugin.so");
-        break;
-    case InferenceEngine::TargetDevice::eGPU:
-        mIEPlugin = InferenceEnginePluginPtr("libclDNNPlugin.so");
-        break;
-    case InferenceEngine::TargetDevice::eHDDL:
-        mIEPlugin = InferenceEnginePluginPtr(HDDL_PLUGIN);
-        break;
-    default:
-        g_print("Not support device [ %d ]\n", (int)dev);
-        return GST_FLOW_ERROR;
-        break;
-    }
-    if(mIEPlugin)
-        return GST_FLOW_OK;
-    else
-        return GST_FLOW_ERROR;
+	mTargetDevice = TargetDevice;
+	return GST_FLOW_OK;
 }
+
 GstFlowReturn IELoader::read_model(std::string strModelXml,
         std::string strModelBin, int modelType, std::string network_config)
 {
@@ -151,24 +160,10 @@ GstFlowReturn IELoader::read_model(std::string strModelXml,
     std::string config_xml;
 
     InferenceEngine::ResponseDesc resp;
-    InferenceEngine::StatusCode ret = InferenceEngine::StatusCode::OK;
+    //InferenceEngine::StatusCode ret = InferenceEngine::StatusCode::OK;
 
-    InferenceEngine::CNNNetReader netReader = InferenceEngine::CNNNetReader();
-    netReader.ReadNetwork(strModelXml);
-    if (!netReader.isParseSuccess()) {
-        g_print("read model %s fail", strModelXml.c_str());
-        return GST_FLOW_ERROR;
-    }
-    //g_print("Success to read %s\n", strModelXml.c_str());
-
-    netReader.ReadWeights(strModelBin);
-    if (!netReader.isParseSuccess()) {
-        g_print("read model %s fail", strModelBin.c_str());
-        return GST_FLOW_ERROR;
-    }
-    //g_print("Success to read %s\n", strModelBin.c_str());
-
-    InferenceEngine::CNNNetwork cnnNetwork = netReader.getNetwork();
+    //InferenceEngine::CNNNetwork cnnNetwork = netReader.getNetwork();
+	auto cnnNetwork = mCore->ReadNetwork(strModelXml);
     InferenceEngine::InputsDataMap networkInputs;
     InferenceEngine::OutputsDataMap networkOutputs;
 
@@ -177,20 +172,23 @@ GstFlowReturn IELoader::read_model(std::string strModelXml,
     g_return_val_if_fail(networkInputs.empty()==FALSE, GST_FLOW_ERROR);
     auto inputInfo = networkInputs.begin();
     g_return_val_if_fail(inputInfo != networkInputs.end(), GST_FLOW_ERROR);
-    inputInfo->second->setInputPrecision(mInputPrecision);
+    //inputInfo->second->setInputPrecision(mInputPrecision);
+    inputInfo->second->setPrecision(mInputPrecision);
     mFirstInputName = inputInfo->first;
-    inputInfo->second->setLayout(Layout::NCHW);//HW: NCHW, SW: NHWC
+    inputInfo->second->setLayout(InferenceEngine::Layout::NCHW);//HW: NCHW, SW: NHWC
 
     if(mNeedSecondInputData) {
         inputInfo++;
         g_return_val_if_fail(inputInfo != networkInputs.end(), GST_FLOW_ERROR);
-        inputInfo->second->setInputPrecision(mInputPrecision);
+        //inputInfo->second->setInputPrecision(mInputPrecision);
+        inputInfo->second->setPrecision(mInputPrecision);
         mSecondInputName = inputInfo->first;
         GST_INFO("IE blobs second input name is %s\n", mSecondInputName.c_str());
 
         //Improvement need: make it generic!
-        auto secondInputDims = inputInfo->second->getDims();
-        if( secondInputDims.size() != 2 || secondInputDims[0] != 1 || secondInputDims[1] != mSecDataSrcCount){
+        //auto secondInputDims = inputInfo->second->getDims();
+        auto secondInputDims = inputInfo->second->getTensorDesc().getDims();
+        if( secondInputDims.size() != 2 || secondInputDims[1] != 1 || secondInputDims[0] != mSecDataSrcCount){
             g_print("Parsing netowrk error (wrong size of second input).\n");
             return GST_FLOW_ERROR;
         }
@@ -201,72 +199,75 @@ GstFlowReturn IELoader::read_model(std::string strModelXml,
     g_return_val_if_fail(!networkOutputs.empty(), GST_FLOW_ERROR);
     auto firstOutputInfo = networkOutputs.begin();
     g_return_val_if_fail(firstOutputInfo != networkOutputs.end(), GST_FLOW_ERROR);
-    firstOutputInfo->second->precision = mOutputPrecision;
+    //firstOutputInfo->second->precision = mOutputPrecision;
+    firstOutputInfo->second->setPrecision(mOutputPrecision);
     mFirstOutputName = firstOutputInfo->first;
 
     InferenceEngine::OutputsDataMap outputInfo(cnnNetwork.getOutputsInfo());
     auto outputInfoIter = outputInfo.begin();
     if(outputInfoIter  != outputInfo.end()){
-        InferenceEngine::SizeVector outputDims = outputInfoIter->second->dims;
-         mOutputDim[1] = (int)outputDims[1]; 
-         mOutputDim[0] = (int)outputDims[0];
+         //InferenceEngine::SizeVector outputDims = outputInfoIter->second->dims;
+         InferenceEngine::SizeVector outputDims = outputInfoIter->second->getDims();
+         mOutputDim[1] = (int)outputDims[2]; 
+         mOutputDim[0] = (int)outputDims[3];
     }
-
-    std::map<std::string, std::string> networkConfig;
-    networkConfig[InferenceEngine::PluginConfigParams::KEY_LOG_LEVEL]
-        = InferenceEngine::PluginConfigParams::LOG_INFO;
-    networkConfig[VPU_CONFIG_KEY(HW_STAGES_OPTIMIZATION)] = CONFIG_VALUE(YES);
 
     mModelType = modelType;
-    switch(modelType) {
-        case IE_MODEL_DETECTION:
-            networkConfig[VPU_CONFIG_KEY(NETWORK_CONFIG)] = "data=data,scale=64";
-            break;
-       case IE_MODEL_SSD:
-            // Get moblienet_ssd_config_xml file name based on strModelXml
-            config_xml = strModelXml.substr(0, strModelXml.rfind(".")) + std::string(".conf.xml");
-            networkConfig[VPU_CONFIG_KEY(NETWORK_CONFIG)] = "file=" + config_xml;
-            break;
-        case IE_MODEL_LP_RECOGNIZE:
-            break;
-        case IE_MODEL_YOLOTINYV2:
-            networkConfig[VPU_CONFIG_KEY(NETWORK_CONFIG)] = "data=input,scale=128";
-            break;
-        case IE_MODEL_GENERIC:
-            if(network_config.compare("null"))
-                networkConfig[VPU_CONFIG_KEY(NETWORK_CONFIG)] = network_config.c_str();
-            break;
-        default:
-            break;
-   }
+    std::map<std::string, std::string> networkConfig;
+	if ("HDDL" == mTargetDevice)
+	{
+    	networkConfig[InferenceEngine::PluginConfigParams::KEY_LOG_LEVEL]
+    	    = InferenceEngine::PluginConfigParams::LOG_INFO;
+    	networkConfig[VPU_CONFIG_KEY(HW_STAGES_OPTIMIZATION)] = CONFIG_VALUE(YES);
 
-    // Executable Network for inference engine
-    ret = mIEPlugin->LoadNetwork(mExeNetwork, cnnNetwork, networkConfig, &resp);
-    if (InferenceEngine::StatusCode::OK != ret) {
-        // GENERAL_ERROR = -1
-        g_print("Failed to  LoadNetwork, ret_code = %d, models=%s\n", ret, strModelBin.c_str());
-        return GST_FLOW_ERROR;
-    }
+    	switch(modelType) {
+    	    case IE_MODEL_DETECTION:
+    	        networkConfig[VPU_CONFIG_KEY(NETWORK_CONFIG)] = "data=data,scale=64";
+    	        break;
+    	   case IE_MODEL_SSD:
+    	        // Get moblienet_ssd_config_xml file name based on strModelXml
+    	        config_xml = strModelXml.substr(0, strModelXml.rfind(".")) + std::string(".conf.xml");
+    	        networkConfig[VPU_CONFIG_KEY(NETWORK_CONFIG)] = "file=" + config_xml;
+    	        break;
+    	    case IE_MODEL_LP_RECOGNIZE:
+    	        break;
+    	    case IE_MODEL_YOLOTINYV2:
+    	        networkConfig[VPU_CONFIG_KEY(NETWORK_CONFIG)] = "data=input,scale=128";
+    	        break;
+    	    case IE_MODEL_GENERIC:
+    	        if(network_config.compare("null"))
+    	            networkConfig[VPU_CONFIG_KEY(NETWORK_CONFIG)] = network_config.c_str();
+    	        break;
+			case IE_MODEL_OMZ_VEHICLE_LICENSE_PLATE_DETECTION_BARRIER_0106:
+				break;
+			case IE_MODEL_OMZ_VEHICLE_ATTRIBUTES_RECOGNITION_BARRIER_0039:
+				break;
+    	    default:
+    	        break;
+    	}
+	}
 
-    // First create 16 request for current thread.
+	auto exeNetwork = mCore->LoadNetwork(cnnNetwork, mTargetDevice, networkConfig);
+	mExecutableNetwork = exeNetwork;
     for (int r = 0; r < REQUEST_NUM; r++) {
-        IECALLCHECK(mExeNetwork->CreateInferRequest(mInferRequest[r], &resp));
+		mInferRequest[r] = mExecutableNetwork.CreateInferRequest();
         mRequestEnable[r] = true;
     }
     return GST_FLOW_OK;
 }
-
 GstFlowReturn IELoader::convert_input_to_blob(const cv::UMat& img,
     InferenceEngine::Blob::Ptr& inputBlobPtr)
 {
-    if (inputBlobPtr->precision() != mInputPrecision) {
+	auto inputBlobTensorDesc = inputBlobPtr->getTensorDesc();
+    if (inputBlobTensorDesc.getPrecision() != mInputPrecision) {
         GST_ERROR("loadImage error: blob must have only same precision");
         return GST_FLOW_ERROR;
     }
+	auto dims = inputBlobTensorDesc.getDims();
 
     cv::Mat src;
-    int w = (int)inputBlobPtr->dims()[0];
-    int h = (int)inputBlobPtr->dims()[1];
+    int w = (int)dims[3];
+    int h = (int)dims[2];
     if (img.cols != w || img.rows != h) {
         GST_ERROR("WARNNING: resize from %dx%d to %dx%d !\n", src.cols, src.rows, w, h);
         cv::resize(img, src, cv::Size(w, h));
@@ -279,7 +280,7 @@ GstFlowReturn IELoader::convert_input_to_blob(const cv::UMat& img,
     }
     g_return_val_if_fail(src.data, GST_FLOW_ERROR);
 
-    auto numBlobChannels = inputBlobPtr->dims()[2];
+    auto numBlobChannels = dims[1];
     size_t numImageChannels = src.channels();
     if (numBlobChannels != numImageChannels && numBlobChannels != 1) {
         GST_ERROR("numBlobChannels != numImageChannels && numBlobChannels != 1");
@@ -381,9 +382,11 @@ GstFlowReturn IELoader::get_input_size(int *w, int *h, int *c)
         InferenceEngine::IInferRequest::Ptr inferRequestAsyn = mInferRequest[reqestId];
         InferenceEngine::Blob::Ptr inputBlobPtr;
         IECALLCHECK(inferRequestAsyn->GetBlob(mFirstInputName.c_str(), inputBlobPtr, &resp));
-        *w = (int)inputBlobPtr->dims()[0];
-        *h = (int)inputBlobPtr->dims()[1];
-        *c = (int)inputBlobPtr->dims()[2];
+		auto inputBlobTensorDesc = inputBlobPtr->getTensorDesc();
+		auto dims = inputBlobTensorDesc.getDims();
+        *w = (int)dims[3];
+        *h = (int)dims[2];
+        *c = (int)dims[1];
         ret = GST_FLOW_OK;
         release_request(reqestId);
     } else {

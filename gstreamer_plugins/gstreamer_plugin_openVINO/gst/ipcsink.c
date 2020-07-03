@@ -51,6 +51,7 @@ enum
 {
     PROP_0,
     PROP_IPC_SERVER_URI,
+	PROP_IPC_LOCATION,
     PROP_IPC_CLIENT_ID,
     PROP_IPC_CLIENT_PROXY,
     PROP_LAST
@@ -192,13 +193,13 @@ static void process_sink_buffers(gpointer userData)
     }
 
     //setup ipcclient
-    if(!basesink->ipc_handle) {
-        if(basesink->ipc_handle_proxy != INVALID_IPCC_PROXY)
-            basesink->ipc_handle = basesink->ipc_handle_proxy;
-        else
-            basesink->ipc_handle = ipcclient_setup(basesink->ipcs_uri, basesink->ipcc_id);
-        ipcclient_set_id(basesink->ipc_handle,  basesink->ipcc_id);
-    }
+    //if(!basesink->ipc_handle) {
+    //    if(basesink->ipc_handle_proxy != INVALID_IPCC_PROXY)
+    //        basesink->ipc_handle = basesink->ipc_handle_proxy;
+    //    else
+    //        basesink->ipc_handle = ipcclient_setup(basesink->ipcs_uri, basesink->ipcc_id);
+    //    ipcclient_set_id(basesink->ipc_handle,  basesink->ipcc_id);
+    //}
 
     gint64 start_time = g_get_monotonic_time();
     // Send meta data
@@ -213,8 +214,7 @@ static void process_sink_buffers(gpointer userData)
             int count = txt_mem->data_count;
             GST_LOG("object num = %d\n",count);
             infer_data->frame_index = basesink->frame_index;
-            data_len = ipcclient_send_infer_data_full_frame(basesink->ipc_handle,
-                infer_data, count,txt_mem->pts,basesink->meta_data_index);
+            data_len = ipcclient_send_infer_data_full_frame((void*)basesink->file_sink_ptr, infer_data, count,txt_mem->pts,basesink->meta_data_index);
             basesink->meta_data_index+=count;
             size += data_len;
             if(count>0)
@@ -235,11 +235,18 @@ static void process_sink_buffers(gpointer userData)
         for (i = 0; i < n; ++i) {
             mem = gst_buffer_peek_memory (bit_buf, i);
             if (gst_memory_map (mem, &mapInfo[i], GST_MAP_READ)) {
+		static unsigned int index = 0;
+		char jpeg[6];
+		strcpy(jpeg, ".jpeg");
+		char file_name_buffer[18];
+		sprintf(file_name_buffer, "%d", index);
+		strcat(file_name_buffer, jpeg);
                 data_base = mapInfo[i].data;
                 data_len = mapInfo[i].size;
-                ipcclient_send_data(basesink->ipc_handle, (const char *)data_base, data_len, eMetaJPG);
-                g_print("pipe %d: index = %d, jpeg size = %ld\n",basesink->ipcc_id, basesink->bit_data_index, data_len );
+		FILE * fH = fopen(file_name_buffer, "wb");
+		fwrite(data_base, 1, data_len, fH);
                 basesink->bit_data_index++;
+		++index;
             }
             size += data_len;
         }
@@ -309,11 +316,17 @@ gst_ipc_sink_set_property (GObject * object, guint prop_id,
             g_free(sink->ipcs_uri);
         sink->ipcs_uri = g_value_dup_string (value);
         break;
+	case PROP_IPC_LOCATION:
+		if(sink->file_sink_name)
+			g_free(sink->file_sink_name);
+		sink->file_sink_name = g_value_dup_string (value);
+		sink->file_sink_ptr = fopen(sink->file_sink_name, "w");
+		break;
     case PROP_IPC_CLIENT_ID:
         sink->ipcc_id = g_value_get_int(value);
         break;
      case PROP_IPC_CLIENT_PROXY:
-        sink->ipc_handle_proxy=g_value_get_pointer(value);
+        //sink->ipc_handle_proxy=g_value_get_pointer(value);
         break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -331,11 +344,14 @@ gst_ipc_sink_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_IPC_SERVER_URI:
         g_value_set_string (value, sink->ipcs_uri);
         break;
+	case PROP_IPC_LOCATION:
+        g_value_set_string (value, sink->file_sink_name);
+        break;
     case PROP_IPC_CLIENT_ID:
         g_value_set_int (value, sink->ipcc_id);
         break;
     case PROP_IPC_CLIENT_PROXY:
-        g_value_set_pointer(value, sink->ipc_handle_proxy);
+        //g_value_set_pointer(value, sink->ipc_handle_proxy);
         break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -652,6 +668,11 @@ gst_ipc_sink_class_init (GstIpcSinkClass * klass)
           "The URI of IPC(Socket) Server", "wss://localhost:8123/binaryEchoWithSize",
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+    g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_IPC_LOCATION,
+      g_param_spec_string ("location", "Location",
+          "Sink file location", "meta.json",
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
     g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_IPC_CLIENT_ID,
       g_param_spec_int ("ipcclientid", "IPC client Index",
           "IPC(Socket) client index to connected to its server(default: 0)",
@@ -692,8 +713,10 @@ gst_ipc_sink_init (GstIpcSink * basesink, gpointer g_class)
     GST_DEBUG_CATEGORY_INIT (gst_ipc_sink_debug, "ipcsink", 0,
             "Send data out by IPC/Socket");
 
-    basesink->ipc_handle = NULL;
-    basesink->ipc_handle_proxy = INVALID_IPCC_PROXY;
+    //basesink->ipc_handle = NULL;
+    //basesink->ipc_handle_proxy = INVALID_IPCC_PROXY;
+	basesink->file_sink_name = NULL;
+	basesink->file_sink_ptr = NULL;
     basesink->ipcs_uri = NULL;
     basesink->ipcc_id = 0;
     basesink->meta_data_index = 0;
@@ -755,11 +778,11 @@ gst_ipc_sink_finalize (GObject * object)
     GstIpcSink *basesink;
     basesink = GST_IPC_SINK (object);
 
-   if((basesink->ipc_handle_proxy==INVALID_IPCC_PROXY)
-    &&( basesink->ipc_handle) ) {
-        ipcclient_destroy(basesink->ipc_handle);
-        basesink->ipc_handle = NULL;
-    }
+   //if((basesink->ipc_handle_proxy==INVALID_IPCC_PROXY)
+   // &&( basesink->ipc_handle) ) {
+   //     ipcclient_destroy(basesink->ipc_handle);
+   //     basesink->ipc_handle = NULL;
+   // }
 
     g_mutex_clear (&basesink->lock);
     g_cond_clear (&basesink->cond);
@@ -772,6 +795,10 @@ gst_ipc_sink_finalize (GObject * object)
     if(basesink->ipcs_uri)
         g_free (basesink->ipcs_uri);
     basesink->ipcs_uri=NULL;
+
+	if(basesink->file_sink_ptr)
+		fclose(basesink->file_sink_ptr);
+	basesink->file_sink_ptr = NULL;
 
     G_OBJECT_CLASS (parent_class)->finalize (object);
 }

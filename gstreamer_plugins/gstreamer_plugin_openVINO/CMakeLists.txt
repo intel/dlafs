@@ -1,6 +1,7 @@
 pkg_check_modules(GLIB2      REQUIRED  glib-2.0)
 pkg_check_modules(GSTREAMER  REQUIRED  gstreamer-1.0)
-pkg_check_modules(OpenCV     REQUIRED  opencv)
+pkg_check_modules(GSTVIDEO   REQUIRED  gstreamer-video-1.0)
+pkg_check_modules(OpenCV     REQUIRED  opencv4)
 pkg_check_modules(EIGEN3     REQUIRED  eigen3)
 pkg_check_modules(EIGEN3     REQUIRED  json-c)
 
@@ -8,6 +9,7 @@ find_package(InferenceEngine REQUIRED)
 
 include_directories(${GLIB2_INCLUDE_DIRS})
 include_directories(${GSTREAMER_INCLUDE_DIRS})
+include_directories(${GSTVIDEO_INCLUDE_DIRS})
 include_directories(${OpenCV_INCLUDE_DIRS})
 include_directories(gst)
 include_directories(gst-libs)
@@ -49,18 +51,23 @@ aux_source_directory(gst DIR_SRCS)
 
 link_directories(gst-libs/safestringlib)
 link_directories(/usr/lib)
+link_directories(${GSTREAMER_LIBRARY_DIRS})
+link_directories(${GSTVIDEO_LIBRARY_DIRS})
+link_directories(${OpenCV_LIBRARY_DIRS})
 
 add_library (gstcvdlfilter SHARED ${DIR_SRCS})
 target_link_libraries(gstcvdlfilter
+	PRIVATE
     safestring
 	OpenCL
-    ${OpenCV_LIBRARIES}
     ${GSTREAMER_LIBRARIES}
+    ${GSTVIDEO_LIBRARIES}
     ${GLIB2_LIBRARIES}
 	${InferenceEngine_LIBRARIES}
    	dlib
 	pthread
 	json-c
+    ${OpenCV_LIBRARIES}
 	)
 
 add_subdirectory(customer)

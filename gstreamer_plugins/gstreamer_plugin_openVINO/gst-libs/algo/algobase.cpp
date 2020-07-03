@@ -358,7 +358,7 @@ CvdlAlgoBase::CvdlAlgoBase(PostCallback  cb, guint cvdlType )
      mPrev(NULL), mObsoletedAlgoData(NULL), postCb(cb),
      mInferCnt(0), mInferCntTotal(0), mFrameIndex(0), mFrameDoneNum(0),
      mImageProcCost(1), mInferCost(1), mFrameIndexLast(0), mObjIndex(0),
-     fpOclResult(NULL)
+     fpOclResult(NULL), mResultPool(nullptr), element(nullptr)
 {
     g_rec_mutex_init (&mMutex);
 
@@ -541,7 +541,16 @@ GstFlowReturn CvdlAlgoBase::init_ieloader(const char* modeFileName, guint ieType
         return ret;
     mIeInited = true;
 
-    ret = mIeLoader.set_device(InferenceEngine::TargetDevice::eHDDL);
+	const gchar *env = g_getenv("HDDL_PLUGIN");
+	if(env)
+	{
+		ret = mIeLoader.load_hddl_plugin(env);
+	}
+	else
+	{
+		ret = mIeLoader.load_hddl_plugin("HDDL");
+	}
+
     if(ret != GST_FLOW_OK){
         g_print("IE failed to set device be eHDDL!\n");
         return GST_FLOW_ERROR;

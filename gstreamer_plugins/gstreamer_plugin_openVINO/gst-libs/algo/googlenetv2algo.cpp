@@ -44,6 +44,7 @@ GoogleNetv2Algo::GoogleNetv2Algo() : CvdlAlgoBase(post_callback, CVDL_TYPE_DL)
     mName = std::string(ALGO_GOOGLENETV2_NAME);
     mInputWidth = CLASSIFICATION_INPUT_W;
     mInputHeight = CLASSIFICATION_INPUT_H;
+	mCurPts = 0;
 }
 
 GoogleNetv2Algo::~GoogleNetv2Algo()

@@ -20,6 +20,8 @@
 
 #include <gst/gst.h>
 #include <ipcclient/ipcclient.h>
+#include <stdio.h>
+
 
 G_BEGIN_DECLS
 
@@ -97,8 +99,10 @@ struct _GstIpcSink {
   GRecMutex task_lock;
 
   // ipc client
-  IPCClientHandle ipc_handle;
-  IPCClientHandle ipc_handle_proxy;
+  //IPCClientHandle ipc_handle;
+  //IPCClientHandle ipc_handle_proxy;
+  gchar* file_sink_name;
+  FILE* file_sink_ptr;
   gchar* ipcs_uri;
   int ipcc_id;
 

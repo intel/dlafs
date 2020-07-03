@@ -121,6 +121,7 @@ LPRNetAlgo::LPRNetAlgo() : CvdlAlgoBase(post_callback, CVDL_TYPE_DL)
 {
     mName = std::string(ALGO_LPRNET_NAME);
     mSecData[0] = 1.0;
+	mCurPts = 0;
     for(int i=1;i<LPR_COLS;i++)
         mSecData[i] = 1.0;
 }

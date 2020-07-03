@@ -25,6 +25,7 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -z noexecstack -z relro -z
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath-link -lstdc++ -std=c++11 -pthread")
 
 link_directories(${PROJECT_ROOT_PATH}/gstreamer_plugins/gstreamer_plugin_openVINO/gst-libs/safestringlib)
+link_directories(${GSTREAMER_LIBRARY_DIRS})
 
 add_subdirectory(src)
 add_subdirectory(tools)

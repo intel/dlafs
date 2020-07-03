@@ -252,7 +252,8 @@ OclContext::finish()
 }
 
 OclDevice::OclDevice () : m_context(0), m_queue(0),
-    m_platform(0), m_device(0), clCreateFromVA_APIMediaSurfaceINTEL(0)
+    m_platform(0), m_device(0), clCreateFromVA_APIMediaSurfaceINTEL(0), m_display(nullptr), clGetDeviceIDsFromVA_APIMediaAdapterINTEL(nullptr),
+clEnqueueAcquireVA_APIMediaSurfacesINTEL(nullptr), clEnqueueReleaseVA_APIMediaSurfacesINTEL(nullptr)
 {
 }
 

@@ -116,6 +116,7 @@ ReidAlgo::ReidAlgo() : CvdlAlgoBase(post_callback, CVDL_TYPE_DL)
 {
     mName = std::string(ALGO_REID_NAME);
     set_default_label_name();
+	mLabelNames = nullptr;
 }
 
 ReidAlgo::~ReidAlgo()

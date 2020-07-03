@@ -19,7 +19,7 @@
 #define __ALGO_YOLOV1_TINY_H__
 
 #include "algobase.h"
-#include <gst/gstbuffer.h>
+//#include <gst/gstbuffer.h>
 #include "mathutils.h"
 
 #define DETECTION_GRIDE_SIZE  7
@@ -37,14 +37,6 @@ typedef struct {
     int32_t nCls;
     float **fProbs;
 } RectSortable;
-
-typedef struct _Yolov1TinyResultData Yolov1TinyResultData;
-struct _Yolov1TinyResultData{
-    GstBuffer *buffer;
-    guint64 pts;
-    int object_num;
-    std::vector<ObjectData> objects;
-};
 
 class Yolov1TinyInternalData;
 class Yolov1TinyAlgo : public CvdlAlgoBase 
@@ -64,7 +56,6 @@ private:
     const float cNMSThreshold = DETECTION_NMS_THRESHOLD; /* 0.4 */
 
     guint64 mCurPts;
-    Yolov1TinyResultData mResultData;
     const char** mLabelNames;
 
     void set_default_label_name();

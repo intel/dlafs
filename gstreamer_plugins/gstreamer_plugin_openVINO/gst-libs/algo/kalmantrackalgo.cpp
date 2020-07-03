@@ -125,6 +125,7 @@ KalmanTrackAlgo::KalmanTrackAlgo():CvdlAlgoBase(post_tracklp_process, CVDL_TYPE_
 
     mSvmModelStr = std::string(CVDL_MODEL_DIR_DEFAULT"/svm_model.xml");
     kalmanTracker = KalmanTracker(KFMaxAge);
+	mCurPts = 0;
 }
 
 KalmanTrackAlgo::~KalmanTrackAlgo()

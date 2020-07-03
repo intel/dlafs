@@ -54,7 +54,10 @@ public:
     gboolean setParameters (gpointer);
     void setOclFormat(CRCFormat crc_format) {m_crc_format = crc_format;}
 
-    explicit OclVppCrc () : m_planar(true), m_src(NULL), m_dst(NULL) {}
+    explicit OclVppCrc () : m_planar(true), m_src(NULL), m_dst(NULL), m_crc_format(CRC_FORMAT_BGR),
+							m_dst_w(0), m_dst_h(0), m_src_w(0), m_src_h(0), m_crop_x(0),
+							m_crop_y(0), m_crop_w(0), m_crop_h(0)
+							{}
 
 private:
 

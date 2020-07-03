@@ -42,7 +42,8 @@
  IPCClientHandle ipcclient_setup(const char *serverUri, int client_id);
  void ipcclient_send_data(IPCClientHandle handle, const char *data, int len, enum ePlayloadType type);
  int ipcclient_send_infer_data(IPCClientHandle handle, void *infer_data, guint64 pts, int infer_index);
- int ipcclient_send_infer_data_full_frame(IPCClientHandle handle, void *data, int count, guint64 pts, int infer_index);
+// int ipcclient_send_infer_data_full_frame(IPCClientHandle handle, void *data, int count, guint64 pts, int infer_index);
+ int ipcclient_send_infer_data_full_frame(void* fH, void *data, int count, guint64 pts, int infer_index);
  void ipcclient_destroy(IPCClientHandle handle);
  MessageItem * ipcclient_get_data(IPCClientHandle handle);
  MessageItem *ipcclient_get_data_timed(IPCClientHandle handle);

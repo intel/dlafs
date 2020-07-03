@@ -33,6 +33,8 @@ enum {
     ALGO_LPRNET         = 5,
     ALGO_YOLOV2_TINY    = 6,
     ALGO_REID           = 7,
+	ALGO_OMZ_VEHICLE_LICENSE_PLATE_DETECTION_BARRIER_0106 = 8,
+	ALGO_OMZ_VEHICLE_ATTRIBUTES_RECOGNITION_BARRIER_0039 = 9,
     ALGO_SINK,   /*last algo in algopipe*/
     ALGO_MAX_DEFAULT_NUM,
 };
@@ -45,6 +47,8 @@ enum {
 #define ALGO_LPRNET_NAME "lprnet"
 #define ALGO_YOLOV2_TINY_NAME "yolov2tiny"
 #define ALGO_REID_NAME "reid"
+#define ALGO_OMZ_VEHICLE_LICENSE_PLATE_DETECTION_BARRIER_0106_NAME "vehicle-license-plate-detection-barrier-0106"
+#define ALGO_OMZ_VEHICLE_ATTRIBUTES_RECOGNITION_BARRIER_0039_NAME "vehicle-attributes-recognition-barrier-0039"
 #define ALGO_GENERIC_DL_NAME "generic"
 #define ALGO_SINK_NAME "sink"
 

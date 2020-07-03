@@ -273,17 +273,16 @@ int ipcclient_send_infer_data(IPCClientHandle handle, void *data, guint64 pts, i
 }
 
 
-int ipcclient_send_infer_data_full_frame(IPCClientHandle handle, void *data, int count, guint64 pts, int infer_index)
+//int ipcclient_send_infer_data_full_frame(IPCClientHandle handle, void *data, int count, guint64 pts, int infer_index)
+int ipcclient_send_infer_data_full_frame(void* file_handler, void *data, int count, guint64 pts, int infer_index)
 {
-#if 0
-    std::string str = covert_infer_data_to_string(data, pts, infer_index);
-#else
+	FILE* fH = (FILE*)file_handler;
     std::string str = covert_infer_data_to_json_string_full_frame(data, count, pts, infer_index);
-#endif
-    const char*txt_cache = str.c_str();
+    const char* txt_cache = str.c_str();
     int data_len = str.size();
-    ipcclient_send_data(handle, (const char *)txt_cache, data_len, eMetaText);
-    g_print("send data size=%d, %s\n",data_len, txt_cache);
+	fputs(txt_cache, fH);
+    //ipcclient_send_data(handle, (const char *)txt_cache, data_len, eMetaText);
+    //g_print("send data size=%d, %s\n",data_len, txt_cache);
 
     //debug
     //ipcclient_upload_error_info(handle, (char *)txt_cache);

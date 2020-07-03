@@ -34,6 +34,8 @@ SampleAlgo::SampleAlgo() : CvdlAlgoBase(post_callback, CVDL_TYPE_DL)
 {
     mName = std::string("sample");
     set_default_label_name();
+	mCurPts = 0;
+	mLabelNames = nullptr;
 }
 
 SampleAlgo::~SampleAlgo()

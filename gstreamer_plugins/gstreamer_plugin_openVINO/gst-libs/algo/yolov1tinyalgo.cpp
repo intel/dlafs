@@ -88,7 +88,8 @@ static void post_callback(CvdlAlgoData *algoData)
         // post process algoData
 }
 
-Yolov1TinyAlgo::Yolov1TinyAlgo() : CvdlAlgoBase(post_callback, CVDL_TYPE_DL)
+Yolov1TinyAlgo::Yolov1TinyAlgo() : CvdlAlgoBase(post_callback, CVDL_TYPE_DL),
+mCurPts(0)
 {
     mName = std::string(ALGO_YOLOV1_TINY_NAME);
     set_default_label_name();

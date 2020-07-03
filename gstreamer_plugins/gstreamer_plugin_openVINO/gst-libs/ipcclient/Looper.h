@@ -50,7 +50,7 @@ class Looper
  private:
   std::thread _tLooperThread;
   ThreadSafeQueue<ipcProtocol> _qSndQueue;
-  bool _bQuit;
+  volatile bool _bQuit;
   Epoller _tEpoller;
   GAsyncQueue *receive_message_queue;
   gint64 _iSendDuration;

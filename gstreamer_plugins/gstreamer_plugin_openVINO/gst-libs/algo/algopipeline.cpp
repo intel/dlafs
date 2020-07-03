@@ -32,6 +32,8 @@
 #include "genericalgo.h"
 #include "sinkalgo.h"
 #include "algopipeline.h"
+#include "omzvehiclelicenseplatedetectionbarrier0106algo.h"
+#include "omzvehicleattributesrecognitionbarrier0039algo.h"
 
 using namespace std;
 
@@ -76,6 +78,12 @@ static CvdlAlgoBase* algo_create(GstElement *element, int type)
          case ALGO_REID:
             algo = new ReidAlgo;
             break;
+		 case ALGO_OMZ_VEHICLE_LICENSE_PLATE_DETECTION_BARRIER_0106:
+			algo = new OMZVehicleLicensePlateDetectionBarrier0106Algo;
+			break;
+		 case ALGO_OMZ_VEHICLE_ATTRIBUTES_RECOGNITION_BARRIER_0039:
+			algo = new OMZVehicleAttributesRecognitionBarrier0039Algo;
+			break;
          case ALGO_SINK:
             algo = new SinkAlgo;
             break;

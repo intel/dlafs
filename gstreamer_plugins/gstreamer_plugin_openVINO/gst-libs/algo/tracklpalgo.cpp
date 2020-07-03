@@ -213,13 +213,21 @@ static void post_tracklp_process(CvdlAlgoData *algoData)
 
 }
 
-TrackLpAlgo::TrackLpAlgo():CvdlAlgoBase(post_tracklp_process, CVDL_TYPE_CV)
+TrackLpAlgo::TrackLpAlgo():CvdlAlgoBase(post_tracklp_process, CVDL_TYPE_CV),
+mCurPts(0)
 {
     mInputWidth = TRACKING_LP_INPUT_W;
     mInputHeight = TRACKING_LP_INPUT_H;
     mName = std::string(ALGO_TRACK_LP_NAME);
 
-    mSvmModelStr = std::string(CVDL_MODEL_DIR_DEFAULT"/svm_model.xml");
+    const gchar *env = g_getenv("HDDLS_CVDL_PATH");
+	if(env) {
+    	std::ostringstream   path_str;
+        path_str   <<   env   <<   "/svm_model.xml";
+    	mSvmModelStr = std::string(path_str.str());
+	} else {
+    	mSvmModelStr = std::string(CVDL_MODEL_DIR_DEFAULT"/svm_model.xml");
+	}
 
     lpTracker = KalmanTracker(KFMaxAge);
     lpDetect = LicencePlateDetect(mSvmModelStr);

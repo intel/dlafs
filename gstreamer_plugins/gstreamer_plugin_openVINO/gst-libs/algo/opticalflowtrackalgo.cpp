@@ -65,7 +65,8 @@ static void post_track_process(CvdlAlgoData *algoData)
     trackAlgo->update_track_object(algoData->mObjectVec);
 }
 
-OpticalflowTrackAlgo::OpticalflowTrackAlgo():CvdlAlgoBase(post_track_process, CVDL_TYPE_CV)
+OpticalflowTrackAlgo::OpticalflowTrackAlgo():CvdlAlgoBase(post_track_process, CVDL_TYPE_CV),
+mCurPts(0)
 {
     mName = std::string(ALGO_OF_TRACK_NAME);
     mInputWidth = TRACKING_INPUT_W;

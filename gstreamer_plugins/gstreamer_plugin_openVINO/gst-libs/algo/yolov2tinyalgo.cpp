@@ -35,6 +35,7 @@ Yolov2TinyAlgo::Yolov2TinyAlgo() : CvdlAlgoBase(post_callback, CVDL_TYPE_DL)
 {
     mName = std::string(ALGO_YOLOV2_TINY_NAME);
     set_default_label_name();
+	mCurPts = 0;
 }
 
 Yolov2TinyAlgo::~Yolov2TinyAlgo()
