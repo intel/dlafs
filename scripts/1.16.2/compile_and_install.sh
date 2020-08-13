@@ -1,7 +1,7 @@
 #!/bin/bash
 export dlafs_root=`realpath ../..`
 source /opt/intel/openvino_2020.3.194/bin/setupvars.sh
-export PKG_CONFIG_PATH=/opt/intel/mediasdk/lib64/pkgconfig:$PKG_CONFIG_PATH
+export PKG_CONFIG_PATH=/opt/intel/mediasdk/lib64/pkgconfig:/opt/intel/openvino_2020.3.194/opencv/lib/pkgconfig:$PKG_CONFIG_PATH
 cd $dlafs_root
 rm -rf build; mkdir build; cd build
 cmake ..; make
