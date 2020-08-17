@@ -63,6 +63,35 @@ GstFlowReturn GoogleNetv2Algo::algo_dl_init(const char* modeFileName)
     return ret;
 }
 
+inline void TopResults(InferenceEngine::TBlob<float>& input, std::vector<unsigned>& output)
+{
+	auto dims = input.getTensorDesc().getDims();
+	size_t input_rank = dims.size();
+	if (!input_rank || !dims[0]) THROW_IE_EXCEPTION << "Input blob has incorrect dimensions!";
+	size_t batchSize = dims[0];
+	std::vector<unsigned> offsets(input.size() / batchSize);
+        unsigned n = 1;
+        n = 1 < input.size() ? 1 : input.size();
+	output.resize(n * batchSize);
+	for (size_t i = 0; i < batchSize; i++)
+	{
+	    size_t offset = i * (input.size() / batchSize);
+	    float* batchData = input.data();
+	    batchData += offset;
+
+	    std::iota(std::begin(offsets), std::end(offsets), 0);
+	    std::partial_sort(
+                std::begin(offsets),
+                std::begin(offsets) + n,
+                std::end(offsets),
+	        [&batchData](unsigned l, unsigned r) { return batchData[l] > batchData[r]; });
+	    for (unsigned j = 0; j < n; j++)
+	    {
+	        output.at(i * n + j) = offsets.at(j);
+	    }
+	}
+}
+
 GstFlowReturn GoogleNetv2Algo::parse_inference_result(InferenceEngine::Blob::Ptr &resultBlobPtr,
                                                   int precision, CvdlAlgoData *outData, int objId)
 {
@@ -74,14 +103,13 @@ GstFlowReturn GoogleNetv2Algo::parse_inference_result(InferenceEngine::Blob::Ptr
     }
 
     auto resultBlobFp32 
-        = std::dynamic_pointer_cast<InferenceEngine::TBlob<float> >(resultBlobPtr);
+        = std::dynamic_pointer_cast<InferenceEngine::TBlob<float>>(resultBlobPtr);
     //float *input = static_cast<float*>(resultBlobFp32->data());
 
     // Get top N results
     std::vector<unsigned> topIndexes;
-    int topnum = 1;
     ObjectData objData = outData->mObjectVecIn[objId];
-    InferenceEngine::TopResults(topnum, *resultBlobFp32, topIndexes);
+    TopResults(*resultBlobFp32, topIndexes);
     float *probBase = resultBlobFp32->data();
     if (topIndexes.size()>0) {
         for (size_t i = 0; i < topIndexes.size(); i++) {

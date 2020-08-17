@@ -1,6 +1,6 @@
 #!/bin/bash
 export dlafs_root=`realpath ../..`
-remote=https://download.01.org/opencv/2020/openvinotoolkit/2020.3/open_model_zoo/models_bin/1/
+remote=https://download.01.org/opencv/2020/openvinotoolkit/2020.4/open_model_zoo/models_bin/1/
 for model in vehicle-attributes-recognition-barrier-0039 vehicle-license-plate-detection-barrier-0106
 do
     rm -rf $dlafs_root/test/models/$model

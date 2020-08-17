@@ -53,22 +53,23 @@ cd /opt/intel/mediasdk
 sudo ln -sf lib lib64
 
 export CPLUS_INCLUDE_PATH=/opt/intel/mediasdk/include:$CPLUS_INCLUDE_PATH
-sudo cp -r /opt/intel/openvino_2020.3.194/opencv /opt/intel/openvino_2020.3.194/opencv.openvino
+sudo cp -r /opt/intel/openvino_2020.4.287/opencv /opt/intel/openvino_2020.4.287/opencv.openvino
+sudo ln -sf /opt/intel/system_studio_2019/opencl-sdk /opt/intel/opencl
 git clone https://github.com/opencv/opencv.git
 cd opencv
-git checkout 4.3.0-openvino
+git checkout 62eece0d7e67df1e79d9646f0870a90e56feca10
 rm -rf build
 mkdir build
 cd build
-cmake -DCMAKE_INSTALL_PREFIX=/opt/intel/openvino_2020.3.194/opencv -DWITH_VA_INTEL=ON -DWITH_IPP=OFF -DWITH_CUDA=OFF -DOPENCV_GENERATE_PKGCONFIG=ON ..
+cmake -DCMAKE_INSTALL_PREFIX=/opt/intel/openvino_2020.4.287/opencv -DWITH_VA_INTEL=ON -DWITH_IPP=OFF -DWITH_CUDA=OFF -DOPENCV_GENERATE_PKGCONFIG=ON ..
 make -j16
 sudo make install
 cd ../..
 rm -rf opencv
-sudo cp /opt/intel/openvino_2020.3.194/opencv/lib/* /opt/intel/openvino_2020.3.194/opencv.openvino/lib
-sudo cp -r /opt/intel/openvino_2020.3.194/opencv/lib/pkgconfig /opt/intel/openvino_2020.3.194/opencv.openvino/lib
-sudo cp -r /opt/intel/openvino_2020.3.194/opencv/include/* /opt/intel/openvino_2020.3.194/opencv.openvino/include
-sudo rm -rf /opt/intel/openvino_2020.3.194/opencv
-sudo cp -r /opt/intel/openvino_2020.3.194/opencv.openvino /opt/intel/openvino_2020.3.194/opencv
+sudo cp /opt/intel/openvino_2020.4.287/opencv/lib/* /opt/intel/openvino_2020.4.287/opencv.openvino/lib
+sudo cp -r /opt/intel/openvino_2020.4.287/opencv/lib/pkgconfig /opt/intel/openvino_2020.4.287/opencv.openvino/lib
+sudo cp -r /opt/intel/openvino_2020.4.287/opencv/include/* /opt/intel/openvino_2020.4.287/opencv.openvino/include
+sudo rm -rf /opt/intel/openvino_2020.4.287/opencv
+sudo cp -r /opt/intel/openvino_2020.4.287/opencv.openvino /opt/intel/openvino_2020.4.287/opencv
 
 sudo -E apt install libeigen3-dev libdlib-dev libudev-dev

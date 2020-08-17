@@ -244,7 +244,12 @@ static void process_sink_buffers(gpointer userData)
                 data_base = mapInfo[i].data;
                 data_len = mapInfo[i].size;
 		FILE * fH = fopen(file_name_buffer, "wb");
-		fwrite(data_base, 1, data_len, fH);
+		if(!fH)
+		    fprintf(stderr, "Failed to open %s\n", file_name_buffer);
+		else {
+		    fwrite(data_base, 1, data_len, fH);
+		    fclose(fH);
+		}
                 basesink->bit_data_index++;
 		++index;
             }
