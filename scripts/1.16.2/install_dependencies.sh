@@ -1,6 +1,6 @@
 #!/bin/bash
 
-sudo -E apt install libeigen3-dev libdlib-dev libudev-dev libpciaccess-dev
+sudo -E apt install libeigen3-dev libdlib-dev libudev-dev libpciaccess-dev opencl-headers
 
 git clone https://github.com/json-c/json-c.git
 cd json-c
@@ -54,6 +54,7 @@ sudo make install
 cd ../..
 cd /opt/intel/mediasdk
 sudo ln -sf lib lib64
+cd -
 
 export CPLUS_INCLUDE_PATH=/opt/intel/mediasdk/include:$CPLUS_INCLUDE_PATH
 sudo cp -r /opt/intel/openvino_2020.4.287/opencv /opt/intel/openvino_2020.4.287/opencv.openvino

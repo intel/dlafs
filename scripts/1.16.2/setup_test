@@ -1,5 +1,6 @@
 #!/bin/bash
 source /opt/intel/openvino_2020.4.287/bin/setupvars.sh
+export LD_LIBRARY_PATH=/opt/intel/mediasdk/lib:$LD_LIBRARY_PATH
 #export LD_LIBRARY_PATH=`python3 -c "LD_LIBRARY_PATH = '$LD_LIBRARY_PATH'; entries = LD_LIBRARY_PATH.split(':'); ix = sum([0 if 'opencv' not in entry else ix for ix, entry in enumerate(entries)]); del entries[ix]; LD_LIBRARY_PATH = ':'.join(entries); print(LD_LIBRARY_PATH);"`
 
 export dlafs_root=`realpath ../..`
