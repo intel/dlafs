@@ -10,46 +10,46 @@ git checkout f8c632f579c71012f9aca81543b880a579f634fc
 cd ..
 rm -rf json-c
 
-wget https://github.com/intel/libva/archive/2.8.0.tar.gz -O libva.tar.gz
-tar zxf libva.tar.gz; mv libva-2.8.0 libva
+wget https://github.com/intel/libva/archive/2.9.0.tar.gz -O libva.tar.gz
+tar zxf libva.tar.gz; mv libva-2.9.0 libva
 cd libva
 ./autogen.sh --prefix=/usr --libdir=/usr/lib/x86_64-linux-gnu; make -j4; sudo make install
 cd ..
 
-wget https://github.com/intel/gmmlib/archive/intel-gmmlib-20.2.2.tar.gz
-tar zxf intel-gmmlib-20.2.2.tar.gz; mv gmmlib-intel-gmmlib-20.2.2 gmmlib
+wget https://github.com/intel/gmmlib/archive/intel-gmmlib-20.3.2.tar.gz
+tar zxf intel-gmmlib-20.3.2.tar.gz; mv gmmlib-intel-gmmlib-20.3.2 gmmlib
 cd gmmlib
 mkdir build
 cd build
 cmake ..
-make -j16
+make -j8
 sudo make install
 cd ../..
 
-wget https://github.com/intel/libva-utils/archive/2.8.0.tar.gz -O libva-utils.tar.gz
-tar zxf libva-utils.tar.gz; mv libva-utils-2.8.0 libva-utils
+wget https://github.com/intel/libva-utils/archive/2.9.1.tar.gz -O libva-utils.tar.gz
+tar zxf libva-utils.tar.gz; mv libva-utils-2.9.1 libva-utils
 cd libva-utils
 ./autogen.sh --prefix=/usr --libdir=/usr/lib/x86_64-linux-gnu; make -j4; sudo make install
 cd ..
 
-wget https://github.com/intel/media-driver/archive/intel-media-20.2.0.tar.gz
-tar zxf intel-media-20.2.0.tar.gz; mv media-driver-intel-media-20.2.0 media-driver
+wget https://github.com/intel/media-driver/archive/intel-media-20.3.0.tar.gz
+tar zxf intel-media-20.3.0.tar.gz; mv media-driver-intel-media-20.3.0 media-driver
 cd media-driver
 mkdir build
 cd build
 cmake ..
-make -j16
+make -j8
 sudo make install
 cd ../..
 
 sudo ln -sf /opt/intel/system_studio_2019/opencl-sdk /opt/intel/opencl
-wget https://github.com/Intel-Media-SDK/MediaSDK/archive/intel-mediasdk-20.2.1.tar.gz
-tar zxf intel-mediasdk-20.2.1.tar.gz; mv MediaSDK-intel-mediasdk-20.2.1 MediaSDK
+wget https://github.com/Intel-Media-SDK/MediaSDK/archive/intel-mediasdk-20.3.0.tar.gz
+tar zxf intel-mediasdk-20.3.0.tar.gz; mv MediaSDK-intel-mediasdk-20.3.0 MediaSDK
 cd MediaSDK
 mkdir build
 cd build
 cmake ..
-make -j16
+make -j8
 sudo make install
 cd ../..
 cd /opt/intel/mediasdk
@@ -83,11 +83,10 @@ sudo dpkg -r intel-igc-core
 sudo dpkg -r intel-gmmlib
 mkdir neo
 cd neo
-wget https://github.com/intel/compute-runtime/releases/download/20.25.17111/intel-gmmlib_20.1.1_amd64.deb
-wget https://github.com/intel/compute-runtime/releases/download/20.25.17111/intel-igc-core_1.0.4155_amd64.deb
-wget https://github.com/intel/compute-runtime/releases/download/20.25.17111/intel-igc-opencl_1.0.4155_amd64.deb
-wget https://github.com/intel/compute-runtime/releases/download/20.25.17111/intel-opencl_20.25.17111_amd64.deb
-wget https://github.com/intel/compute-runtime/releases/download/20.25.17111/intel-ocloc_20.25.17111_amd64.deb
-wget https://github.com/intel/compute-runtime/releases/download/20.25.17111/intel-level-zero-gpu_0.8.17111_amd64.deb
+wget https://github.com/intel/compute-runtime/releases/download/20.39.17972/intel-gmmlib_20.2.5_amd64.deb
+wget https://github.com/intel/intel-graphics-compiler/releases/download/igc-1.0.5064/intel-igc-core_1.0.5064_amd64.deb
+wget https://github.com/intel/intel-graphics-compiler/releases/download/igc-1.0.5064/intel-igc-opencl_1.0.5064_amd64.deb
+wget https://github.com/intel/compute-runtime/releases/download/20.39.17972/intel-opencl_20.39.17972_amd64.deb
+wget https://github.com/intel/compute-runtime/releases/download/20.39.17972/intel-ocloc_20.39.17972_amd64.deb
 sudo dpkg -i *.deb
 
