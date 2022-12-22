@@ -6,7 +6,7 @@
     "test": "mocha test/*.test.js"
   },
   "dependencies": {
-    "jsonwebtoken": "~8.4.0",
+    "jsonwebtoken": "~9.0.0",
     "ws": "latest",
     "mocha": "latest"
   },
